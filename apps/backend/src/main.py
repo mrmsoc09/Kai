@@ -14,6 +14,7 @@ from apps.backend.src.middleware.security_headers import SecurityHeadersMiddlewa
 from apps.backend.src.routers import (
     agent0,
     auth,
+    autonomous,
     chains,
     docs,
     dorks,
@@ -94,6 +95,9 @@ app.include_router(chains.router)
 app.include_router(embeddings.router)
 app.include_router(intel.router)
 app.include_router(mcp.router)
+
+# Autonomous Multi-Agent Systems (NEW)
+app.include_router(autonomous.router)
 
 # Evidence and findings lifecycle
 app.include_router(evidence.router)
@@ -233,6 +237,53 @@ async def initialize_llm_providers():
 
     except Exception as e:
         print(f"⚠ Agent Zero initialization (optional): {str(e)}")
+
+    # Autonomous Multi-Agent Systems Initialization
+    print("\n" + "-"*60)
+    print("INITIALIZING AUTONOMOUS MULTI-AGENT SYSTEMS")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.autonomous_agent_system import (
+            initialize_autonomous_system
+        )
+        from apps.backend.src.core.autonomous_reasoning import (
+            initialize_reasoning_engine
+        )
+        from apps.backend.src.core.swarm_coordination import (
+            initialize_swarm_coordinator
+        )
+
+        # Initialize reasoning engine
+        reasoning_engine = initialize_reasoning_engine(llm_factory.complete)
+        print("✓ Autonomous reasoning engine initialized")
+
+        # Initialize swarm coordinator
+        swarm_coordinator = initialize_swarm_coordinator(llm_factory.complete)
+        print("✓ Swarm coordination system initialized")
+
+        # Initialize autonomous multi-agent system
+        autonomous_system = initialize_autonomous_system(
+            llm_factory.complete,
+            agent_registry=agent_registry if 'agent_registry' in locals() else None,
+            reasoning_engine=reasoning_engine,
+            swarm_coordinator=swarm_coordinator
+        )
+        print("✓ Autonomous multi-agent system initialized")
+        print(f"  Autonomous agents created: {len(autonomous_system.agents) if hasattr(autonomous_system, 'agents') else 0}")
+
+        # Store globally for API access
+        import apps.backend.src.core.autonomous_agent_system as autonomous_module
+        autonomous_module.autonomous_system = autonomous_system
+        autonomous_module.reasoning_engine = reasoning_engine
+        autonomous_module.swarm_coordinator = swarm_coordinator
+
+        # Also set in router for API endpoints
+        from apps.backend.src.routers.autonomous import set_systems
+        set_systems(autonomous_system, reasoning_engine, swarm_coordinator)
+
+    except Exception as e:
+        print(f"⚠ Autonomous systems initialization (optional): {str(e)}")
 
     print("\n" + "="*60)
     print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")
