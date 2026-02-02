@@ -1,0 +1,47 @@
+version: 1
+test_mode: true
+external_queries_enabled: false
+allowlist: []
+rate_limits:
+  google_cse_qpm: 3
+  osint_qpm: 5
+safety:
+  require_scope_confirmation: true
+  audit_redactions:
+  - secrets
+  - pii
+audit:
+  enabled: true
+autonomy:
+  tier_default: 0
+  tier_definitions:
+  - id: 0
+    name: AUTO
+    description: Local-only, reversible, low-risk operations. No prompts.
+  - id: 1
+    name: NOTIFY
+    description: Low-risk permitted external reads or notable internal changes. Notify
+      only.
+  - id: 2
+    name: APPROVE
+    description: External execution on targets/services or persistence of sensitive
+      content. Requires HiL approve.
+  - id: 3
+    name: HARD_STOP
+    description: Irreversible, export/share, retention changes, or high-risk operations.
+      Explicit approval and optional dual-approval.
+  gating_rules:
+  - Plan mode is always Tier 0
+  - Execute mode on external targets is Tier 2 by default
+  - Anything involving Regulated classification is Tier 2+ and must follow redaction/encryption
+  - Export/share of evidence is Tier 3
+  - VALIDATED status remains impossible without recording reference
+  reduce_prompts:
+  - Do not ask for approval for internal planning steps, scoring, summarization, indexing,
+    graph updates
+  - 'Batch approvals: present a single approval request per run containing the bounded
+    execute plan'
+policies:
+  allowed_targets:
+  - '*.adobe.com'
+  require_hil: true

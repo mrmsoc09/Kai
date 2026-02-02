@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k1-recorder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: k1-recorder
+  template:
+    metadata:
+      labels:
+        app: k1-recorder
+    spec:
+      containers:
+      - name: recorder
+        image: jrottenberg/ffmpeg:4.4-ubuntu
+        command: ['bash','-lc','sleep infinity']
+        volumeMounts:
+        - name: recordings
+          mountPath: /recordings
+      volumes:
+      - name: recordings
+        persistentVolumeClaim:
+          claimName: k1-recordings-pvc

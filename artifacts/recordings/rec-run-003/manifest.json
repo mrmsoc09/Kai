@@ -1,0 +1,11 @@
+{
+  "run_id": "rec-run-003",
+  "tar": "/a0/usr/projects/main-startup-build/k1/artifacts/recordings/rec-run-003.tar.gz",
+  "sha256": "ecf65c02c0e85f46752822d07a2513c30285e9fb98e18b1eb93ed3440e7329fe",
+  "segments": [
+    "seg_0200.mp4",
+    "seg_0201.webm"
+  ],
+  "bytes": 243,
+  "ts": 1769768511
+}

@@ -1,0 +1,12 @@
+subject: "[Bugcrowd] {{ finding.title }} — {{ finding.severity|capitalize }}"
+body: |
+  Hello Bugcrowd Program,
+
+  Submission package attached with report and recording.
+
+  {{ finding.summary }}
+
+  Mitigation:
+  {{ mitigation.plan }}
+headers:
+  X-Platform: "Bugcrowd"

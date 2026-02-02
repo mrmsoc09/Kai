@@ -1,0 +1,104 @@
+from __future__ import annotations
+from pathlib import Path
+from typing import List, Dict, Any
+import hashlib, json, os, tarfile, time
+
+ROOT = Path(__file__).resolve().parents[4]
+ART = ROOT / 'artifacts'
+RECS = ART / 'recordings'
+STATE = ART / 'recorder_state.json'
+RECS.mkdir(parents=True, exist_ok=True)
+
+VIDEO_EXT = {'.mp4', '.webm', '.mkv'}
+
+
+def segment_dir(run_id: str) -> Path:
+    d = RECS / run_id
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def list_recordings(run_id: str) -> List[str]:
+    base = RECS / run_id
+    out: List[str] = []
+    if base.exists():
+        for p in sorted(base.glob('*')):
+            if p.is_file() and p.suffix.lower() in VIDEO_EXT:
+                out.append(str(p))
+    arch = RECS / f"{run_id}.tar.gz"
+    if arch.exists():
+        out.append(str(arch))
+    return out
+
+
+def has_recording(run_id: str) -> bool:
+    base = RECS / run_id
+    segs = list(base.glob('seg_*.mp4')) + list(base.glob('seg_*.webm')) + list(base.glob('seg_*.mkv'))
+    if segs:
+        return True
+    arch = RECS / f"{run_id}.tar.gz"
+    return arch.exists() and arch.is_file() and arch.stat().st_size > 0
+
+
+def _sha256(p: Path) -> str:
+    h = hashlib.sha256()
+    with p.open('rb') as f:
+        for chunk in iter(lambda: f.read(1024 * 1024), b''):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def compress_run(run_id: str) -> Dict[str, Any]:
+    base = RECS / run_id
+    if not base.exists():
+        return {'ok': False, 'reason': 'no_run_dir'}
+    out = RECS / f"{run_id}.tar.gz"
+    with tarfile.open(out, 'w:gz') as tar:
+        for p in sorted(base.glob('*')):
+            if p.is_file() and p.suffix.lower() in VIDEO_EXT:
+                tar.add(p, arcname=p.name)
+    meta = {
+        'run_id': run_id,
+        'archive': str(out),
+        'size': out.stat().st_size,
+        'sha256': _sha256(out),
+        'ts': int(time.time()),
+    }
+    _update_global_index(meta)
+    return {'ok': True, **meta}
+
+
+def _update_global_index(entry: Dict[str, Any]) -> None:
+    idx = []
+    if STATE.exists():
+        try:
+            idx = json.loads(STATE.read_text())
+        except Exception:
+            idx = []
+    # Replace existing run entry if present
+    try:
+        idx = [e for e in (idx if isinstance(idx, list) else []) if isinstance(e, dict) and e.get('run_id') != entry.get('run_id')]
+    except Exception:
+        idx = []
+    idx.append(entry)
+    STATE.write_text(json.dumps(idx, indent=2))
+
+
+def global_index() -> List[Dict[str, Any]]:
+    if not STATE.exists():
+        return []
+    try:
+        data = json.loads(STATE.read_text())
+    except Exception:
+        return []
+    if isinstance(data, list):
+        return [e for e in data if isinstance(e, dict)]
+    if isinstance(data, dict):
+        # promote dict-of-runs to list if applicable
+        vals = list(data.values())
+        return [e for e in vals if isinstance(e, dict)] if vals else []
+    return []
+    try:
+        return json.loads(STATE.read_text())
+    except Exception:
+        return []

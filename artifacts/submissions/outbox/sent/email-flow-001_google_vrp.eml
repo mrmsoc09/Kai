@@ -1,0 +1,45 @@
+Date: Fri, 30 Jan 2026 11:59:59 -0000
+Subject: [VRP] Email Flow =?utf-8?b?4oCU?=  severity
+From: agent-zero@k1.local
+To: stakeholder@program.local
+X-K1-Report: email-flow-001
+X-Program: google_vrp
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============8991633651739140213=="
+
+--===============8991633651739140213==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello Google VRP Team,
+
+Please find a responsibly disclosed vulnerability report.
+
+Title: Email Flow
+Severity: 
+Impact: 
+Scope: 
+
+Reproduction steps and a safe screen recording are attached.
+
+Mitigation Plan:
+fix
+
+Timeline: n/a
+
+Regards,
+K1/Agent Zero
+
+--===============8991633651739140213==
+Content-Type: text/markdown
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="report.md"
+MIME-Version: 1.0
+
+IyBHb29nbGUgVlJQIFJlcG9ydCDigJQgRW1haWwgRmxvdwoKU3Rha2Vob2xkZXI6IGdvb2dsZV92
+cnAKU2V2ZXJpdHk6IHVua25vd24gIHwgQ1dFOiBuL2EgIHwgQ1ZTUzogbi9hCgojIyBTdW1tYXJ5
+CgojIyBJbXBhY3QKCiMjIEFmZmVjdGVkIFNjb3BlCgojIyBTdGVwcyB0byBSZXByb2R1Y2UKMSkg
+Li4uCiMjIEV2aWRlbmNlCgojIyBNaXRpZ2F0aW9uCmZpeAojIyBUaW1lbGluZQoKIyMgUmVmZXJl
+bmNlcwoK
+
+--===============8991633651739140213==--

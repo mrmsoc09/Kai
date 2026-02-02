@@ -1,0 +1,15 @@
+name: Google VRP Report
+stakeholder: google_vrp
+sections:
+  - Summary
+  - Impact
+  - Affected Scope
+  - Steps to Reproduce
+  - Evidence
+  - Mitigation
+  - Timeline
+  - References
+format_rules:
+  - name: TitleCaseSummary
+  - name: IncludeCVEIfAvailable
+  - name: AttachScreenRecording

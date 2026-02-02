@@ -1,0 +1,10 @@
+stakeholder: bugcrowd
+required_sections: [Summary, Impact, Steps to Reproduce, Evidence, Mitigation]
+render:
+  title: "Bugcrowd Report — {{ finding.title }}"
+  sections:
+    - { name: Summary, body: "{{ finding.summary }}" }
+    - { name: Impact, body: "{{ finding.impact }}" }
+    - { name: Steps to Reproduce, body: "{{ evidence.repro|default('n/a') }}" }
+    - { name: Evidence, body: "{{ evidence.details|default('') }}" }
+    - { name: Mitigation, body: "{{ mitigation.plan|default('n/a') }}" }

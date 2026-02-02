@@ -1,0 +1,31 @@
+{
+  "chain_id": "chain-1769769678",
+  "seed": "Account takeover via OAuth misconfig with open redirect and CSRF",
+  "steps": [
+    {
+      "id": "seed",
+      "title": "Account takeover via OAuth misconfig with open redirect and CSRF",
+      "severity": "medium",
+      "rationale": "Seed hypothesis",
+      "score": 1.0,
+      "meta": {}
+    },
+    {
+      "id": "chain-run-B1",
+      "title": "Open Redirect on OAuth redirect_uri",
+      "severity": "medium",
+      "rationale": "Vector similarity 0.3 + severity medium + heuristics -> 1.56",
+      "score": 1.56,
+      "meta": {
+        "run_id": "chain-run-B1",
+        "format": "google_vrp",
+        "title": "Open Redirect on OAuth redirect_uri",
+        "severity": "medium",
+        "finding_title": "Open Redirect on OAuth redirect_uri"
+      }
+    }
+  ],
+  "combined_score": 2.56,
+  "business_impact": "Account takeover vector via chain: Account takeover via OAuth misconfig with open redirect and CSRF + Open Redirect on OAuth redirect_uri",
+  "status": "chain_proposed"
+}

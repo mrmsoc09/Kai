@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k1-orchestrator
+  namespace: k1
+spec:
+  schedule: "*/15 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: runner
+            image: curlimages/curl:8.5.0
+            env:
+            - name: BACKEND_URL
+              value: http://k1-backend.k1.svc.cluster.local:8080
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: k1-operator
+                  key: token
+            command: ["sh","-lc"]
+            args:
+              - |
+                curl -s -X POST -H "Authorization: Bearer ${TOKEN}" ${BACKEND_URL}/orchestrator/run_next || true

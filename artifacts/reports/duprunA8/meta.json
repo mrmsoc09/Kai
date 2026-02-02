@@ -1,0 +1,10 @@
+{
+  "run_id": "duprunA8",
+  "format_id": "google_vrp",
+  "hil_approved": true,
+  "duplicate_check": {
+    "status": "clear"
+  },
+  "stakeholder": "google_vrp",
+  "saved_at": "2026-01-30T11:08:21Z"
+}

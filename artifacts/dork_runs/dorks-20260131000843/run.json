@@ -1,0 +1,105 @@
+{
+  "run_id": "dorks-20260131000843",
+  "module": "dorks.google_cse",
+  "target": "example.com",
+  "mode": "plan",
+  "loops": {
+    "strategic": {
+      "name": "GPEE",
+      "step": "Plan"
+    },
+    "tactical": {
+      "name": "OODA",
+      "step": "Orient/Decide"
+    }
+  },
+  "ledger": {
+    "assets": [],
+    "hypotheses": [
+      {
+        "name": "CSE dork execution yields high-signal OSINT",
+        "status": "hypothesis"
+      }
+    ],
+    "evidence": [],
+    "attack_graph": {
+      "nodes": [
+        "DorkLibrary",
+        "CSEClient",
+        "AuditBundle"
+      ],
+      "edges": []
+    },
+    "branches": {
+      "active": [
+        "dork_run"
+      ],
+      "parked": []
+    },
+    "open_questions": []
+  },
+  "decision": {
+    "candidates": [
+      {
+        "name": "plan_only",
+        "score_breakdown": {
+          "impact": 3,
+          "likelihood": 5,
+          "chain": 3,
+          "cost": 1,
+          "scope": 1
+        },
+        "score_total": 9
+      },
+      {
+        "name": "execute_via_cse",
+        "score_breakdown": {
+          "impact": 5,
+          "likelihood": 5,
+          "chain": 4,
+          "cost": 2,
+          "scope": 1
+        },
+        "score_total": 11
+      }
+    ],
+    "chosen": {
+      "name": "plan_only",
+      "score_total": 9
+    }
+  },
+  "approval": {
+    "hil_required": false,
+    "hil_approved": false,
+    "approver": null,
+    "approved_at": null
+  },
+  "artifacts": {
+    "audit_bundle_path": null,
+    "recording_path": "/evidence/demo_recording.mp4",
+    "screenshots": []
+  },
+  "planned_queries": [
+    "site:example.com (backup OR .env OR .bak OR .sql)",
+    "site:example.com filetype:(pdf OR doc OR xls OR csv)",
+    "site:example.com (password OR secret OR api_key OR token) -github"
+  ],
+  "results": [],
+  "findings": [
+    {
+      "id": "run",
+      "status": "VALIDATED",
+      "updated_at": "2026-01-31T00:08:43Z"
+    }
+  ],
+  "timestamp": "2026-01-31T00:08:43Z",
+  "metrics": {
+    "validated_findings_count": 1,
+    "invalidated_findings_count": 0,
+    "time_to_first_signal": null,
+    "time_to_validated": 0.0,
+    "chain_candidate_count": 3,
+    "evidence_completeness_ratio": 0.0
+  },
+  "first_validated_at": "2026-01-31T00:08:43Z"
+}

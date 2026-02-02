@@ -1,0 +1,3 @@
+{"ts": "2026-01-30T09:48:30Z", "event": "report_validate", "data": {"format": "google_vrp", "ok": true}}
+{"ts": "2026-01-30T09:48:31Z", "event": "report_submit_hil", "data": {"format": "google_vrp", "stakeholder": "google_vrp"}}
+{"ts": "2026-01-30T09:48:31Z", "event": "report_package", "data": {"stakeholder": "google_vrp", "zip": "/a0/usr/projects/main-startup-build/k1/artifacts/submissions/merkle-run-003_google_vrp.zip"}}

@@ -1,0 +1,11 @@
+stakeholder: intigriti
+required_sections: [Summary, Impact, Scope, Reproduction, Evidence, Mitigation]
+render:
+  title: "Intigriti Report — {{ finding.title }}"
+  sections:
+    - { name: Summary, body: "{{ finding.summary }}" }
+    - { name: Impact, body: "{{ finding.impact }}" }
+    - { name: Scope, body: "{{ finding.scope|default('n/a') }}" }
+    - { name: Reproduction, body: "{{ evidence.repro|default('n/a') }}" }
+    - { name: Evidence, body: "{{ evidence.details|default('') }}" }
+    - { name: Mitigation, body: "{{ mitigation.plan|default('n/a') }}" }

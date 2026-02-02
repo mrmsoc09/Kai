@@ -1,0 +1,44 @@
+# User-managed API key registry (no secrets). Keys are stored in Vault only.
+# Fields: id, name, market, category, base_url, docs_url, signup_url, auth_type, quota, rate_limit, pii_flags
+
+markets:
+  - healthcare
+  - finance
+  - ecommerce
+  - government_contracts_grants
+  - supply_chain
+
+providers:
+  # Cross-market core
+  - { id: shodan, name: Shodan, market: cross, category: osint, base_url: https://api.shodan.io, docs_url: https://developer.shodan.io/api, signup_url: https://account.shodan.io, auth_type: api_key, quota: free_tier_daily, rate_limit: provider, pii_flags: low }
+  - { id: censys, name: Censys, market: cross, category: osint, base_url: https://search.censys.io/api, docs_url: https://search.censys.io/api, signup_url: https://accounts.censys.io/register, auth_type: api_key, quota: free_tier_monthly, rate_limit: provider, pii_flags: low }
+  - { id: securitytrails, name: SecurityTrails, market: cross, category: osint, base_url: https://api.securitytrails.com, docs_url: https://docs.securitytrails.com, signup_url: https://securitytrails.com/app/signup, auth_type: api_key, quota: free_tier, rate_limit: provider, pii_flags: low }
+  - { id: virustotal, name: VirusTotal, market: cross, category: cti, base_url: https://www.virustotal.com/api/v3, docs_url: https://developers.virustotal.com/reference/overview, signup_url: https://www.virustotal.com/gui/join-us, auth_type: api_key, quota: free_tier_daily, rate_limit: provider, pii_flags: medium }
+  - { id: hibp, name: HaveIBeenPwned, market: cross, category: cti, base_url: https://haveibeenpwned.com/api/v3, docs_url: https://haveibeenpwned.com/API/v3, signup_url: https://haveibeenpwned.com/API/Key, auth_type: api_key, quota: paid_required, rate_limit: provider, pii_flags: high }
+  - { id: nvd, name: NVD, market: cross, category: cti, base_url: https://services.nvd.nist.gov/rest/json, docs_url: https://nvd.nist.gov/developers, signup_url: https://nvd.nist.gov/developers/request-an-api-key, auth_type: api_key, quota: free, rate_limit: provider, pii_flags: low }
+  - { id: exploitdb, name: ExploitDB, market: cross, category: cti, base_url: https://gitlab.com/exploit-database, docs_url: https://gitlab.com/exploit-database, signup_url: https://gitlab.com/users/sign_in, auth_type: none, quota: none, rate_limit: none, pii_flags: low }
+  - { id: otx, name: AlienVault OTX, market: cross, category: cti, base_url: https://otx.alienvault.com/api, docs_url: https://otx.alienvault.com/api, signup_url: https://otx.alienvault.com, auth_type: api_key, quota: free, rate_limit: provider, pii_flags: medium }
+  - { id: urlscan, name: urlscan.io, market: cross, category: osint, base_url: https://urlscan.io/api, docs_url: https://urlscan.io/docs/api, signup_url: https://urlscan.io/user/signup, auth_type: api_key, quota: free, rate_limit: provider, pii_flags: low }
+  - { id: crtsh, name: crt.sh, market: cross, category: certs, base_url: https://crt.sh, docs_url: https://crt.sh, signup_url: https://crt.sh, auth_type: none, quota: none, rate_limit: none, pii_flags: low }
+
+  # Healthcare
+  - { id: hhs_breach, name: HHS Breach Portal, market: healthcare, category: compliance, base_url: https://ocrportal.hhs.gov, docs_url: https://ocrportal.hhs.gov, signup_url: https://ocrportal.hhs.gov, auth_type: none, quota: none, rate_limit: robots, pii_flags: high }
+  - { id: openfda, name: OpenFDA, market: healthcare, category: osint, base_url: https://api.fda.gov, docs_url: https://open.fda.gov/apis, signup_url: https://open.fda.gov, auth_type: none, quota: free, rate_limit: provider, pii_flags: low }
+
+  # Finance
+  - { id: sec_edgar, name: SEC EDGAR, market: finance, category: osint, base_url: https://data.sec.gov, docs_url: https://www.sec.gov/edgar/sec-api-documentation, signup_url: https://www.sec.gov/os/accessing-edgar-data, auth_type: header-token, quota: fair_use, rate_limit: provider, pii_flags: low }
+  - { id: finra_brokercheck, name: FINRA BrokerCheck, market: finance, category: osint, base_url: https://api.brokercheck.finra.org, docs_url: https://api.brokercheck.finra.org, signup_url: https://www.finra.org, auth_type: none, quota: fair_use, rate_limit: robots, pii_flags: medium }
+
+  # Ecommerce
+  - { id: builtwith, name: BuiltWith, market: ecommerce, category: tech_fingerprint, base_url: https://api.builtwith.com, docs_url: https://api.builtwith.com/documentation, signup_url: https://api.builtwith.com, auth_type: api_key, quota: paid, rate_limit: provider, pii_flags: low }
+  - { id: commoncrawl, name: CommonCrawl, market: ecommerce, category: osint, base_url: https://index.commoncrawl.org, docs_url: https://commoncrawl.github.io/cc-index-table, signup_url: https://commoncrawl.org, auth_type: none, quota: free, rate_limit: none, pii_flags: low }
+
+  # Government contracting / grants
+  - { id: sam_gov, name: SAM.gov, market: government_contracts_grants, category: osint, base_url: https://api.sam.gov, docs_url: https://open.gsa.gov/api/sam, signup_url: https://login.max.gov, auth_type: api_key, quota: free, rate_limit: provider, pii_flags: medium }
+  - { id: grants_gov, name: Grants.gov, market: government_contracts_grants, category: osint, base_url: https://www.grants.gov/grantsws, docs_url: https://www.grants.gov/learn-grants/grants-apis.html, signup_url: https://apply07.grants.gov/apply/register.faces, auth_type: api_key, quota: free, rate_limit: provider, pii_flags: low }
+
+  # Supply chain
+  - { id: osv, name: OSV.dev, market: supply_chain, category: vuln_db, base_url: https://api.osv.dev, docs_url: https://osv.dev/docs, signup_url: https://osv.dev, auth_type: none, quota: free, rate_limit: provider, pii_flags: low }
+  - { id: openssf_scorecard, name: OpenSSF Scorecard, market: supply_chain, category: repo_risk, base_url: https://api.securityscorecards.dev, docs_url: https://github.com/ossf/scorecard#public-data, signup_url: https://github.com/ossf/scorecard, auth_type: none, quota: free, rate_limit: provider, pii_flags: low }
+
+# UI suggestion: present providers grouped by market with checkboxes and docs/signup links. Store selected providers' keys in Vault.

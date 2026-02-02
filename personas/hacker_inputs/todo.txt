@@ -1,0 +1,5 @@
+1. Create chained prompts for website generation.
+2. Ensure black background and endless scroll.
+3. Generate AI visuals.
+4. Provide deployment instructions.
+

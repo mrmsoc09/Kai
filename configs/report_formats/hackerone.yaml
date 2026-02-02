@@ -1,0 +1,29 @@
+stakeholder: hackerone
+required_sections:
+  - Summary
+  - Impact
+  - Affected Scope
+  - Steps to Reproduce
+  - Evidence
+  - Mitigation
+  - Timeline
+  - References
+render:
+  title: "HackerOne Report — {{ finding.title }}"
+  sections:
+    - name: Summary
+      body: "{{ finding.summary }}"
+    - name: Impact
+      body: "{{ finding.impact }}"
+    - name: Affected Scope
+      body: "{{ finding.scope|default('n/a') }}"
+    - name: Steps to Reproduce
+      body: "{{ evidence.repro|default('n/a') }}"
+    - name: Evidence
+      body: "{{ evidence.details|default('') }}"
+    - name: Mitigation
+      body: "{{ mitigation.plan|default('n/a') }}"
+    - name: Timeline
+      body: "{{ mitigation.timeline|default('n/a') }}"
+    - name: References
+      body: "{{ evidence.refs|default('') }}"

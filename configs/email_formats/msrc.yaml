@@ -1,0 +1,12 @@
+subject: "[MSRC] {{ finding.title }} — Severity {{ finding.severity|upper }}"
+body: |
+  Hello MSRC,
+
+  This package includes the report and reproduction recording.
+
+  Scope: {{ finding.scope }}
+
+  Mitigation Plan:
+  {{ mitigation.plan }}
+headers:
+  X-Platform: "MSRC"

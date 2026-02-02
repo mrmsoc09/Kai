@@ -1,0 +1,14 @@
+{
+  "slug": "google-vrp",
+  "name": "Google VRP",
+  "platform": "google_vrp",
+  "policy_url": "https://bughunters.google.com/about/vrp",
+  "scope": [
+    "*.google.com",
+    "google.com"
+  ],
+  "rules": {
+    "format_multiplier": true
+  },
+  "ingested_at": 1769774316
+}

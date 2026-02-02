@@ -1,0 +1,9 @@
+{"ts": "2026-01-30T10:49:31Z", "event": "report_validate", "data": {"format": "google_vrp", "ok": true}}
+{"ts": "2026-01-30T10:49:31Z", "event": "report_submit_hil", "data": {"format": "google_vrp", "stakeholder": "google_vrp"}}
+{"ts": "2026-01-30T10:49:31Z", "event": "report_finalize", "data": {"ok": false, "stakeholder": "google_vrp"}}
+{"ts": "2026-01-30T10:49:31Z", "event": "report_finalize", "data": {"ok": true, "stakeholder": "google_vrp"}}
+{"ts": "2026-01-30T10:49:31Z", "event": "report_package", "data": {"stakeholder": "google_vrp", "zip": "/a0/usr/projects/main-startup-build/k1/artifacts/submissions/finalize-run-006_google_vrp.zip"}}
+{"ts": "2026-01-30T10:49:31Z", "event": "report_dispatch", "data": {"stakeholder": "google_vrp", "zip": "/a0/usr/projects/main-startup-build/k1/artifacts/submissions/finalize-run-006_google_vrp.zip", "eml": "/a0/usr/projects/main-startup-build/k1/artifacts/submissions/outbox/finalize-run-006_google_vrp.eml"}}
+{"ts": "2026-01-30T10:49:31Z", "event": "report_followup", "data": {"stakeholder": "google_vrp", "eml": "/a0/usr/projects/main-startup-build/k1/artifacts/submissions/outbox/finalize-run-006_google_vrp_followup.eml"}}
+{"ts": "2026-01-30T11:28:28Z", "event": "report_finalize", "data": {"ok": true, "stakeholder": "google_vrp"}}
+{"ts": "2026-01-30T11:28:28Z", "event": "report_finalize", "data": {"ok": true, "stakeholder": "google_vrp"}}
