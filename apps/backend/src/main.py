@@ -22,6 +22,7 @@ from apps.backend.src.routers import (
     embeddings,
     evidence,
     export,
+    finding_validation,
     findings,
     graph,
     intel,
@@ -102,6 +103,9 @@ app.include_router(autonomous.router)
 
 # Agent Training and Skill Management (NEW)
 app.include_router(agent_training.router)
+
+# Finding Validation Workflow (NEW)
+app.include_router(finding_validation.router)
 
 # Evidence and findings lifecycle
 app.include_router(evidence.router)
@@ -325,6 +329,49 @@ async def initialize_llm_providers():
 
     except Exception as e:
         print(f"⚠ Training system initialization (optional): {str(e)}")
+
+    # Finding Validation & Exploit Chaining Systems
+    print("\n" + "-"*60)
+    print("INITIALIZING FINDING VALIDATION & ROUTING SYSTEMS")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.duplicate_detection import initialize_duplicate_detection
+        from apps.backend.src.core.exploit_chaining import initialize_chaining_engine
+        from apps.backend.src.core.finding_router import initialize_finding_router
+        from apps.backend.src.core.episodic_memory import initialize_episodic_memory
+
+        # Initialize duplicate detection
+        dup_detection = initialize_duplicate_detection()
+        print("✓ Duplicate detection system initialized")
+
+        # Initialize exploit chaining
+        chaining = initialize_chaining_engine(llm_factory.complete)
+        print("✓ Exploit chaining engine initialized")
+
+        # Initialize finding router
+        router = initialize_finding_router()
+        print("✓ Finding router initialized")
+
+        # Initialize episodic memory
+        memory = initialize_episodic_memory()
+        print("✓ Episodic memory system initialized")
+
+        # Store globally for API access
+        import apps.backend.src.core.duplicate_detection as dup_module
+        import apps.backend.src.core.exploit_chaining as chain_module
+        import apps.backend.src.core.finding_router as router_module
+        import apps.backend.src.core.episodic_memory as memory_module
+
+        dup_module.duplicate_detection_system = dup_detection
+        chain_module.chaining_engine = chaining
+        router_module.finding_router = router
+        memory_module.episodic_memory = memory
+
+        print("✓ All finding validation systems ready")
+
+    except Exception as e:
+        print(f"⚠ Finding systems initialization (optional): {str(e)}")
 
     print("\n" + "="*60)
     print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")

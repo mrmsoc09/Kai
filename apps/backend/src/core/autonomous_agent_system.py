@@ -174,6 +174,14 @@ class AutonomousAgent:
     self_evaluation_score: float = 0.5
     adaptation_rate: float = 0.1
 
+    # Reasoning Loop (Plan-Act-Reflect)
+    max_reflection_loops: int = 3  # Max times to reflect and retry
+    current_reflection_loop: int = 0
+    reflection_history: List[Dict[str, Any]] = field(default_factory=list)
+
+    # Episodic memory reference
+    episodic_memory_system: Optional[Any] = None
+
     # Created/updated timestamps
     created_at: datetime = field(default_factory=datetime.utcnow)
     last_activity: datetime = field(default_factory=datetime.utcnow)
@@ -184,8 +192,21 @@ class AutonomousAgent:
         situation: Dict[str, Any],
         llm_complete_fn: Callable
     ) -> Dict[str, Any]:
-        """Autonomous reasoning: Deliberate on situation and decide action"""
+        """Autonomous reasoning: Plan-Act-Reflect with adaptation"""
         self.status = "thinking"
+        self.current_reflection_loop = 0
+
+        # PLAN PHASE: Generate and select action
+        action = await self._plan_action(situation, llm_complete_fn)
+
+        return action
+
+    async def _plan_action(
+        self,
+        situation: Dict[str, Any],
+        llm_complete_fn: Callable
+    ) -> Dict[str, Any]:
+        """PLAN phase: Deliberate on situation and decide action"""
 
         # Step 1: Analyze current situation with memory context
         context = {
@@ -209,6 +230,77 @@ class AutonomousAgent:
         best_action = self._select_best_action(evaluated)
 
         return best_action
+
+    async def reflect_on_outcome(
+        self,
+        action: Dict[str, Any],
+        outcome: Dict[str, Any],
+        situation: Dict[str, Any],
+        llm_complete_fn: Callable
+    ) -> Dict[str, Any]:
+        """REFLECT phase: Analyze outcome and adapt strategy"""
+
+        reflection = {
+            "loop": self.current_reflection_loop,
+            "action": action.get("action_type"),
+            "outcome": outcome.get("status"),
+            "reflection": "",
+            "adapted_action": None
+        }
+
+        # Check if failed
+        if not outcome.get("success"):
+            # Attempt to reflect and adapt
+            if self.current_reflection_loop < self.max_reflection_loops:
+                self.current_reflection_loop += 1
+
+                # Generate reflection prompt
+                reflection_prompt = f"""
+                My action failed:
+                Action: {action.get('action_type')}
+                Reason: {outcome.get('error_message', 'Unknown')}
+                Response code: {outcome.get('response_code', 'N/A')}
+                Target: {situation.get('target', 'Unknown')}
+
+                Why did this fail? What adaptation would help?
+                Consider: WAF detection, rate limiting, wrong technique, timing issue
+
+                Provide:
+                - Root cause analysis
+                - Recommended adaptation (technique change, payload obfuscation, timing, etc.)
+                - New strategy
+                - Confidence in adaptation (0-1)
+
+                Format as JSON.
+                """
+
+                response = await llm_complete_fn(
+                    messages=[{"role": "user", "content": reflection_prompt}],
+                    system="You are analyzing why an action failed and adapting strategy."
+                )
+
+                try:
+                    text = response.text if hasattr(response, 'text') else str(response)
+                    analysis = json.loads(text)
+
+                    reflection["reflection"] = analysis.get("root_cause", "Unknown cause")
+
+                    # Generate adapted action
+                    adapted_action = await self._plan_action(
+                        {**situation, "failed_technique": action.get("action_type"), "adaptation": analysis.get("recommendation")},
+                        llm_complete_fn
+                    )
+
+                    reflection["adapted_action"] = adapted_action
+
+                except:
+                    reflection["reflection"] = "Could not parse reflection analysis"
+
+        # Track reflection
+        self.reflection_history.append(reflection)
+        self.last_learned = datetime.utcnow()
+
+        return reflection
 
     async def _generate_action_candidates(
         self,
