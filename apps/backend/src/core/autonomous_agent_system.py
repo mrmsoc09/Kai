@@ -12,6 +12,12 @@ from datetime import datetime, timedelta
 import asyncio
 from collections import defaultdict
 import math
+import uuid
+
+# Import skill system
+from apps.backend.src.core.skill_system import (
+    AgentSkillSet, SkillProfile, SkillCategory, SkillExperience, ProficiencyLevel
+)
 
 
 class AgentObjective(str, Enum):
@@ -136,6 +142,13 @@ class AutonomousAgent:
     # Memory and learning
     memory: AgentMemory = field(default_factory=lambda: AgentMemory(agent_id=str(uuid.uuid4())))
 
+    def __post_init__(self):
+        """Initialize skill system when agent is created"""
+        # Ensure memory has correct agent_id
+        self.memory.agent_id = self.agent_id
+        # Initialize skill system
+        self.skill_set = AgentSkillSet(agent_id=self.agent_id)
+
     # Autonomous planning
     long_term_goals: List[Dict[str, Any]] = field(default_factory=list)
     goal_stack: List[str] = field(default_factory=list)  # Stack of active goals
@@ -143,6 +156,18 @@ class AutonomousAgent:
     # Multi-agent collaboration
     peer_agents: Dict[str, 'AutonomousAgent'] = field(default_factory=dict)
     delegation_preferences: Dict[str, List[str]] = field(default_factory=dict)  # task_type -> agent_ids
+
+    # Subagent hierarchy
+    parent_agent_id: Optional[str] = None  # Parent agent if spawned by another agent
+    subagents: Dict[str, 'AutonomousAgent'] = field(default_factory=dict)  # Child agents spawned
+    can_spawn_subagents: bool = True  # Permission to spawn children
+    max_subagents: int = 5  # Maximum subagents this agent can spawn
+
+    # Advanced skill system
+    skill_set: Optional[AgentSkillSet] = None  # Integrated skill tracking
+    training_enabled: bool = True  # Can participate in training
+    training_sessions: List[str] = field(default_factory=list)  # Training session IDs
+    mentoring_capabilities: Dict[str, float] = field(default_factory=dict)  # skill -> teaching proficiency
 
     # Self-monitoring
     is_improving: bool = False
@@ -504,6 +529,190 @@ class AutonomousAgent:
             "strategies_learned": len(self.memory.successful_strategies),
             "last_activity": self.last_activity.isoformat(),
             "last_learned": self.last_learned.isoformat()
+        }
+
+    def initialize_skills(self) -> AgentSkillSet:
+        """Initialize skill system for this agent"""
+        if self.skill_set is None:
+            self.skill_set = AgentSkillSet(agent_id=self.agent_id)
+        return self.skill_set
+
+    async def spawn_subagent(
+        self,
+        name: str,
+        objective: AgentObjective,
+        inherit_skills: bool = True
+    ) -> 'AutonomousAgent':
+        """Spawn a subagent specialized for specific objective"""
+        if not self.can_spawn_subagents:
+            raise PermissionError(f"Agent {self.agent_id} not allowed to spawn subagents")
+
+        if len(self.subagents) >= self.max_subagents:
+            raise ValueError(f"Agent {self.agent_id} reached max subagents ({self.max_subagents})")
+
+        # Create subagent
+        subagent = AutonomousAgent(
+            name=name,
+            primary_objective=objective,
+            autonomy_level=max(0, self.autonomy_level - 1),  # Slightly less autonomous
+            decision_mode=self.decision_mode,
+            parent_agent_id=self.agent_id,
+            can_spawn_subagents=False  # Subagents can't spawn their own
+        )
+
+        # Initialize subagent's skill set
+        subagent.initialize_skills()
+
+        # Inherit parent skills if requested
+        if inherit_skills and self.skill_set:
+            for skill_name, skill in self.skill_set.skills.items():
+                # Subagent inherits at 70% of parent's proficiency
+                inherited_proficiency = skill.proficiency * 0.7
+                new_skill = subagent.skill_set.add_or_update_skill(skill_name, skill.category)
+                new_skill.proficiency = inherited_proficiency
+                new_skill.learning_rate = skill.learning_rate
+
+        # Register in both directions
+        self.subagents[subagent.agent_id] = subagent
+        subagent.peer_agents[self.agent_id] = self
+
+        return subagent
+
+    async def request_training(
+        self,
+        skill_name: str,
+        target_proficiency: float,
+        reason: str,
+        confidence: float
+    ) -> Dict[str, Any]:
+        """Agent autonomously requests training from training system"""
+        if not self.training_enabled:
+            raise PermissionError(f"Agent {self.agent_id} not enabled for training")
+
+        if self.skill_set is None:
+            self.initialize_skills()
+
+        current_proficiency = 0.0
+        if skill_name in self.skill_set.skills:
+            current_proficiency = self.skill_set.skills[skill_name].proficiency
+
+        # Estimate training duration based on gap and learning rate
+        gap = target_proficiency - current_proficiency
+        if gap <= 0:
+            return {"status": "error", "message": "Target proficiency not higher than current"}
+
+        learning_rate = self.skill_set.skills[skill_name].learning_rate if skill_name in self.skill_set.skills else 0.05
+        estimated_duration = int((gap * 100) / (learning_rate * 100))  # Rough estimate in minutes
+
+        return {
+            "agent_id": self.agent_id,
+            "skill_name": skill_name,
+            "current_proficiency": current_proficiency,
+            "target_proficiency": target_proficiency,
+            "estimated_duration": estimated_duration,
+            "reason": reason,
+            "confidence_in_success": confidence,
+            "status": "pending_approval"
+        }
+
+    async def teach_subagent(
+        self,
+        subagent_id: str,
+        skill_name: str,
+        target_proficiency: float,
+        session_duration: int
+    ) -> Dict[str, Any]:
+        """Teach skill to subagent"""
+        if subagent_id not in self.subagents:
+            raise ValueError(f"Subagent {subagent_id} not found")
+
+        subagent = self.subagents[subagent_id]
+
+        if self.skill_set is None or skill_name not in self.skill_set.skills:
+            raise ValueError(f"Agent {self.agent_id} doesn't have skill {skill_name}")
+
+        teacher_skill = self.skill_set.skills[skill_name]
+        if teacher_skill.proficiency < target_proficiency:
+            raise ValueError(f"Teacher not proficient enough to teach {skill_name}")
+
+        # Initialize subagent skill if needed
+        if subagent.skill_set is None:
+            subagent.initialize_skills()
+
+        student_skill = subagent.skill_set.add_or_update_skill(skill_name, teacher_skill.category)
+
+        # Calculate knowledge transfer
+        transfer_efficiency = 0.8 * (teacher_skill.proficiency - student_skill.proficiency)
+        student_proficiency_gain = min(target_proficiency - student_skill.proficiency, transfer_efficiency)
+
+        return {
+            "teacher_id": self.agent_id,
+            "student_id": subagent_id,
+            "skill_name": skill_name,
+            "transfer_efficiency": transfer_efficiency,
+            "proficiency_gain": student_proficiency_gain,
+            "student_new_proficiency": student_skill.proficiency + student_proficiency_gain,
+            "session_duration": session_duration,
+            "teaching_successful": student_proficiency_gain > 0.05
+        }
+
+    def record_skill_experience(
+        self,
+        skill_name: str,
+        success: bool,
+        quality_score: float,
+        confidence: float,
+        context: Optional[Dict[str, Any]] = None
+    ):
+        """Record skill experience for learning"""
+        if self.skill_set is None:
+            self.initialize_skills()
+
+        # Ensure skill exists
+        if skill_name not in self.skill_set.skills:
+            self.skill_set.add_or_update_skill(skill_name, SkillCategory.LEARNING)
+
+        # Create experience record
+        experience = SkillExperience(
+            timestamp=datetime.utcnow(),
+            action_type=self.primary_objective.value,
+            success=success,
+            outcome_quality=quality_score,
+            context=context or {},
+            confidence=confidence
+        )
+
+        # Record experience
+        self.skill_set.record_skill_experience(skill_name, experience)
+
+    def get_skill_profile(self, skill_name: Optional[str] = None) -> Dict[str, Any]:
+        """Get skill profile or all skills"""
+        if self.skill_set is None:
+            return {}
+
+        if skill_name:
+            if skill_name in self.skill_set.skills:
+                return self.skill_set.skills[skill_name].to_dict()
+            return {}
+
+        return self.skill_set.to_dict()
+
+    def get_subagent_hierarchy(self) -> Dict[str, Any]:
+        """Get subagent hierarchy information"""
+        return {
+            "agent_id": self.agent_id,
+            "parent_id": self.parent_agent_id,
+            "subagent_count": len(self.subagents),
+            "max_subagents": self.max_subagents,
+            "subagents": {
+                sub_id: {
+                    "name": sub.name,
+                    "objective": sub.primary_objective.value,
+                    "autonomy_level": sub.autonomy_level,
+                    "status": sub.status
+                }
+                for sub_id, sub in self.subagents.items()
+            }
         }
 
 

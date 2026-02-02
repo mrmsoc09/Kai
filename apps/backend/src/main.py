@@ -13,6 +13,7 @@ from apps.backend.src.middleware.security_headers import SecurityHeadersMiddlewa
 # Import routers exactly once
 from apps.backend.src.routers import (
     agent0,
+    agent_training,
     auth,
     autonomous,
     chains,
@@ -98,6 +99,9 @@ app.include_router(mcp.router)
 
 # Autonomous Multi-Agent Systems (NEW)
 app.include_router(autonomous.router)
+
+# Agent Training and Skill Management (NEW)
+app.include_router(agent_training.router)
 
 # Evidence and findings lifecycle
 app.include_router(evidence.router)
@@ -284,6 +288,43 @@ async def initialize_llm_providers():
 
     except Exception as e:
         print(f"⚠ Autonomous systems initialization (optional): {str(e)}")
+
+    # Agent Training System with HiL Approval
+    print("\n" + "-"*60)
+    print("INITIALIZING AGENT TRAINING SYSTEM")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.agent_training import (
+            initialize_training_system,
+            TrainingType
+        )
+
+        # Initialize training system
+        training_system = initialize_training_system(llm_factory.complete)
+
+        # Create some default curriculums
+        for skill in ["reconnaissance", "validation", "analysis", "exploitation", "reporting"]:
+            curriculum = await training_system.create_curriculum(
+                skill_name=skill,
+                target_proficiency=0.8,
+                training_type=TrainingType.PRACTICE,
+                description=f"Standard curriculum for {skill} skill development"
+            )
+            print(f"  ✓ Created curriculum: {skill}")
+
+        # Store globally for API access
+        import apps.backend.src.core.agent_training as training_module
+        training_module.training_system = training_system
+
+        # Also set in router
+        from apps.backend.src.routers.agent_training import router as training_router
+        # Note: Router will access via get_systems() function
+
+        print("✓ Agent training system initialized with default curriculums")
+
+    except Exception as e:
+        print(f"⚠ Training system initialization (optional): {str(e)}")
 
     print("\n" + "="*60)
     print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")
