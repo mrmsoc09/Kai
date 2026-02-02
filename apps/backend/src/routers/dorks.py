@@ -105,7 +105,7 @@ def run(payload: Dict[str, Any]) -> Dict[str, Any]:
     limit = int(payload.get("limit") or 5)
 
     planned = _resolve_queries(target, query, chain)
-    run_id = f"dorks-{datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")}"
+    run_id = f"dorks-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     record = _init_run_record(run_id, target, mode, planned)
 
     # Always write a plan-mode record; never call external services in plan
