@@ -123,3 +123,144 @@ try:
 
 except Exception:
     pass
+
+# Optional: Agent Zero integration
+try:
+    agent_zero_router = importlib.import_module('apps.backend.src.routers.agent_zero')
+    app.include_router(agent_zero_router.router)
+except Exception:
+    pass
+
+# Optional: Real-time WebSocket
+try:
+    ws_router = importlib.import_module('apps.backend.src.routers.websocket')
+    app.include_router(ws_router.router)
+except Exception:
+    pass
+
+
+# ==================== INITIALIZE K1 SYSTEMS ====================
+
+# Multi-LLM Provider Initialization
+from apps.backend.src.core.llm_providers import llm_factory
+
+# Initialize from environment variables
+@app.on_event("startup")
+async def initialize_llm_providers():
+    """Initialize multi-LLM provider system"""
+    print("\n" + "="*60)
+    print("INITIALIZING K1 LLM PROVIDERS")
+    print("="*60)
+
+    try:
+        llm_factory.initialize_from_env()
+        print("✓ LLM providers initialized")
+        print(f"  Primary provider: {llm_factory.primary_provider.value if llm_factory.primary_provider else 'Not set'}")
+        print(f"  Fallback providers: {', '.join([p.value for p in llm_factory.fallback_chain])}")
+    except Exception as e:
+        print(f"✗ LLM initialization error: {str(e)}")
+
+    # MCP Server Initialization
+    print("\n" + "-"*60)
+    print("INITIALIZING MCP SERVERS")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.mcp_base import mcp_manager
+        from apps.backend.src.mcp_servers.validator_mcp import validator_server
+        from apps.backend.src.mcp_servers.analysis_mcp import analysis_server
+        from apps.backend.src.mcp_servers.osint_mcp import osint_server
+        from apps.backend.src.mcp_servers.graph_mcp import graph_server
+
+        # Register servers
+        mcp_manager.register_server(validator_server)
+        mcp_manager.register_server(analysis_server)
+        mcp_manager.register_server(osint_server)
+        mcp_manager.register_server(graph_server)
+
+        # Start all servers
+        await mcp_manager.start_all_servers()
+        print("✓ All MCP servers started")
+
+    except Exception as e:
+        print(f"✗ MCP initialization error: {str(e)}")
+
+    # A2A Communication System Initialization
+    print("\n" + "-"*60)
+    print("INITIALIZING AGENT-TO-AGENT COMMUNICATION")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.agent_a2a import initialize_a2a
+
+        agent_registry, a2a_bus, workflow_orchestrator = initialize_a2a()
+        print("✓ A2A communication system ready")
+        print(f"  Agents registered: {len(agent_registry.agents)}")
+
+    except Exception as e:
+        print(f"✗ A2A initialization error: {str(e)}")
+
+    # Agent Zero Integration Initialization
+    print("\n" + "-"*60)
+    print("INITIALIZING AGENT ZERO INTEGRATION")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.agent_zero_integration import (
+            initialize_agent_zero_integration,
+            AgentZeroCommandProcessor
+        )
+        from apps.backend.src.core.agent_zero_k1_customization import (
+            initialize_k1_orchestrator
+        )
+
+        agent_zero_bridge = initialize_agent_zero_integration()
+
+        # Initialize K1-specific orchestrator
+        k1_orchestrator = initialize_k1_orchestrator(agent_registry, a2a_bus, mcp_manager)
+        print("✓ K1-customized Agent Zero orchestrator ready")
+
+        # Register with Agent Zero
+        if await agent_zero_bridge.register_with_agent_zero():
+            print("✓ Registered with Agent Zero")
+        else:
+            print("⚠ Agent Zero not available (running in standalone mode)")
+
+        # Start command processor
+        command_processor = AgentZeroCommandProcessor(agent_zero_bridge, workflow_orchestrator)
+        asyncio.create_task(command_processor.start())
+        print("✓ Agent Zero command processor running")
+
+    except Exception as e:
+        print(f"⚠ Agent Zero initialization (optional): {str(e)}")
+
+    print("\n" + "="*60)
+    print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")
+    print("="*60 + "\n")
+
+
+@app.on_event("shutdown")
+async def shutdown_systems():
+    """Clean shutdown of all K1 systems"""
+    print("\nShutting down K1 systems...")
+
+    try:
+        from apps.backend.src.mcp_base import mcp_manager
+
+        await mcp_manager.stop_all_servers()
+        print("✓ MCP servers stopped")
+
+    except Exception as e:
+        print(f"✗ MCP shutdown error: {str(e)}")
+
+    try:
+        from apps.backend.src.core.agent_a2a import a2a_bus
+
+        if a2a_bus:
+            a2a_bus.clear_messages("all")
+            print("✓ A2A bus cleaned up")
+
+    except Exception as e:
+        print(f"✗ A2A shutdown error: {str(e)}")
+
+    print("K1 shutdown complete\n")
