@@ -9,7 +9,144 @@ sections:
   - Mitigation
   - Timeline
   - References
+required_sections:
+  - Summary
+  - Impact
+  - Steps to Reproduce
+  - Evidence
+  - Mitigation
 format_rules:
   - name: TitleCaseSummary
   - name: IncludeCVEIfAvailable
   - name: AttachScreenRecording
+template: |
+  # Google VRP Report: {{ finding.title }}
+
+  **Vulnerability ID:** {{ finding.id | default('N/A') }}
+  **Severity:** {{ finding.severity | upper }}
+  **CWE:** {{ finding.cwe | default('N/A') }}
+  **CVSS:** {{ finding.cvss | default('N/A') }}
+  **Date Submitted:** {{ submission_date | default('N/A') }}
+
+  ---
+
+  ## Summary
+
+  {{ finding.summary }}
+
+  {%- if finding.attack_scenario %}
+
+  ### Attack Scenario
+
+  {{ finding.attack_scenario }}
+  {%- endif %}
+
+  ## Impact
+
+  {{ finding.impact }}
+
+  {%- if finding.affected_users %}
+
+  **Affected Users:** {{ finding.affected_users }}
+  {%- endif %}
+
+  {%- if finding.data_exposure %}
+
+  **Data Exposure:** {{ finding.data_exposure }}
+  {%- endif %}
+
+  ## Affected Scope
+
+  {{ finding.scope }}
+
+  {%- if finding.affected_endpoints %}
+
+  **Affected Endpoints:**
+  {%- for endpoint in finding.affected_endpoints %}
+  - {{ endpoint }}
+  {%- endfor %}
+  {%- endif %}
+
+  ## Steps to Reproduce
+
+  {{ evidence.repro }}
+
+  {%- if evidence.repro_steps %}
+
+  **Step-by-step:**
+  {%- for step in evidence.repro_steps %}
+  {{ loop.index }}. {{ step }}
+  {%- endfor %}
+  {%- endif %}
+
+  ## Evidence
+
+  {%- if evidence.artifacts %}
+
+  **Artifacts Included:**
+  {%- for artifact_type, artifact_value in evidence.artifacts.items() %}
+  - **{{ artifact_type }}:** {{ artifact_value }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.screenshots %}
+
+  **Screenshots:**
+  {%- for screenshot in evidence.screenshots %}
+  - {{ screenshot.description | default('Screenshot') }}: `{{ screenshot.filename }}`
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.network_captures %}
+
+  **Network Captures:**
+  {%- for capture in evidence.network_captures %}
+  - {{ capture.description }}: `{{ capture.filename }}`
+  {%- endfor %}
+  {%- endif %}
+
+  ## Mitigation
+
+  {{ mitigation.plan }}
+
+  {%- if mitigation.effort_hours %}
+
+  **Estimated Effort:** {{ mitigation.effort_hours }} hours
+  {%- endif %}
+
+  {%- if mitigation.priority %}
+
+  **Priority:** {{ mitigation.priority }}
+  {%- endif %}
+
+  ## Timeline
+
+  {{ mitigation.timeline }}
+
+  {%- if mitigation.dates %}
+
+  **Key Dates:**
+  {%- for date_entry in mitigation.dates %}
+  - {{ date_entry.date }}: {{ date_entry.event }}
+  {%- endfor %}
+  {%- endif %}
+
+  ## References
+
+  {%- if finding.references %}
+  {%- for ref in finding.references %}
+  - {{ ref }}
+  {%- endfor %}
+  {%- else %}
+  - No references provided
+  {%- endif %}
+
+  {%- if finding.cve_id %}
+
+  **CVE:** {{ finding.cve_id }}
+  {%- endif %}
+
+  ---
+
+  **Report Generated:** {{ report_generated_at }}
+  **Report ID:** {{ report_id }}

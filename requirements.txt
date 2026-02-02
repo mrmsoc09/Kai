@@ -1,7 +1,63 @@
+# Core Web Framework
 fastapi>=0.110,<1.0
-pydantic>=2.0,<3.0
-PyYAML>=6.0,<7.0
-uvicorn>=0.27,<1.0
-httpx>=0.24.0
+uvicorn[standard]>=0.27,<1.0
+starlette>=0.37,<1.0
 
-Jinja2>=3.1.2
+# Data Validation & Serialization
+pydantic>=2.0,<3.0
+pydantic-settings>=2.0,<3.0
+PyYAML>=6.0,<7.0
+python-dotenv>=1.0.0
+
+# HTTP & Networking
+httpx>=0.24.0,<1.0
+requests>=2.31.0,<3.0
+
+# Database
+SQLAlchemy>=2.0,<3.0
+psycopg2-binary>=2.9,<3.0
+alembic>=1.12,<2.0
+
+# Caching & Task Queue
+redis>=5.0,<6.0
+celery>=5.3,<6.0
+
+# Templating
+Jinja2>=3.1.2,<4.0
+
+# Report Generation & PDF
+weasyprint>=60.0,<61.0
+Markdown>=3.5,<4.0
+bleach>=6.0,<7.0
+
+# Vector DB & Search
+sentence-transformers>=2.2,<3.0
+numpy>=1.24,<2.0
+qdrant-client>=2.4,<3.0
+
+# Graph & Network Analysis
+networkx>=3.0,<4.0
+
+# Cryptography & Security
+hvac>=1.2,<2.0
+python-jose[cryptography]>=3.3,<4.0
+passlib[bcrypt]>=1.7,<2.0
+cryptography>=41.0,<42.0
+orjson>=3.9,<4.0
+
+# Utilities
+python-multipart>=0.0.6,<1.0
+email-validator>=2.0,<3.0
+
+# Development & Testing
+pytest>=7.4,<8.0
+pytest-cov>=4.1,<5.0
+pytest-asyncio>=0.21,<1.0
+black>=24.1,<25.0
+ruff>=0.1,<1.0
+mypy>=1.0,<2.0
+isort>=5.13,<6.0
+
+# Optional: For enhanced functionality
+plotly>=5.17,<6.0  # For visualization (optional)
+
