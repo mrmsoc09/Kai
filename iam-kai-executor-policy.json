@@ -1,0 +1,85 @@
+{
+  "displayName": "Kai Security Engine - Executor Service Account",
+  "description": "Minimal permissions for authorized OSINT and vulnerability scanning",
+  "bindings": [
+    {
+      "role": "roles/secretmanager.secretAccessor",
+      "members": [
+        "serviceAccount:kai-executor@PROJECT_ID.iam.gserviceaccount.com"
+      ],
+      "condition": {
+        "title": "Access only Kai secrets",
+        "description": "Only allow access to Kai-specific secrets",
+        "expression": "resource.name.startsWith('projects/PROJECT_ID/secrets/kai-')"
+      }
+    },
+    {
+      "role": "roles/logging.logWriter",
+      "members": [
+        "serviceAccount:kai-executor@PROJECT_ID.iam.gserviceaccount.com"
+      ],
+      "condition": {
+        "title": "Write only to kai-audit logs",
+        "description": "Only write to Kai audit trail logs",
+        "expression": "resource.type == 'cloud_run_revision' && resource.labels.service_name == 'kai-security-engine'"
+      }
+    },
+    {
+      "role": "roles/monitoring.metricWriter",
+      "members": [
+        "serviceAccount:kai-executor@PROJECT_ID.iam.gserviceaccount.com"
+      ],
+      "condition": {
+        "title": "Write metrics for Kai",
+        "description": "Only write metrics from Kai service",
+        "expression": "resource.type == 'cloud_run_revision'"
+      }
+    },
+    {
+      "role": "roles/cloudkms.cryptoKeyDecrypter",
+      "members": [
+        "serviceAccount:kai-executor@PROJECT_ID.iam.gserviceaccount.com"
+      ],
+      "condition": {
+        "title": "Decrypt only Kai keys",
+        "description": "Only decrypt with Kai-specific KMS keys",
+        "expression": "resource.name.startsWith('projects/PROJECT_ID/locations/us-central1/keyRings/kai-keyring')"
+      }
+    },
+    {
+      "role": "roles/storage.objectViewer",
+      "members": [
+        "serviceAccount:kai-executor@PROJECT_ID.iam.gserviceaccount.com"
+      ],
+      "condition": {
+        "title": "Read only Kai buckets",
+        "description": "Only read from Kai-specific GCS buckets",
+        "expression": "resource.name.startsWith('projects/_/buckets/kai-')"
+      }
+    },
+    {
+      "role": "roles/bigquery.dataEditor",
+      "members": [
+        "serviceAccount:kai-executor@PROJECT_ID.iam.gserviceaccount.com"
+      ],
+      "condition": {
+        "title": "Write to kai_audit dataset",
+        "description": "Only write audit logs to kai_audit dataset",
+        "expression": "resource.name.contains('/datasets/kai_audit')"
+      }
+    },
+    {
+      "role": "roles/container.developer",
+      "members": [
+        "serviceAccount:kai-executor@PROJECT_ID.iam.gserviceaccount.com"
+      ],
+      "condition": {
+        "title": "Access only Kai clusters",
+        "description": "Only access Kai-labeled GKE clusters",
+        "expression": "api.getAttribute('labels.security', ['']) == 'kai'"
+      }
+    }
+  ],
+  "etag": "BwWgqV1ZqSs=",
+  "version": 3
+}

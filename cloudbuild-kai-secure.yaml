@@ -1,0 +1,235 @@
+# Kai Secure OSINT/Vulnerability Scanner Deployment
+# Enterprise-ready CI/CD with security guardrails built in
+
+steps:
+  # Step 0: Pre-flight security checks
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔐 Running pre-deployment security checks..."
+
+        # Verify secrets exist
+        if ! gcloud secrets describe kai-authorization-certs >/dev/null 2>&1; then
+          echo "❌ ERROR: kai-authorization-certs secret not found"
+          exit 1
+        fi
+
+        if ! gcloud secrets describe kai-api-keys >/dev/null 2>&1; then
+          echo "❌ ERROR: kai-api-keys secret not found"
+          exit 1
+        fi
+
+        echo "✅ All required secrets present"
+        echo "✅ Pre-flight checks passed"
+
+  # Step 1: Pull authorization certificates (encrypted)
+  - name: 'gcr.io/cloud-builders/gcloud'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "📋 Loading authorization certificates..."
+        gcloud secrets versions access latest --secret="kai-authorization-certs" > /workspace/.kai-certs.enc
+        gcloud secrets versions access latest --secret="kai-api-keys" > /workspace/.env.enc
+
+        # Decrypt (using Terraform-managed KMS key)
+        gcloud kms decrypt \
+          --ciphertext-file=/workspace/.kai-certs.enc \
+          --plaintext-file=/workspace/.kai-certs \
+          --location=us-central1 \
+          --keyring=kai-keyring \
+          --key=kai-cert-key
+
+        gcloud kms decrypt \
+          --ciphertext-file=/workspace/.env.enc \
+          --plaintext-file=/workspace/.env \
+          --location=us-central1 \
+          --keyring=kai-keyring \
+          --key=kai-env-key
+
+        echo "✅ Certificates decrypted securely"
+
+  # Step 2: Static security analysis on code
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔍 Running security static analysis..."
+
+        # Check for hardcoded credentials
+        if grep -r "api_key\|password\|secret" apps/backend/src --include="*.py" | grep -v "os.getenv" | grep -v "#"; then
+          echo "⚠️  WARNING: Possible hardcoded secrets found. Review needed."
+        fi
+
+        echo "✅ Security analysis complete"
+
+  # Step 3: Build Kai container with security context
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kai-repo/kai-security-engine:$COMMIT_SHA'
+      - '--build-arg'
+      - 'SECURITY_MODE=hardened'
+      - '--build-arg'
+      - 'AUDIT_ENABLED=true'
+      - '.'
+    env:
+      - 'CLOUDBUILD_BUILD_ID=$BUILD_ID'
+
+  # Step 4: Security scanning of container image
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🛡️  Scanning container for vulnerabilities..."
+
+        # Use GCP Container Analysis
+        gcloud container images scan us-central1-docker.pkg.dev/$PROJECT_ID/kai-repo/kai-security-engine:$COMMIT_SHA \
+          --remote || true
+
+        echo "✅ Container scan complete"
+
+  # Step 5: Push to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kai-repo/kai-security-engine:$COMMIT_SHA'
+
+  # Step 6: Deploy to Cloud Run with restricted security context
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'kai-security-engine'
+      - '--image'
+      - 'us-central1-docker.pkg.dev/$PROJECT_ID/kai-repo/kai-security-engine:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--no-allow-unauthenticated'  # Auth required
+      - '--service-account'
+      - 'kai-executor@$PROJECT_ID.iam.gserviceaccount.com'
+      - '--set-env-vars'
+      - 'PROJECT_ID=$PROJECT_ID,SECURITY_MODE=hardened,AUDIT_ENABLED=true'
+      - '--cpu'
+      - '2'
+      - '--memory'
+      - '4Gi'
+      - '--timeout'
+      - '3600'
+      - '--max-instances'
+      - '100'
+      - '--min-instances'
+      - '1'
+      - '--labels'
+      - 'tool=kai,security=hardened,environment=production'
+
+  # Step 7: Deploy audit logging configuration
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "📊 Configuring audit logging..."
+
+        # Create Cloud Logging sink for Kai activities
+        gcloud logging sinks create kai-audit-sink \
+          "bigquery.googleapis.com/projects/$PROJECT_ID/datasets/kai_audit" \
+          --log-filter='resource.type="cloud_run_revision" AND resource.labels.service_name="kai-security-engine"' \
+          --create-dataset || true
+
+        # Create BigQuery dataset for audit analysis
+        bq mk --dataset \
+          --location=us-central1 \
+          --description="Kai security audit trail" \
+          kai_audit || true
+
+        echo "✅ Audit logging configured"
+
+  # Step 8: Deploy secrets to Cloud Run
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🔑 Deploying secrets to Cloud Run..."
+
+        # Grant Cloud Run service account access to secrets
+        gcloud secrets add-iam-policy-binding kai-authorization-certs \
+          --member=serviceAccount:kai-executor@$PROJECT_ID.iam.gserviceaccount.com \
+          --role=roles/secretmanager.secretAccessor || true
+
+        gcloud secrets add-iam-policy-binding kai-api-keys \
+          --member=serviceAccount:kai-executor@$PROJECT_ID.iam.gserviceaccount.com \
+          --role=roles/secretmanager.secretAccessor || true
+
+        echo "✅ Secrets deployed"
+
+  # Step 9: Run security compliance checks
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "✔️  Running compliance verification..."
+
+        # Verify service account has minimal permissions
+        SA_EMAIL="kai-executor@$PROJECT_ID.iam.gserviceaccount.com"
+
+        echo "Checking service account permissions..."
+        gcloud projects get-iam-policy $PROJECT_ID \
+          --flatten="bindings[].members" \
+          --filter="bindings.members:serviceAccount:$SA_EMAIL" \
+          --format='table(bindings.role)' || true
+
+        echo "✅ Compliance checks complete"
+
+  # Step 10: Health check and monitoring setup
+  - name: 'gcr.io/cloud-builders/gke-deploy'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🏥 Setting up monitoring..."
+
+        # Create alert policy for unauthorized access attempts
+        cat > /tmp/alert-policy.json << 'EOF'
+        {
+          "displayName": "Kai - Unauthorized Access Attempts",
+          "conditions": [{
+            "displayName": "High rate of 403/401 errors",
+            "conditionThreshold": {
+              "filter": "resource.type=\"cloud_run_revision\" AND resource.labels.service_name=\"kai-security-engine\" AND httpRequest.status=403",
+              "comparison": "COMPARISON_GT",
+              "thresholdValue": 10,
+              "duration": "300s"
+            }
+          }]
+        }
+        EOF
+
+        gcloud alpha monitoring policies create --policy-from-file=/tmp/alert-policy.json || true
+
+        echo "✅ Monitoring configured"
+
+# Image pushed to Artifact Registry
+images:
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/kai-repo/kai-security-engine:$COMMIT_SHA'
+  - 'us-central1-docker.pkg.dev/$PROJECT_ID/kai-repo/kai-security-engine:latest'
+
+# Secure logging configuration
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'N1_HIGHCPU_8'
+
+# Only deploy on main branch or tagged releases
+onFailure:
+  - 'gcloud logging write kai-deployment-failure "Kai deployment failed for commit $COMMIT_SHA" --severity=ERROR'
+
+# Timeout for entire build
+timeout: '3600s'

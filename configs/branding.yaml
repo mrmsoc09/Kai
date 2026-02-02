@@ -1,0 +1,167 @@
+# K1 Unified Platform Branding Configuration
+# Color scheme and visual identity for all UI/API components
+
+branding:
+  name: "Kaison K1"
+  tagline: "Unified Automated Bug Bounty Intelligence Platform"
+  version: "7.0"
+  phase: "Phase 7 - AI-Active Multi-Agent System"
+
+colors:
+  # Primary brand colors
+  primary:
+    main: "#1a472a"      # Deep forest green
+    light: "#2d7a47"     # Medium green
+    lighter: "#45a369"   # Light green
+    contrast: "#ffffff"  # White text on primary
+
+  # Secondary colors
+  secondary:
+    main: "#d4571e"      # Deep orange (accent)
+    light: "#ff7a3d"     # Light orange
+    contrast: "#ffffff"
+
+  # Status colors (consistent across all systems)
+  status:
+    success: "#22c55e"   # Bright green
+    warning: "#f59e0b"   # Amber
+    error: "#ef4444"     # Red
+    info: "#3b82f6"      # Blue
+    pending: "#8b5cf6"   # Purple
+
+  # Neutral palette
+  neutral:
+    black: "#000000"
+    white: "#ffffff"
+    gray_50: "#f9fafb"
+    gray_100: "#f3f4f6"
+    gray_200: "#e5e7eb"
+    gray_300: "#d1d5db"
+    gray_400: "#9ca3af"
+    gray_500: "#6b7280"
+    gray_600: "#4b5563"
+    gray_700: "#374151"
+    gray_800: "#1f2937"
+    gray_900: "#111827"
+
+  # Semantic colors for threat levels
+  severity:
+    critical: "#dc2626"      # Dark red
+    high: "#ea580c"          # Orange-red
+    medium: "#eab308"        # Yellow
+    low: "#84cc16"           # Light green
+    info: "#0ea5e9"          # Cyan
+
+  # DeepAgent/Reasoning colors
+  reasoning:
+    thinking: "#8b5cf6"      # Purple - deep thinking
+    analyzing: "#06b6d4"     # Cyan - analysis step
+    verifying: "#10b981"     # Green - verification
+    concluding: "#f59e0b"    # Amber - conclusion
+
+# UI/UX Constants
+ui:
+  # Border radius for modern design
+  border_radius:
+    none: "0"
+    small: "4px"
+    medium: "8px"
+    large: "12px"
+    xl: "16px"
+    full: "9999px"
+
+  # Spacing scale (8px base)
+  spacing:
+    xs: "4px"
+    sm: "8px"
+    md: "16px"
+    lg: "24px"
+    xl: "32px"
+    xxl: "48px"
+
+  # Typography
+  fonts:
+    family_sans: '"Segoe UI", Roboto, "Helvetica Neue", sans-serif'
+    family_mono: '"Fira Code", "Monaco", "Courier New", monospace'
+    size_xs: "12px"
+    size_sm: "14px"
+    size_base: "16px"
+    size_lg: "18px"
+    size_xl: "20px"
+    size_2xl: "24px"
+    size_3xl: "30px"
+
+  # Shadows
+  shadow:
+    none: "none"
+    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
+
+  # Transitions
+  transition:
+    fast: "150ms"
+    base: "250ms"
+    slow: "350ms"
+    function: "cubic-bezier(0.4, 0, 0.2, 1)"
+
+# API Response Styling
+api:
+  response_format: "json+theme"
+  include_branding: true
+  color_codes_in_response: true
+  icons_unicode: true
+
+# Frontend Theme CSS
+theme:
+  css_variables: true
+  dark_mode_support: true
+  high_contrast_mode: true
+
+# Logging & Observability Styling
+observability:
+  log_colors: true
+  metric_severity_color: true
+  event_timeline_color: true
+  trace_visualization_color: true
+
+# Component Styling
+components:
+  button:
+    primary: "bg-primary-main text-white"
+    secondary: "bg-secondary-main text-white"
+    outline: "border-2 border-primary-main text-primary-main"
+    danger: "bg-status-error text-white"
+
+  card:
+    background: "bg-white"
+    border: "border-1 border-neutral-gray_200"
+    shadow: "shadow-md"
+
+  alert:
+    success: "bg-status-success/10 border-l-4 border-status-success"
+    warning: "bg-status-warning/10 border-l-4 border-status-warning"
+    error: "bg-status-error/10 border-l-4 border-status-error"
+    info: "bg-status-info/10 border-l-4 border-status-info"
+
+# Icon Pack (Unicode symbols for consistency)
+icons:
+  success: "✓"
+  error: "✕"
+  warning: "⚠"
+  info: "ℹ"
+  thinking: "🧠"
+  tool: "🔧"
+  database: "💾"
+  network: "🌐"
+  shield: "🛡"
+  lightning: "⚡"
+  gear: "⚙"
+
+# Documentation Styling
+documentation:
+  code_block_bg: "neutral-gray_900"
+  code_block_text: "neutral-white"
+  highlight_color: "primary-light"
+  accent_color: "secondary-main"

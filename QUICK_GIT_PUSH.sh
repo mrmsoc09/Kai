@@ -1,0 +1,62 @@
+#!/bin/bash
+# Quick Git Push Script for Phase 6
+# Use this as a reference for manual git push
+
+echo "================================================================================"
+echo "PHASE 6: REPORT GENERATION - MANUAL GIT PUSH"
+echo "================================================================================"
+echo ""
+echo "Follow these commands to manually push Phase 6 to GitHub:"
+echo ""
+
+echo "--- STEP 1: Check Status ---"
+echo "git status"
+echo ""
+
+echo "--- STEP 2: Add Phase 6 Core Files ---"
+echo "git add requirements.txt"
+echo "git add apps/backend/src/core/pdf_generator.py"
+echo "git add apps/backend/src/core/format_exporter.py"
+echo "git add apps/backend/src/core/report_formats.py"
+echo "git add apps/backend/src/core/report_validator.py"
+echo "git add configs/report_formats/"
+echo ""
+
+echo "--- STEP 3: Commit Phase 6 ---"
+echo "git commit -m \"Phase 6: Report Generation - Core Implementation (Tasks 2-6)"
+echo ""
+echo "- Add Jinja2 template rendering for 5 VRP formats"
+echo "- Implement PDF generation with professional styling (weasyprint)"
+echo "- Create multi-format export system (markdown, HTML, PDF, JSON)"
+echo "- Enhance report validation with content quality checks"
+echo "- Add multiplier detection for reward optimization"
+echo "- ~4,000 lines of code (implementation, templates, CSS)"
+echo ""
+echo "Completed Tasks:"
+echo "✅ Task #2: Enhanced Jinja2 template rendering"
+echo "✅ Task #3: PDF generation capability"
+echo "✅ Task #4: Enhanced templates for 5 VRPs"
+echo "✅ Task #5: Multi-format export system"
+echo "✅ Task #6: Format validation with quality checks\""
+echo ""
+
+echo "--- STEP 4: (Optional) Add Phase 5 Endpoints ---"
+echo "git add apps/backend/src/routers/findings.py"
+echo ""
+echo "git commit -m \"Phase 5 Integration: Add 22 patching endpoints to findings router"
+echo ""
+echo "- 6 patch generation endpoints"
+echo "- 5 package analysis endpoints"
+echo "- 4 patch validation endpoints"
+echo "- 5 remediation orchestration endpoints"
+echo "- 1 unified statistics endpoint\""
+echo ""
+
+echo "--- STEP 5: Push to GitHub ---"
+echo "git push origin main"
+echo ""
+
+echo "================================================================================"
+echo "ALL FILES ARE SAVED LOCALLY AND READY TO PUSH!"
+echo "================================================================================"
+
