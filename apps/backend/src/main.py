@@ -14,6 +14,7 @@ from apps.backend.src.middleware.security_headers import SecurityHeadersMiddlewa
 from apps.backend.src.routers import (
     agent0,
     agent_training,
+    approvals,
     auth,
     autonomous,
     chains,
@@ -27,6 +28,7 @@ from apps.backend.src.routers import (
     graph,
     intel,
     kai_authorized_scanning,
+    key_management,
     knowledge,
     logs,
     mailer,
@@ -85,6 +87,12 @@ app.include_router(metrics.router)
 # Auth and scope
 app.include_router(auth.router)
 app.include_router(scope.router)
+
+# Key Management (Cryptographic keys and PGP signatures)
+app.include_router(key_management.router)
+
+# Human-in-the-Loop Approvals (PGP-signed action approval)
+app.include_router(approvals.router)
 
 # Knowledge / OSINT utilities
 app.include_router(dorks.router)
@@ -436,6 +444,53 @@ async def initialize_llm_providers():
 
     except Exception as e:
         print(f"⚠ Orchestration graph initialization (optional): {str(e)}")
+
+    # Cryptographic Key Management System (v7.4)
+    print("\n" + "-"*60)
+    print("INITIALIZING CRYPTOGRAPHIC KEY MANAGEMENT")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.key_management import initialize_key_management
+
+        key_mgmt = initialize_key_management(keys_dir="/var/lib/k1/keys")
+        print("✓ Key management system initialized")
+        print(f"  Keys directory: /var/lib/k1/keys")
+        print(f"  Encryption enabled: True")
+
+        # Set system reference in router
+        from apps.backend.src.routers import key_management as km_router
+        km_router.set_key_management(key_mgmt)
+
+    except Exception as e:
+        print(f"⚠ Key management initialization (optional): {str(e)}")
+
+    # Human-in-the-Loop Approval Workflow (v7.4)
+    print("\n" + "-"*60)
+    print("INITIALIZING HUMAN-IN-THE-LOOP APPROVAL WORKFLOW")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.approval_workflow import initialize_hil_approval_workflow
+
+        # Initialize with key management and orchestration graph
+        key_mgmt_ref = key_mgmt if 'key_mgmt' in locals() else None
+        orch_graph_ref = orchestration_graph if 'orchestration_graph' in locals() else None
+
+        hil_workflow = initialize_hil_approval_workflow(
+            key_management_system=key_mgmt_ref,
+            orchestration_graph=orch_graph_ref
+        )
+        print("✓ HiL approval workflow initialized")
+        print(f"  Pending queue: Empty")
+        print(f"  PGP signature verification: Enabled")
+
+        # Set system reference in router
+        from apps.backend.src.routers import approvals as approval_router
+        approval_router.set_hil_workflow(hil_workflow)
+
+    except Exception as e:
+        print(f"⚠ HiL approval workflow initialization (optional): {str(e)}")
 
     print("\n" + "="*60)
     print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")
