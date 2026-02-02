@@ -32,6 +32,8 @@ from apps.backend.src.routers import (
     mailer,
     mcp,
     metrics,
+    model_bidding,
+    orchestration,
     orchestrator,
     persona,
     planner,
@@ -98,6 +100,10 @@ app.include_router(embeddings.router)
 app.include_router(intel.router)
 app.include_router(mcp.router)
 
+# Model Bidding and Orchestration (v7.4)
+app.include_router(model_bidding.router)
+app.include_router(orchestration.router)
+
 # Autonomous Multi-Agent Systems (NEW)
 app.include_router(autonomous.router)
 
@@ -155,6 +161,7 @@ except Exception:
 
 # Multi-LLM Provider Initialization
 from apps.backend.src.core.llm_providers import llm_factory
+import asyncio
 
 # Initialize from environment variables
 @app.on_event("startup")
@@ -372,6 +379,63 @@ async def initialize_llm_providers():
 
     except Exception as e:
         print(f"⚠ Finding systems initialization (optional): {str(e)}")
+
+    # Model Bidding & Intelligent Routing (v7.4)
+    print("\n" + "-"*60)
+    print("INITIALIZING INTELLIGENT MODEL BIDDING SYSTEM")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.model_bidding import UniversalModelFactory
+
+        model_factory = UniversalModelFactory()
+        print("✓ Model factory initialized")
+
+        # Discover available models
+        discovery = await asyncio.to_thread(model_factory.discover_models)
+        print(f"✓ Model discovery complete")
+        print(f"  Local models found: {len(discovery['local_models'])}")
+        print(f"  Cloud APIs available: {len(discovery['cloud_models'])}")
+        print(f"  Active providers: {', '.join(discovery['available_providers'])}")
+
+        # Set system reference in router
+        from apps.backend.src.routers import model_bidding as mb_router
+        mb_router.set_systems(model_factory, None)
+
+    except Exception as e:
+        print(f"⚠ Model bidding initialization (optional): {str(e)}")
+
+    # Orchestration Graph & State Machine (v7.4)
+    print("\n" + "-"*60)
+    print("INITIALIZING HUNTING ORCHESTRATION GRAPH")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.orchestration_graph import (
+            initialize_orchestration_graph
+        )
+
+        # Initialize with default session for testing
+        orchestration_graph = initialize_orchestration_graph(
+            session_id="default-session",
+            target_domain="default.local",
+            mission="Initialization test session"
+        )
+        print("✓ Orchestration graph initialized")
+        print(f"  Starting phase: {orchestration_graph.session.current_phase.value}")
+        print(f"  Audit trail enabled: True")
+
+        # Set system references in routers
+        from apps.backend.src.routers import orchestration as orch_router
+        orch_router.set_orchestration_graph(orchestration_graph)
+
+        # Update model bidding router with orchestration graph reference
+        if 'model_factory' in locals():
+            from apps.backend.src.routers import model_bidding as mb_router
+            mb_router.set_systems(model_factory, orchestration_graph)
+
+    except Exception as e:
+        print(f"⚠ Orchestration graph initialization (optional): {str(e)}")
 
     print("\n" + "="*60)
     print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")
