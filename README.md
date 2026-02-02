@@ -10,7 +10,7 @@
 ---
 
 ## 🚀 Overview
-Agent-Zero is a next-generation, open-source platform for automated OSINT, recon, and vulnerability assessment with strict human-in-the-loop (HiL) validation and enterprise-grade security. Designed for bug bounty hunters, penetration testers, SOC analysts, and compliance teams, Agent-Zero fuses AI reasoning, rule-based policy gates, and modular workflows for safe, auditable vulnerability discovery, triage, and professional reporting.
+Kai is a next-generation, open-source platform for automated OSINT, recon, and vulnerability assessment with strict human-in-the-loop (HiL) validation and enterprise-grade security. Designed for bug bounty hunters, penetration testers, SOC analysts, and compliance teams, Kai fuses AI reasoning, rule-based policy gates, and modular workflows for safe, auditable vulnerability discovery, triage, and professional reporting.
 
 ## 🌐 Key Capabilities
 - **Autonomous OSINT & Recon:**
