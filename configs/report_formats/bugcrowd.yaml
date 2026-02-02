@@ -1,10 +1,94 @@
+name: Bugcrowd Report
 stakeholder: bugcrowd
-required_sections: [Summary, Impact, Steps to Reproduce, Evidence, Mitigation]
-render:
-  title: "Bugcrowd Report — {{ finding.title }}"
-  sections:
-    - { name: Summary, body: "{{ finding.summary }}" }
-    - { name: Impact, body: "{{ finding.impact }}" }
-    - { name: Steps to Reproduce, body: "{{ evidence.repro|default('n/a') }}" }
-    - { name: Evidence, body: "{{ evidence.details|default('') }}" }
-    - { name: Mitigation, body: "{{ mitigation.plan|default('n/a') }}" }
+required_sections:
+  - Summary
+  - Impact
+  - Steps to Reproduce
+  - Evidence
+  - Mitigation
+template: |
+  # Bugcrowd Report: {{ finding.title }}
+
+  **Vulnerability ID:** {{ finding.id | default('N/A') }}
+  **Vulnerability Type:** {{ finding.vuln_type | default('N/A') }}
+  **Severity:** {{ finding.severity | upper }}
+  **Submission Date:** {{ submission_date | default('N/A') }}
+
+  ---
+
+  ## Summary
+
+  {{ finding.summary }}
+
+  ## Vulnerability Type
+
+  **Type:** {{ finding.vuln_type | default('N/A') }}
+  **CWE:** {{ finding.cwe | default('N/A') }}
+
+  ## Impact
+
+  {{ finding.impact }}
+
+  {%- if finding.affected_users %}
+
+  **Affected Users:** {{ finding.affected_users }}
+  {%- endif %}
+
+  {%- if finding.business_impact %}
+
+  **Business Impact:** {{ finding.business_impact }}
+  {%- endif %}
+
+  ## Affected Asset
+
+  **Asset Type:** {{ finding.asset_type | default('Web Application') }}
+  **Asset Name:** {{ finding.asset_id | default('N/A') }}
+
+  {%- if finding.scope %}
+
+  {{ finding.scope }}
+  {%- endif %}
+
+  ## Steps to Reproduce
+
+  {{ evidence.repro }}
+
+  {%- if evidence.repro_steps %}
+
+  **Step-by-Step:**
+  {%- for step in evidence.repro_steps %}
+  {{ loop.index }}. {{ step }}
+  {%- endfor %}
+  {%- endif %}
+
+  ## Evidence
+
+  {%- if evidence.artifacts %}
+
+  **Evidence Provided:**
+  {%- for artifact_type, artifact_value in evidence.artifacts.items() %}
+  - **{{ artifact_type }}:** {{ artifact_value }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.screenshots %}
+
+  **Screenshots:**
+  {%- for screenshot in evidence.screenshots %}
+  - {{ screenshot.description | default('Screenshot') }}: `{{ screenshot.filename }}`
+  {%- endfor %}
+  {%- endif %}
+
+  ## Mitigation Plan
+
+  {{ mitigation.plan }}
+
+  {%- if mitigation.effort_hours %}
+
+  **Estimated Remediation Time:** {{ mitigation.effort_hours }} hours
+  {%- endif %}
+
+  ---
+
+  **Report ID:** {{ report_id }}
+  **Generated:** {{ report_generated_at }}

@@ -1,6 +1,9 @@
 from __future__ import annotations
 from pathlib import Path
+from typing import Dict, Any, Optional
+from datetime import datetime
 import yaml
+from jinja2 import Template, TemplateError, TemplateNotFound
 
 BASE = Path(__file__).resolve().parents[4]
 FMT_DIR = BASE / 'configs' / 'report_formats'
@@ -8,17 +11,24 @@ FMT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 def list_formats():
+    """List all available report formats."""
     fmts = []
     for p in sorted(FMT_DIR.glob('*.yaml')):
         try:
             data = yaml.safe_load(p.read_text()) or {}
-            fmts.append({'id': p.stem, 'name': data.get('name', p.stem), 'stakeholder': data.get('stakeholder')})
+            fmts.append({
+                'id': p.stem,
+                'name': data.get('name', p.stem),
+                'stakeholder': data.get('stakeholder'),
+                'required_sections': data.get('required_sections', [])
+            })
         except Exception:
             pass
     return fmts
 
 
 def get_format(fid: str) -> dict:
+    """Get report format by ID."""
     p = FMT_DIR / f'{fid}.yaml'
     data = yaml.safe_load(p.read_text()) if p.exists() else None
     if not data:
@@ -26,8 +36,57 @@ def get_format(fid: str) -> dict:
     return data
 
 
-def render_report(fmt: dict, finding: dict, evidence: dict, mitigation: dict) -> str:
-    # Very basic Jinja-less rendering (placeholder). Real system: jinja2 templates per stakeholder.
+def build_template_context(finding: dict, evidence: dict, mitigation: dict, report_id: str = None) -> Dict[str, Any]:
+    """Build template context from finding, evidence, and mitigation data."""
+    return {
+        'finding': finding,
+        'evidence': evidence,
+        'mitigation': mitigation,
+        'report_id': report_id or 'REPORT_' + datetime.utcnow().strftime('%Y%m%d_%H%M%S'),
+        'submission_date': finding.get('submission_date', datetime.utcnow().isoformat()),
+        'report_generated_at': datetime.utcnow().isoformat(),
+    }
+
+
+def render_report(fmt: dict, finding: dict, evidence: dict, mitigation: dict, report_id: str = None) -> str:
+    """
+    Render a report using Jinja2 template from format definition.
+
+    Args:
+        fmt: Format dictionary (from YAML config)
+        finding: Finding data
+        evidence: Evidence data
+        mitigation: Mitigation data
+        report_id: Optional report ID
+
+    Returns:
+        Rendered report as markdown string
+    """
+    try:
+        # Get template from format
+        template_str = fmt.get('template')
+        if not template_str:
+            # Fallback to basic rendering if no template defined
+            return _render_basic_report(fmt, finding, evidence, mitigation)
+
+        # Build template context
+        context = build_template_context(finding, evidence, mitigation, report_id)
+
+        # Add custom filters
+        template = Template(template_str)
+
+        # Render template
+        rendered = template.render(**context)
+        return rendered
+
+    except TemplateError as e:
+        raise ValueError(f"Template rendering error: {str(e)}")
+    except Exception as e:
+        raise ValueError(f"Report rendering failed: {str(e)}")
+
+
+def _render_basic_report(fmt: dict, finding: dict, evidence: dict, mitigation: dict) -> str:
+    """Fallback basic report rendering when no template is defined."""
     lines = []
     lines.append(f"# {fmt.get('name','Bug Report')} — {finding.get('title','Untitled')}")
     lines.append("")
@@ -45,19 +104,28 @@ def render_report(fmt: dict, finding: dict, evidence: dict, mitigation: dict) ->
     lines.append("")
     return '\n'.join(lines)
 
-from typing import Dict, Any
+import re
+
 
 def validate_rendered(stakeholder: str, content: str, run_id: str | None = None, has_recording: bool = False) -> Dict[str, Any]:
-    """Lightweight rendered-report validation.
-    Ensures stakeholder-required sections are present and a recording exists.
     """
-    import yaml, re
-    from pathlib import Path
-    BASE = Path(__file__).resolve().parents[4]
-    fmt_dir = BASE / 'configs' / 'report_formats'
+    Validate rendered report against stakeholder requirements.
+
+    Ensures stakeholder-required sections are present and a recording exists.
+
+    Args:
+        stakeholder: Stakeholder identifier
+        content: Rendered report content (markdown)
+        run_id: Optional run ID for additional context
+        has_recording: Whether screen recording is attached
+
+    Returns:
+        Validation result dictionary with status and issues
+    """
     required = []
+
     # Load required sections from stakeholder format
-    for y in fmt_dir.glob('*.yaml'):
+    for y in FMT_DIR.glob('*.yaml'):
         try:
             data = yaml.safe_load(y.read_text()) or {}
             if str(data.get('stakeholder','')).lower() == str(stakeholder).lower():
@@ -65,17 +133,45 @@ def validate_rendered(stakeholder: str, content: str, run_id: str | None = None,
                 break
         except Exception:
             continue
+
     missing = []
     if required:
         for sec in required:
             pattern = re.compile(r'^#+\s*' + re.escape(str(sec)) + r'\b', re.IGNORECASE | re.MULTILINE)
             if not pattern.search(content or ''):
                 missing.append(sec)
+
     ok = bool(has_recording) and not missing and bool(content and content.strip())
     issues = []
+
     if not bool(has_recording):
         issues.append('screen_recording_missing')
     if missing:
-        # include a generic code for missing sections; future can enumerate per section
         issues.append('missing_sections')
-    return {'ok': ok, 'missing_sections': missing, 'has_recording': bool(has_recording), 'stakeholder': stakeholder, 'issues': issues}
+
+    return {
+        'ok': ok,
+        'missing_sections': missing,
+        'has_recording': bool(has_recording),
+        'stakeholder': stakeholder,
+        'issues': issues,
+        'run_id': run_id
+    }
+
+
+def get_template_stats() -> Dict[str, Any]:
+    """Get statistics about available templates."""
+    formats = list_formats()
+    stats = {
+        'total_formats': len(formats),
+        'formats': formats,
+        'template_coverage': {
+            fmt['stakeholder']: {
+                'name': fmt['name'],
+                'required_sections': fmt['required_sections'],
+                'has_template': bool(get_format(fmt['id']).get('template'))
+            }
+            for fmt in formats
+        }
+    }
+    return stats

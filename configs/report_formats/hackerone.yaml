@@ -1,29 +1,152 @@
+name: HackerOne Report
 stakeholder: hackerone
 required_sections:
   - Summary
   - Impact
-  - Affected Scope
   - Steps to Reproduce
   - Evidence
   - Mitigation
-  - Timeline
-  - References
-render:
-  title: "HackerOne Report — {{ finding.title }}"
-  sections:
-    - name: Summary
-      body: "{{ finding.summary }}"
-    - name: Impact
-      body: "{{ finding.impact }}"
-    - name: Affected Scope
-      body: "{{ finding.scope|default('n/a') }}"
-    - name: Steps to Reproduce
-      body: "{{ evidence.repro|default('n/a') }}"
-    - name: Evidence
-      body: "{{ evidence.details|default('') }}"
-    - name: Mitigation
-      body: "{{ mitigation.plan|default('n/a') }}"
-    - name: Timeline
-      body: "{{ mitigation.timeline|default('n/a') }}"
-    - name: References
-      body: "{{ evidence.refs|default('') }}"
+template: |
+  # HackerOne Report: {{ finding.title }}
+
+  **Vulnerability ID:** {{ finding.id | default('N/A') }}
+  **Weakness Type:** {{ finding.weakness_type | default('N/A') }}
+  **Severity:** {{ finding.severity | upper }}
+  **CVSS Score:** {{ finding.cvss | default('N/A') }}
+  **Submission Date:** {{ submission_date | default('N/A') }}
+
+  ---
+
+  ## Summary
+
+  {{ finding.summary }}
+
+  {%- if finding.attack_scenario %}
+
+  ### Attack Scenario
+
+  {{ finding.attack_scenario }}
+  {%- endif %}
+
+  ## Weakness & Severity
+
+  **Weakness Type:** {{ finding.weakness_type | default('N/A') }}
+  **CWE:** {{ finding.cwe | default('N/A') }}
+  **CVSS Score:** {{ finding.cvss | default('N/A') }}
+
+  ## Impact
+
+  {{ finding.impact }}
+
+  {%- if finding.affected_users %}
+
+  **Affected Users:** {{ finding.affected_users }}
+  {%- endif %}
+
+  {%- if finding.financial_impact %}
+
+  **Financial Impact:** {{ finding.financial_impact }}
+  {%- endif %}
+
+  ## Affected Scope
+
+  **Asset Type:** {{ finding.asset_type | default('Web Application') }}
+  **Asset Identifier:** {{ finding.asset_id | default('N/A') }}
+
+  {{ finding.scope }}
+
+  {%- if finding.affected_endpoints %}
+
+  **Endpoints:**
+  {%- for endpoint in finding.affected_endpoints %}
+  - {{ endpoint }}
+  {%- endfor %}
+  {%- endif %}
+
+  ## Steps to Reproduce
+
+  {{ evidence.repro }}
+
+  {%- if evidence.repro_steps %}
+
+  **Detailed Steps:**
+  {%- for step in evidence.repro_steps %}
+  {{ loop.index }}. {{ step }}
+  {%- endfor %}
+  {%- endif %}
+
+  ## Evidence & Proof of Concept
+
+  {%- if evidence.artifacts %}
+
+  **Evidence:**
+  {%- for artifact_type, artifact_value in evidence.artifacts.items() %}
+  - **{{ artifact_type }}:** {{ artifact_value }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.screenshots %}
+
+  **Screenshots:**
+  {%- for screenshot in evidence.screenshots %}
+  - {{ screenshot.description | default('Screenshot') }}: `{{ screenshot.filename }}`
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.poc_code %}
+
+  **Proof of Concept Code:**
+
+  ```
+  {{ evidence.poc_code }}
+  ```
+  {%- endif %}
+
+  ## Mitigation & Remediation
+
+  {{ mitigation.plan }}
+
+  {%- if mitigation.remediation_steps %}
+
+  **Remediation Steps:**
+  {%- for step in mitigation.remediation_steps %}
+  {{ loop.index }}. {{ step }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if mitigation.effort_hours %}
+
+  **Estimated Effort:** {{ mitigation.effort_hours }} hours
+  {%- endif %}
+
+  ## Timeline
+
+  {{ mitigation.timeline }}
+
+  {%- if mitigation.dates %}
+
+  **Key Dates:**
+  {%- for date_entry in mitigation.dates %}
+  - {{ date_entry.date }}: {{ date_entry.event }}
+  {%- endfor %}
+  {%- endif %}
+
+  ## References
+
+  {%- if finding.references %}
+  {%- for ref in finding.references %}
+  - {{ ref }}
+  {%- endfor %}
+  {%- else %}
+  - No references provided
+  {%- endif %}
+
+  {%- if finding.cve_id %}
+
+  **CVE:** {{ finding.cve_id }}
+  {%- endif %}
+
+  ---
+
+  **Report Generated:** {{ report_generated_at }}
+  **Report ID:** {{ report_id }}

@@ -1,10 +1,146 @@
+name: Microsoft Security Response Center (MSRC) Report
 stakeholder: msrc
-required_sections: [Summary, Impact, Components, Repro Steps, Mitigation]
-render:
-  title: "MSRC Report — {{ finding.title }}"
-  sections:
-    - { name: Summary, body: "{{ finding.summary }}" }
-    - { name: Impact, body: "{{ finding.impact }}" }
-    - { name: Components, body: "{{ finding.components|default('n/a') }}" }
-    - { name: Repro Steps, body: "{{ evidence.repro|default('n/a') }}" }
-    - { name: Mitigation, body: "{{ mitigation.plan|default('n/a') }}" }
+required_sections:
+  - Summary
+  - Impact
+  - Components
+  - Repro Steps
+  - Mitigation
+template: |
+  # Microsoft Security Response Center - Vulnerability Report
+
+  **Report ID:** {{ report_id }}
+  **Submission Date:** {{ submission_date | default('N/A') }}
+  **Severity:** {{ finding.severity | upper }}
+
+  ---
+
+  ## Executive Summary
+
+  {{ finding.summary }}
+
+  ## Vulnerability Details
+
+  **Vulnerability Type:** {{ finding.vuln_type | default('N/A') }}
+  **CWE ID:** {{ finding.cwe | default('N/A') }}
+  **CVSS Score:** {{ finding.cvss | default('N/A') }}
+
+  {%- if finding.cve_id %}
+
+  **CVE ID:** {{ finding.cve_id }}
+  {%- endif %}
+
+  ## Affected Components
+
+  **Product:** {{ finding.product | default('N/A') }}
+  **Component(s):** {{ finding.components | default('N/A') }}
+
+  {%- if finding.affected_versions %}
+
+  **Affected Versions:**
+  {%- for version in finding.affected_versions %}
+  - {{ version }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if finding.supported_versions %}
+
+  **Supported Versions:** {{ finding.supported_versions }}
+  {%- endif %}
+
+  ## Impact Analysis
+
+  {{ finding.impact }}
+
+  {%- if finding.attack_complexity %}
+
+  **Attack Complexity:** {{ finding.attack_complexity }}
+  {%- endif %}
+
+  {%- if finding.privileges_required %}
+
+  **Privileges Required:** {{ finding.privileges_required }}
+  {%- endif %}
+
+  {%- if finding.user_interaction %}
+
+  **User Interaction:** {{ finding.user_interaction }}
+  {%- endif %}
+
+  {%- if finding.scope_of_impact %}
+
+  **Scope of Impact:** {{ finding.scope_of_impact }}
+  {%- endif %}
+
+  ## Reproduction Steps
+
+  {{ evidence.repro }}
+
+  {%- if evidence.repro_steps %}
+
+  **Step-by-Step Instructions:**
+  {%- for step in evidence.repro_steps %}
+  {{ loop.index }}. {{ step }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.system_requirements %}
+
+  **System Requirements:** {{ evidence.system_requirements }}
+  {%- endif %}
+
+  ## Evidence
+
+  {%- if evidence.artifacts %}
+
+  **Evidence Provided:**
+  {%- for artifact_type, artifact_value in evidence.artifacts.items() %}
+  - **{{ artifact_type }}:** {{ artifact_value }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.screenshots %}
+
+  **Screenshots:**
+  {%- for screenshot in evidence.screenshots %}
+  - {{ screenshot.description | default('Screenshot') }}: `{{ screenshot.filename }}`
+  {%- endfor %}
+  {%- endif %}
+
+  ## Mitigation & Fix
+
+  {{ mitigation.plan }}
+
+  {%- if mitigation.patches %}
+
+  **Available Patches:**
+  {%- for patch in mitigation.patches %}
+  - {{ patch.kb_number | default('KB???') }}: {{ patch.description }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if mitigation.workaround %}
+
+  **Workaround:**
+
+  {{ mitigation.workaround }}
+  {%- endif %}
+
+  {%- if mitigation.release_date %}
+
+  **Patch Release Date:** {{ mitigation.release_date }}
+  {%- endif %}
+
+  ## References
+
+  {%- if finding.references %}
+  {%- for ref in finding.references %}
+  - {{ ref }}
+  {%- endfor %}
+  {%- else %}
+  - No additional references
+  {%- endif %}
+
+  ---
+
+  **Report Generated:** {{ report_generated_at }}
