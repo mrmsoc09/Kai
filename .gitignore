@@ -1,0 +1,11 @@
+.env
+.env.*
+k1/artifacts/
+__pycache__/
+node_modules/
+.DS_Store
+.Python
+.venv/
+*.tar.gz
+*.zip
+*.bundle

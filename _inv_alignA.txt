@@ -1,0 +1,294 @@
+# K1 Alignment & Cognitive Expansion – Backend Inventory
+2026-01-03T02:26:53.382988Z
+
+===== configs/knowledge.yaml =====
+
+version: 1
+enabled: false
+vault_path: /a0/usr/projects/main-startup-build/cpn_nexus/CPN_Vault
+frontmatter_required: [id, type, classification, scope_ref, status, evidence_refs, created_at]
+governance:
+  redact_patterns: ["AWS_SECRET_ACCESS_KEY", "BEGIN RSA PRIVATE KEY", "apikey=", "password="]
+  regulated_allowed: false
+
+===== schemas/run.json =====
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "run_id": {"type": "string"},
+    "module": {"type": "string"},
+    "target": {"type": "string"},
+    "mode": {"type": "string"},
+    "loops": {"type": "object"},
+    "ledger": {"type": "object"},
+    "decision": {"type": "object"},
+    "approval": {"type": "object"},
+    "artifacts": {"type": "object"},
+    "planned_queries": {"type": "array"},
+    "results": {"type": "array"},
+    "metrics": {"$ref": "metrics.json"}
+  },
+  "required": ["run_id","module","target","mode","loops","ledger","decision","approval","artifacts"]
+}
+
+===== schemas/metrics.json =====
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "validated_findings_count": {"type": ["integer", "null"]},
+    "invalidated_findings_count": {"type": ["integer", "null"]},
+    "time_to_first_signal": {"type": ["number", "null"], "description": "seconds"},
+    "time_to_validated": {"type": ["number", "null"], "description": "seconds"},
+    "chain_candidate_count": {"type": ["integer", "null"]},
+    "evidence_completeness_ratio": {"type": ["number", "null"], "minimum": 0, "maximum": 1 }
+  }
+}
+
+===== core/metrics.py =====
+
+from typing import Dict, Any
+from datetime import datetime
+
+def _to_ts(s: str | None) -> float | None:
+    if not s: return None
+    try:
+        return datetime.fromisoformat(s.replace('Z','+00:00')).timestamp()
+    except Exception:
+        return None
+
+def compute_run_metrics(run: Dict[str, Any]) -> Dict[str, Any]:
+    findings = run.get('findings', []) or []
+    validated = len([f for f in findings if f.get('status') == 'VALIDATED'])
+    invalidated = len([f for f in findings if f.get('status') == 'INVALID'])
+    t_start = _to_ts(run.get('timestamp'))
+    t_signal = _to_ts(run.get('first_signal_at'))
+    t_valid = _to_ts(run.get('first_validated_at'))
+    ttfs = (t_signal - t_start) if (t_start and t_signal and t_signal >= t_start) else None
+    ttv = (t_valid - t_start) if (t_start and t_valid and t_valid >= t_start) else None
+    chain_candidates = len(run.get('planned_queries', []) or [])
+    art = run.get('artifacts', {}) or {}
+    expected = ['audit_bundle_path']
+    present = sum(1 for k in expected if art.get(k))
+    ecr = present / len(expected) if expected else 0.0
+    return {
+        'validated_findings_count': validated,
+        'invalidated_findings_count': invalidated,
+        'time_to_first_signal': ttfs,
+        'time_to_validated': ttv,
+        'chain_candidate_count': chain_candidates,
+        'evidence_completeness_ratio': round(ecr, 3)
+    }
+
+def aggregate_metrics(runs: list[dict[str, Any]]) -> Dict[str, Any]:
+    agg = {
+        'runs': len(runs),
+        'validated_total': 0,
+        'invalidated_total': 0,
+        'avg_chain_candidates': 0.0,
+        'avg_evidence_completeness_ratio': 0.0
+    }
+    if not runs:
+        return agg
+    ecs = []
+    ccs = []
+    for r in runs:
+        m = r.get('metrics') or {}
+        agg['validated_total'] += int(m.get('validated_findings_count') or 0)
+        agg['invalidated_total'] += int(m.get('invalidated_findings_count') or 0)
+        ccs.append(int(m.get('chain_candidate_count') or 0))
+        ecs.append(float(m.get('evidence_completeness_ratio') or 0.0))
+    agg['avg_chain_candidates'] = round(sum(ccs)/len(ccs), 2)
+    agg['avg_evidence_completeness_ratio'] = round(sum(ecs)/len(ecs), 3)
+    return agg
+
+===== core/obsidian.py =====
+
+from __future__ import annotations
+import os, json
+from pathlib import Path
+from typing import Dict, Any, List, Tuple
+import yaml
+
+ROOT = Path(__file__).resolve().parents[4]
+CONF = ROOT / 'configs' / 'knowledge.yaml'
+ART = ROOT / 'artifacts' / 'knowledge'
+ART.mkdir(parents=True, exist_ok=True)
+
+REQ_FIELDS = ["id","type","classification","scope_ref","status","evidence_refs","created_at"]
+
+class ObsidianConnector:
+    def __init__(self):
+        self.conf = self._load_conf()
+
+    def _load_conf(self) -> Dict[str, Any]:
+        try:
+            return yaml.safe_load(CONF.read_text()) or {}
+        except Exception:
+            return {"enabled": False}
+
+    def status(self) -> Dict[str, Any]:
+        return {"enabled": bool(self.conf.get('enabled')), "vault_path": self.conf.get('vault_path')}
+
+    def _parse_frontmatter(self, text: str) -> Tuple[Dict[str, Any], str]:
+        if not text.startswith('---'):
+            return {}, text
+        parts = text.split('
+---
+', 1)
+        if len(parts) != 2:
+            return {}, text
+        fm = parts[0].lstrip('-
+')
+        body = parts[1]
+        try:
+            data = yaml.safe_load(fm) or {}
+        except Exception:
+            data = {}
+        return data, body
+
+    def _redact(self, body: str) -> str:
+        pats = (self.conf.get('governance') or {}).get('redact_patterns') or []
+        red = body
+        for p in pats:
+            red = red.replace(p, '[REDACTED]')
+        return red
+
+    def refresh(self) -> Dict[str, Any]:
+        if not bool(self.conf.get('enabled')):
+            return {"status": "disabled"}
+        vault = self.conf.get('vault_path')
+        if not vault or not os.path.isdir(vault):
+            return {"status": "error", "reason": "vault_path_missing"}
+        notes: List[Dict[str, Any]] = []
+        for path in Path(vault).rglob('*.md'):
+            try:
+                raw = path.read_text(encoding='utf-8', errors='ignore')
+            except Exception:
+                continue
+            fm, body = self._parse_frontmatter(raw)
+            required = self.conf.get('frontmatter_required') or REQ_FIELDS
+            if not fm:
+                continue
+            if not all(k in fm for k in required):
+                continue
+            if fm.get('classification') == 'Regulated' and not ((self.conf.get('governance') or {}).get('regulated_allowed')):
+                continue
+            note = {k: fm.get(k) for k in REQ_FIELDS}
+            note['title'] = fm.get('title')
+            note['path'] = str(path)
+            note['body_preview'] = self._redact(body)[:400]
+            notes.append(note)
+        idx_path = ART / 'index.json'
+        idx_path.write_text(json.dumps({"count": len(notes), "notes": notes}, ensure_ascii=False, indent=2))
+        return {"status": "ok", "count": len(notes), "index": str(idx_path)}
+
+    def list_notes(self) -> Dict[str, Any]:
+        p = ART / 'index.json'
+        if not p.exists():
+            return {"status": "empty"}
+        try:
+            return json.loads(p.read_text())
+        except Exception:
+            return {"status": "error"}
+
+===== core/graph.py =====
+
+import json
+from pathlib import Path
+from typing import Dict, Any, List
+import yaml
+from .run_store import load_all_runs
+
+ROOT = Path(__file__).resolve().parents[4]
+ART = ROOT / 'artifacts' / 'graph'
+LIB_CHAINS = ROOT / 'data' / 'dorks' / 'google' / 'chains.yaml'
+KNOW_IDX = ROOT / 'artifacts' / 'knowledge' / 'index.json'
+
+
+def build_graph() -> Dict[str, Any]:
+    nodes: List[Dict[str, Any]] = []
+    edges: List[Dict[str, Any]] = []
+    runs = load_all_runs()
+    seen = set()
+    for r in runs:
+        rid = r.get('run_id')
+        if rid and rid not in seen:
+            nodes.append({"id": rid, "type": "run", "label": rid})
+            seen.add(rid)
+        for q in (r.get('planned_queries') or []):
+            qid = f"q:{abs(hash(q))}"
+            if qid not in seen:
+                nodes.append({"id": qid, "type": "query", "label": q})
+                seen.add(qid)
+            edges.append({"src": rid, "dst": qid, "rel": "produced"})
+    try:
+        ch = yaml.safe_load(LIB_CHAINS.read_text()) or {}
+        for c in ch.get('chains', []) or []:
+            cid = f"chain:{c.get('name')}"
+            if cid not in seen:
+                nodes.append({"id": cid, "type": "chain", "label": c.get('name')})
+                seen.add(cid)
+    except Exception:
+        pass
+    try:
+        idx = json.loads(KNOW_IDX.read_text())
+        for n in idx.get('notes', []) or []:
+            nid = f"note:{n.get('id')}"
+            if nid not in seen:
+                nodes.append({"id": nid, "type": "note", "label": n.get('title') or n.get('id')})
+                seen.add(nid)
+    except Exception:
+        pass
+    g = {"nodes": nodes, "edges": edges}
+    (ART / 'graph.json').write_text(json.dumps(g, ensure_ascii=False, indent=2))
+    return g
+
+===== routers/knowledge.py =====
+
+from fastapi import APIRouter
+from typing import Dict, Any
+from apps.backend.src.core.obsidian import ObsidianConnector
+
+router = APIRouter(prefix="/knowledge", tags=["knowledge"])
+
+@router.get('/status')
+def status() -> Dict[str, Any]:
+    return ObsidianConnector().status()
+
+@router.post('/refresh')
+def refresh() -> Dict[str, Any]:
+    return ObsidianConnector().refresh()
+
+@router.get('/notes')
+def notes() -> Dict[str, Any]:
+    return ObsidianConnector().list_notes()
+
+===== routers/metrics.py =====
+
+from fastapi import APIRouter
+from typing import Dict, Any
+from apps.backend.src.core.run_store import aggregate_all
+
+router = APIRouter(prefix="/metrics", tags=["metrics"])
+
+@router.get('/aggregate')
+def aggregate() -> Dict[str, Any]:
+    return aggregate_all()
+
+===== routers/graph.py =====
+
+from fastapi import APIRouter
+from typing import Dict, Any
+from apps.backend.src.core.graph import build_graph
+
+router = APIRouter(prefix="/graph", tags=["graph"])
+
+@router.get('')
+@router.get('/')
+def graph() -> Dict[str, Any]:
+    return build_graph()
+

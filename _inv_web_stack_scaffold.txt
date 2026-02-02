@@ -1,0 +1,23 @@
+
+K1 Web Stack Scaffold — 2026-01-03T04:48:19.279441Z
+
+Backend:
+- Core auth (env token, RBAC), audit middleware, websocket manager
+- Routers: auth (/auth/login, /auth/me), state (/state/global, /mission/<built-in function id>, /agent/<built-in function id>), evidence (register/finalize/update immutability), realtime (/ws, /events/broadcast)
+- Integrated into main.py with audit middleware
+
+Frontend:
+- React + Vite + TS scaffold, strict dark theme, semantic badges
+- Routes: /dashboard, /operations, /arsenal, /intelligence, /mcp-registry, /persona-market, /logs, /settings
+- Axios client with Bearer token from in-memory store; Zustand global store (persisted key only, token user-provided in Settings)
+- Tablet-first responsive layout (sidebar/top HUD), no hardcoded secrets
+
+Security notes:
+- All API routes require Authorization via env-configured bearer token
+- No frontend secrets; token entered at runtime by human
+- Audit logs written to artifacts/logs/http/YYYY/MM/DD/audit.jsonl
+- Evidence finalized becomes immutable (server-enforced)
+
+Updates — 2026-01-03T04:49:32.843821+00:00
+- Secured WebSocket with token gating; Vite proxy added for HTTP/WS.
+- Auth token now memory-only (not persisted); offline cache util added.

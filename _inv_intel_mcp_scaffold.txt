@@ -1,0 +1,6 @@
+K1 Intelligence Database and MCP Registry scaffolds implemented:
+- Backend: /intel/findings with filters (chain_potential, stage); /mcp/servers with status, uptime, purpose.
+- Schemas: Finding (severity, type, target_asset, chain_value, chain_potential, stage, status, evidence_completeness); MCPServer (status, uptime_seconds, purpose).
+- Frontend: Intelligence view with FiltersBar and IntelTable (table/card hybrid, progress bar, color chips).
+- Frontend: MCP Registry with rack metaphor, status light, uptime, purpose; no logs.
+- Styling tokens: chips by severity/stage, progress pill, rack-unit visuals.

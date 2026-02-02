@@ -1,0 +1,4 @@
+K1 Persona Market implemented (enterprise-safe):
+- Backend: Persona schema and /personas/ router with role, knowledge_count, last_training_update, confidence_trend, memory_source=obsidian, ingestion_policy=distilled, maturity, rentable, plan.
+- Frontend: Types + API client; Sparkline canvas; PersonaCard with Obsidian/Distilled badges and maturity; PersonaGrid; route /persona.
+- Styling: calm dark cards; muted chips; no marketplace gimmicks; tablet grid responsive.
