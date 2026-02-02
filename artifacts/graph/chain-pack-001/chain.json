@@ -1,0 +1,42 @@
+{
+  "nodes": [
+    {
+      "id": "f1",
+      "title": "CSRF on email change",
+      "sev": "low",
+      "scope": "accounts.example.com",
+      "impact": "privilege escalation risk",
+      "category": "csrf"
+    },
+    {
+      "id": "f2",
+      "title": "Weak reset token predictability",
+      "sev": "medium",
+      "scope": "accounts.example.com",
+      "impact": "account takeover",
+      "category": "auth"
+    }
+  ],
+  "edges": [
+    {
+      "src": "f1",
+      "dst": "f2",
+      "bonus": 1.0,
+      "reason": "scope-link"
+    },
+    {
+      "src": "f2",
+      "dst": "f1",
+      "bonus": 1.0,
+      "reason": "scope-link"
+    }
+  ],
+  "best_chain": {
+    "score": 3.75,
+    "path": [
+      "f1",
+      "f2"
+    ]
+  },
+  "chain_severity": "low"
+}

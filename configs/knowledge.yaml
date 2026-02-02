@@ -1,0 +1,8 @@
+
+version: 1
+enabled: false
+vault_path: /a0/usr/projects/main-startup-build/cpn_nexus/CPN_Vault
+frontmatter_required: [id, type, classification, scope_ref, status, evidence_refs, created_at]
+governance:
+  redact_patterns: ["AWS_SECRET_ACCESS_KEY", "BEGIN RSA PRIVATE KEY", "apikey=", "password="]
+  regulated_allowed: false

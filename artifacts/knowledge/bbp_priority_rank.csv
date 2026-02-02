@@ -1,0 +1,68 @@
+rank,id,name,platform,payout_max_usd,payout_norm,exploitability_fit,priority_score,priority_bucket,scope_url,policy_url,program_url
+1,apple-security-bounty,Apple Security Bounty,direct,2000000,1.0,0.2154,0.7758,high,https://security.apple.com/bounty/,https://security.apple.com/bounty/,https://security.apple.com/bounty/
+2,okta,Okta,hackerone,,,0.6154,0.6154,medium,https://hackerone.com/okta,https://hackerone.com/okta,https://hackerone.com/okta
+3,coinbase,Coinbase,hackerone,,,0.4923,0.4923,medium,https://hackerone.com/coinbase,https://hackerone.com/coinbase,https://hackerone.com/coinbase
+4,binance,Binance,bugcrowd,,,0.4923,0.4923,medium,https://bugcrowd.com/binance,https://bugcrowd.com/binance,https://bugcrowd.com/binance
+5,kraken,Kraken,hackerone,,,0.4923,0.4923,medium,https://hackerone.com/kraken,https://hackerone.com/kraken,https://hackerone.com/kraken
+6,zoom,Zoom,hackerone,,,0.4769,0.4769,medium,https://hackerone.com/zoom,https://hackerone.com/zoom,https://hackerone.com/zoom
+7,dropbox,Dropbox,hackerone,,,0.4769,0.4769,medium,https://hackerone.com/dropbox,https://hackerone.com/dropbox,https://hackerone.com/dropbox
+8,1password,1Password,bugcrowd,,,0.4769,0.4769,medium,https://bugcrowd.com/1password,https://bugcrowd.com/1password,https://bugcrowd.com/1password
+9,lastpass,LastPass,bugcrowd,,,0.4769,0.4769,medium,https://bugcrowd.com/lastpass,https://bugcrowd.com/lastpass,https://bugcrowd.com/lastpass
+10,google-vrp,Google VRP,direct,1000000,0.4286,0.5692,0.4688,medium,https://bughunters.google.com/about/rules/,https://bughunters.google.com/about/,https://bughunters.google.com/
+11,amazon-vrp,Amazon Vulnerability Research Program,hackerone,,,0.4615,0.4615,medium,https://hackerone.com/amazon-vrp,https://hackerone.com/amazon-vrp,https://hackerone.com/amazon-vrp
+12,github,GitHub Security Bug Bounty,hackerone,,,0.4615,0.4615,medium,https://hackerone.com/github,https://hackerone.com/github,https://hackerone.com/github
+13,gitlab,GitLab,hackerone,,,0.4615,0.4615,medium,https://hackerone.com/gitlab,https://hackerone.com/gitlab,https://hackerone.com/gitlab
+14,cloudflare,Cloudflare,hackerone,,,0.4615,0.4615,medium,https://hackerone.com/cloudflare,https://hackerone.com/cloudflare,https://hackerone.com/cloudflare
+15,atlassian,Atlassian,bugcrowd,,,0.4615,0.4615,medium,https://bugcrowd.com/atlassian,https://bugcrowd.com/atlassian,https://bugcrowd.com/atlassian
+16,digitalocean,DigitalOcean,hackerone,,,0.4615,0.4615,medium,https://hackerone.com/digitalocean,https://hackerone.com/digitalocean,https://hackerone.com/digitalocean
+17,tesla,Tesla,bugcrowd,,,0.4615,0.4615,medium,https://bugcrowd.com/tesla,https://bugcrowd.com/tesla,https://bugcrowd.com/tesla
+18,okta-again,Okta Workforce/CIAM,hackerone,,,0.4615,0.4615,medium,https://hackerone.com/okta,https://hackerone.com/okta,https://hackerone.com/okta
+19,microsoft-365,Microsoft 365 (subset of MSRC),direct,,,0.4615,0.4615,medium,https://www.microsoft.com/en-us/msrc/bounty-programs,https://www.microsoft.com/en-us/msrc/bounty-programs,https://www.microsoft.com/en-us/msrc/bounty
+20,fastly,Fastly,hackerone,,,0.4615,0.4615,medium,https://hackerone.com/fastly,https://hackerone.com/fastly,https://hackerone.com/fastly
+21,microsoft-identity,Microsoft Identity Bounty,direct,,,0.4615,0.4615,medium,https://www.microsoft.com/en-us/msrc/bounty-identity,https://www.microsoft.com/en-us/msrc/bounty-identity,https://www.microsoft.com/en-us/msrc/bounty-identity
+22,microsoft-exchange,Microsoft Exchange/Server,direct,,,0.4615,0.4615,medium,https://www.microsoft.com/en-us/msrc/bounty-programs,https://www.microsoft.com/en-us/msrc/bounty-programs,https://www.microsoft.com/en-us/msrc/bounty-programs
+23,meta-bug-bounty,Meta Bug Bounty,direct,,,0.4154,0.4154,medium,https://www.facebook.com/whitehat/info/,https://www.facebook.com/whitehat/info/,https://www.facebook.com/whitehat
+24,reddit,Reddit,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/reddit,https://hackerone.com/reddit,https://hackerone.com/reddit
+25,twitter-x,X (Twitter),hackerone,,,0.4154,0.4154,medium,https://hackerone.com/twitter,https://hackerone.com/twitter,https://hackerone.com/twitter
+26,linkedin,LinkedIn,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/linkedin,https://hackerone.com/linkedin,https://hackerone.com/linkedin
+27,tiktok,TikTok,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/tiktok,https://hackerone.com/tiktok,https://hackerone.com/tiktok
+28,snap,Snap (Snapchat),hackerone,,,0.4154,0.4154,medium,https://hackerone.com/snapchat,https://hackerone.com/snapchat,https://hackerone.com/snapchat
+29,uber,Uber,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/uber,https://hackerone.com/uber,https://hackerone.com/uber
+30,lyft,Lyft,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/lyft,https://hackerone.com/lyft,https://hackerone.com/lyft
+31,paypal,PayPal,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/paypal,https://hackerone.com/paypal,https://hackerone.com/paypal
+32,yahoo,Yahoo (Verizon Media),hackerone,,,0.4154,0.4154,medium,https://hackerone.com/yahoo,https://hackerone.com/yahoo,https://hackerone.com/yahoo
+33,robox,Roblox,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/roblox,https://hackerone.com/roblox,https://hackerone.com/roblox
+34,spotify,Spotify,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/spotify,https://hackerone.com/spotify,https://hackerone.com/spotify
+35,yelp,Yelp,hackerone,,,0.4154,0.4154,medium,https://hackerone.com/yelp,https://hackerone.com/yelp,https://hackerone.com/yelp
+36,shopify,Shopify,hackerone,,,0.4,0.4,medium,https://hackerone.com/shopify,https://hackerone.com/shopify,https://hackerone.com/shopify
+37,slack,Slack,hackerone,,,0.4,0.4,medium,https://hackerone.com/slack,https://hackerone.com/slack,https://hackerone.com/slack
+38,atlassian-marketplace,Atlassian Marketplace,bugcrowd,,,0.4,0.4,medium,https://bugcrowd.com/atlassian,https://bugcrowd.com/atlassian,https://bugcrowd.com/atlassian
+39,zoom-developer,Zoom Developer Platform,hackerone,,,0.4,0.4,medium,https://hackerone.com/zoom,https://hackerone.com/zoom,https://hackerone.com/zoom
+40,shopify-partners,Shopify Partners/Apps,hackerone,,,0.4,0.4,medium,https://hackerone.com/shopify,https://hackerone.com/shopify,https://hackerone.com/shopify
+41,adobe,Adobe,hackerone,,,0.3692,0.3692,medium,https://hackerone.com/adobe,https://hackerone.com/adobe,https://hackerone.com/adobe
+42,mozilla,Mozilla,hackerone,,,0.3692,0.3692,medium,https://hackerone.com/mozilla,https://hackerone.com/mozilla,https://hackerone.com/mozilla
+43,valve,Valve,hackerone,,,0.3692,0.3692,medium,https://hackerone.com/valve,https://hackerone.com/valve,https://hackerone.com/valve
+44,zoom-again,Zoom Rooms/SDK,hackerone,,,0.3692,0.3692,medium,https://hackerone.com/zoom,https://hackerone.com/zoom,https://hackerone.com/zoom
+45,stripe,Stripe,hackerone,,,0.3077,0.3077,low,https://hackerone.com/stripe,https://hackerone.com/stripe,https://hackerone.com/stripe
+46,stripe-again,Stripe Connect/Issuing,hackerone,,,0.3077,0.3077,low,https://hackerone.com/stripe,https://hackerone.com/stripe,https://hackerone.com/stripe
+47,automattic,Automattic/WordPress.com,hackerone,,,0.3077,0.3077,low,https://hackerone.com/automattic,https://hackerone.com/automattic,https://hackerone.com/automattic
+48,openai,OpenAI Bug Bounty,bugcrowd,,,0.3077,0.3077,low,https://bugcrowd.com/openai,https://bugcrowd.com/openai,https://bugcrowd.com/openai
+49,snapcommerce,SnapCommerce/Dealhub,hackerone,,,0.3077,0.3077,low,https://hackerone.com/snaptravel,https://hackerone.com/snaptravel,https://hackerone.com/snaptravel
+50,zoominfo,ZoomInfo,hackerone,,,0.3077,0.3077,low,https://hackerone.com/zoominfo,https://hackerone.com/zoominfo,https://hackerone.com/zoominfo
+51,hackerone,HackerOne (platform),hackerone,,,0.3077,0.3077,low,https://hackerone.com/security,https://hackerone.com/security,https://hackerone.com/security
+52,bugcrowd,Bugcrowd (platform),bugcrowd,,,0.3077,0.3077,low,https://bugcrowd.com/bugcrowd,https://bugcrowd.com/bugcrowd,https://bugcrowd.com/bugcrowd
+53,intigriti,Intigriti (platform),intigriti,,,0.3077,0.3077,low,https://www.intigriti.com/,https://www.intigriti.com/terms,https://www.intigriti.com/
+54,coinbase-commerce,Coinbase Commerce,hackerone,,,0.3077,0.3077,low,https://hackerone.com/coinbase,https://hackerone.com/coinbase,https://hackerone.com/coinbase
+55,microsoft-azure,Microsoft Azure Bounty,direct,,,0.3077,0.3077,low,https://www.microsoft.com/en-us/msrc/bounty-azure,https://www.microsoft.com/en-us/msrc/bounty-azure,https://www.microsoft.com/en-us/msrc/bounty-azure
+56,microsoft-azure-ai,Microsoft Azure AI Bounty,direct,,,0.3077,0.3077,low,https://www.microsoft.com/en-us/msrc/bounty-azure-ai,https://www.microsoft.com/en-us/msrc/bounty-azure-ai,https://www.microsoft.com/en-us/msrc/bounty-azure-ai
+57,oracle-cloud,Oracle Cloud Vulnerability Reporting,direct,,,0.3077,0.3077,low,https://www.oracle.com/corporate/security-practices/assurance/vulnerability/,https://www.oracle.com/corporate/security-practices/assurance/vulnerability/,https://www.oracle.com/corporate/security-practices/assurance/vulnerability/
+58,paypal-braintree,Braintree (PayPal),hackerone,,,0.3077,0.3077,low,https://hackerone.com/paypal,https://hackerone.com/paypal,https://hackerone.com/paypal
+59,zoominfo-duplicate,ZoomInfo (duplicate marker),hackerone,,,0.3077,0.3077,low,https://hackerone.com/zoominfo,https://hackerone.com/zoominfo,https://hackerone.com/zoominfo
+60,intel,Intel,hackerone,,,0.2615,0.2615,low,https://hackerone.com/intel,https://hackerone.com/intel,https://hackerone.com/intel
+61,nvidia,NVIDIA,bugcrowd,,,0.2615,0.2615,low,https://bugcrowd.com/nvidia,https://bugcrowd.com/nvidia,https://bugcrowd.com/nvidia
+62,microsoft-edge,Microsoft Edge Bounty,direct,,,0.2154,0.2154,low,https://www.microsoft.com/en-us/msrc/bounty-edge,https://www.microsoft.com/en-us/msrc/bounty-edge,https://www.microsoft.com/en-us/msrc/bounty-edge
+63,samsung,Samsung Mobile Security Bounty,direct,,,0.1538,0.1538,low,https://security.samsungmobile.com/,https://security.samsungmobile.com/,https://security.samsungmobile.com/
+64,tesla-internal,Tesla Vehicle/Infotainment,bugcrowd,,,0.1538,0.1538,low,https://bugcrowd.com/tesla,https://bugcrowd.com/tesla,https://bugcrowd.com/tesla
+65,microsoft-bounty,Microsoft Bug Bounty Programs (MSRC),direct,250000,0.0,0.5231,0.1495,low,https://www.microsoft.com/en-us/msrc/bounty-programs,https://www.microsoft.com/en-us/msrc/bounty,https://www.microsoft.com/en-us/msrc/bounty
+66,amd,AMD,hackerone,,,0.1077,0.1077,low,https://hackerone.com/amd,https://hackerone.com/amd,https://hackerone.com/amd
+67,microsoft-windows,Microsoft Windows Bounty,direct,,,0.1077,0.1077,low,https://www.microsoft.com/en-us/msrc/windows-bounty-program,https://www.microsoft.com/en-us/msrc/windows-bounty-program,https://www.microsoft.com/en-us/msrc/windows-bounty-program

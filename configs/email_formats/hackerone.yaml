@@ -1,0 +1,18 @@
+subject: "[HackerOne] {{ finding.title }} ({{ finding.severity|capitalize }})"
+body: |
+  Hello Program Team,
+
+  A new submission is prepared with all evidence and mitigation.
+
+  Summary: {{ finding.summary }}
+  Impact: {{ finding.impact }}
+  Severity: {{ finding.severity|default('n/a') }}
+  Scope: {{ finding.scope|default('n/a') }}
+
+  Mitigation plan:
+  {{ mitigation.plan }}
+
+  Regards,
+  K1/Agent Zero
+headers:
+  X-Platform: "HackerOne"

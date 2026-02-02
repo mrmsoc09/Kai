@@ -1,0 +1,16 @@
+[
+  {
+    "run_id": "rec-run-004",
+    "archive": "/a0/usr/projects/main-startup-build/k1/artifacts/recordings/rec-run-004.tar.gz",
+    "size": 235,
+    "sha256": "b59af681d0b510f98f5ffd73621b774a73e2dd2d079b3f907a050560447d6415",
+    "ts": 1769771649
+  },
+  {
+    "run_id": "rec-exp-002",
+    "archive": "/a0/usr/projects/main-startup-build/k1/artifacts/recordings/rec-exp-002.tar.gz",
+    "size": 206,
+    "sha256": "ad756ab01ef411d2762355323ccf1d4731b56e9a355e94c23774fe921cd1fc1e",
+    "ts": 1769772791
+  }
+]

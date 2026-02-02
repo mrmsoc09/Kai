@@ -1,0 +1,71 @@
+{
+  "runs": [
+    {
+      "run_id": "ctl",
+      "segments": 2
+    },
+    {
+      "run_id": "daemon-smoke-001",
+      "segments": 1
+    },
+    {
+      "run_id": "dispatch-run-001",
+      "segments": 1
+    },
+    {
+      "run_id": "dispatch-run-002",
+      "segments": 1
+    },
+    {
+      "run_id": "export-run-001",
+      "segments": 1
+    },
+    {
+      "run_id": "merkle-run-001",
+      "segments": 1
+    },
+    {
+      "run_id": "merkle-run-003",
+      "segments": 1
+    },
+    {
+      "run_id": "persist-run-001",
+      "segments": 1
+    },
+    {
+      "run_id": "pkg-run-final-001",
+      "segments": 1
+    },
+    {
+      "run_id": "pkg-run-final-002",
+      "segments": 1
+    },
+    {
+      "run_id": "pytest-run-001",
+      "segments": 1
+    },
+    {
+      "run_id": "rec-run-003",
+      "segments": [
+        "seg_0200.mp4",
+        "seg_0201.webm"
+      ],
+      "tar": "/a0/usr/projects/main-startup-build/k1/artifacts/recordings/rec-run-003.tar.gz",
+      "sha256": "ecf65c02c0e85f46752822d07a2513c30285e9fb98e18b1eb93ed3440e7329fe",
+      "bytes": 243,
+      "ts": 1769768511
+    },
+    {
+      "run_id": "router-fix-run-001",
+      "segments": 1
+    },
+    {
+      "run_id": "router-fix-run-003",
+      "segments": 1
+    },
+    {
+      "run_id": "submit-run-001",
+      "segments": 1
+    }
+  ]
+}

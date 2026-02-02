@@ -1,0 +1,16 @@
+Subject: Follow-up: email-flow-001 =?utf-8?b?4oCU?= vulnerability report
+ status
+From: agent-zero@k1.local
+To: stakeholder@program.local
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+MIME-Version: 1.0
+
+Hello program team,
+
+This is a friendly follow-up on report email-flow-001. We have provided a ful=
+l reproduction, mitigation plan, and a compliance-formatted report package. P=
+lease let us know if additional details are needed.
+
+Regards,
+Agent Zero

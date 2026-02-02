@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="1" skipped="0" tests="2" time="0.612" timestamp="2026-01-30T13:32:44.819380+00:00" hostname="d46bd5b02ad0"><testcase classname="tests.test_dorks_run_persistence" name="test_plan_mode_persists_run_record" time="0.109" /><testcase classname="tests.test_findings_validated_gate" name="test_validated_requires_recording" time="0.013"><failure message="assert 401 == 200&#10; +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code">def test_validated_requires_recording():
+        # create a safe plan run (no external)
+        r = client.post('/dorks/run', json={"target":"example.com","mode":"plan","chain":"backup_index_chain"})
+&gt;       assert r.status_code == 200
+E       assert 401 == 200
+E        +  where 401 = &lt;Response [401 Unauthorized]&gt;.status_code
+
+tests/test_findings_validated_gate.py:10: AssertionError</failure></testcase></testsuite></testsuites>

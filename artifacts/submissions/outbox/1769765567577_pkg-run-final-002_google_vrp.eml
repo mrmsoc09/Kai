@@ -1,0 +1,45 @@
+Date: Fri, 30 Jan 2026 09:30:37 -0000
+Subject: [VRP] Pkg Final 2 =?utf-8?b?4oCU?= HIGH severity
+From: agent-zero@k1.local
+To: stakeholder@program.local
+X-K1-Report: pkg-run-final-002
+X-Program: google_vrp
+MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="===============1846227951646442943=="
+
+--===============1846227951646442943==
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Hello Google VRP Team,
+
+Please find a responsibly disclosed vulnerability report.
+
+Title: Pkg Final 2
+Severity: HIGH
+Impact: I
+Scope: demo
+
+Reproduction steps and a safe screen recording are attached.
+
+Mitigation Plan:
+fix
+
+Timeline: ASAP
+
+Regards,
+K1/Agent Zero
+
+--===============1846227951646442943==
+Content-Type: text/markdown
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="report.md"
+MIME-Version: 1.0
+
+IyBHb29nbGUgVlJQIFJlcG9ydCDigJQgUGtnIEZpbmFsIDIKClN0YWtlaG9sZGVyOiBnb29nbGVf
+dnJwClNldmVyaXR5OiBoaWdoICB8IENXRTogbi9hICB8IENWU1M6IG4vYQoKIyMgU3VtbWFyeQpT
+CiMjIEltcGFjdApJCiMjIEFmZmVjdGVkIFNjb3BlCmRlbW8KIyMgU3RlcHMgdG8gUmVwcm9kdWNl
+CjEpIC4uLgojIyBFdmlkZW5jZQoKIyMgTWl0aWdhdGlvbgpmaXgKIyMgVGltZWxpbmUKQVNBUAoj
+IyBSZWZlcmVuY2VzCgo=
+
+--===============1846227951646442943==--

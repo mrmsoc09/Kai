@@ -1,0 +1,2 @@
+{"ts": "2026-01-30T11:47:02Z", "event": "report_submit_hil", "data": {"format": "google_vrp", "stakeholder": "google_vrp"}}
+{"ts": "2026-01-30T11:47:02Z", "event": "report_package", "data": {"stakeholder": "google_vrp", "zip": "/a0/usr/projects/main-startup-build/k1/artifacts/submissions/chain-pack-verify-001_google_vrp.zip"}}

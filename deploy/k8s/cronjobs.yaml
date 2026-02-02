@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k1-recordings-compress
+spec:
+  schedule: "@hourly"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: compressor
+              image: ghcr.io/yourorg/k1-recorder:dev
+              command: ["/bin/sh","-c"]
+              args: ["python /app/apps/recorder/daemon.py & sleep 10 && kill 1"]
+              volumeMounts:
+                - name: artifacts
+                  mountPath: /app/artifacts
+          restartPolicy: OnFailure
+          volumes:
+            - name: artifacts
+              persistentVolumeClaim:
+                claimName: k1-artifacts-pvc
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k1-ingest-export
+spec:
+  schedule: "*/30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: exporter
+              image: ghcr.io/yourorg/k1-backend:dev
+              command: ["python","-c"]
+              args: ["print('ingest placeholder run')"]
+              volumeMounts:
+                - name: artifacts
+                  mountPath: /app/artifacts
+          restartPolicy: OnFailure
+          volumes:
+            - name: artifacts
+              persistentVolumeClaim:
+                claimName: k1-artifacts-pvc

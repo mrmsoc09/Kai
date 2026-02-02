@@ -1,0 +1,10 @@
+stakeholder: msrc
+required_sections: [Summary, Impact, Components, Repro Steps, Mitigation]
+render:
+  title: "MSRC Report — {{ finding.title }}"
+  sections:
+    - { name: Summary, body: "{{ finding.summary }}" }
+    - { name: Impact, body: "{{ finding.impact }}" }
+    - { name: Components, body: "{{ finding.components|default('n/a') }}" }
+    - { name: Repro Steps, body: "{{ evidence.repro|default('n/a') }}" }
+    - { name: Mitigation, body: "{{ mitigation.plan|default('n/a') }}" }

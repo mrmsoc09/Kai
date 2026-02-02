@@ -1,0 +1,15 @@
+{
+  "algorithm": "sha256",
+  "root": "73432b24b453ae0732444cdc380d48634e35f07ec95dc116039a109e01e1c49a",
+  "leaves": [
+    {
+      "name": "meta.json",
+      "sha256": "135451faaeec1ad5b13d9243251010ef48151c8f450f46a62eb1fcf4244682f7"
+    },
+    {
+      "name": "report.md",
+      "sha256": "f1ab09157a7ba3d3c6fbac07c6f3e14916c6775a8d93b4f45b38bbf739700586"
+    }
+  ],
+  "generated_at": "2026-01-30T10:41:18Z"
+}

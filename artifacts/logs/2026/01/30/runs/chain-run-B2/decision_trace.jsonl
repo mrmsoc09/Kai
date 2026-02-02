@@ -1,0 +1,2 @@
+{"ts": "2026-01-30T10:41:18Z", "event": "report_validate", "data": {"format": "google_vrp", "ok": true}}
+{"ts": "2026-01-30T10:41:18Z", "event": "report_submit_hil", "data": {"format": "google_vrp", "stakeholder": "google_vrp"}}

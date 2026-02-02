@@ -1,0 +1,15 @@
+{
+  "readiness_time": "2026-01-31T01:04:28Z",
+  "active_targets": [
+    "example.com",
+    "example.com",
+    "example.com",
+    "example.com",
+    "example.com",
+    "google.com",
+    "example.com",
+    "example.com",
+    "microsoft.com"
+  ],
+  "policy_status": "ready"
+}
