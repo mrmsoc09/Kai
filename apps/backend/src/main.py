@@ -15,6 +15,7 @@ from apps.backend.src.routers import (
     agent0,
     agent_training,
     approvals,
+    artifact_signing,
     auth,
     autonomous,
     chains,
@@ -93,6 +94,9 @@ app.include_router(key_management.router)
 
 # Human-in-the-Loop Approvals (PGP-signed action approval)
 app.include_router(approvals.router)
+
+# Artifact Signing & Chain of Custody (Vulnerability report signing & verification)
+app.include_router(artifact_signing.router)
 
 # Knowledge / OSINT utilities
 app.include_router(dorks.router)
@@ -491,6 +495,32 @@ async def initialize_llm_providers():
 
     except Exception as e:
         print(f"⚠ HiL approval workflow initialization (optional): {str(e)}")
+
+    # Cryptographic Artifact Signing & Chain of Custody (v7.5)
+    print("\n" + "-"*60)
+    print("INITIALIZING ARTIFACT SIGNING & CHAIN OF CUSTODY")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.crypto_artifact_signing import initialize_kai_crypto
+
+        kai_crypto = initialize_kai_crypto(
+            gpg_home=os.path.expanduser("~/.kai/gpg_home"),
+            key_source_dir="/home/user/kai/Kai PGP-Keys"
+        )
+        print("✓ Crypto system initialized")
+        print(f"  GPG home: {kai_crypto.gpg_home}")
+        print(f"  Key directory: {kai_crypto.key_source_dir}")
+        print(f"  Machine identity: {kai_crypto.machine_identity}")
+
+        # Set system reference in router
+        from apps.backend.src.routers import artifact_signing as artifact_router
+        artifact_router.set_kai_crypto(kai_crypto)
+
+        print("✓ Ready for automated artifact signing")
+
+    except Exception as e:
+        print(f"⚠ Crypto system initialization (optional): {str(e)}")
 
     print("\n" + "="*60)
     print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")
