@@ -105,6 +105,14 @@ try:
 except ImportError as e:
     print(f"[!] Tasks router not available: {str(e)}")
 
+# Import and include approval router (tool gating)
+try:
+    from ..routers import approvals
+    app.include_router(approvals.router)
+    print("[✓] Approvals router loaded")
+except ImportError as e:
+    print(f"[!] Approvals router not available: {str(e)}")
+
 # Import and include Autonomous Scanning router
 try:
     from ..routers import autonomous_scan
