@@ -38,7 +38,10 @@ except ImportError:
     REPAIR_PIPELINE_AVAILABLE = False
 
 import json
+import time
 from pathlib import Path
+from pydantic import BaseModel
+from ..core.run_store import append_finding
 
 router = APIRouter(prefix="/findings", tags=["findings"])
 
@@ -116,6 +119,17 @@ def _save_remediation_execution(plan_id: str, execution: Dict[str, Any]):
     with open(execution_file, 'a') as f:
         f.write(json.dumps(execution) + '\n')
 
+
+class ToolResultIngest(BaseModel):
+    run_id: str
+    tool_id: str
+    status: str
+    output: Dict[str, Any] = {}
+    error: str | None = None
+    metadata: Dict[str, Any] = {}
+    target: str | None = None
+    severity: str | None = None
+
 @router.post('/set_status')
 def set_status(payload: Dict[str, Any]) -> Dict[str, Any]:
     run_id = payload.get('run_id')
@@ -163,6 +177,28 @@ def set_status(payload: Dict[str, Any]) -> Dict[str, Any]:
     # Persist updated run (recomputes metrics)
     save_run_record(run_id, run)
     return {'ok': True, 'run_id': run_id, 'findings': fins, 'artifacts': run.get('artifacts', {})}
+
+
+@router.post("/ingest/tool-result")
+def ingest_tool_result(payload: ToolResultIngest):
+    """
+    Convert a tool result into a Finding entry and persist to run store.
+    """
+    finding = {
+        "id": f"{payload.tool_id}-{int(time.time())}",
+        "title": payload.tool_id,
+        "severity": payload.severity or "info",
+        "status": "VALIDATED" if payload.status.lower() == "completed" else "OPEN",
+        "target_asset": payload.target,
+        "source_tool": payload.tool_id,
+        "validated": payload.status.lower() == "completed",
+        "confidence": "medium",
+        "repro_command": payload.metadata.get("repro_command"),
+        "artifacts": [],
+        "raw_output": payload.output,
+    }
+    run = append_finding(payload.run_id, finding)
+    return {"ok": True, "run": run}
 
 
 # ============================================================================
