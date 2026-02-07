@@ -39,7 +39,11 @@ class ToolRunner:
         if require_approval and needs_approval and not approved:
             raise HTTPException(status_code=403, detail="Approval required for this tool/run")
 
-        async_result = run_tool_task.apply_async((tool_id, params), queue=self.default_queue)
+        queue = self.default_queue
+        if risk_tier == ToolRiskTier.TIER_2_INTRUSIVE:
+            queue = "intrusive"
+
+        async_result = run_tool_task.apply_async((tool_id, params), queue=queue)
         return async_result.id
 
 

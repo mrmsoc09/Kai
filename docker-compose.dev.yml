@@ -105,6 +105,11 @@ services:
     networks:
       - k1_network
     restart: unless-stopped
+    command: >
+      sh -c "
+        pip install -q -r requirements.txt &&
+        celery -A apps.backend.src.worker.celery_app.celery_app worker -Q tools,intrusive --loglevel=info
+      "
 
   # React Frontend
   frontend:
