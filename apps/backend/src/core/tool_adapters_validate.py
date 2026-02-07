@@ -372,6 +372,254 @@ class PacuCloudValidate(BaseTool):
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
 
 
+class ScoutSuiteValidate(ValidatorCLITool):
+    binary_name = "scout"
+
+    def __init__(self):
+        super().__init__(
+            id="scoutsuite_validate",
+            name="ScoutSuite Cloud Audit",
+            description="Run ScoutSuite against a cloud account (AWS/GCP/Azure) using profile/creds.",
+            category=ToolCategory.VALIDATION,
+            autonomy_tier=ToolAutonomyTier.TIER_2_APPROVE,
+            parameters=[
+                ToolParameter("provider", "string", "aws|gcp|azure", enum=["aws", "gcp", "azure"]),
+                ToolParameter("profile", "string", "Profile or credentials ref"),
+            ],
+            version="0.1.0",
+        )
+
+    def execute(self, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+        provider = kwargs["provider"]
+        profile = kwargs["profile"]
+        args = ["scout", provider, "--profile", profile, "--no-browser"]
+        start = time.time()
+        try:
+            proc = subprocess.run(args, capture_output=True, text=True, timeout=900)
+            elapsed = (time.time() - start) * 1000
+            ok2 = proc.returncode == 0
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED if ok2 else ToolStatus.FAILED,
+                {"provider": provider, "profile": profile, "stdout": proc.stdout},
+                error=None if ok2 else proc.stderr,
+                execution_time_ms=elapsed,
+                metadata={"repro_command": " ".join(args)},
+            )
+        except FileNotFoundError:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="scout (ScoutSuite) binary not found in PATH")
+        except subprocess.TimeoutExpired:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="ScoutSuite timed out after 900s")
+        except Exception as e:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
+
+
+class AzurePwnValidate(ValidatorCLITool):
+    binary_name = "azurepwn"
+
+    def __init__(self):
+        super().__init__(
+            id="azurepwn_validate",
+            name="AzurePwn Validator",
+            description="Run AzurePwn against an Azure tenant with provided creds.",
+            category=ToolCategory.VALIDATION,
+            autonomy_tier=ToolAutonomyTier.TIER_2_APPROVE,
+            parameters=[
+                ToolParameter("tenant", "string", "Tenant ID"),
+                ToolParameter("client_id", "string", "Client ID"),
+                ToolParameter("client_secret", "string", "Client secret"),
+            ],
+            version="0.1.0",
+        )
+
+    def execute(self, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+        tenant = kwargs["tenant"]
+        client_id = kwargs["client_id"]
+        client_secret = kwargs["client_secret"]
+        args = [self.binary_name, "--tenant", tenant, "--client-id", client_id, "--client-secret", client_secret]
+        start = time.time()
+        try:
+            proc = subprocess.run(args, capture_output=True, text=True, timeout=900)
+            elapsed = (time.time() - start) * 1000
+            ok2 = proc.returncode == 0
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED if ok2 else ToolStatus.FAILED,
+                {"tenant": tenant, "stdout": proc.stdout},
+                error=None if ok2 else proc.stderr,
+                execution_time_ms=elapsed,
+                metadata={"repro_command": " ".join(args)},
+            )
+        except FileNotFoundError:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="azurepwn not found in PATH")
+        except subprocess.TimeoutExpired:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="AzurePwn timed out after 900s")
+        except Exception as e:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
+
+
+class PeiratesValidate(ValidatorCLITool):
+    binary_name = "peirates"
+
+    def __init__(self):
+        super().__init__(
+            id="peirates_validate",
+            name="Peirates K8s Validator",
+            description="Run Peirates for Kubernetes privilege escalation checks.",
+            category=ToolCategory.VALIDATION,
+            autonomy_tier=ToolAutonomyTier.TIER_2_APPROVE,
+            parameters=[
+                ToolParameter("kubeconfig", "string", "Path to kubeconfig"),
+            ],
+            version="0.1.0",
+        )
+
+    def execute(self, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+        kubeconfig = Path(kwargs["kubeconfig"]).expanduser()
+        if not kubeconfig.exists():
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=f"kubeconfig not found: {kubeconfig}")
+        args = [self.binary_name, "--kubeconfig", str(kubeconfig), "--non-interactive"]
+        start = time.time()
+        try:
+            proc = subprocess.run(args, capture_output=True, text=True, timeout=600)
+            elapsed = (time.time() - start) * 1000
+            ok2 = proc.returncode == 0
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED if ok2 else ToolStatus.FAILED,
+                {"kubeconfig": str(kubeconfig), "stdout": proc.stdout},
+                error=None if ok2 else proc.stderr,
+                execution_time_ms=elapsed,
+                metadata={"repro_command": " ".join(args)},
+            )
+        except FileNotFoundError:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="peirates binary not found")
+        except subprocess.TimeoutExpired:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="Peirates run timed out after 600s")
+        except Exception as e:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
+
+
+class CMEValidate(ValidatorCLITool):
+    binary_name = "crackmapexec"
+
+    def __init__(self):
+        super().__init__(
+            id="cme_validate",
+            name="CrackMapExec Validator",
+            description="Validate SMB/WinRM/LDAP access using CME.",
+            category=ToolCategory.VALIDATION,
+            autonomy_tier=ToolAutonomyTier.TIER_2_APPROVE,
+            parameters=[
+                ToolParameter("target", "string", "Target host or CIDR"),
+                ToolParameter("username", "string", "Username"),
+                ToolParameter("password", "string", "Password", required=False),
+                ToolParameter("protocol", "string", "smb|winrm|ldap", enum=["smb", "winrm", "ldap"], required=False, default="smb"),
+            ],
+            version="0.1.0",
+        )
+
+    def execute(self, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+        target = kwargs["target"]
+        user = kwargs["username"]
+        pw = kwargs.get("password")
+        protocol = kwargs.get("protocol", "smb")
+        args = [self.binary_name, protocol, target, "-u", user]
+        if pw:
+            args += ["-p", pw]
+        start = time.time()
+        try:
+            proc = subprocess.run(args, capture_output=True, text=True, timeout=300)
+            elapsed = (time.time() - start) * 1000
+            ok2 = proc.returncode == 0
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED if ok2 else ToolStatus.FAILED,
+                {"target": target, "protocol": protocol, "stdout": proc.stdout},
+                error=None if ok2 else proc.stderr,
+                execution_time_ms=elapsed,
+                metadata={"repro_command": " ".join(args)},
+            )
+        except FileNotFoundError:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="crackmapexec not found")
+        except subprocess.TimeoutExpired:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="CME timed out after 300s")
+        except Exception as e:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
+
+
+class ImpacketValidate(ValidatorCLITool):
+    binary_name = "psexec.py"
+
+    def __init__(self):
+        super().__init__(
+            id="impacket_psexec_validate",
+            name="Impacket PsExec Validator",
+            description="Validate Windows exec via impacket psexec.",
+            category=ToolCategory.VALIDATION,
+            autonomy_tier=ToolAutonomyTier.TIER_2_APPROVE,
+            parameters=[
+                ToolParameter("target", "string", "Target host"),
+                ToolParameter("username", "string", "Username"),
+                ToolParameter("password", "string", "Password"),
+                ToolParameter("domain", "string", "Domain", required=False, default=""),
+            ],
+            version="0.1.0",
+        )
+
+    def _which(self):
+        # support both psexec.py and impacket-psexec install names
+        for name in ["psexec.py", "impacket-psexec"]:
+            p = shutil.which(name)
+            if p:
+                return p
+        return None
+
+    def execute(self, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+        binary = self._which()
+        if not binary:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="psexec.py/impacket-psexec not found")
+        target = kwargs["target"]
+        user = kwargs["username"]
+        pw = kwargs["password"]
+        domain = kwargs.get("domain", "")
+        creds = f"{domain}/{user}:{pw}" if domain else f"{user}:{pw}"
+        args = [binary, creds, f"@{target}", "whoami"]
+        start = time.time()
+        try:
+            proc = subprocess.run(args, capture_output=True, text=True, timeout=180)
+            elapsed = (time.time() - start) * 1000
+            ok2 = proc.returncode == 0
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED if ok2 else ToolStatus.FAILED,
+                {"target": target, "stdout": proc.stdout},
+                error=None if ok2 else proc.stderr,
+                execution_time_ms=elapsed,
+                metadata={"repro_command": " ".join(args)},
+            )
+        except subprocess.TimeoutExpired:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="impacket psexec timed out after 180s")
+        except Exception as e:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
+
+
+
 class BloodHoundCollector(BaseTool):
     """Active Directory graph collection (placeholder)."""
 
@@ -472,6 +720,11 @@ def register_phase3_validation_tools():
         MetasploitRPCValidate(),
         CalderaEmulation(),
         PacuCloudValidate(),
+        ScoutSuiteValidate(),
+        AzurePwnValidate(),
+        PeiratesValidate(),
+        CMEValidate(),
+        ImpacketValidate(),
         BloodHoundCollector(),
         EvilWinRMValidate(),
         ResponderListener(),
