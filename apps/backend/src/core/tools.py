@@ -350,8 +350,16 @@ def initialize_default_tools():
         from apps.backend.src.core.tool_adapters_osint import (
             register_phase1_osint_tools,
         )
+        from apps.backend.src.core.tool_adapters_recon import (
+            register_phase2_recon_tools,
+        )
+        from apps.backend.src.core.tool_adapters_scan import (
+            register_phase2_scanner_tools,
+        )
 
         register_phase1_osint_tools()
+        register_phase2_recon_tools()
+        register_phase2_scanner_tools()
     except Exception as e:  # pragma: no cover - defensive
         logger.error(f"Failed to initialize default tools: {e}")
 
