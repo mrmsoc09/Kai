@@ -105,6 +105,14 @@ try:
 except ImportError as e:
     print(f"[!] Tasks router not available: {str(e)}")
 
+# Import and include Autonomous Scanning router
+try:
+    from ..routers import autonomous_scan
+    app.include_router(autonomous_scan.router)
+    print("[✓] Autonomous Scanning router loaded")
+except ImportError as e:
+    print(f"[!] Autonomous Scanning router not available: {str(e)}")
+
 # Application startup event - initialize orchestrator and watchdog
 @app.on_event("startup")
 async def startup_event():
@@ -112,14 +120,19 @@ async def startup_event():
 
     # Initialize Budget Tracker
     try:
+        import os
         from ..core.budget_tracker import initialize_budget_tracker
 
+        # Read from environment with sensible defaults
+        session_budget = int(os.getenv("KAI_SESSION_BUDGET_CENTS", "1000"))  # $10 default
+        daily_budget = int(os.getenv("KAI_DAILY_BUDGET_CENTS", "10000"))     # $100 default
+
         budget_tracker = initialize_budget_tracker(
-            session_budget_cents=1000,  # $10 per session
-            daily_budget_cents=10000    # $100 per day
+            session_budget_cents=session_budget,
+            daily_budget_cents=daily_budget
         )
 
-        print("[✓] BudgetTracker initialized: $10/session, $100/day")
+        print(f"[✓] BudgetTracker initialized: ${session_budget/100:.2f}/session, ${daily_budget/100:.2f}/day")
     except Exception as e:
         print(f"[!] BudgetTracker startup error: {str(e)}")
 
@@ -251,6 +264,30 @@ async def startup_event():
         print("[✓] Intelligence Engine started (scanning every 60 minutes)")
     except Exception as e:
         print(f"[!] Intelligence Engine startup error: {str(e)}")
+
+    # Initialize Repair Pipeline
+    try:
+        from ..core.repair_pipeline import get_repair_pipeline
+        pipeline = get_repair_pipeline()
+        print("[✓] Vulnerability Repair Pipeline initialized")
+    except Exception as e:
+        print(f"[!] Repair Pipeline startup error: {str(e)}")
+
+    # Initialize Autonomous BBP Selector
+    try:
+        from ..core.autonomous_bbp_selector import get_bbp_selector
+        selector = get_bbp_selector()
+        print("[✓] Autonomous BBP Selector initialized")
+    except Exception as e:
+        print(f"[!] BBP Selector startup error: {str(e)}")
+
+    # Initialize Full Scan Orchestrator
+    try:
+        from ..core.full_scan_orchestrator import get_scan_orchestrator
+        orchestrator = get_scan_orchestrator()
+        print("[✓] Full Scan Orchestrator initialized")
+    except Exception as e:
+        print(f"[!] Scan Orchestrator startup error: {str(e)}")
 
     # Initialize Neo4j Graph Database (optional - may not be configured)
     try:

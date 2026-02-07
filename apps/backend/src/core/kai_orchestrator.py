@@ -809,9 +809,100 @@ class KaiOrchestrator:
         logger.info(f"✓ Pre-execution logged: {log_id}")
 
         # ============================================================
+        # 4.5. BUDGET GATE (Cost Control & Model Routing)
+        # ============================================================
+        logger.info(f"[4.5/7] Checking budget and optimizing costs")
+
+        # Import budget and routing components
+        from .hybrid_model_router import get_hybrid_router
+        from .cost_controller import get_cost_controller
+
+        # Get instances
+        cost_controller = get_cost_controller()
+        hybrid_router = get_hybrid_router()
+
+        # Check if this is an LLM task that requires budget control
+        llm_tools = ["agent_zero", "llm_query", "code_generation", "analysis"]
+        requires_budget_check = any(llm_tool in tool_name.lower() for llm_tool in llm_tools)
+
+        budget_decision = None
+        model_routing = None
+
+        if requires_budget_check:
+            # Create task definition for budget analysis
+            from .model_bidding import TaskDefinition
+
+            budget_task = TaskDefinition(
+                task_id=log_id,
+                name=tool_name,
+                description=reasoning,
+                complexity_estimate=5,  # Default moderate complexity
+                required_capabilities=["reasoning"],
+                security_sensitive=task.security_sensitive if hasattr(task, 'security_sensitive') else False,
+                estimated_tokens_input=2000,
+                estimated_tokens_output=1000
+            )
+
+            # Estimate cost
+            estimated_cost = await cost_controller._estimate_task_cost(budget_task)
+
+            # Enforce budget
+            budget_result = await cost_controller.enforce_budget(
+                task=budget_task,
+                session_id=certificate_id,  # Use certificate_id as session_id
+                user_id=user_id,
+                estimated_cost_cents=estimated_cost
+            )
+
+            budget_decision = {
+                "decision": budget_result.decision.value,
+                "approved": budget_result.approved,
+                "message": budget_result.message,
+                "estimated_cost_cents": estimated_cost,
+                "session_remaining": budget_result.session_budget_remaining,
+                "daily_remaining": budget_result.daily_budget_remaining
+            }
+
+            # Log budget decision in audit
+            logger.info(f"Budget decision: {budget_result.decision.value} - {budget_result.message}")
+            logger.info(f"Estimated cost: ${estimated_cost/100:.4f}, "
+                       f"Session remaining: ${budget_result.session_budget_remaining/100:.2f}, "
+                       f"Daily remaining: ${budget_result.daily_budget_remaining/100:.2f}")
+
+            # Route to appropriate model
+            routing_decision = await hybrid_router.route_task(
+                task=budget_task,
+                session_id=certificate_id
+            )
+
+            model_routing = {
+                "model_id": routing_decision.model_id,
+                "is_local": routing_decision.is_local,
+                "estimated_cost": routing_decision.estimated_cost_cents,
+                "complexity": routing_decision.complexity,
+                "fallback_applied": routing_decision.fallback_applied,
+                "fallback_reason": routing_decision.fallback_reason.value if routing_decision.fallback_reason else None,
+                "warning": routing_decision.warning_message
+            }
+
+            logger.info(f"Model routing: {routing_decision.model_id} "
+                       f"({'local' if routing_decision.is_local else 'paid'})")
+
+            if routing_decision.warning_message:
+                logger.warning(f"⚠️ Routing warning: {routing_decision.warning_message}")
+
+            # Add budget info to tool params for downstream use
+            if tool_params is None:
+                tool_params = {}
+            tool_params['_kai_budget_decision'] = budget_decision
+            tool_params['_kai_model_routing'] = model_routing
+        else:
+            logger.info(f"Skipping budget check for non-LLM tool: {tool_name}")
+
+        # ============================================================
         # 5. SUBPROCESS EXECUTION GATEWAY
         # ============================================================
-        logger.info(f"[5/6] Executing tool in subprocess")
+        logger.info(f"[5/7] Executing tool in subprocess")
         exec_success, exec_output, exec_error = await self.execution_gateway.execute_external_tool(
             tool_name=tool_name,
             tool_command=tool_command,
@@ -823,7 +914,7 @@ class KaiOrchestrator:
         # ============================================================
         # 6. POST-EXECUTION AUDIT LOGGING
         # ============================================================
-        logger.info(f"[6/6] Logging post-execution audit")
+        logger.info(f"[6/7] Logging post-execution audit")
         await self.audit_logger.log_execution_result(
             log_id=log_id,
             execution_success=exec_success,

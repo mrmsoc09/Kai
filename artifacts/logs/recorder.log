@@ -1,4 +1,0 @@
-[2026-01-30T09:24:04Z] recorder: daemon start; watching ctl events
-[2026-01-30T09:24:04Z] recorder: started segment: run=daemon-smoke-001 file=/a0/usr/projects/main-startup-build/k1/artifacts/recordings/daemon-smoke-001/seg_0000.mp4
-[2026-01-30T09:24:06Z] recorder: compressed run daemon-smoke-001 -> /a0/usr/projects/main-startup-build/k1/artifacts/recordings/daemon-smoke-001.tar.gz
-[2026-01-30T09:24:07Z] recorder: daemon stop

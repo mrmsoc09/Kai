@@ -10,6 +10,9 @@ from datetime import datetime
 import asyncio
 import json
 import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ModelFamily(str, Enum):
@@ -300,11 +303,15 @@ class UniversalModelFactory:
 
         return min(10, complexity)
 
-    async def bid_models(self, task: TaskDefinition) -> List[ModelBid]:
-        """Get bids from available models"""
+    async def bid_models(self, task: TaskDefinition, budget_cents: Optional[float] = None) -> List[ModelBid]:
+        """Get bids from available models with optional budget filtering"""
 
         complexity = await self.analyze_task_complexity(task)
         bids = []
+
+        # Use task budget if not explicitly provided
+        if budget_cents is None:
+            budget_cents = task.budget_cents
 
         for model_id, metrics in self.available_models.items():
             if not metrics.available:
@@ -328,6 +335,11 @@ class UniversalModelFactory:
                 task.estimated_tokens_output
             )
 
+            # Budget-aware filtering: skip models that exceed budget
+            if budget_cents is not None and estimated_cost > budget_cents:
+                logger.debug(f"Skipping {model_id}: cost ${estimated_cost/100:.4f} exceeds budget ${budget_cents/100:.2f}")
+                continue
+
             # Create bid
             bid = ModelBid(
                 model_id=model_id,
@@ -341,8 +353,9 @@ class UniversalModelFactory:
 
             bids.append(bid)
 
-        # Sort by suitability score (highest first)
-        bids.sort(key=lambda b: b.confidence_score, reverse=True)
+        # Sort by suitability score (highest first), then by cost (lowest first)
+        # Prefer local models (cost=0) when suitability is similar
+        bids.sort(key=lambda b: (-b.confidence_score, b.estimated_cost_cents))
 
         return bids
 

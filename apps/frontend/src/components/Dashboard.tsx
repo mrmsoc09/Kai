@@ -12,6 +12,9 @@ import CommunicationsSettings from './settings/CommunicationsSettings';
 import OllamaSetup from './ollama/OllamaSetup';
 import AttackSurfaceGraph from './graph/AttackSurfaceGraph';
 import { CVSSTemporalHeatmap, EPSSRiskMatrix, VulnerabilityDensityMap } from './heatmaps';
+import { RepairPipelinePanel } from './repair/RepairPipelinePanel';
+import { BudgetStatusIndicator } from './budget/BudgetStatusIndicator';
+import { BudgetDashboard } from './budget/BudgetDashboard';
 import './Dashboard.css';
 
 interface ToolSummary {
@@ -60,7 +63,7 @@ const Dashboard: React.FC = () => {
     expired: 0,
   });
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'tools' | 'programs' | 'security' | 'agentzero' | 'intelligence' | 'notifications' | 'ollama' | 'attacksurface' | 'heatmaps'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tools' | 'programs' | 'security' | 'agentzero' | 'intelligence' | 'notifications' | 'ollama' | 'attacksurface' | 'heatmaps' | 'repair' | 'budget'>('overview');
   const [loading, setLoading] = useState(true);
 
   // Fetch system data on mount
@@ -136,6 +139,9 @@ const Dashboard: React.FC = () => {
           <p className="tagline">{BRANDING.tagline}</p>
         </div>
         <div className="header-status">
+          <div style={{ marginRight: '1rem' }}>
+            <BudgetStatusIndicator />
+          </div>
           <div className="status-indicator">
             <span className="indicator-dot"></span>
             System Healthy
@@ -205,6 +211,18 @@ const Dashboard: React.FC = () => {
         >
           🔥 Heatmaps
         </button>
+        <button
+          className={`nav-tab ${activeTab === 'repair' ? 'active' : ''}`}
+          onClick={() => setActiveTab('repair')}
+        >
+          🔧 Repair Pipeline
+        </button>
+        <button
+          className={`nav-tab ${activeTab === 'budget' ? 'active' : ''}`}
+          onClick={() => setActiveTab('budget')}
+        >
+          💰 Budget
+        </button>
       </nav>
 
       {/* Main Content */}
@@ -219,6 +237,8 @@ const Dashboard: React.FC = () => {
         {activeTab === 'ollama' && <OllamaSetup />}
         {activeTab === 'attacksurface' && <AttackSurfaceGraph />}
         {activeTab === 'heatmaps' && <HeatmapsSection />}
+        {activeTab === 'repair' && <RepairPipelinePanel />}
+        {activeTab === 'budget' && <BudgetDashboard />}
       </main>
     </div>
   );

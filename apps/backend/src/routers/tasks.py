@@ -4,9 +4,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
-from apps.backend.src.worker.celery_app import run_tool_task
-from apps.backend.src.core.tool_runner import tool_runner
-from apps.backend.src.core.tools import get_registry, initialize_default_tools
+from ..worker.celery_app import run_tool_task
+from ..core.tool_runner import tool_runner
+from ..core.tools import get_registry, initialize_default_tools
 
 
 class TaskRequest(BaseModel):

@@ -1,2 +1,0 @@
-{"ts": "2026-01-30T11:58:36Z", "event": "report_format_check", "data": {"stakeholder": "google_vrp", "ok": false, "missing": ["repro", "mitigation.plan"]}}
-{"ts": "2026-01-30T11:58:36Z", "event": "report_format_check", "data": {"stakeholder": "google_vrp", "ok": true, "missing": []}}

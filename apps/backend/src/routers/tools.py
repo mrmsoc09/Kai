@@ -37,6 +37,12 @@ def get_tool_registry():
     global _registry
     if _registry is None:
         _registry = get_registry()
+        # Autoload default adapters
+        try:
+            from apps.backend.src.core.tools import initialize_default_tools
+            initialize_default_tools()
+        except Exception as e:
+            logger.error(f"Tool init error: {e}")
         # Register validation tools
         _registry.register(FindingValidatorTool())
         _registry.register(QuickClassifierTool())
