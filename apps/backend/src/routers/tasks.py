@@ -7,11 +7,13 @@ from pydantic import BaseModel, Field
 from ..worker.celery_app import run_tool_task
 from ..core.tool_runner import tool_runner
 from ..core.tools import get_registry, initialize_default_tools
+from ..core.kai_security_guardrails import get_tool_tier, ToolRiskTier
 
 
 class TaskRequest(BaseModel):
     tool_id: str = Field(..., description="Registered tool ID")
     params: dict = Field(default_factory=dict, description="Tool parameters")
+    approved: bool = Field(default=False, description="Set true if approval was granted")
 
 
 router = APIRouter(prefix="/api/v1/tasks", tags=["Tasks"])
@@ -25,7 +27,16 @@ async def enqueue_task(req: TaskRequest):
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool not found: {req.tool_id}")
 
-    task_id = tool_runner.enqueue(req.tool_id, req.params, require_approval=False)
+    # Require approval for intrusive tools by default
+    risk_tier = get_tool_tier(req.tool_id)
+    require_approval = risk_tier == ToolRiskTier.TIER_2_INTRUSIVE
+
+    task_id = tool_runner.enqueue(
+        req.tool_id,
+        req.params,
+        require_approval=require_approval,
+        approved=req.approved,
+    )
     return {"task_id": task_id, "status": "queued"}
 
 

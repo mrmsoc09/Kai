@@ -29,6 +29,7 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
     """Invoke a registered tool adapter by ID."""
     from apps.backend.src.core.tools import get_registry, initialize_default_tools
     from apps.backend.src.core.artifacts import write_json
+    import time
 
     initialize_default_tools()
     registry = get_registry()
@@ -36,7 +37,10 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
     if not tool:
         return {"status": "failed", "error": f"tool not found: {tool_id}"}
 
+    start = time.time()
     result = tool.execute(**params)
+    elapsed = (time.time() - start) * 1000
+    result.execution_time_ms = result.execution_time_ms or elapsed
     result_dict = result.to_dict()
 
     # Persist artifact for traceability (best-effort)
@@ -44,6 +48,24 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
         artifact_id = result_dict.get("execution_id") or result_dict.get("tool_id") or tool_id
         path = write_json(artifact_id, result_dict)
         result_dict["artifact_path"] = path
+    except Exception:
+        pass
+
+    # Lightweight telemetry
+    try:
+        from pathlib import Path
+        import json
+
+        metrics_dir = Path(__file__).resolve().parents[3] / "artifacts" / "telemetry"
+        metrics_dir.mkdir(parents=True, exist_ok=True)
+        record = {
+            "tool_id": tool_id,
+            "status": result.status.value,
+            "execution_time_ms": result_dict.get("execution_time_ms"),
+            "timestamp": time.time(),
+        }
+        with open(metrics_dir / "tool_runs.jsonl", "a") as f:
+            f.write(json.dumps(record) + "\n")
     except Exception:
         pass
 

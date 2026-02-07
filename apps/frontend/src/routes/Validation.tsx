@@ -28,6 +28,11 @@ export default function Validation(){
       <p style={{ color: '#667', marginBottom: 16 }}>
         Tier-2 tools require approval. Use the console or API to approve a run before execution.
       </p>
+      <div style={{ background: '#f5f7ff', border: '1px solid #dbe3ff', padding: 12, borderRadius: 8, marginBottom: 16, fontSize: 13 }}>
+        <strong>How to run:</strong><br/>
+        1) Approve: <code>POST /api/v1/approvals/tool-run {"{\"tool_id\":\"sqlmap_validate\",\"approved\":true,\"approver\":\"you\"}"}</code><br/>
+        2) Enqueue with approval: <code>POST /api/v1/tasks/enqueue {"{\"tool_id\":\"sqlmap_validate\",\"approved\":true,\"params\":{\"url\":\"https://target/?id=1\"}}"}</code>
+      </div>
       {loading && <p>Loading…</p>}
       {error && <p style={{ color: 'crimson' }}>{error}</p>}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
