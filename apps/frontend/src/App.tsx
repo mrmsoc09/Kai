@@ -24,6 +24,7 @@ import MCPRegistry from './routes/MCPRegistry'
 import PersonaMarket from './routes/PersonaMarket'
 import Logs from './routes/Logs'
 import Settings from './routes/Settings'
+import Validation from './routes/Validation'
 
 // Pages
 import Planner from './pages/Planner'
@@ -54,6 +55,7 @@ export default function App(){
 
         {/* Tools & Execution */}
         <Route path='/arsenal' element={<Arsenal />} />
+        <Route path='/validation' element={<Validation />} />
         <Route path='/intelligence' element={<Intelligence />} />
         <Route path='/agent-zero' element={<AgentZero />} />
 
