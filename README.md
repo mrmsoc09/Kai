@@ -1,4 +1,4 @@
-# Kaison K1: Enterprise-Grade Autonomous OSINT & Vulnerability Hunting Platform
+# Kaison K1: Autonomous OSINT & Vulnerability Hunting
 
 <div align="center">
 
@@ -6,14 +6,14 @@
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![React 18+](https://img.shields.io/badge/React-18+-61DAFB.svg)](https://react.dev/)
-[![Build Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](https://github.com/mrmsoc09/Kaison_Latest_Build)
+[![Build Status](https://img.shields.io/badge/Status-Active-blue.svg)](https://github.com/mrmsoc09/Kaison_Latest_Build)
 [![Contributions Welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)](CONTRIBUTING.md)
 
-**🚀 Autonomous OSINT. Intelligent Vulnerability Discovery. Enterprise Compliance.**
+**🚀 Autonomous OSINT. Intelligent Vulnerability Discovery. Celery-backed workers.**
 
 *From reconnaissance to reporting—all with human-in-the-loop validation and immutable audit trails.*
 
-[📖 Documentation](#documentation) • [🚀 Quick Start](#quick-start) • [🎯 Features](#features) • [🔒 Security](#security) • [💬 Discord](#community) • [⭐ Star Us](#)
+[📖 Documentation](#documentation) • [🚀 Quick Start](#quick-start) • [🎯 Features](#features) • [🔒 Security](#security)
 
 </div>
 
@@ -46,99 +46,35 @@
 
 ---
 
-## 🚀 Quick Start
-
-### For Bug Bounty Hunters (5 minutes)
+## 🚀 Quick Start (Docker)
 
 ```bash
-# 1. Clone K1
 git clone https://github.com/mrmsoc09/Kaison_Latest_Build.git
 cd Kaison_Latest_Build
-
-# 2. Run automated setup (Ubuntu 22.04 VM recommended)
-chmod +x setup_k1_vm.sh
-./setup_k1_vm.sh
-
-# 3. Start services
-cd apps/backend && source venv/bin/activate && python -m uvicorn src.main:app &
-cd apps/frontend && npm run dev
-
-# 4. Access dashboard
-# → http://localhost:5173
-
-# 5. Create authorization & run first scan
-curl -X POST http://localhost:8000/api/v1/kai/authorize \
-  -H "Content-Type: application/json" \
-  -d '{"authorization_type": "bug_bounty_platform", "target": "example.com", ...}'
-
-# 6. Start discovering vulnerabilities and earning bounties 💰
+docker-compose -f docker-compose.dev.yml up --build backend worker redis postgres
+# Frontend (dev): in another shell
+cd apps/frontend && npm install && npm run dev -- --host
 ```
 
-**⏱️ Total time to first scan: 2.5 hours**
-
-### For Docker Users
-
+API test:
 ```bash
-docker-compose -f deploy/docker-compose.dev.yml up --build
-# → Dashboard at http://localhost:5173
+curl -X POST http://localhost:8080/api/v1/tasks/enqueue \
+  -H 'Content-Type: application/json' \
+  -d '{"tool_id":"httpx_probe","params":{"target":"https://example.com"}}'
 ```
 
-### For Enterprise Deployment
-
-```bash
-# See DEPLOYMENT_GUIDE.md for GCP Cloud Run, Kubernetes, and on-premises setups
-gcloud run deploy k1-backend --source .
-```
+Artifacts land in `artifacts/`; poll `/api/v1/tasks/{task_id}` for status.
 
 ---
 
 ## ✨ Core Features
 
-### 🔍 **Autonomous OSINT & Reconnaissance**
-- ✅ Domain enumeration, DNS resolution, WHOIS lookups
-- ✅ Subdomain discovery & enumeration
-- ✅ SSL/TLS certificate analysis
-- ✅ Technology stack fingerprinting
-- ✅ Cloud resource mapping
-- ✅ Attack surface mapping
+- **Recon/Vuln adapters**: amass, subfinder, naabu, httpx, nuclei, ffuf, shodan host, theHarvester, trufflehog, exiftool.
+- **Queue-backed execution**: Celery worker (`tools` queue) keeps API fast; artifacts saved to `artifacts/`.
+- **Tool registry + autonomy tiers**: approval hooks ready; phase‑1 runs default to safe tiers.
+- **FastAPI REST**: `/api/v1/tools` (discover), `/api/v1/tasks/enqueue` (run), `/api/v1/tasks/{id}` (status/results).
+- **Dockerized workflow**: backend, worker, redis, postgres; worker image ships binaries.
 
-### 🎯 **Intelligent Vulnerability Discovery**
-- ✅ **5 AI-Powered Tools:**
-  - **Quick Classifier** - Fast auto-classification (<1s)
-  - **Finding Validator** - Deep 5-step analysis (95% accuracy)
-  - **Vulnerability Analyzer** - Technical assessment & impact
-  - **Chain Analyzer** - Multi-step attack identification
-  - **Program Matcher** - Payout optimization
-
-### ✅ **Human-in-the-Loop Validation**
-- ✅ Explicit authorization certificates (proof of permission)
-- ✅ Professional finding validation before submission
-- ✅ Scope enforcement (no out-of-scope discoveries)
-- ✅ Immutable audit trail (all operations logged)
-- ✅ Anomaly detection (suspicious activity alerts)
-
-### 📊 **Enterprise Reporting**
-- ✅ Professional PDF, HTML, JSON, CSV outputs
-- ✅ Proof of authorization embedded in reports
-- ✅ Actionable remediation guidance
-- ✅ Stakeholder-specific templates
-- ✅ Compliance documentation (SOC2, GDPR, HIPAA)
-
-### 🔌 **Multi-Platform Integration**
-- ✅ HackerOne program support
-- ✅ Bugcrowd integration
-- ✅ Google VRP, Microsoft MSRC, Meta, Apple, Amazon
-- ✅ Custom program definitions
-- ✅ Real-time payout tracking
-
-### 🛡️ **Enterprise Security**
-- ✅ Role-based access control (RBAC)
-- ✅ Authorization certificate system
-- ✅ Immutable audit logging (730-day retention)
-- ✅ Rate limiting & DDoS protection
-- ✅ KMS encryption (GCP)
-- ✅ Secret management
-- ✅ Compliance reporting
 
 ---
 

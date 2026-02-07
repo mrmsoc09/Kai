@@ -1,66 +1,62 @@
 /**
  * Kaison K1 Unified Platform Branding
  * Centralized theme and branding constants for entire frontend
+ * Updated with dark IDE aesthetic and Matrix neon green
  */
+
+import { K1_COLORS } from './colors';
 
 export const BRANDING = {
   name: "Kaison K1",
   tagline: "Unified Automated Bug Bounty Intelligence Platform",
-  version: "7.0",
-  phase: "Phase 7 - AI-Active Multi-Agent System",
+  version: "7.6",
+  phase: "Phase 7.6 - Platform Expansion & Intelligence Integration",
 } as const;
 
 export const COLORS = {
-  // Primary brand colors
-  primary: {
-    main: "#1a472a",      // Deep forest green
-    light: "#2d7a47",     // Medium green
-    lighter: "#45a369",   // Light green
-    contrast: "#ffffff",  // White text on primary
-  },
+  // Primary brand colors (updated to Matrix neon green)
+  primary: K1_COLORS.neon.green,
+  primaryLight: K1_COLORS.neon.greenDim,
+  primaryDark: K1_COLORS.neon.greenDark,
+  primaryGlow: K1_COLORS.neon.greenGlow,
 
-  // Secondary colors
-  secondary: {
-    main: "#d4571e",      // Deep orange (accent)
-    light: "#ff7a3d",     // Light orange
-    contrast: "#ffffff",
-  },
+  // Background colors (dark IDE aesthetic)
+  background: K1_COLORS.background.default,
+  surface: K1_COLORS.background.paper,
+  elevated: K1_COLORS.background.elevated,
 
-  // Status colors (consistent across all systems)
-  status: {
-    success: "#22c55e",   // Bright green
-    warning: "#f59e0b",   // Amber
-    error: "#ef4444",     // Red
-    info: "#3b82f6",      // Blue
-    pending: "#8b5cf6",   // Purple
-  },
+  // Text colors
+  text: K1_COLORS.text.primary,
+  textSecondary: K1_COLORS.text.secondary,
+  textDisabled: K1_COLORS.text.disabled,
 
-  // Neutral palette
+  // Status colors
+  ...K1_COLORS.status,
+
+  // Border colors
+  border: K1_COLORS.charcoal.border,
+  borderHover: K1_COLORS.neon.green,
+
+  // Legacy compatibility (for components not yet updated)
   neutral: {
     black: "#000000",
-    white: "#ffffff",
-    gray_50: "#f9fafb",
-    gray_100: "#f3f4f6",
-    gray_200: "#e5e7eb",
-    gray_300: "#d1d5db",
-    gray_400: "#9ca3af",
-    gray_500: "#6b7280",
-    gray_600: "#4b5563",
-    gray_700: "#374151",
-    gray_800: "#1f2937",
-    gray_900: "#111827",
+    white: K1_COLORS.text.primary,
+    gray_50: K1_COLORS.charcoal.border,
+    gray_100: K1_COLORS.charcoal.lighter,
+    gray_200: K1_COLORS.charcoal.light,
+    gray_300: K1_COLORS.charcoal.border,
+    gray_400: K1_COLORS.neutral.gray,
+    gray_500: K1_COLORS.neutral.gray,
+    gray_600: K1_COLORS.neutral.darkGray,
+    gray_700: K1_COLORS.charcoal.lighter,
+    gray_800: K1_COLORS.charcoal.light,
+    gray_900: K1_COLORS.charcoal.base,
   },
 
   // Semantic colors for threat levels
-  severity: {
-    critical: "#dc2626",      // Dark red
-    high: "#ea580c",          // Orange-red
-    medium: "#eab308",        // Yellow
-    low: "#84cc16",           // Light green
-    info: "#0ea5e9",          // Cyan
-  },
+  severity: K1_COLORS.status,
 
-  // DeepAgent/Reasoning colors
+  // DeepAgent/Reasoning colors (keep existing for compatibility)
   reasoning: {
     thinking: "#8b5cf6",      // Purple - deep thinking
     analyzing: "#06b6d4",     // Cyan - analysis step
@@ -90,33 +86,35 @@ export const UI = {
     xxl: "48px",
   },
 
-  // Typography
+  // Typography (updated to JetBrains Mono)
   fonts: {
     family_sans: '"Segoe UI", Roboto, "Helvetica Neue", sans-serif',
-    family_mono: '"Fira Code", "Monaco", "Courier New", monospace',
-    size_xs: "12px",
-    size_sm: "14px",
-    size_base: "16px",
-    size_lg: "18px",
-    size_xl: "20px",
-    size_2xl: "24px",
-    size_3xl: "30px",
+    family_mono: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace",
+    size_xs: "0.75rem",    // 12px
+    size_sm: "0.875rem",   // 14px
+    size_base: "1rem",     // 16px
+    size_lg: "1.125rem",   // 18px
+    size_xl: "1.5rem",     // 24px
+    size_2xl: "2rem",      // 32px
+    size_3xl: "2.5rem",    // 40px
   },
 
-  // Shadows
+  // Shadows (updated with neon glow)
   shadow: {
     none: "none",
-    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
+    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.3)",
+    md: "0 4px 12px rgba(0, 0, 0, 0.5)",
+    lg: "0 8px 24px rgba(0, 0, 0, 0.7)",
+    xl: "0 12px 32px rgba(0, 0, 0, 0.8)",
+    glow: `0 0 20px ${K1_COLORS.neon.greenGlow}`,
+    glowStrong: `0 0 30px ${K1_COLORS.neon.greenGlow}, 0 0 60px ${K1_COLORS.neon.greenGlow}`,
   },
 
   // Transitions
   transition: {
-    fast: "150ms",
-    base: "250ms",
-    slow: "350ms",
+    fast: "150ms ease-in-out",
+    base: "250ms ease-in-out",
+    slow: "400ms ease-in-out",
     function: "cubic-bezier(0.4, 0, 0.2, 1)",
   },
 } as const;

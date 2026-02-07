@@ -49,6 +49,7 @@ from apps.backend.src.routers import (
     scope,
     state,
     tools,
+    tasks,
 )
 from apps.backend.src.routers import triage
 
@@ -105,6 +106,7 @@ app.include_router(graph.router)
 
 # Core operations (Tools and orchestration)
 app.include_router(tools.router)
+app.include_router(tasks.router)
 app.include_router(orchestrator.router)
 app.include_router(planner.router)
 app.include_router(chains.router)

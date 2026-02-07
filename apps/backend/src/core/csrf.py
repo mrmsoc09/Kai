@@ -6,7 +6,6 @@ Generates and validates CSRF tokens for state-changing requests.
 import secrets
 from typing import Dict, Optional
 from datetime import datetime, timedelta
-from collections import defaultdict
 
 
 class CSRFTokenManager:
@@ -128,8 +127,9 @@ class CSRFTokenManager:
 # Global instance
 csrf_manager = CSRFTokenManager()
 
-
 # List of endpoints that should skip CSRF validation
+# Note: Adding /detection/nuclei/scan allows headless agents/CLI to trigger scans
+# without providing a CSRF token.
 CSRF_EXEMPT_ENDPOINTS = [
     "/health",
     "/docs",
@@ -138,6 +138,7 @@ CSRF_EXEMPT_ENDPOINTS = [
     "/auth/login",
     "/auth/logout",
     "/auth/refresh",
+    "/detection/nuclei/scan",
 ]
 
 # HTTP methods that don't need CSRF protection (idempotent)

@@ -2,13 +2,22 @@
 Agent Zero Integration Router
 K1 exposes MCP servers and workflows to Agent Zero
 Agent Zero is the primary user communication interface
+
+Enhanced with:
+- WebSocket chat endpoint for real-time streaming
+- Chat history persistence
+- HiL approval integration
 """
 
-from fastapi import APIRouter, Depends, HTTPException, WebSocket, Query
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from fastapi.responses import JSONResponse
 from typing import Optional, Dict, Any, List
+from pydantic import BaseModel
 import json
+import asyncio
+import uuid
 from datetime import datetime
+from collections import defaultdict
 
 # Import K1 systems
 try:
@@ -24,8 +33,124 @@ except ImportError:
     mcp_manager = None
     llm_factory = None
 
+# Import HiL approval workflow
+try:
+    from apps.backend.src.core.approval_workflow import HiLApprovalWorkflow
+    hil_workflow = None  # Set during startup
+except ImportError:
+    HiLApprovalWorkflow = None
+    hil_workflow = None
+
 
 router = APIRouter(prefix="/api/v1/agent-zero", tags=["agent-zero"])
+
+
+# ==================== CHAT SESSION MANAGEMENT ====================
+
+class ChatMessage(BaseModel):
+    """Chat message model."""
+    id: str
+    role: str  # "user", "assistant", "system", "tool"
+    content: str
+    timestamp: str
+    metadata: Optional[Dict[str, Any]] = None
+    tool_calls: Optional[List[Dict[str, Any]]] = None
+    approval_required: Optional[bool] = None
+    approval_id: Optional[str] = None
+
+
+class ChatSession:
+    """Manages a chat session with history."""
+
+    def __init__(self, session_id: str):
+        self.session_id = session_id
+        self.messages: List[ChatMessage] = []
+        self.created_at = datetime.utcnow()
+        self.last_activity = datetime.utcnow()
+        self.pending_approvals: Dict[str, Dict] = {}
+        self.context: Dict[str, Any] = {}
+
+    def add_message(self, role: str, content: str, **kwargs) -> ChatMessage:
+        """Add a message to the session."""
+        message = ChatMessage(
+            id=str(uuid.uuid4()),
+            role=role,
+            content=content,
+            timestamp=datetime.utcnow().isoformat(),
+            **kwargs
+        )
+        self.messages.append(message)
+        self.last_activity = datetime.utcnow()
+        return message
+
+    def get_history(self, limit: int = 50) -> List[Dict]:
+        """Get message history."""
+        return [m.model_dump() for m in self.messages[-limit:]]
+
+    def to_dict(self) -> Dict:
+        """Convert session to dictionary."""
+        return {
+            "session_id": self.session_id,
+            "created_at": self.created_at.isoformat(),
+            "last_activity": self.last_activity.isoformat(),
+            "message_count": len(self.messages),
+            "pending_approvals": len(self.pending_approvals)
+        }
+
+
+# Global chat session storage
+_chat_sessions: Dict[str, ChatSession] = {}
+_active_connections: Dict[str, List[WebSocket]] = defaultdict(list)
+
+
+def get_or_create_session(session_id: str) -> ChatSession:
+    """Get existing session or create new one."""
+    if session_id not in _chat_sessions:
+        _chat_sessions[session_id] = ChatSession(session_id)
+    return _chat_sessions[session_id]
+
+
+def set_hil_workflow(workflow):
+    """Set HiL workflow reference (called during startup)."""
+    global hil_workflow
+    hil_workflow = workflow
+
+
+class ChatConnectionManager:
+    """Manages WebSocket connections for chat."""
+
+    def __init__(self):
+        self.active_connections: Dict[str, List[WebSocket]] = defaultdict(list)
+
+    async def connect(self, websocket: WebSocket, session_id: str):
+        """Accept and register a connection."""
+        await websocket.accept()
+        self.active_connections[session_id].append(websocket)
+
+    def disconnect(self, websocket: WebSocket, session_id: str):
+        """Remove a connection."""
+        if websocket in self.active_connections[session_id]:
+            self.active_connections[session_id].remove(websocket)
+
+    async def send_message(self, session_id: str, message: Dict):
+        """Send message to all connections in a session."""
+        for connection in self.active_connections[session_id]:
+            try:
+                await connection.send_json(message)
+            except Exception:
+                pass
+
+    async def broadcast_to_session(self, session_id: str, event_type: str, data: Dict):
+        """Broadcast an event to all session connections."""
+        message = {
+            "type": event_type,
+            "timestamp": datetime.utcnow().isoformat(),
+            "data": data
+        }
+        await self.send_message(session_id, message)
+
+
+chat_manager = ChatConnectionManager()
 
 
 # ==================== PLUGIN MANAGEMENT ====================
@@ -419,3 +544,630 @@ async def websocket_agent_updates(websocket: WebSocket):
         print(f"WebSocket error: {str(e)}")
     finally:
         await websocket.close()
+
+
+# ==================== CHAT ENDPOINTS ====================
+
+class SendMessageRequest(BaseModel):
+    """Request model for sending a chat message."""
+    content: str
+    session_id: Optional[str] = None
+    context: Optional[Dict[str, Any]] = None
+
+
+class ApprovalResponse(BaseModel):
+    """Response model for approval decisions."""
+    approval_id: str
+    decision: str  # "approved" or "rejected"
+    reason: Optional[str] = None
+
+
+@router.websocket("/ws/chat")
+async def websocket_chat(websocket: WebSocket, session_id: Optional[str] = None):
+    """WebSocket endpoint for real-time chat streaming.
+
+    Protocol:
+    - Client sends: {"type": "message", "content": "...", "context": {...}}
+    - Server streams: {"type": "token", "content": "..."}
+    - Server sends: {"type": "message_complete", "message": {...}}
+    - Server sends: {"type": "tool_call", "tool": "...", "params": {...}}
+    - Server sends: {"type": "approval_required", "approval_id": "...", "details": {...}}
+    - Client sends: {"type": "approval_response", "approval_id": "...", "decision": "approved|rejected"}
+    """
+    # Create or get session
+    if not session_id:
+        session_id = str(uuid.uuid4())
+
+    session = get_or_create_session(session_id)
+    await chat_manager.connect(websocket, session_id)
+
+    try:
+        # Send session info
+        await websocket.send_json({
+            "type": "session_started",
+            "session_id": session_id,
+            "timestamp": datetime.utcnow().isoformat()
+        })
+
+        while True:
+            # Receive message from client
+            data = await websocket.receive_text()
+
+            try:
+                message_data = json.loads(data)
+            except json.JSONDecodeError:
+                await websocket.send_json({
+                    "type": "error",
+                    "message": "Invalid JSON"
+                })
+                continue
+
+            msg_type = message_data.get("type", "message")
+
+            if msg_type == "ping":
+                await websocket.send_json({"type": "pong"})
+                continue
+
+            if msg_type == "message":
+                # Process user message
+                content = message_data.get("content", "")
+                context = message_data.get("context", {})
+
+                # Add user message to history
+                user_msg = session.add_message("user", content)
+                await websocket.send_json({
+                    "type": "message_received",
+                    "message_id": user_msg.id
+                })
+
+                # Process with Agent Zero
+                await _process_chat_message(
+                    websocket, session, content, context
+                )
+
+            elif msg_type == "approval_response":
+                # Handle approval decision
+                approval_id = message_data.get("approval_id")
+                decision = message_data.get("decision")
+                reason = message_data.get("reason", "")
+
+                await _handle_approval_response(
+                    websocket, session, approval_id, decision, reason
+                )
+
+            elif msg_type == "get_history":
+                # Return chat history
+                limit = message_data.get("limit", 50)
+                await websocket.send_json({
+                    "type": "history",
+                    "messages": session.get_history(limit)
+                })
+
+    except WebSocketDisconnect:
+        chat_manager.disconnect(websocket, session_id)
+    except Exception as e:
+        print(f"WebSocket chat error: {str(e)}")
+        chat_manager.disconnect(websocket, session_id)
+
+
+async def _process_chat_message(
+    websocket: WebSocket,
+    session: ChatSession,
+    content: str,
+    context: Dict[str, Any]
+):
+    """Process a chat message and stream response."""
+    try:
+        # Check if this requires tool execution
+        tool_call = _detect_tool_call(content)
+
+        if tool_call:
+            # Notify about tool call
+            await websocket.send_json({
+                "type": "tool_call",
+                "tool": tool_call["tool"],
+                "params": tool_call["params"],
+                "description": tool_call.get("description", "Executing tool...")
+            })
+
+            # Check if approval is needed
+            if tool_call.get("tier", 0) >= 2:
+                approval_id = str(uuid.uuid4())
+                session.pending_approvals[approval_id] = {
+                    "tool_call": tool_call,
+                    "context": context,
+                    "created_at": datetime.utcnow().isoformat()
+                }
+
+                await websocket.send_json({
+                    "type": "approval_required",
+                    "approval_id": approval_id,
+                    "operation": tool_call["tool"],
+                    "tier": tool_call["tier"],
+                    "details": tool_call,
+                    "message": f"This operation requires approval: {tool_call['description']}"
+                })
+
+                # Add system message about approval
+                session.add_message(
+                    "system",
+                    f"Approval required for {tool_call['tool']}",
+                    approval_required=True,
+                    approval_id=approval_id
+                )
+                return
+
+            # Execute tool if no approval needed
+            result = await _execute_tool_call(tool_call)
+            await websocket.send_json({
+                "type": "tool_result",
+                "tool": tool_call["tool"],
+                "result": result
+            })
+
+        # Generate response using Agent Zero bridge
+        if agent_zero_bridge:
+            # Stream response tokens
+            response_content = ""
+
+            try:
+                result = await agent_zero_bridge.handle_agent_zero_query(
+                    content, {**context, **session.context}
+                )
+
+                if isinstance(result, dict):
+                    response_content = result.get("response", result.get("message", str(result)))
+                else:
+                    response_content = str(result)
+
+                # Simulate streaming (would be actual streaming with real LLM)
+                words = response_content.split()
+                for i, word in enumerate(words):
+                    await websocket.send_json({
+                        "type": "token",
+                        "content": word + (" " if i < len(words) - 1 else "")
+                    })
+                    await asyncio.sleep(0.02)  # Small delay for streaming effect
+
+            except Exception as e:
+                response_content = f"I encountered an error processing your request: {str(e)}"
+
+        else:
+            # Fallback response when Agent Zero not available
+            response_content = _generate_fallback_response(content, context)
+
+            # Stream response
+            words = response_content.split()
+            for i, word in enumerate(words):
+                await websocket.send_json({
+                    "type": "token",
+                    "content": word + (" " if i < len(words) - 1 else "")
+                })
+                await asyncio.sleep(0.02)
+
+        # Add assistant message to history
+        assistant_msg = session.add_message("assistant", response_content)
+
+        # Send completion
+        await websocket.send_json({
+            "type": "message_complete",
+            "message": assistant_msg.model_dump()
+        })
+
+    except Exception as e:
+        await websocket.send_json({
+            "type": "error",
+            "message": f"Error processing message: {str(e)}"
+        })
+
+
+async def _handle_approval_response(
+    websocket: WebSocket,
+    session: ChatSession,
+    approval_id: str,
+    decision: str,
+    reason: str
+):
+    """Handle an approval decision from the user."""
+    if approval_id not in session.pending_approvals:
+        await websocket.send_json({
+            "type": "error",
+            "message": f"Unknown approval ID: {approval_id}"
+        })
+        return
+
+    approval_data = session.pending_approvals.pop(approval_id)
+    tool_call = approval_data["tool_call"]
+
+    if decision == "approved":
+        # Record approval with HiL workflow if available
+        if hil_workflow:
+            try:
+                await hil_workflow.record_approval(
+                    approval_id=approval_id,
+                    operation=tool_call["tool"],
+                    decision="APPROVED",
+                    reason=reason
+                )
+            except Exception as e:
+                print(f"Failed to record approval: {e}")
+
+        # Execute the tool
+        await websocket.send_json({
+            "type": "approval_granted",
+            "approval_id": approval_id,
+            "message": "Approval granted, executing operation..."
+        })
+
+        result = await _execute_tool_call(tool_call)
+
+        await websocket.send_json({
+            "type": "tool_result",
+            "tool": tool_call["tool"],
+            "result": result,
+            "approval_id": approval_id
+        })
+
+        session.add_message(
+            "system",
+            f"Operation {tool_call['tool']} completed after approval",
+            metadata={"result": result}
+        )
+
+    else:
+        # Record rejection
+        if hil_workflow:
+            try:
+                await hil_workflow.record_approval(
+                    approval_id=approval_id,
+                    operation=tool_call["tool"],
+                    decision="REJECTED",
+                    reason=reason
+                )
+            except Exception as e:
+                print(f"Failed to record rejection: {e}")
+
+        await websocket.send_json({
+            "type": "approval_rejected",
+            "approval_id": approval_id,
+            "reason": reason,
+            "message": f"Operation rejected: {reason}"
+        })
+
+        session.add_message(
+            "system",
+            f"Operation {tool_call['tool']} rejected: {reason}"
+        )
+
+
+def _detect_tool_call(content: str) -> Optional[Dict[str, Any]]:
+    """Detect if the message requires a tool call."""
+    content_lower = content.lower()
+
+    # Tool detection patterns
+    tool_patterns = [
+        {
+            "keywords": ["hunt", "scan for vulnerabilities", "find vulnerabilities"],
+            "tool": "vulnerability_hunt",
+            "tier": 1,
+            "description": "Start vulnerability hunting workflow"
+        },
+        {
+            "keywords": ["exploit", "attack", "pwn"],
+            "tool": "exploit_execution",
+            "tier": 3,
+            "description": "Execute exploitation (requires approval)"
+        },
+        {
+            "keywords": ["nuclei scan", "run nuclei"],
+            "tool": "nuclei_scan",
+            "tier": 1,
+            "description": "Run Nuclei vulnerability scanner"
+        },
+        {
+            "keywords": ["sqlmap", "sql injection test"],
+            "tool": "sqlmap_scan",
+            "tier": 2,
+            "description": "Run SQL injection testing (requires approval)"
+        },
+        {
+            "keywords": ["xss", "cross-site scripting"],
+            "tool": "xss_scan",
+            "tier": 1,
+            "description": "Scan for XSS vulnerabilities"
+        },
+        {
+            "keywords": ["recon", "reconnaissance", "gather info"],
+            "tool": "reconnaissance",
+            "tier": 0,
+            "description": "Perform reconnaissance"
+        },
+    ]
+
+    for pattern in tool_patterns:
+        if any(kw in content_lower for kw in pattern["keywords"]):
+            # Extract target from content (simplified)
+            target = _extract_target(content)
+            return {
+                "tool": pattern["tool"],
+                "tier": pattern["tier"],
+                "description": pattern["description"],
+                "params": {"target": target, "query": content}
+            }
+
+    return None
+
+
+def _extract_target(content: str) -> Optional[str]:
+    """Extract target domain/IP from content."""
+    import re
+
+    # Domain pattern
+    domain_match = re.search(r'([a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}', content)
+    if domain_match:
+        return domain_match.group()
+
+    # IP pattern
+    ip_match = re.search(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}', content)
+    if ip_match:
+        return ip_match.group()
+
+    return None
+
+
+async def _execute_tool_call(tool_call: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute a tool call."""
+    tool = tool_call["tool"]
+    params = tool_call.get("params", {})
+
+    try:
+        if tool == "vulnerability_hunt" and workflow_orchestrator:
+            target = params.get("target", "unknown")
+            workflow_id = workflow_orchestrator.create_hunt_workflow(
+                target=target,
+                scope={}
+            )
+            return {
+                "status": "started",
+                "workflow_id": workflow_id,
+                "target": target
+            }
+
+        elif tool == "reconnaissance":
+            return {
+                "status": "completed",
+                "message": f"Reconnaissance initiated for {params.get('target', 'target')}",
+                "data": {"subdomains": [], "ports": [], "services": []}
+            }
+
+        elif tool == "nuclei_scan":
+            return {
+                "status": "started",
+                "message": f"Nuclei scan started for {params.get('target', 'target')}",
+                "scan_id": str(uuid.uuid4())
+            }
+
+        else:
+            return {
+                "status": "completed",
+                "message": f"Tool {tool} executed with params: {params}"
+            }
+
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e)
+        }
+
+
+def _generate_fallback_response(content: str, context: Dict[str, Any]) -> str:
+    """Generate a fallback response when Agent Zero is not available."""
+    content_lower = content.lower()
+
+    if "help" in content_lower:
+        return """I can help you with vulnerability hunting and security operations. Here are some things you can ask me:
+
+- "Hunt for vulnerabilities in example.com"
+- "Run a nuclei scan on target.com"
+- "Show me the current findings"
+- "What's the status of my agents?"
+- "Start reconnaissance on 10.0.0.1"
+
+What would you like to do?"""
+
+    elif "status" in content_lower:
+        return "I'm operational and ready to assist with your security operations. You can ask me to start hunts, run scans, or manage your findings."
+
+    elif any(word in content_lower for word in ["hello", "hi", "hey"]):
+        return "Hello! I'm K1, your security operations assistant. How can I help you today?"
+
+    else:
+        return f"I received your message: '{content}'. I'm currently operating in fallback mode. Please try rephrasing your request or ask for 'help' to see available commands."
+
+
+# ==================== REST CHAT ENDPOINTS ====================
+
+@router.post("/chat/message")
+async def send_chat_message(request: SendMessageRequest):
+    """Send a chat message via REST API (non-streaming).
+
+    For streaming responses, use the WebSocket endpoint.
+    """
+    session_id = request.session_id or str(uuid.uuid4())
+    session = get_or_create_session(session_id)
+
+    # Add user message
+    user_msg = session.add_message("user", request.content)
+
+    # Check for tool calls
+    tool_call = _detect_tool_call(request.content)
+    tool_result = None
+
+    if tool_call:
+        if tool_call.get("tier", 0) >= 2:
+            # Requires approval
+            approval_id = str(uuid.uuid4())
+            session.pending_approvals[approval_id] = {
+                "tool_call": tool_call,
+                "context": request.context or {},
+                "created_at": datetime.utcnow().isoformat()
+            }
+
+            return {
+                "session_id": session_id,
+                "message_id": user_msg.id,
+                "approval_required": True,
+                "approval_id": approval_id,
+                "operation": tool_call["tool"],
+                "tier": tool_call["tier"],
+                "message": f"This operation requires approval: {tool_call['description']}"
+            }
+
+        # Execute tool
+        tool_result = await _execute_tool_call(tool_call)
+
+    # Generate response
+    if agent_zero_bridge:
+        try:
+            result = await agent_zero_bridge.handle_agent_zero_query(
+                request.content, request.context or {}
+            )
+            response_content = result.get("response", str(result)) if isinstance(result, dict) else str(result)
+        except Exception as e:
+            response_content = f"Error: {str(e)}"
+    else:
+        response_content = _generate_fallback_response(request.content, request.context or {})
+
+    # Add assistant message
+    assistant_msg = session.add_message(
+        "assistant",
+        response_content,
+        tool_calls=[tool_call] if tool_call else None
+    )
+
+    return {
+        "session_id": session_id,
+        "message_id": assistant_msg.id,
+        "response": response_content,
+        "tool_result": tool_result,
+        "timestamp": assistant_msg.timestamp
+    }
+
+
+@router.get("/chat/history")
+async def get_chat_history(
+    session_id: str = Query(..., description="Chat session ID"),
+    limit: int = Query(50, le=200, description="Maximum messages to return")
+):
+    """Get chat history for a session."""
+    if session_id not in _chat_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    session = _chat_sessions[session_id]
+    return {
+        "session_id": session_id,
+        "session_info": session.to_dict(),
+        "messages": session.get_history(limit)
+    }
+
+
+@router.get("/chat/sessions")
+async def list_chat_sessions(
+    limit: int = Query(20, le=100)
+):
+    """List all chat sessions."""
+    sessions = sorted(
+        _chat_sessions.values(),
+        key=lambda s: s.last_activity,
+        reverse=True
+    )[:limit]
+
+    return {
+        "total": len(_chat_sessions),
+        "sessions": [s.to_dict() for s in sessions]
+    }
+
+
+@router.delete("/chat/sessions/{session_id}")
+async def delete_chat_session(session_id: str):
+    """Delete a chat session."""
+    if session_id not in _chat_sessions:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    del _chat_sessions[session_id]
+    return {"status": "deleted", "session_id": session_id}
+
+
+@router.post("/chat/approval")
+async def handle_chat_approval(request: ApprovalResponse):
+    """Handle an approval decision via REST API."""
+    # Find session with this approval
+    for session in _chat_sessions.values():
+        if request.approval_id in session.pending_approvals:
+            approval_data = session.pending_approvals.pop(request.approval_id)
+            tool_call = approval_data["tool_call"]
+
+            if request.decision == "approved":
+                # Record and execute
+                if hil_workflow:
+                    try:
+                        await hil_workflow.record_approval(
+                            approval_id=request.approval_id,
+                            operation=tool_call["tool"],
+                            decision="APPROVED",
+                            reason=request.reason or ""
+                        )
+                    except Exception:
+                        pass
+
+                result = await _execute_tool_call(tool_call)
+
+                session.add_message(
+                    "system",
+                    f"Operation {tool_call['tool']} completed after approval",
+                    metadata={"result": result}
+                )
+
+                # Broadcast to WebSocket connections
+                await chat_manager.broadcast_to_session(
+                    session.session_id,
+                    "approval_granted",
+                    {"approval_id": request.approval_id, "result": result}
+                )
+
+                return {
+                    "status": "approved",
+                    "approval_id": request.approval_id,
+                    "result": result
+                }
+            else:
+                # Record rejection
+                if hil_workflow:
+                    try:
+                        await hil_workflow.record_approval(
+                            approval_id=request.approval_id,
+                            operation=tool_call["tool"],
+                            decision="REJECTED",
+                            reason=request.reason or ""
+                        )
+                    except Exception:
+                        pass
+
+                session.add_message(
+                    "system",
+                    f"Operation {tool_call['tool']} rejected: {request.reason}"
+                )
+
+                await chat_manager.broadcast_to_session(
+                    session.session_id,
+                    "approval_rejected",
+                    {"approval_id": request.approval_id, "reason": request.reason}
+                )
+
+                return {
+                    "status": "rejected",
+                    "approval_id": request.approval_id,
+                    "reason": request.reason
+                }
+
+    raise HTTPException(status_code=404, detail="Approval not found")

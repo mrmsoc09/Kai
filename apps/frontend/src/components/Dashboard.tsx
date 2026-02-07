@@ -6,6 +6,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { COLORS, UI, COMPONENT_STYLES, BRANDING, ICONS } from '@/theme/branding';
+import { AgentZeroChat } from './agentZero/AgentZeroChat';
+import RSSIntelligenceDashboard from './intelligence/RSSIntelligenceDashboard';
+import CommunicationsSettings from './settings/CommunicationsSettings';
+import OllamaSetup from './ollama/OllamaSetup';
+import AttackSurfaceGraph from './graph/AttackSurfaceGraph';
+import { CVSSTemporalHeatmap, EPSSRiskMatrix, VulnerabilityDensityMap } from './heatmaps';
 import './Dashboard.css';
 
 interface ToolSummary {
@@ -54,7 +60,7 @@ const Dashboard: React.FC = () => {
     expired: 0,
   });
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'tools' | 'programs' | 'security'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'tools' | 'programs' | 'security' | 'agentzero' | 'intelligence' | 'notifications' | 'ollama' | 'attacksurface' | 'heatmaps'>('overview');
   const [loading, setLoading] = useState(true);
 
   // Fetch system data on mount
@@ -163,14 +169,56 @@ const Dashboard: React.FC = () => {
         >
           {ICONS.shield} Security
         </button>
+        <button
+          className={`nav-tab ${activeTab === 'agentzero' ? 'active' : ''}`}
+          onClick={() => setActiveTab('agentzero')}
+        >
+          🤖 Agent Zero
+        </button>
+        <button
+          className={`nav-tab ${activeTab === 'intelligence' ? 'active' : ''}`}
+          onClick={() => setActiveTab('intelligence')}
+        >
+          📰 Intelligence
+        </button>
+        <button
+          className={`nav-tab ${activeTab === 'notifications' ? 'active' : ''}`}
+          onClick={() => setActiveTab('notifications')}
+        >
+          📧 Notifications
+        </button>
+        <button
+          className={`nav-tab ${activeTab === 'ollama' ? 'active' : ''}`}
+          onClick={() => setActiveTab('ollama')}
+        >
+          🧠 AI Models
+        </button>
+        <button
+          className={`nav-tab ${activeTab === 'attacksurface' ? 'active' : ''}`}
+          onClick={() => setActiveTab('attacksurface')}
+        >
+          🕸️ Attack Surface
+        </button>
+        <button
+          className={`nav-tab ${activeTab === 'heatmaps' ? 'active' : ''}`}
+          onClick={() => setActiveTab('heatmaps')}
+        >
+          🔥 Heatmaps
+        </button>
       </nav>
 
       {/* Main Content */}
-      <main className="dashboard-main">
+      <main className="dashboard-main" style={{ height: activeTab === 'agentzero' ? 'calc(100vh - 200px)' : 'auto' }}>
         {activeTab === 'overview' && <OverviewSection stats={systemStats} authStatus={authStatus} />}
         {activeTab === 'tools' && <ToolsSection tools={tools} />}
         {activeTab === 'programs' && <ProgramsSection programs={programs} />}
         {activeTab === 'security' && <SecuritySection authStatus={authStatus} />}
+        {activeTab === 'agentzero' && <AgentZeroChat />}
+        {activeTab === 'intelligence' && <RSSIntelligenceDashboard />}
+        {activeTab === 'notifications' && <CommunicationsSettings />}
+        {activeTab === 'ollama' && <OllamaSetup />}
+        {activeTab === 'attacksurface' && <AttackSurfaceGraph />}
+        {activeTab === 'heatmaps' && <HeatmapsSection />}
       </main>
     </div>
   );
@@ -253,7 +301,7 @@ const OverviewSection: React.FC<{ stats: SystemStats; authStatus: AuthorizationS
         <tbody>
           <tr>
             <td>Platform</td>
-            <td>Kaison K1 v7.0</td>
+            <td>Kaison K1 v{BRANDING.version}</td>
           </tr>
           <tr>
             <td>Phase</td>
@@ -407,6 +455,44 @@ const SecuritySection: React.FC<{ authStatus: AuthorizationStatus }> = ({ authSt
         <li>{ICONS.success} KMS encryption</li>
         <li>{ICONS.success} Compliance reporting (SOC2, GDPR, HIPAA)</li>
       </ul>
+    </div>
+  </div>
+);
+
+/**
+ * Heatmaps Section - Vulnerability heatmaps and visualizations
+ */
+const HeatmapsSection: React.FC = () => (
+  <div className="heatmaps-section">
+    <h2>Vulnerability Heatmaps</h2>
+    <p style={{ color: COLORS.textSecondary, marginBottom: '2rem' }}>
+      Visual analytics for vulnerability temporal trends, EPSS risk, and density mapping
+    </p>
+
+    <div className="heatmaps-grid">
+      <div className="heatmap-card">
+        <h3 style={{ color: COLORS.primary.main }}>CVSS Temporal Heatmap</h3>
+        <p style={{ color: COLORS.textSecondary }}>
+          Time-series visualization of CVSS scores across findings
+        </p>
+        <CVSSTemporalHeatmap />
+      </div>
+
+      <div className="heatmap-card">
+        <h3 style={{ color: COLORS.primary.main }}>EPSS Risk Matrix</h3>
+        <p style={{ color: COLORS.textSecondary }}>
+          Exploit Prediction Scoring System risk assessment
+        </p>
+        <EPSSRiskMatrix />
+      </div>
+
+      <div className="heatmap-card">
+        <h3 style={{ color: COLORS.primary.main }}>Vulnerability Density Map</h3>
+        <p style={{ color: COLORS.textSecondary }}>
+          Geographic and network density mapping of vulnerabilities
+        </p>
+        <VulnerabilityDensityMap />
+      </div>
     </div>
   </div>
 );
