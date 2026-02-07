@@ -27,7 +27,9 @@ interface Finding {
   finding_id: string
   title: string
   severity: string
-  confidence: number
+  confidence: number | string
+  validated?: boolean
+  source_tool?: string
   timestamp: string
 }
 
@@ -504,30 +506,47 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
           >
             <h3 style={{ marginBottom: '12px' }}>🎯 Discovered Vulnerabilities</h3>
 
-            {findings.map((finding) => (
-              <div
-                key={finding.finding_id}
-                style={{
-                  padding: '12px',
-                  backgroundColor: 'white',
-                  borderLeft: `4px solid ${
-                    finding.severity === 'critical'
-                      ? '#d32f2f'
-                      : finding.severity === 'high'
-                        ? '#f57c00'
-                        : '#fbc02d'
-                  }`,
-                  marginBottom: '8px',
-                  borderRadius: '2px'
-                }}
-              >
-                <div style={{ fontWeight: 600 }}>{finding.title}</div>
-                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                  Severity: <strong>{finding.severity.toUpperCase()}</strong> | Confidence:{' '}
-                  {(finding.confidence * 100).toFixed(0)}%
+            {findings.map((finding) => {
+              const sev = (finding.severity || 'info').toLowerCase()
+              const color =
+                sev === 'critical'
+                  ? '#d32f2f'
+                  : sev === 'high'
+                    ? '#f57c00'
+                    : sev === 'medium'
+                      ? '#fbc02d'
+                      : '#0288d1'
+              return (
+                <div
+                  key={finding.finding_id}
+                  style={{
+                    padding: '12px',
+                    backgroundColor: 'white',
+                    borderLeft: `4px solid ${color}`,
+                    marginBottom: '8px',
+                    borderRadius: '2px'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontWeight: 600 }}>{finding.title}</div>
+                    {finding.validated && (
+                      <span style={{ background: '#e8f5e9', color: '#2e7d32', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+                        Validated
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    Severity: <strong>{(finding.severity || 'INFO').toUpperCase()}</strong> | Confidence:{' '}
+                    {typeof finding.confidence === 'number' ? `${(finding.confidence as number) * 100}%` : finding.confidence ?? '—'}
+                  </div>
+                  {finding.source_tool && (
+                    <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
+                      Source: {finding.source_tool}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
