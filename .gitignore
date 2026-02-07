@@ -23,8 +23,6 @@ Thumbs.db
 .vscode/
 
 # Archives / generated
-archive/
 *.tar.gz
 *.zip
 *.tgz
-
