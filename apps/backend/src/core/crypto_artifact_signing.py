@@ -70,8 +70,7 @@ class KaiCryptoSystem:
             key_source_dir: Path to Kai PGP-Keys directory (default: /home/user/kai/Kai PGP-Keys)
             machine_identity: The machine signing identity (default: machine-kaisonai@pm.me)
         """
-        self.gpg_home = Path(gpg_home or os.path.expanduser("~/.kai/gpg_home"))
-        self.key_source_dir = Path(key_source_dir or "/home/user/kai/Kai PGP-Keys")
+        self.key_source_dir = Path(key_source_dir or os.getenv("K1_PGP_KEY_SOURCE_DIR", "/home/user/kai/Kai PGP-Keys"))
         self.machine_identity = machine_identity
 
         # Ensure GPG home exists with strict permissions
