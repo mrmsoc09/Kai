@@ -14,6 +14,9 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
+import os
+import json
+import httpx
 
 from .tools import (
     BaseTool,
@@ -221,7 +224,7 @@ class ArjunParams(ValidatorCLITool):
 
 
 class MetasploitRPCValidate(BaseTool):
-    """Placeholder for Metasploit RPC-driven validation."""
+    """Metasploit RPC-driven validation (best-effort JSON-RPC)."""
 
     def __init__(self):
         super().__init__(
@@ -242,17 +245,44 @@ class MetasploitRPCValidate(BaseTool):
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
-        # Placeholder guard until RPC client is implemented.
-        return ToolResult(
-            self.id,
-            ToolStatus.FAILED,
-            {"module": kwargs.get("module"), "rhost": kwargs.get("rhost")},
-            error="Metasploit RPC not configured; set MSF_RPC_URL/MSF_RPC_USER/MSF_RPC_PASS",
-        )
+        rpc_url = os.getenv("MSF_RPC_URL")
+        rpc_user = os.getenv("MSF_RPC_USER")
+        rpc_pass = os.getenv("MSF_RPC_PASS")
+        if not all([rpc_url, rpc_user, rpc_pass]):
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="MSF_RPC_URL/USER/PASS not set")
+
+        module = kwargs["module"]
+        rhost = kwargs["rhost"]
+        options = kwargs.get("options", {})
+
+        def _rpc(method: str, params: dict) -> httpx.Response:
+            return httpx.post(rpc_url, json={"method": method, "params": params}, timeout=30)
+
+        try:
+            auth = _rpc("auth.login", {"username": rpc_user, "password": rpc_pass})
+            if auth.status_code != 200 or auth.json().get("error"):
+                return ToolResult(self.id, ToolStatus.FAILED, {}, error=f"MSF auth failed: {auth.text}")
+            token = auth.json().get("result", {}).get("token")
+            if not token:
+                return ToolResult(self.id, ToolStatus.FAILED, {}, error="MSF token missing")
+
+            mod_resp = _rpc("module.execute", {"token": token, "module_type": module.split("/")[0], "module_name": "/".join(module.split("/")[1:]), "options": {"RHOSTS": rhost, **options}})
+            if mod_resp.status_code != 200:
+                return ToolResult(self.id, ToolStatus.FAILED, {}, error=f"MSF exec HTTP {mod_resp.status_code}")
+            data = mod_resp.json()
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED,
+                {"module": module, "rhost": rhost, "raw": data},
+                execution_time_ms=0,
+                metadata={"repro_command": f"msfrpc {module} RHOSTS={rhost}"},
+            )
+        except Exception as e:  # pragma: no cover
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
 
 
 class CalderaEmulation(BaseTool):
-    """MITRE Caldera / Atomic Red Team emulation runner (placeholder)."""
+    """MITRE Caldera / Atomic Red Team emulation runner (minimal HTTP client)."""
 
     def __init__(self):
         super().__init__(
@@ -272,16 +302,31 @@ class CalderaEmulation(BaseTool):
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
-        return ToolResult(
-            self.id,
-            ToolStatus.FAILED,
-            {"profile": kwargs.get("profile"), "target": kwargs.get("target")},
-            error="Caldera/Atomic integration not configured; set CALDERA_API_URL/CALDERA_API_KEY",
-        )
+        api_url = os.getenv("CALDERA_API_URL")
+        api_key = os.getenv("CALDERA_API_KEY")
+        if not api_url or not api_key:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="CALDERA_API_URL/API_KEY not set")
+
+        profile = kwargs["profile"]
+        target = kwargs["target"]
+        headers = {"KEY": api_key, "Content-Type": "application/json"}
+        payload = {"name": f"kai-{profile}", "adversary_id": profile, "host_group": [target]}
+        try:
+            resp = httpx.post(f"{api_url.rstrip('/')}/api/v2/operations", headers=headers, json=payload, timeout=30)
+            if resp.status_code not in (200, 201):
+                return ToolResult(self.id, ToolStatus.FAILED, {"raw": resp.text}, error=f"Caldera HTTP {resp.status_code}")
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED,
+                {"profile": profile, "target": target, "raw": resp.json()},
+                metadata={"repro_command": f"POST {api_url}/api/v2/operations profile={profile} target={target}"},
+            )
+        except Exception as e:  # pragma: no cover
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
 
 
 class PacuCloudValidate(BaseTool):
-    """AWS adversary simulation via Pacu (placeholder)."""
+    """AWS adversary simulation via Pacu (CLI invocation)."""
 
     def __init__(self):
         super().__init__(
@@ -301,12 +346,30 @@ class PacuCloudValidate(BaseTool):
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
-        return ToolResult(
-            self.id,
-            ToolStatus.FAILED,
-            {"module": kwargs.get("module"), "profile": kwargs.get("profile")},
-            error="Pacu integration not configured; provide AWS creds/profile and install pacu CLI",
-        )
+        module = kwargs["module"]
+        profile = kwargs["profile"]
+
+        # pacu --non-interactive --profile <profile> --module <module> --run
+        args = ["pacu", "--non-interactive", "--profile", profile, "--module", module, "--run"]
+        start = time.time()
+        try:
+            result = subprocess.run(args, capture_output=True, text=True, timeout=600)
+            elapsed = (time.time() - start) * 1000
+            ok = result.returncode == 0
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED if ok else ToolStatus.FAILED,
+                {"module": module, "profile": profile, "stdout": result.stdout},
+                error=None if ok else result.stderr,
+                execution_time_ms=elapsed,
+                metadata={"repro_command": " ".join(args)},
+            )
+        except FileNotFoundError:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="pacu CLI not found in PATH")
+        except subprocess.TimeoutExpired:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="pacu run timed out after 600s")
+        except Exception as e:  # pragma: no cover
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
 
 
 class BloodHoundCollector(BaseTool):
