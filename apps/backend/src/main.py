@@ -27,6 +27,7 @@ from apps.backend.src.routers import (
     finding_validation,
     findings,
     graph,
+    hil_approval,
     intel,
     kai_authorized_scanning,
     key_management,
@@ -96,6 +97,9 @@ app.include_router(key_management.router)
 # Human-in-the-Loop Approvals (PGP-signed action approval)
 app.include_router(approvals.router)
 
+# Human-in-the-Loop Approvals for stakeholder comms (draft review)
+app.include_router(hil_approval.router)
+
 # Artifact Signing & Chain of Custody (Vulnerability report signing & verification)
 app.include_router(artifact_signing.router)
 
@@ -105,8 +109,8 @@ app.include_router(knowledge.router)
 app.include_router(graph.router)
 
 # Core operations (Tools and orchestration)
-app.include_router(tools.router)
-app.include_router(tasks.router)
+app.include_router(tools)
+app.include_router(tasks)
 app.include_router(orchestrator.router)
 app.include_router(planner.router)
 app.include_router(chains.router)

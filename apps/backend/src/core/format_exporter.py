@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from pathlib import Path
-from typing import Optional, Dict, Any, Literal
+from typing import Optional, Dict, Any, Literal, Union
 from datetime import datetime
 import json
 import logging
@@ -45,7 +45,7 @@ class ReportExporter:
         format_type: FormatType = "markdown",
         output_path: Optional[Path] = None,
         report_id: Optional[str] = None
-    ) -> bytes:
+    ) -> Union[str, bytes]:
         """
         Export report in specified format.
 
@@ -58,7 +58,7 @@ class ReportExporter:
             report_id: Optional report ID
 
         Returns:
-            Report content as bytes
+            Report content. `bytes` for PDF, `str` for markdown/html/json.
         """
         try:
             if format_type not in self.SUPPORTED_FORMATS:
@@ -95,7 +95,7 @@ class ReportExporter:
                 'size': len(content) if isinstance(content, bytes) else len(content.encode())
             })
 
-            return content if isinstance(content, bytes) else content.encode('utf-8')
+            return content
 
         except Exception as e:
             logger.error(f"Export to {format_type} failed: {str(e)}")
@@ -108,7 +108,7 @@ class ReportExporter:
         mitigation: Dict[str, Any],
         output_dir: Optional[Path] = None,
         report_id: Optional[str] = None
-    ) -> Dict[str, bytes]:
+    ) -> Dict[str, Optional[Union[str, bytes]]]:
         """
         Export report in all supported formats.
 
@@ -120,7 +120,7 @@ class ReportExporter:
             report_id: Optional report ID
 
         Returns:
-            Dictionary mapping format types to report bytes
+            Dictionary mapping format types to report content.
         """
         report_id = report_id or f"REPORT_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
         exports = {}

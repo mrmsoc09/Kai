@@ -2,6 +2,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any
 from pathlib import Path
+import os
 import smtplib, ssl, email
 from email.parser import BytesParser
 from email.policy import default
@@ -11,7 +12,13 @@ from ..core.logs import log_decision
 router = APIRouter(prefix='/mailer', tags=['mailer'], dependencies=[Depends(require_roles(ROLE_OPERATOR))])
 
 ROOT = Path(__file__).resolve().parents[4]
-SUBMITS = ROOT / 'artifacts' / 'submissions'
+ENV_ARTIFACTS = os.getenv('K1_ARTIFACTS_ROOT')
+if ENV_ARTIFACTS and Path(ENV_ARTIFACTS).exists():
+    ARTIFACTS_ROOT = Path(ENV_ARTIFACTS)
+else:
+    ARTIFACTS_ROOT = ROOT / 'artifacts'
+
+SUBMITS = ARTIFACTS_ROOT / 'submissions'
 OUTBOX = SUBMITS / 'outbox'
 SENT = OUTBOX / 'sent'
 FOLLOWUPS = OUTBOX / 'followups'

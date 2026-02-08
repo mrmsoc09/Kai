@@ -1,15 +1,12 @@
-import os, sys
+import os
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault('K1_DEV_TOKEN', 'devtoken')
-BACKEND_SRC = ROOT / 'k1' / 'apps' / 'backend' / 'src'
-if str(BACKEND_SRC) not in sys.path:
-    sys.path.insert(0, str(BACKEND_SRC))
-import main as backend_main  # type: ignore
+from apps.backend.src.main import app  # noqa: E402
 from fastapi.testclient import TestClient
 
-client = TestClient(backend_main.app)
+client = TestClient(app)
 AUTH = {"Authorization": f"Bearer {os.environ['K1_DEV_TOKEN']}"}
 
 
@@ -26,10 +23,12 @@ def test_validate_requires_sections_and_video():
     assert r.status_code == 200
     j = r.json()
     assert j['ok'] is False
-    assert 'screen_recording_missing' in j['result']['issues']
+    issues = j['result'].get('issues') or []
+    assert any(isinstance(it, dict) and it.get('code') == 'screen_recording_missing' for it in issues)
 
     payload['has_recording'] = True
     r2 = client.post('/reports/validate', json=payload, headers=AUTH)
     assert r2.status_code == 200
     j2 = r2.json()
-    assert 'screen_recording_missing' not in j2['result']['issues']
+    issues2 = j2['result'].get('issues') or []
+    assert not any(isinstance(it, dict) and it.get('code') == 'screen_recording_missing' for it in issues2)

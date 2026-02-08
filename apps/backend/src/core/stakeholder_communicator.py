@@ -1,14 +1,53 @@
 """
-Stakeholder Communication System
-Autonomous email correspondence with BBP program stakeholders
+Stakeholder Communication System (DEPRECATED)
+
+⚠️  WARNING: This module contains DEPRECATED auto-send functions.
+⚠️  Platform NEVER auto-sends emails per HiL approval policy.
+
+MIGRATION PATH:
+--------------
+OLD (Deprecated):
+    from .stakeholder_communicator import send_findings_to_program
+    await send_findings_to_program(program, scan_result, notification_service)
+
+NEW (Correct):
+    from .email_draft_generator import generate_initial_findings_draft
+    from .hil_approval_system import HiLApprovalSystem
+
+    # Generate draft
+    draft = await generate_initial_findings_draft(program, scan_result)
+
+    # Create approval request
+    hil_system = HiLApprovalSystem()
+    approval = await hil_system.request_report_submission_approval(
+        scan_id=scan_id,
+        program_id=program['id'],
+        program_name=program['name'],
+        report_content={'email_draft': draft, ...},
+        submission_platform=program['platform']
+    )
+
+    # User reviews and approves via API
+    # User manually sends email
+
+For new code, use:
+- email_draft_generator.py - Generate email drafts
+- hil_approval_system.py - Manage approval workflow
+- hil_approval.py (router) - API endpoints for approval management
 """
 
 import logging
+import warnings
 from datetime import datetime
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# DEPRECATED FUNCTIONS - Use HiL Approval System Instead
+# ============================================================================
 
 
 async def send_findings_to_program(
@@ -17,50 +56,117 @@ async def send_findings_to_program(
     notification_service: Any
 ) -> bool:
     """
-    Send findings report to program stakeholders
+    ⚠️  DEPRECATED: Auto-send function violates HiL approval policy.
+
+    This function automatically sends emails, which is no longer allowed.
+    Platform NEVER auto-sends emails - all communications require HiL approval.
+
+    MIGRATION:
+        Use email_draft_generator.generate_initial_findings_draft() to create
+        draft, then use HiLApprovalSystem.request_report_submission_approval()
+        to queue for user review.
 
     Args:
         program: BBP program details
         scan_result: Full scan result with findings
-        notification_service: Notification service for sending emails
+        notification_service: Notification service (unused in new workflow)
 
     Returns:
-        bool: True if email sent successfully
+        False - Function is deprecated and does nothing
     """
 
-    program_name = program.get("name", "Unknown Program")
-    contact_email = program.get("contact_email")
+    warnings.warn(
+        "send_findings_to_program() is DEPRECATED and does nothing. "
+        "Use HiL approval system: email_draft_generator + HiLApprovalSystem",
+        DeprecationWarning,
+        stacklevel=2
+    )
 
-    if not contact_email:
-        logger.warning(f"No contact email for program {program_name}")
-        return False
+    logger.error("⚠️  DEPRECATED: send_findings_to_program() called - function does nothing")
+    logger.error("⚠️  Migrate to HiL approval system: see stakeholder_communicator.py docstring")
 
-    logger.info(f"Sending findings report to {contact_email} for {program_name}")
+    return False
 
-    # Generate email content
-    subject = f"[Kaison K1] Security Findings Report - {program_name}"
-    body = await generate_findings_email(program, scan_result)
 
-    # Send email
-    try:
-        success = await notification_service.send_notification(
-            to=contact_email,
-            subject=subject,
-            body=body,
-            priority="high",
-            html=True
-        )
+async def send_status_update(
+    program: Dict[str, Any],
+    scan_id: str,
+    status: str,
+    message: str,
+    notification_service: Any
+) -> bool:
+    """
+    ⚠️  DEPRECATED: Auto-send function violates HiL approval policy.
 
-        if success:
-            logger.info(f"✓ Findings report sent to {contact_email}")
-        else:
-            logger.error(f"Failed to send findings report to {contact_email}")
+    Status updates should be sent through HiL approval workflow if needed.
+    Platform NEVER auto-sends emails without user review.
 
-        return success
+    MIGRATION:
+        Generate draft using email_draft_generator, then create approval
+        request using HiLApprovalSystem.
 
-    except Exception as e:
-        logger.error(f"Error sending findings report: {str(e)}")
-        return False
+    Args:
+        program: BBP program details
+        scan_id: Scan ID
+        status: Status message
+        message: Detailed message
+        notification_service: Notification service (unused)
+
+    Returns:
+        False - Function is deprecated and does nothing
+    """
+
+    warnings.warn(
+        "send_status_update() is DEPRECATED. Use HiL approval system.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+
+    logger.error("⚠️  DEPRECATED: send_status_update() called - function does nothing")
+
+    return False
+
+
+async def send_follow_up_request(
+    program: Dict[str, Any],
+    scan_id: str,
+    findings_requiring_feedback: List[Dict[str, Any]],
+    notification_service: Any
+) -> bool:
+    """
+    ⚠️  DEPRECATED: Auto-send function violates HiL approval policy.
+
+    Follow-up emails should be sent through HiL approval workflow.
+    Platform NEVER auto-sends emails without user review.
+
+    MIGRATION:
+        Generate draft reply using email_draft_generator, then create
+        approval request using HiLApprovalSystem.request_email_reply_approval()
+
+    Args:
+        program: BBP program details
+        scan_id: Scan ID
+        findings_requiring_feedback: Findings needing feedback
+        notification_service: Notification service (unused)
+
+    Returns:
+        False - Function is deprecated and does nothing
+    """
+
+    warnings.warn(
+        "send_follow_up_request() is DEPRECATED. Use HiL approval system.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+
+    logger.error("⚠️  DEPRECATED: send_follow_up_request() called - function does nothing")
+
+    return False
+
+
+# ============================================================================
+# LEGACY EMAIL GENERATION - Use email_draft_generator.py Instead
+# ============================================================================
 
 
 async def generate_findings_email(
@@ -68,15 +174,28 @@ async def generate_findings_email(
     scan_result: Any
 ) -> str:
     """
-    Generate HTML email content for findings report
+    ⚠️  LEGACY: Use email_draft_generator.generate_initial_findings_draft() instead.
+
+    This function generates HTML email content but is superseded by the
+    email_draft_generator module which provides better formatting and
+    integrates with the HiL approval workflow.
+
+    Kept for backward compatibility only.
 
     Args:
         program: BBP program details
         scan_result: Full scan result
 
     Returns:
-        str: HTML email content
+        str: HTML email content (legacy format)
     """
+
+    warnings.warn(
+        "generate_findings_email() is LEGACY. "
+        "Use email_draft_generator.generate_initial_findings_draft()",
+        PendingDeprecationWarning,
+        stacklevel=2
+    )
 
     program_name = program.get("name", "Unknown Program")
     target = scan_result.target
@@ -404,160 +523,3 @@ async def generate_findings_email(
     """
 
     return email_html
-
-
-async def send_status_update(
-    program: Dict[str, Any],
-    scan_id: str,
-    status: str,
-    message: str,
-    notification_service: Any
-) -> bool:
-    """
-    Send status update to program stakeholders
-
-    Args:
-        program: BBP program details
-        scan_id: Scan ID
-        status: Status message
-        message: Detailed message
-        notification_service: Notification service
-
-    Returns:
-        bool: True if sent successfully
-    """
-
-    contact_email = program.get("contact_email")
-    if not contact_email:
-        return False
-
-    program_name = program.get("name", "Unknown Program")
-    subject = f"[Kaison K1] Scan Status Update - {program_name}"
-
-    body = f"""
-    <html>
-    <body style="font-family: 'JetBrains Mono', monospace; background: #121212; color: #E0E0E0; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #00FF41; text-shadow: 0 0 10px #00FF4155;">
-                Kaison K1 - Scan Status Update
-            </h1>
-
-            <div style="background: #1E1E1E; border: 1px solid #00FF41; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                <p><strong>Program:</strong> {program_name}</p>
-                <p><strong>Scan ID:</strong> <code>{scan_id}</code></p>
-                <p><strong>Status:</strong> <span style="color: #00FF41;">{status}</span></p>
-                <p><strong>Message:</strong></p>
-                <p style="margin-left: 20px;">{message}</p>
-            </div>
-
-            <p style="color: #9E9E9E; font-size: 0.875rem;">
-                This is an automated status update from Kaison K1 Platform.<br>
-                Timestamp: {datetime.utcnow().isoformat()}
-            </p>
-        </div>
-    </body>
-    </html>
-    """
-
-    try:
-        return await notification_service.send_notification(
-            to=contact_email,
-            subject=subject,
-            body=body,
-            priority="normal",
-            html=True
-        )
-    except Exception as e:
-        logger.error(f"Failed to send status update: {str(e)}")
-        return False
-
-
-async def send_follow_up_request(
-    program: Dict[str, Any],
-    scan_id: str,
-    findings_requiring_feedback: List[Dict[str, Any]],
-    notification_service: Any
-) -> bool:
-    """
-    Send follow-up request for findings that need stakeholder feedback
-
-    Args:
-        program: BBP program details
-        scan_id: Scan ID
-        findings_requiring_feedback: Findings needing feedback
-        notification_service: Notification service
-
-    Returns:
-        bool: True if sent successfully
-    """
-
-    contact_email = program.get("contact_email")
-    if not contact_email:
-        return False
-
-    program_name = program.get("name", "Unknown Program")
-    subject = f"[Kaison K1] Follow-up Required - {program_name}"
-
-    findings_list = ""
-    for i, finding in enumerate(findings_requiring_feedback, 1):
-        findings_list += f"""
-        <li style="margin-bottom: 12px;">
-            <strong>{finding.get('type', 'Unknown')}</strong>
-            ({finding.get('severity', 'unknown').upper()})<br>
-            <span style="color: #9E9E9E; font-size: 0.875rem;">
-                {finding.get('description', 'No description')}
-            </span>
-        </li>
-        """
-
-    body = f"""
-    <html>
-    <body style="font-family: 'JetBrains Mono', monospace; background: #121212; color: #E0E0E0; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #00FF41; text-shadow: 0 0 10px #00FF4155;">
-                Kaison K1 - Follow-up Required
-            </h1>
-
-            <p>Hello,</p>
-
-            <p>
-                We have identified {len(findings_requiring_feedback)} findings that require
-                additional information or feedback from your team.
-            </p>
-
-            <div style="background: #1E1E1E; border: 1px solid #00FF41; border-radius: 8px; padding: 20px; margin: 20px 0;">
-                <h2 style="color: #00FF41; margin-top: 0;">Findings Requiring Feedback:</h2>
-                <ol style="margin: 0; padding-left: 20px;">
-                    {findings_list}
-                </ol>
-            </div>
-
-            <p>
-                Please reply to this email with:
-            </p>
-            <ul>
-                <li>Confirmation of findings</li>
-                <li>Remediation timeline</li>
-                <li>Any questions or concerns</li>
-            </ul>
-
-            <p style="color: #9E9E9E; font-size: 0.875rem; margin-top: 40px;">
-                Scan ID: <code>{scan_id}</code><br>
-                Timestamp: {datetime.utcnow().isoformat()}
-            </p>
-        </div>
-    </body>
-    </html>
-    """
-
-    try:
-        return await notification_service.send_notification(
-            to=contact_email,
-            subject=subject,
-            body=body,
-            priority="high",
-            html=True
-        )
-    except Exception as e:
-        logger.error(f"Failed to send follow-up request: {str(e)}")
-        return False

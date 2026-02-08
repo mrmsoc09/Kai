@@ -26,7 +26,7 @@ pip install -r requirements.txt --upgrade
 ```
 
 New dependencies added:
-- `weasyprint>=60.0` - PDF generation
+- `weasyprint>=61.2` - PDF generation
 - `Markdown>=3.5` - Markdown processing
 - `bleach>=6.0` - HTML sanitization
 - `Pillow>=10.0` - Image processing

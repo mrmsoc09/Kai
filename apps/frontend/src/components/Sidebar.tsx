@@ -7,6 +7,7 @@ const links = [
   {to:'/wizard', label:'Wizard'},
   {to:'/dashboard', label:'Dashboard'},
   {to:'/operations', label:'Operations'},
+  {to:'/operations/approvals', label:'HiL Approvals'},
   {to:'/arsenal', label:'Arsenal'},
   {to:'/intelligence', label:'Intelligence'},
   {to:'/mcp-registry', label:'MCP Registry'},

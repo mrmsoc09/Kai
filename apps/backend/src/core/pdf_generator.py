@@ -223,6 +223,9 @@ img {
 }
 """
 
+# Parse CSS once; reusing it materially speeds up repeated PDF generation.
+_PDF_CSS = CSS(string=PDF_STYLESHEET)
+
 
 def markdown_to_html(markdown_content: str, stakeholder: str = "default") -> str:
     """
@@ -306,7 +309,7 @@ def generate_pdf(
         # Generate PDF from HTML
         HTML(string=html_content).write_pdf(
             output_buffer,
-            stylesheets=[CSS(string=PDF_STYLESHEET)]
+            stylesheets=[_PDF_CSS]
         )
 
         # Return bytes if in-memory

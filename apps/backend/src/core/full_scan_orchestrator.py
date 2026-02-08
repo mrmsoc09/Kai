@@ -87,7 +87,9 @@ class FullScanOrchestrator:
     6. Repair (auto-generate fixes for discovered vulnerabilities)
     7. Validation (verify fixes work)
     8. Reporting (generate comprehensive report)
-    9. Stakeholder Communication (email findings to program contacts)
+    9. Stakeholder Communication (create email draft for HiL approval)
+
+    IMPORTANT: Platform NEVER auto-sends emails. Phase 9 creates drafts for user review.
     """
 
     def __init__(self):
@@ -96,12 +98,12 @@ class FullScanOrchestrator:
         from .autonomous_bbp_selector import get_bbp_selector
         from .repair_pipeline import get_repair_pipeline
         from .budget_tracker import get_budget_tracker
-        from ..integrations.notification_service import get_notification_service
+        from .hil_approval_system import HiLApprovalSystem
 
         self.bbp_selector = get_bbp_selector()
         self.repair_pipeline = get_repair_pipeline()
         self.budget_tracker = get_budget_tracker()
-        self.notification_service = get_notification_service()
+        self.hil_system = HiLApprovalSystem()
 
         # Active scans
         self.active_scans: Dict[str, FullScanResult] = {}
@@ -579,31 +581,79 @@ class FullScanOrchestrator:
         program: Dict[str, Any],
         scan_result: FullScanResult
     ) -> PhaseResult:
-        """Phase: Communicate findings to program stakeholders"""
+        """
+        Phase: Create draft communication for stakeholder approval
+
+        IMPORTANT: This phase NEVER sends emails automatically.
+        It creates a draft email and approval request for user review.
+        User must approve and manually send the email.
+        """
 
         started_at = datetime.utcnow()
-        logger.info(f"[{scan_id}] Phase: Stakeholder Communication")
+        logger.info(f"[{scan_id}] Phase: Stakeholder Communication (Draft Creation)")
 
-        # Send findings to program contact
-        from .stakeholder_communicator import send_findings_to_program
+        # Generate draft email for findings report
+        from .email_draft_generator import generate_initial_findings_draft
 
-        success = await send_findings_to_program(
-            program=program,
-            scan_result=scan_result,
-            notification_service=self.notification_service
-        )
+        try:
+            # Create email draft
+            draft = await generate_initial_findings_draft(
+                program=program,
+                scan_result=scan_result
+            )
 
-        completed_at = datetime.utcnow()
-        duration = (completed_at - started_at).total_seconds()
+            logger.info(f"[{scan_id}] Email draft generated")
 
-        return PhaseResult(
-            phase=ScanPhase.STAKEHOLDER_COMMUNICATION,
-            status=ScanStatus.COMPLETED if success else ScanStatus.FAILED,
-            started_at=started_at,
-            completed_at=completed_at,
-            duration_seconds=duration,
-            output={"email_sent": success}
-        )
+            # Create HiL approval request for report submission
+            approval_request = await self.hil_system.request_report_submission_approval(
+                scan_id=scan_id,
+                program_id=program.get("id", ""),
+                program_name=program.get("name", "Unknown Program"),
+                report_content={
+                    "email_draft": draft,
+                    "findings_count": scan_result.total_findings,
+                    "critical_count": scan_result.critical_findings,
+                    "high_count": scan_result.high_findings,
+                    "report_path": scan_result.final_report_path
+                },
+                submission_platform=program.get("platform", "unknown")
+            )
+
+            logger.info(f"[{scan_id}] Approval request created: {approval_request.approval_id}")
+            logger.info(f"[{scan_id}] ⚠️  EMAIL DRAFT READY - User approval required before sending")
+
+            completed_at = datetime.utcnow()
+            duration = (completed_at - started_at).total_seconds()
+
+            return PhaseResult(
+                phase=ScanPhase.STAKEHOLDER_COMMUNICATION,
+                status=ScanStatus.COMPLETED,
+                started_at=started_at,
+                completed_at=completed_at,
+                duration_seconds=duration,
+                output={
+                    "draft_created": True,
+                    "approval_id": approval_request.approval_id,
+                    "approval_status": approval_request.status.value,
+                    "email_subject": draft.get("subject"),
+                    "email_to": draft.get("to"),
+                    "note": "Email draft created and queued for user approval. User must review and manually send."
+                }
+            )
+
+        except Exception as e:
+            logger.error(f"[{scan_id}] Failed to create email draft: {str(e)}")
+            completed_at = datetime.utcnow()
+            duration = (completed_at - started_at).total_seconds()
+
+            return PhaseResult(
+                phase=ScanPhase.STAKEHOLDER_COMMUNICATION,
+                status=ScanStatus.FAILED,
+                started_at=started_at,
+                completed_at=completed_at,
+                duration_seconds=duration,
+                errors=[f"Draft creation failed: {str(e)}"]
+            )
 
     def get_scan_status(self, scan_id: str) -> Optional[FullScanResult]:
         """Get status of active scan"""

@@ -121,6 +121,14 @@ try:
 except ImportError as e:
     print(f"[!] Autonomous Scanning router not available: {str(e)}")
 
+# Import and include HiL Approval router
+try:
+    from ..routers import hil_approval
+    app.include_router(hil_approval.router)
+    print("[✓] HiL Approval router loaded")
+except ImportError as e:
+    print(f"[!] HiL Approval router not available: {str(e)}")
+
 # Application startup event - initialize orchestrator and watchdog
 @app.on_event("startup")
 async def startup_event():
@@ -296,6 +304,23 @@ async def startup_event():
         print("[✓] Full Scan Orchestrator initialized")
     except Exception as e:
         print(f"[!] Scan Orchestrator startup error: {str(e)}")
+
+    # Initialize HiL Approval System
+    try:
+        from ..routers.hil_approval import get_hil_system
+        hil_system = get_hil_system()
+        print("[✓] HiL Approval System initialized")
+    except Exception as e:
+        print(f"[!] HiL Approval System startup error: {str(e)}")
+
+    # Initialize Tool Registry (OSINT/Security Tools)
+    try:
+        from ..core.tool_adapters.tool_registry import initialize_tool_registry
+        tool_registry = await initialize_tool_registry()
+        stats = await tool_registry.get_stats()
+        print(f"[✓] Tool Registry initialized: {stats.available_tools}/{stats.total_tools} tools available")
+    except Exception as e:
+        print(f"[!] Tool Registry startup error: {str(e)}")
 
     # Initialize Neo4j Graph Database (optional - may not be configured)
     try:

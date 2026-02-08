@@ -30,6 +30,7 @@ import Validation from './routes/Validation'
 import Planner from './pages/Planner'
 import Outbox from './pages/Outbox'
 import HiLReview from './pages/HiLReview'
+import ApprovalsDashboard from './pages/ApprovalsDashboard'
 
 // Layout
 import Layout from './components/Layout'
@@ -45,6 +46,7 @@ export default function App(){
         {/* Core Operations */}
         <Route path='/operations' element={<Operations />} />
         <Route path='/operations/hil-review' element={<HiLReview />} />
+        <Route path='/operations/approvals' element={<ApprovalsDashboard />} />
         <Route path='/operations/outbox' element={<Outbox />} />
         <Route path='/operations/logs' element={<Logs />} />
 

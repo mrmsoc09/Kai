@@ -31,9 +31,8 @@ class AuditMiddleware(BaseHTTPMiddleware):
             rec['status'] = resp.status_code
             return resp
         finally:
-            try:
-                with open(path, 'a', encoding='utf-8') as f:
-                    f.write(json.dumps(rec, ensure_ascii=False) + '
-')
-            except Exception:
-                pass
+	            try:
+	                with open(path, 'a', encoding='utf-8') as f:
+	                    f.write(json.dumps(rec, ensure_ascii=False) + '\n')
+	            except Exception:
+	                pass

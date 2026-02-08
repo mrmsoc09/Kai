@@ -26,3 +26,8 @@ Thumbs.db
 *.tar.gz
 *.zip
 *.tgz
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example
