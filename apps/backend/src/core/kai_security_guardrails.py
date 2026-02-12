@@ -14,6 +14,27 @@ import hashlib
 logger = logging.getLogger(__name__)
 
 
+class ToolRiskTier(Enum):
+    """Risk classification for tools; informs approval gating."""
+    TIER_0_SAFE = "tier_0_safe"        # passive / local only
+    TIER_1_NOTIFY = "tier_1_notify"    # active-but-low-risk; notify only
+    TIER_2_INTRUSIVE = "tier_2_intrusive"  # intrusive/exploit; approval required
+
+
+# Minimal default policy; populated by adapters during registration.
+TOOL_TIER_MAP: Dict[str, ToolRiskTier] = {}
+
+
+def set_tool_tier(tool_id: str, tier: ToolRiskTier):
+    """Register or update a tool's risk tier."""
+    TOOL_TIER_MAP[tool_id] = tier
+
+
+def get_tool_tier(tool_id: str) -> ToolRiskTier:
+    """Resolve tier; default to intrusive if unknown to stay safe."""
+    return TOOL_TIER_MAP.get(tool_id, ToolRiskTier.TIER_2_INTRUSIVE)
+
+
 class ScanAuthorization(Enum):
     """Authorization types for scanning"""
     BUG_BOUNTY_PLATFORM = "bug_bounty_platform"  # HackerOne, Bugcrowd, etc.

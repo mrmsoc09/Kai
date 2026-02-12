@@ -1,15 +1,12 @@
-import os, sys
+import os
 from pathlib import Path
-ROOT = Path(__file__).resolve().parents[2]
+REPO_ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault('K1_DEV_TOKEN', 'devtoken')
-BACKEND_SRC = ROOT / 'k1' / 'apps' / 'backend' / 'src'
-if str(BACKEND_SRC) not in sys.path:
-    sys.path.insert(0, str(BACKEND_SRC))
-import main as backend_main  # type: ignore
+from apps.backend.src.main import app  # noqa: E402
 from fastapi.testclient import TestClient
-client = TestClient(backend_main.app)
+client = TestClient(app)
 AUTH = {"Authorization": f"Bearer {os.environ['K1_DEV_TOKEN']}"}
-REC_ROOT = ROOT / 'k1' / 'artifacts' / 'recordings'
+REC_ROOT = REPO_ROOT / 'artifacts' / 'recordings'
 RUN_ID = 'submit-run-001'
 
 def setup_recording():

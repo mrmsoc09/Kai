@@ -44,5 +44,16 @@ def load_run(run_id: str) -> Optional[Dict[str, Any]]:
     except Exception:
         return None
 
+
+def append_finding(run_id: str, finding: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Append a finding to a run record (creates run if missing).
+    """
+    run = load_run(run_id) or {"id": run_id, "findings": []}
+    fins = run.setdefault("findings", [])
+    fins.append(finding)
+    save_run_record(run_id, run)
+    return run
+
 # alias for explicit save
 save_run_record = write_run_record

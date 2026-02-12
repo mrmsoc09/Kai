@@ -27,6 +27,12 @@ class Finding(BaseModel):
     chain_potential: Optional[str] = None
     stage: Optional[str] = None
     status: Optional[str] = None
+    source_tool: Optional[str] = None
+    validated: bool = False
+    confidence: Optional[str] = None
+    repro_command: Optional[str] = None
+    artifacts: List[str] = Field(default_factory=list)
+    raw_output: Optional[Dict[str, Any]] = None
     evidence_completeness: Optional[int] = None
     description: Optional[str] = None
     evidence_ids: List[str] = Field(default_factory=list)
@@ -77,4 +83,3 @@ class MCPServer(BaseModel):
     status: Optional[str] = None
     uptime_seconds: Optional[int] = None
     purpose: Optional[str] = None
-

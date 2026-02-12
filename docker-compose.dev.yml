@@ -86,6 +86,31 @@ services:
       - k1_network
     restart: unless-stopped
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: k1_worker
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      SHODAN_API_KEY: ${SHODAN_API_KEY:-}
+      # Align PATH for Go-installed binaries inside the worker
+      PATH: "/root/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/go/bin"
+    depends_on:
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - ./artifacts:/app/artifacts
+    networks:
+      - k1_network
+    restart: unless-stopped
+    command: >
+      sh -c "
+        pip install -q -r requirements.txt &&
+        celery -A apps.backend.src.worker.celery_app.celery_app worker -Q tools,intrusive --loglevel=info
+      "
+
   # React Frontend
   frontend:
     image: node:18-alpine

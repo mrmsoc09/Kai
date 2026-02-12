@@ -1,0 +1,53 @@
+# Worker image containing CLI tooling for recon/vuln scans
+FROM debian:12-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+      ca-certificates curl wget git jq python3 python3-pip python3-venv \
+      libssl-dev libffi-dev build-essential \
+      # common wordlists
+      wordlists \
+      # exiftool dependency
+      libimage-exiftool-perl \
+      # ffuf deps
+      libpcap0.8 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Go tools (ProjectDiscovery suite + trufflehog, theHarvester)
+RUN apt-get update && apt-get install -y --no-install-recommends golang && rm -rf /var/lib/apt/lists/*
+
+ENV GOPATH=/root/go
+ENV PATH="/root/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/go/bin:$PATH"
+
+# ProjectDiscovery tools
+RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
+    go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest && \
+    go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
+    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
+    go install github.com/projectdiscovery/katana/cmd/katana@latest && \
+    go install github.com/projectdiscovery/chaos-client/cmd/chaos@latest && \
+    go install github.com/projectdiscovery/uncover/cmd/uncover@latest
+
+# ffuf
+RUN go install github.com/ffuf/ffuf/v2@latest
+
+# Amass
+RUN go install github.com/owasp-amass/amass/v4/...@latest
+
+# trufflehog
+RUN go install github.com/trufflesecurity/trufflehog/v3@latest
+
+# theHarvester (pip)
+RUN pip install --no-cache-dir theHarvester==4.5.0
+
+# Python libs for adapters
+RUN pip install --no-cache-dir httpx==0.28.1
+
+WORKDIR /app
+COPY . /app
+
+# Default command: start Celery worker (queue name tools)
+CMD ["bash", "-lc", "cd /app && celery -A apps.backend.src.worker.celery_app worker -Q tools -l info"]
+

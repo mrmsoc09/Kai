@@ -46,6 +46,24 @@
 
 ---
 
+## 🚀 Quick Start (Docker)
+
+```bash
+git clone https://github.com/mrmsoc09/Kaison_Latest_Build.git
+cd Kaison_Latest_Build
+docker-compose -f docker-compose.dev.yml up --build backend worker redis postgres
+# Frontend (dev): in another shell
+cd apps/frontend && npm install && npm run dev -- --host
+```
+
+API test:
+```bash
+curl -X POST http://localhost:8080/api/v1/tasks/enqueue \
+  -H 'Content-Type: application/json' \
+  -d '{"tool_id":"httpx_probe","params":{"target":"https://example.com"}}'
+```
+
+Artifacts land in `artifacts/`; poll `/api/v1/tasks/{task_id}` for status.
 ## 🚀 Quick Start
 
 ### For Bug Bounty Hunters (5 minutes)
@@ -93,6 +111,12 @@ gcloud run deploy k1-backend --source .
 ---
 
 ## ✨ Core Features
+
+- **Recon/Vuln adapters**: amass, subfinder, naabu, httpx, nuclei, ffuf, shodan host, theHarvester, trufflehog, exiftool.
+- **Queue-backed execution**: Celery worker (`tools` queue) keeps API fast; artifacts saved to `artifacts/`.
+- **Tool registry + autonomy tiers**: approval hooks ready; phase‑1 runs default to safe tiers.
+- **FastAPI REST**: `/api/v1/tools` (discover), `/api/v1/tasks/enqueue` (run), `/api/v1/tasks/{id}` (status/results).
+- **Dockerized workflow**: backend, worker, redis, postgres; worker image ships binaries.
 
 ### 🔍 **Autonomous OSINT & Reconnaissance**
 - ✅ Domain enumeration, DNS resolution, WHOIS lookups
@@ -453,6 +477,7 @@ kubectl apply -f k8s/
 
 - 🌐 **Twitter/X** - @KaisonPlatform (coming soon)
 - 💬 **Discord** - Join our community (coming soon)
+- 📧 **Email** - support@kaison.ai (coming soon)
 - 📧 **Email** - kaisonai@pm.me
 
 ---

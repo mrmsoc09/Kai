@@ -1,11 +1,33 @@
-.env
-.env.*
-k1/artifacts/
+# Core artifacts and logs
+artifacts/
+var/
+*.log
+*.pem
+*.lock
+
+# Python
 __pycache__/
+*.pyc
+.venv
+venv
+
+# Node
 node_modules/
+apps/frontend/node_modules/
+*.cache
+
+# OS / editor
 .DS_Store
-.Python
-.venv/
+Thumbs.db
+.idea/
+.vscode/
+
+# Archives / generated
 *.tar.gz
 *.zip
-*.bundle
+*.tgz
+
+# Environment files (never commit secrets)
+.env
+.env.*
+!.env.example

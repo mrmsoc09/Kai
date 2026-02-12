@@ -76,6 +76,10 @@ class ReportValidator:
         Returns:
             Validation result with detailed issues and recommendations
         """
+        # Some exporters may return bytes; normalize to str for regex/metrics.
+        if isinstance(content, (bytes, bytearray)):
+            content = content.decode("utf-8", errors="replace")
+
         if finding_data is None:
             finding_data = {}
 
@@ -90,13 +94,31 @@ class ReportValidator:
         # Check metadata presence
         metadata_issues = self._check_metadata(finding_data)
 
+        # Recording requirement (explicit issue for UI/tests)
+        recording_issues: List[Dict[str, Any]] = []
+        if not has_recording:
+            recording_issues.append({
+                'section': 'Recording',
+                'level': 'error',
+                'code': 'screen_recording_missing',
+                'message': 'Screen recording is required for submission'
+            })
+
         # Calculate validation score
-        all_issues = missing_sections + quality_issues + metadata_issues
+        all_issues = missing_sections + quality_issues + metadata_issues + recording_issues
         compliance_score = self._calculate_compliance_score(len(all_issues), len(rules.get("required_sections", [])))
 
         # Warnings vs errors
         errors = [issue for issue in all_issues if issue['level'] == 'error']
         warnings = [issue for issue in all_issues if issue['level'] == 'warning']
+
+        if not has_recording:
+            errors.append({
+                "code": "screen_recording_missing",
+                "section": "Recording",
+                "level": "error",
+                "message": "Screen recording is required for submission validation",
+            })
 
         is_valid = not errors and has_recording
         issues = errors + warnings

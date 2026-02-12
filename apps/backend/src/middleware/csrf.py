@@ -38,6 +38,13 @@ class CSRFProtectionMiddleware(BaseHTTPMiddleware):
         if any(request.url.path.startswith(path) for path in CSRF_EXEMPT_ENDPOINTS):
             return await call_next(request)
 
+        # CSRF is primarily a browser-cookie threat. If the request is using an
+        # explicit Bearer token (typical API client / SPA auth), CSRF protection
+        # is not applicable and would incorrectly block legitimate requests.
+        auth = request.headers.get("Authorization", "")
+        if auth.startswith("Bearer "):
+            return await call_next(request)
+
         # Get CSRF token from request headers
         csrf_token = request.headers.get("X-CSRF-Token")
 

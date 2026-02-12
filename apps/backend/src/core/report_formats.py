@@ -145,9 +145,18 @@ def validate_rendered(stakeholder: str, content: str, run_id: str | None = None,
     issues = []
 
     if not bool(has_recording):
-        issues.append('screen_recording_missing')
+        issues.append({
+            'code': 'screen_recording_missing',
+            'level': 'error',
+            'message': 'Screen recording is required for submission'
+        })
     if missing:
-        issues.append('missing_sections')
+        issues.append({
+            'code': 'missing_sections',
+            'level': 'error',
+            'message': f"Missing required sections: {', '.join(missing)}",
+            'sections': missing
+        })
 
     return {
         'ok': ok,

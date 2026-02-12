@@ -30,8 +30,18 @@ try:
 except ImportError:
     PATCHING_AVAILABLE = False
 
+# Repair Pipeline imports (Phase 1-5 Hybrid AI Integration)
+try:
+    from ..core.repair_pipeline import get_repair_pipeline
+    REPAIR_PIPELINE_AVAILABLE = True
+except ImportError:
+    REPAIR_PIPELINE_AVAILABLE = False
+
 import json
+import time
 from pathlib import Path
+from pydantic import BaseModel
+from ..core.run_store import append_finding
 
 router = APIRouter(prefix="/findings", tags=["findings"])
 
@@ -109,6 +119,17 @@ def _save_remediation_execution(plan_id: str, execution: Dict[str, Any]):
     with open(execution_file, 'a') as f:
         f.write(json.dumps(execution) + '\n')
 
+
+class ToolResultIngest(BaseModel):
+    run_id: str
+    tool_id: str
+    status: str
+    output: Dict[str, Any] = {}
+    error: str | None = None
+    metadata: Dict[str, Any] = {}
+    target: str | None = None
+    severity: str | None = None
+
 @router.post('/set_status')
 def set_status(payload: Dict[str, Any]) -> Dict[str, Any]:
     run_id = payload.get('run_id')
@@ -156,6 +177,28 @@ def set_status(payload: Dict[str, Any]) -> Dict[str, Any]:
     # Persist updated run (recomputes metrics)
     save_run_record(run_id, run)
     return {'ok': True, 'run_id': run_id, 'findings': fins, 'artifacts': run.get('artifacts', {})}
+
+
+@router.post("/ingest/tool-result")
+def ingest_tool_result(payload: ToolResultIngest):
+    """
+    Convert a tool result into a Finding entry and persist to run store.
+    """
+    finding = {
+        "id": f"{payload.tool_id}-{int(time.time())}",
+        "title": payload.tool_id,
+        "severity": payload.severity or "info",
+        "status": "VALIDATED" if payload.status.lower() == "completed" else "OPEN",
+        "target_asset": payload.target,
+        "source_tool": payload.tool_id,
+        "validated": payload.status.lower() == "completed",
+        "confidence": "medium",
+        "repro_command": payload.metadata.get("repro_command"),
+        "artifacts": [],
+        "raw_output": payload.output,
+    }
+    run = append_finding(payload.run_id, finding)
+    return {"ok": True, "run": run}
 
 
 # ============================================================================
@@ -1079,3 +1122,108 @@ async def get_patching_stats(
         'validation_stats': validator.get_validation_stats(),
         'remediation_stats': engine.get_remediation_stats(),
     }
+
+
+# ============================================================================
+# HYBRID AI REPAIR PIPELINE (PHASE 1-5 INTEGRATION)
+# ============================================================================
+
+@router.post('/repair/discover-and-repair')
+async def discover_and_repair_vulnerabilities(
+    payload: Dict[str, Any],
+    _=Depends(require_roles(ROLE_OPERATOR))
+) -> Dict[str, Any]:
+    """
+    Execute full vulnerability repair pipeline.
+
+    Workflow:
+    1. Discovery (OSINTAgent + local models, $0)
+    2. Analysis (ReasoningAgent + paid APIs for complex findings)
+    3. Repair (RepairAgent + Codex/Claude Code)
+    4. Validation (FixValidator + local models)
+    5. Auto-apply (if auto_repair=True)
+    6. Post-review report with all changes
+
+    Payload:
+        target: Domain/IP to scan
+        auto_repair: If True, auto-apply fixes (default: True)
+        session_id: Session ID for budget tracking (optional)
+    """
+    if not REPAIR_PIPELINE_AVAILABLE:
+        raise HTTPException(503, 'Repair pipeline not available')
+
+    target = payload.get('target')
+    auto_repair = payload.get('auto_repair', True)
+    session_id = payload.get('session_id')
+
+    if not target:
+        raise HTTPException(400, 'target required')
+
+    pipeline = get_repair_pipeline()
+
+    try:
+        result = await pipeline.discover_and_repair(
+            target=target,
+            auto_repair=auto_repair,
+            session_id=session_id
+        )
+
+        return {
+            'ok': True,
+            'target': result.target,
+            'vulnerabilities_found': result.vulnerabilities_found,
+            'repairs_generated': result.repairs_generated,
+            'repairs_applied': result.repairs_applied,
+            'total_cost_cents': result.total_cost_cents,
+            'total_cost_usd': result.total_cost_cents / 100,
+            'local_percentage': result.local_percentage,
+            'paid_percentage': result.paid_percentage,
+            'execution_time_ms': result.execution_time_ms,
+            'post_review_report': result.post_review_report,
+            'timestamp': result.timestamp.isoformat(),
+        }
+
+    except Exception as e:
+        raise HTTPException(500, f'Repair pipeline error: {str(e)}')
+
+
+@router.get('/repair/health')
+async def repair_pipeline_health(
+    _=Depends(require_roles(ROLE_OPERATOR))
+) -> Dict[str, Any]:
+    """
+    Check repair pipeline health and CLI tool availability.
+    """
+    if not REPAIR_PIPELINE_AVAILABLE:
+        raise HTTPException(503, 'Repair pipeline not available')
+
+    try:
+        from ..integrations.claude_code_client import get_claude_code_client
+        from ..integrations.codex_client import get_codex_client
+        from ..integrations.gemini_cli_client import get_gemini_client
+
+        claude_code = get_claude_code_client()
+        codex = get_codex_client()
+        gemini = get_gemini_client()
+
+        return {
+            'ok': True,
+            'repair_pipeline_available': True,
+            'cli_tools': {
+                'claude_code': claude_code.available,
+                'codex': codex.available,
+                'gemini': gemini.available,
+            },
+            'specialized_agents': {
+                'osint_agent': True,  # Always available (local only)
+                'reasoning_agent': True,
+                'repair_agent': True,
+            },
+        }
+
+    except Exception as e:
+        return {
+            'ok': False,
+            'error': str(e),
+            'repair_pipeline_available': False,
+        }

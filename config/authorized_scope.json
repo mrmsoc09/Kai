@@ -1,0 +1,41 @@
+{
+  "_comment": "Authorized Scope Configuration for KaiOrchestrator",
+  "_description": "Hard-coded whitelist of authorized targets for bug bounty research. Only targets in this scope can be scanned.",
+  "target_domains": [
+    "example.com",
+    "*.example.com",
+    "api.example.com",
+    "app.example.com"
+  ],
+  "target_ips": [
+    "192.168.1.1",
+    "192.168.1.2",
+    "10.0.0.1"
+  ],
+  "target_cidrs": [
+    "192.168.1.0/24",
+    "10.0.0.0/8",
+    "172.16.0.0/12"
+  ],
+  "allowed_methods": [
+    "osint",
+    "dns_enumeration",
+    "subdomain_enumeration",
+    "port_scanning",
+    "vulnerability_scanning",
+    "web_testing",
+    "api_testing"
+  ],
+  "tool_autonomy_tiers": {
+    "osint_tool": "TIER_1_NOTIFY",
+    "nmap": "TIER_1_NOTIFY",
+    "masscan": "TIER_1_NOTIFY",
+    "dns_enum": "TIER_1_NOTIFY",
+    "nuclei": "TIER_2_APPROVE",
+    "nikto": "TIER_2_APPROVE",
+    "burpsuite": "TIER_2_APPROVE",
+    "sqlmap": "TIER_3_HARD_STOP",
+    "metasploit": "TIER_3_HARD_STOP",
+    "exploit_tool": "TIER_3_HARD_STOP"
+  }
+}

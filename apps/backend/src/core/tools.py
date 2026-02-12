@@ -43,6 +43,10 @@ class ToolAutonomyTier(Enum):
     TIER_2_APPROVE = 2     # Requires HiL approval (external execution)
     TIER_3_HARD_STOP = 3   # Explicit approval required (irreversible)
 
+    @classmethod
+    def safe_defaults(cls):
+        return {cls.TIER_0_AUTO, cls.TIER_1_NOTIFY}
+
 
 @dataclass
 class ToolParameter:
@@ -84,6 +88,10 @@ class ToolResult:
     tokens_used: Optional[Dict[str, int]] = None
     metadata: Dict[str, Any] = field(default_factory=dict)
 
+    @property
+    def execution_id(self) -> str:
+        return self.metadata.get("execution_id") or self.metadata.get("id") or self.tool_id
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
         return {
@@ -94,6 +102,7 @@ class ToolResult:
             "execution_time_ms": self.execution_time_ms,
             "tokens_used": self.tokens_used,
             "metadata": self.metadata,
+            "execution_id": self.execution_id,
         }
 
 
@@ -332,6 +341,31 @@ _global_registry = ToolRegistry()
 def get_registry() -> ToolRegistry:
     """Get global tool registry"""
     return _global_registry
+
+
+# Register default adapters if present (idempotent guard in caller)
+def initialize_default_tools():
+    """Load built-in tool adapters that are safe for Phase 1."""
+    try:
+        from apps.backend.src.core.tool_adapters_osint import (
+            register_phase1_osint_tools,
+        )
+        from apps.backend.src.core.tool_adapters_recon import (
+            register_phase2_recon_tools,
+        )
+        from apps.backend.src.core.tool_adapters_scan import (
+            register_phase2_scanner_tools,
+        )
+        from apps.backend.src.core.tool_adapters_validate import (
+            register_phase3_validation_tools,
+        )
+
+        register_phase1_osint_tools()
+        register_phase2_recon_tools()
+        register_phase2_scanner_tools()
+        register_phase3_validation_tools()
+    except Exception as e:  # pragma: no cover - defensive
+        logger.error(f"Failed to initialize default tools: {e}")
 
 
 def register_tool(tool: BaseTool):

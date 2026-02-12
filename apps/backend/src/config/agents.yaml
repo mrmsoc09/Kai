@@ -1,0 +1,498 @@
+# K1 Agent Orchestration Configuration
+# Defines agent roles, responsibilities, and communication patterns for PraisonAI
+
+framework: "praisonai"
+version: "1.0"
+
+agents:
+  # ============================================================================
+  # COMMAND & CONTROL
+  # ============================================================================
+
+  strategist:
+    role: "Strategic Planner & Mission Orchestrator"
+    goal: "Transform user intent into actionable hunting plans with task prioritization"
+    description: |
+      High-level strategic agent that interprets user missions, decomposes them
+      into tactical phases, and manages the overall hunting workflow. Interfaces
+      with Agent-Zero for natural language command processing.
+
+    responsibilities:
+      - Parse user missions from natural language
+      - Decompose missions into reconnaissance → analysis → exploitation phases
+      - Prioritize targets based on CVSS, exploitability, bounty value
+      - Manage session state and phase transitions
+      - Coordinate with specialized agents
+      - Handle escalations and approval workflows
+
+    model: "auto"  # Uses model bidding system
+    model_complexity: 8  # High complexity - needs reasoning
+    opsec_required: false
+    requires_approval: true
+
+    tools:
+      - mission_parser
+      - phase_decomposer
+      - target_prioritizer
+      - session_manager
+
+  # ============================================================================
+  # RECONNAISSANCE TIER
+  # ============================================================================
+
+  scout:
+    role: "Passive Reconnaissance & Asset Discovery"
+    goal: "Identify targets, enumerate assets, discover attack surfaces 24/7"
+    description: |
+      Autonomous reconnaissance agent that performs passive OSINT, subdomain
+      enumeration, API discovery, and continuous monitoring. Feeds targets
+      to the Analyst for triage and prioritization.
+
+    responsibilities:
+      - Passive OSINT (DNS, WHOIS, GitHub dorks)
+      - Subdomain enumeration and verification
+      - API endpoint discovery
+      - Port scanning and service enumeration
+      - Screenshot/banner collection
+      - Continuous monitoring for new targets
+      - Feed findings to Analyst tier
+
+    model: "auto"
+    model_complexity: 4  # Moderate - mostly tool execution
+    opsec_required: true  # Local models preferred
+    parallelizable: true
+    max_parallel_instances: 3
+
+    tools:
+      - domain_enumeration
+      - subdomain_discovery
+      - api_discovery
+      - port_scanner
+      - banner_grabber
+      - dork_generator
+
+  # ============================================================================
+  # ANALYSIS TIER
+  # ============================================================================
+
+  analyst:
+    role: "Vulnerability Triage & Exploitability Assessment"
+    goal: "Determine which targets are most likely to yield high-value vulns"
+    description: |
+      Receives reconnaissance data and performs rapid triage. Analyzes
+      target characteristics (technology stack, common vulns, past exploits),
+      checks for duplicates, and estimates exploitability & bounty potential.
+
+    responsibilities:
+      - Analyze target technology stacks
+      - Estimate exploitability and difficulty
+      - CVSS scoring and severity assessment
+      - Duplicate finding detection
+      - Bounty platform research
+      - Risk assessment (out-of-scope, honeypot detection)
+      - Route findings to exploitation or chaining
+      - Prioritize targets for weaponizer
+
+    model: "auto"
+    model_complexity: 6
+    opsec_required: true
+    depends_on: ["scout"]
+
+    tools:
+      - tech_stack_analyzer
+      - duplicate_detector
+      - bounty_researcher
+      - cvss_calculator
+      - risk_assessor
+      - cve_matcher
+
+  # ============================================================================
+  # EXPLOITATION TIER
+  # ============================================================================
+
+  weaponizer:
+    role: "Payload Generation & Exploit Development"
+    goal: "Generate working exploits and proof-of-concepts for discovered vulns"
+    description: |
+      Specialized exploitation agent that generates payloads, fuzz templates,
+      and proof-of-concept code. Receives targets from Analyst and produces
+      executable exploits ready for execution (pending auditor approval).
+
+    responsibilities:
+      - Generate payloads for identified vuln types
+      - Create fuzz templates and mutation strategies
+      - Develop proof-of-concept (PoC) code
+      - Optimize for bypass/evasion
+      - Generate multiple payload variants
+      - Document exploitation steps
+      - Create test cases
+      - Hand off to Auditor for verification
+
+    model: "auto"
+    model_complexity: 9  # Very high - code generation
+    opsec_required: true
+    requires_approval: true
+
+    tools:
+      - payload_generator
+      - fuzz_engine
+      - poc_generator
+      - bypass_generator
+      - code_optimizer
+      - test_case_builder
+
+  auditor:
+    role: "Security Gatekeeper & Rules-of-Engagement Validator"
+    goal: "Prevent out-of-scope, malicious, or illegal actions before execution"
+    description: |
+      Critical security gate that validates all high-risk actions. Ensures
+      payloads and exploits comply with Rules of Engagement, target scope,
+      and applicable laws. Approvers must PGP-sign for execution authority.
+
+    responsibilities:
+      - Validate target is in-scope
+      - Check for destructive or malicious payloads
+      - Ensure compliance with Rules of Engagement
+      - Verify authorization certificates
+      - Assess liability risks
+      - Request human approval for risky actions
+      - Log all approvals/rejections with PGP signatures
+      - Escalate policy violations
+      - Cross-model verification of exploits
+
+    model: "auto"
+    model_complexity: 7
+    opsec_required: true
+    requires_approval: true  # This agent itself makes approval decisions
+    cross_verify: true  # Uses different model family than weaponizer
+
+    tools:
+      - scope_validator
+      - roe_checker
+      - certificate_verifier
+      - liability_assessor
+      - pgp_verifier
+      - approval_logger
+
+  executor:
+    role: "Exploit Execution & Target Interaction"
+    goal: "Execute approved payloads and collect results from targets"
+    description: |
+      Executes pre-approved exploits in isolated sandbox containers.
+      Collects output, handles errors, manages timing/delays for evasion,
+      and records all interactions with targets.
+
+    responsibilities:
+      - Execute payloads in Docker sandbox
+      - Manage request timing and delays
+      - Handle response parsing
+      - Collect proof of exploitation
+      - Generate screenshots/recordings
+      - Manage rate limiting and retries
+      - Record all requests/responses
+      - Handle detection/blocking gracefully
+      - Feed results to analyzer
+
+    model: "auto"
+    model_complexity: 3  # Low - mostly execution
+    opsec_required: true
+    sandboxed: true  # Runs in isolated Docker
+    depends_on: ["auditor"]
+
+    tools:
+      - payload_executor
+      - request_manager
+      - response_parser
+      - screenshot_taker
+      - result_collector
+      - sandbox_manager
+
+  # ============================================================================
+  # VALIDATION & REPORTING TIER
+  # ============================================================================
+
+  validator:
+    role: "Finding Verification & Quality Assurance"
+    goal: "Verify findings are reproducible and impact assessment is accurate"
+    description: |
+      Quality assurance agent that validates exploitation results. Reproduces
+      findings independently, verifies impact claims, generates reproducible
+      steps, and produces clean proof-of-concept documentation suitable
+      for bounty platform submission.
+
+    responsibilities:
+      - Reproduce findings independently
+      - Verify impact claims
+      - Generate step-by-step reproduction guide
+      - Create clean PoC code/steps
+      - Assess false positive probability
+      - Generate CVSS justification
+      - Handle edge cases and variations
+      - Produce auditable evidence
+      - Feed to Reporter for submission
+
+    model: "auto"
+    model_complexity: 6
+    opsec_required: true
+    depends_on: ["executor"]
+
+    tools:
+      - reproduction_tester
+      - impact_verifier
+      - poc_cleaner
+      - documentation_generator
+      - evidence_collector
+      - false_positive_checker
+
+  reporter:
+    role: "Report Generation & Bounty Submission"
+    goal: "Generate professional reports and submit to bounty platforms"
+    description: |
+      Transforms validated findings into professional submissions optimized
+      for each bounty platform (HackerOne, Bugcrowd, Intigriti). Generates
+      clear descriptions, impact assessments, and submission tracking.
+
+    responsibilities:
+      - Format findings per platform requirements
+      - Generate clear vulnerability descriptions
+      - Write business impact assessments
+      - Create proof-of-concept videos/transcripts
+      - Suggest CVSS scores with justification
+      - Track submission history
+      - Monitor for responses/decisions
+      - Update KAI with bounty outcomes
+      - Manage communication with platforms
+
+    model: "auto"
+    model_complexity: 5
+    opsec_required: false
+    depends_on: ["validator"]
+
+    tools:
+      - report_formatter
+      - impact_writer
+      - poc_transcriber
+      - cvss_justifier
+      - submission_tracker
+      - platform_monitor
+
+  chainer:
+    role: "Low-Severity Exploit Chaining"
+    goal: "Combine multiple findings to increase impact and payout potential"
+    description: |
+      Specialized agent that identifies and chains together low-severity
+      findings to create higher-impact exploits. Analyzes finding combinations,
+      simulates attack chains, and increases CVSS scores through combination.
+
+    responsibilities:
+      - Identify chainable finding combinations
+      - Analyze logical attack flow
+      - Simulate chained exploitation
+      - Re-assess combined CVSS
+      - Document chain methodology
+      - Create chain-specific PoCs
+      - Estimate combined impact
+      - Feed chains to validator
+
+    model: "auto"
+    model_complexity: 7
+    opsec_required: true
+    depends_on: ["analyst"]
+
+    tools:
+      - chain_analyzer
+      - flow_simulator
+      - cvss_aggregator
+      - chain_poc_generator
+      - impact_multiplier
+
+  # ============================================================================
+  # MEMORY & LEARNING
+  # ============================================================================
+
+  memory_manager:
+    role: "Episodic Memory & Pattern Learning"
+    goal: "Track attempts, learn from failures, prevent loops and waste"
+    description: |
+      Manages episodic memory system. Tracks all agent attempts, outcomes,
+      and learned patterns. Prevents repeated failures, recommends technique
+      variants, calculates API credit savings, and feeds learnings back
+      to agents.
+
+    responsibilities:
+      - Record all attack attempts
+      - Track success/failure rates per technique
+      - Record what caused blocking/detection
+      - Manage attempt history per target
+      - Calculate API credit waste
+      - Recommend technique variants
+      - Prevent retry of blocked approaches
+      - Generate learning reports
+      - Update agent decision logic
+
+    model: "auto"
+    model_complexity: 4
+    opsec_required: true
+    stateful: true  # Maintains long-term state
+
+    tools:
+      - memory_recorder
+      - pattern_analyzer
+      - technique_recommender
+      - waste_calculator
+      - learning_reporter
+
+# ============================================================================
+# PROCESS DEFINITIONS
+# ============================================================================
+
+processes:
+  full_hunt:
+    name: "Complete Vulnerability Hunt Workflow"
+    description: "End-to-end hunting from reconnaissance through reporting"
+    agents_sequence:
+      - strategist
+      - scout
+      - analyst
+      - weaponizer
+      - auditor
+      - executor
+      - validator
+      - reporter
+    conditional_agents:
+      - chainer  # Added if low-severity findings exist
+
+  rapid_triage:
+    name: "Fast Target Assessment"
+    description: "Quick evaluation of new targets"
+    agents_sequence:
+      - scout
+      - analyst
+
+  exploitation_focus:
+    name: "Exploitation-Only Workflow"
+    description: "For known vulnerable targets"
+    agents_sequence:
+      - weaponizer
+      - auditor
+      - executor
+      - validator
+      - reporter
+
+  chain_building:
+    name: "Exploit Chaining Workflow"
+    description: "Combine low-severity findings"
+    agents_sequence:
+      - analyst
+      - chainer
+      - validator
+      - reporter
+
+# ============================================================================
+# COMMUNICATION & DELEGATION
+# ============================================================================
+
+delegation:
+  strategist:
+    delegates_to: ["scout", "analyst", "weaponizer", "auditor"]
+    receives_from: ["validator", "analyst"]
+
+  scout:
+    delegates_to: []
+    receives_from: ["strategist"]
+    feeds_to: ["analyst"]
+
+  analyst:
+    delegates_to: []
+    receives_from: ["scout"]
+    feeds_to: ["weaponizer", "chainer"]
+
+  weaponizer:
+    delegates_to: []
+    receives_from: ["analyst"]
+    feeds_to: ["auditor"]
+
+  auditor:
+    delegates_to: ["executor"]
+    receives_from: ["weaponizer"]
+    requires_human_approval: true
+    approval_method: "pgp_signature"
+
+  executor:
+    delegates_to: []
+    receives_from: ["auditor"]
+    sandbox: "docker"
+    feeds_to: ["validator"]
+
+  validator:
+    delegates_to: []
+    receives_from: ["executor"]
+    feeds_to: ["reporter", "chainer"]
+
+  reporter:
+    delegates_to: []
+    receives_from: ["validator"]
+    platforms:
+      - "hackerone"
+      - "bugcrowd"
+      - "intigriti"
+
+  chainer:
+    delegates_to: []
+    receives_from: ["analyst", "validator"]
+    feeds_to: ["validator"]
+
+# ============================================================================
+# GUARDRAILS & SAFETY
+# ============================================================================
+
+safety:
+  human_in_the_loop:
+    enabled: true
+    approval_triggers:
+      - "exploitation_attempt"
+      - "out_of_scope_detected"
+      - "destructive_payload"
+      - "legal_risk"
+
+  sandboxing:
+    enabled: true
+    executor_sandbox: "docker"
+    isolation: "strict"
+    network_access: "controlled"
+
+  audit_logging:
+    enabled: true
+    traceable_wrappers: "@traceable"
+    persistence: "postgresql"
+    retention_days: 730
+
+  model_verification:
+    cross_model_check: true
+    verification_requirement:
+      - weaponizer: "use_different_family"
+      - executor: "requires_auditor_approval"
+
+# ============================================================================
+# OBSERVABILITY
+# ============================================================================
+
+observability:
+  langsmith:
+    enabled: true
+    project: "kai-production"
+    trace_all_calls: true
+    detailed_logging: true
+
+  metrics:
+    track_model_performance: true
+    track_api_costs: true
+    track_success_rates: true
+    track_technique_effectiveness: true
+
+  alerting:
+    enabled: true
+    escalation_triggers:
+      - "approval_required"
+      - "out_of_scope"
+      - "detection_likely"
