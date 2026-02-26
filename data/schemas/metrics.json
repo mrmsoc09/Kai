@@ -1,0 +1,13 @@
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "validated_findings_count": {"type": ["integer", "null"]},
+    "invalidated_findings_count": {"type": ["integer", "null"]},
+    "time_to_first_signal": {"type": ["number", "null"], "description": "seconds"},
+    "time_to_validated": {"type": ["number", "null"], "description": "seconds"},
+    "chain_candidate_count": {"type": ["integer", "null"]},
+    "evidence_completeness_ratio": {"type": ["number", "null"], "minimum": 0, "maximum": 1 }
+  }
+}

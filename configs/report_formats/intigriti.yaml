@@ -1,0 +1,134 @@
+name: Intigriti Report
+stakeholder: intigriti
+required_sections:
+  - Summary
+  - Impact
+  - Scope
+  - Reproduction
+  - Evidence
+  - Mitigation
+template: |
+  # Intigriti Report: {{ finding.title }}
+
+  **Report ID:** {{ report_id }}
+  **Submission Date:** {{ submission_date | default('N/A') }}
+  **Vulnerability Type:** {{ finding.vuln_type | default('N/A') }}
+  **Severity:** {{ finding.severity | upper }}
+
+  ---
+
+  ## Summary
+
+  {{ finding.summary }}
+
+  ## Vulnerability Classification
+
+  **Vulnerability Type:** {{ finding.vuln_type | default('N/A') }}
+  **CWE ID:** {{ finding.cwe | default('N/A') }}
+  **CVSS Score:** {{ finding.cvss | default('N/A') }}
+
+  ## Impact
+
+  {{ finding.impact }}
+
+  {%- if finding.data_exposure %}
+
+  **Data Exposure:** {{ finding.data_exposure }}
+  {%- endif %}
+
+  {%- if finding.system_impact %}
+
+  **System Impact:** {{ finding.system_impact }}
+  {%- endif %}
+
+  ## Affected Scope
+
+  **Asset Type:** {{ finding.asset_type | default('Web Application') }}
+  **Asset URL/Identifier:** {{ finding.asset_id | default('N/A') }}
+
+  {{ finding.scope }}
+
+  {%- if finding.scope_details %}
+
+  **Scope Details:** {{ finding.scope_details }}
+  {%- endif %}
+
+  ## Reproduction Steps
+
+  {{ evidence.repro }}
+
+  {%- if evidence.repro_steps %}
+
+  **Detailed Steps:**
+  {%- for step in evidence.repro_steps %}
+  {{ loop.index }}. {{ step }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.required_access %}
+
+  **Required Access Level:** {{ evidence.required_access }}
+  {%- endif %}
+
+  ## Evidence
+
+  {%- if evidence.artifacts %}
+
+  **Artifacts:**
+  {%- for artifact_type, artifact_value in evidence.artifacts.items() %}
+  - **{{ artifact_type }}:** {{ artifact_value }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.screenshots %}
+
+  **Screenshots:**
+  {%- for screenshot in evidence.screenshots %}
+  - {{ screenshot.description | default('Screenshot') }}: `{{ screenshot.filename }}`
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if evidence.poc_code %}
+
+  **Proof of Concept:**
+
+  ```
+  {{ evidence.poc_code }}
+  ```
+  {%- endif %}
+
+  ## Mitigation
+
+  {{ mitigation.plan }}
+
+  {%- if mitigation.remediation_steps %}
+
+  **Steps to Fix:**
+  {%- for step in mitigation.remediation_steps %}
+  {{ loop.index }}. {{ step }}
+  {%- endfor %}
+  {%- endif %}
+
+  {%- if mitigation.effort_hours %}
+
+  **Estimated Effort:** {{ mitigation.effort_hours }} hours
+  {%- endif %}
+
+  {%- if mitigation.priority %}
+
+  **Priority:** {{ mitigation.priority }}
+  {%- endif %}
+
+  ## Additional References
+
+  {%- if finding.references %}
+  {%- for ref in finding.references %}
+  - {{ ref }}
+  {%- endfor %}
+  {%- else %}
+  - No additional references
+  {%- endif %}
+
+  ---
+
+  **Generated:** {{ report_generated_at }}

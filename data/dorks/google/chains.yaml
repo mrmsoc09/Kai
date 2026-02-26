@@ -1,0 +1,17 @@
+schema: v1
+chains:
+  - name: backup_index_chain
+    description: Index reconnaissance for backup/config exposure and document leaks
+    steps:
+      - query: "site:{target} (backup OR .env OR .bak OR .sql)"
+      - query: "site:{target} filetype:(pdf OR doc OR xls OR csv)"
+      - query: "site:{target} (password OR secret OR api_key OR token) -github"
+  - name: subdomain_surface_chain
+    description: Enumerate subdomains and JS endpoints as seeds for later scoped probing
+    steps:
+      - query: "site:*.{target} -www.{target}"
+      - query: "site:{target} filetype:js (api OR token)"
+  - name: vuln_reference_chain
+    description: Reference mining for known issues tied to target to seed hypothesis
+    steps:
+      - query: "site:{target} (CVE OR vulnerability OR bug)"

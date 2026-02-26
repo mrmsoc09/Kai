@@ -1,0 +1,18 @@
+schema: v1
+parameters:
+  target: required
+categories:
+  subdomains:
+    - "site:*.{target} -www.{target}"
+  exposures:
+    - "site:{target} (password OR secret OR api_key OR token) -github"
+  buckets:
+    - "site:storage.googleapis.com inurl:{target}"
+  code:
+    - "site:{target} filetype:js (api OR token)"
+  docs:
+    - "site:{target} filetype:(pdf OR doc OR xls OR csv)"
+  backups:
+    - "site:{target} (backup OR .env OR .bak OR .sql)"
+  bugrefs:
+    - "site:{target} (CVE OR vulnerability OR bug)"

@@ -1,0 +1,32 @@
+version: 1
+modules:
+  - id: scanners.recon
+    kind: scanner
+    path: modules/scanners/recon
+    entry: cli.py
+    input_schema: data/schemas/run.json
+    output_schema: data/schemas/recon.json
+  - id: scanners.nmap
+    kind: scanner
+    path: modules/scanners/nmap
+    entry: run.sh
+  - id: scanners.nuclei
+    kind: scanner
+    path: modules/scanners/nuclei
+    entry: run.sh
+  - id: scanners.google_dorks
+    kind: scanner
+    path: modules/scanners/google_dorks
+    entry: runner.py
+    input_schema: data/schemas/dork_run.json
+    output_schema: data/schemas/dork_results.json
+  - id: osint.shodan
+    kind: osint
+    path: modules/osint/shodan
+  - id: osint.censys
+    kind: osint
+    path: modules/osint/censys
+  - id: orchestrator.dag_runner
+    kind: orchestrator
+    path: apps/orchestrator
+    entry: runner.py

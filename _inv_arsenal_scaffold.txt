@@ -1,0 +1,7 @@
+K1 Arsenal attack graph view implemented (spider web metaphor):
+- Canvas renderer with pan/zoom/pinch, tablet touch support, DPR scaling.
+- Edge styles: solid=proven, dashed=hypothesis, pulsing=during active investigation.
+- Node size by importance; node color by risk (green/amber/red/blue/gray).
+- No label spam; details on selection in NodeDetails panel.
+- API: uses GET /graph if available, otherwise fallback snapshot.
+- Route: /arsenal.

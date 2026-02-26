@@ -1,0 +1,32 @@
+{
+  "name": "k1-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "axios": "^1.13.5",
+    "classnames": "^2.3.2",
+    "idb-keyval": "^6.2.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.24.1",
+    "remark-gfm": "^4.0.0",
+    "zustand": "^4.5.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.55",
+    "@types/react-dom": "^18.2.19",
+    "@vitejs/plugin-react-swc": "^4.2.2",
+    "typescript": "^5.3.3",
+    "vite": "^7.3.1"
+  },
+  "overrides": {
+    "rollup": "4.59.0"
+  }
+}

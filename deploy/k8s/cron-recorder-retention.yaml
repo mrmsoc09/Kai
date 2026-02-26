@@ -1,0 +1,28 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: k1-recorder-retention
+spec:
+  schedule: "0 * * * *"  # hourly
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: retention
+              image: python:3.11-slim
+              env:
+                - name: REC_MAX_AGE_DAYS
+                  value: "14"
+                - name: REC_MAX_TOTAL_GB
+                  value: "50"
+              volumeMounts:
+                - name: artifacts
+                  mountPath: /work
+              command: ["bash","-lc","pip install --no-cache-dir --quiet --disable-pip-version-check --no-input --progress-bar off --upgrade pip && python /work/k1/scripts/retention_job.py"]
+          volumes:
+            - name: artifacts
+              hostPath:
+                path: /var/lib/k1
+                type: DirectoryOrCreate

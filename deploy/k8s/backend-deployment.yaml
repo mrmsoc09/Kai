@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k1-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: k1-backend
+  template:
+    metadata:
+      labels:
+        app: k1-backend
+    spec:
+      containers:
+      - name: backend
+        image: k1/backend:dev
+        env:
+        - name: K1_DEV_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: k1-secrets
+              key: k1_dev_token
+        ports:
+        - containerPort: 8080
+        volumeMounts:
+        - name: artifacts
+          mountPath: /app/artifacts
+      volumes:
+      - name: artifacts
+        persistentVolumeClaim:
+          claimName: k1-artifacts-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k1-backend
+spec:
+  selector:
+    app: k1-backend
+  ports:
+  - port: 8080
+    targetPort: 8080

@@ -1,0 +1,23 @@
+subject: "[VRP] {{ finding.title }} — {{ finding.severity|upper }} severity"
+body: |
+  Hello Google VRP Team,
+
+  Please find a responsibly disclosed vulnerability report.
+
+  Title: {{ finding.title }}
+  Severity: {{ finding.severity|upper }}
+  Impact: {{ finding.impact }}
+  Scope: {{ finding.scope }}
+
+  Reproduction steps and a safe screen recording are attached.
+
+  Mitigation Plan:
+  {{ mitigation.plan }}
+
+  Timeline: {{ mitigation.timeline|default('n/a') }}
+
+  Regards,
+  K1/Agent Zero
+headers:
+  X-K1-Report: "{{ run_id }}"
+  X-Program: "google_vrp"

@@ -1,0 +1,12 @@
+subject: "[Intigriti] {{ finding.title }} ({{ finding.severity|capitalize }})"
+body: |
+  Dear Intigriti Program Team,
+
+  Please find the report and evidence attached.
+
+  Impact: {{ finding.impact }}
+
+  Mitigation:
+  {{ mitigation.plan }}
+headers:
+  X-Platform: "Intigriti"

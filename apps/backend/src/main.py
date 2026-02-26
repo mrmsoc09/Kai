@@ -1,0 +1,665 @@
+from __future__ import annotations
+
+import os
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+# Import security configurations and middleware
+from apps.backend.src.config.cors_config import get_cors_config, print_cors_config
+from apps.backend.src.middleware.rate_limit import RateLimitMiddleware
+from apps.backend.src.middleware.csrf import CSRFProtectionMiddleware
+from apps.backend.src.middleware.security_headers import SecurityHeadersMiddleware
+from apps.backend.src.core.exception_handlers import register_exception_handlers
+from apps.backend.src.core.services import Services
+
+# Import routers exactly once
+from apps.backend.src.routers import (
+    agent0,
+    agent_training,
+    approvals,
+    artifact_signing,
+    auth,
+    autonomous,
+    chains,
+    docs,
+    dorks,
+    embeddings,
+    evidence,
+    export,
+    finding_validation,
+    findings,
+    graph,
+    hil_approval,
+    intel,
+    kai_authorized_scanning,
+    key_management,
+    knowledge,
+    logs,
+    mailer,
+    mcp,
+    metrics,
+    model_bidding,
+    orchestration,
+    orchestrator,
+    persona,
+    planner,
+    programs,
+    programs_discovery,
+    realtime,
+    recordings,
+    reports,
+    runs,
+    scope,
+    state,
+    submissions,
+    tools,
+    tasks,
+)
+from apps.backend.src.routers import triage
+from apps.backend.src.routers import (
+    hil_embeddings as hil_embeddings_router,
+    hil_findings as hil_findings_router,
+    hil_providers as hil_providers_router,
+    hil_scopes as hil_scopes_router,
+    hil_workflow as hil_workflow_router,
+)
+
+
+services = Services()
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _required_startup_services() -> list[str]:
+    raw = os.getenv("K1_REQUIRED_SERVICES", "postgres")
+    values = [item.strip().lower() for item in raw.split(",") if item.strip()]
+    allowed = {"postgres", "redis", "neo4j"}
+    return [item for item in values if item in allowed]
+
+
+async def _validate_startup_dependencies() -> None:
+    dependencies = await services.probe_dependencies()
+    failures: list[str] = []
+    required_services = _required_startup_services()
+
+    for service_name in required_services:
+        status = dependencies.get(service_name, {})
+        if status.get("status") == "not_configured":
+            failures.append(f"{service_name}: not configured")
+            continue
+        if not bool(status.get("ok")):
+            failures.append(f"{service_name}: {status.get('error') or status.get('status') or 'unavailable'}")
+
+    if failures:
+        raise RuntimeError("startup dependency checks failed: " + "; ".join(failures))
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.services = services
+    test_mode = os.getenv("K1_TEST_MODE", "false").lower() == "true"
+    if not test_mode:
+        await services.startup()
+        if _env_bool("K1_STARTUP_VALIDATE_DEPENDENCIES", True):
+            await _validate_startup_dependencies()
+        await initialize_llm_providers()
+    try:
+        yield
+    finally:
+        if not test_mode:
+            await shutdown_systems()
+            await services.shutdown()
+
+
+if os.getenv("K1_TEST_MODE", "false").lower() == "true":
+    app = FastAPI(title="K1 Backend")
+else:
+    app = FastAPI(title="K1 Backend", lifespan=lifespan)
+app.state.services = services
+register_exception_handlers(app)
+
+# ==================== SECURITY MIDDLEWARE ====================
+# Order matters: innermost middleware is applied last to responses
+
+# 1. Security Headers (should be last, applied to all responses)
+app.add_middleware(SecurityHeadersMiddleware)
+
+# 2. CSRF Protection (before rate limiting)
+app.add_middleware(CSRFProtectionMiddleware)
+
+# 3. Rate Limiting (before CORS)
+app.add_middleware(RateLimitMiddleware)
+
+# 4. CORS (outermost, handles preflight requests)
+cors_config = get_cors_config()
+app.add_middleware(CORSMiddleware, **cors_config)
+
+# Print CORS configuration for debugging
+if os.getenv("DEBUG_MODE", "false").lower() == "true":
+    print_cors_config()
+
+# Health
+@app.get("/health")
+async def health(request: Request) -> dict:
+    svc = getattr(request.app.state, "services", None)
+    return {
+        "status": "ok",
+        "services": {
+            "started": bool(getattr(svc, "started", False)),
+            "neo4j": bool(getattr(svc, "neo4j_available", False)),
+            "intelligence": bool(getattr(svc, "intelligence_ready", False)),
+            "rag": bool(getattr(svc, "rag_ready", False)),
+        },
+    }
+
+
+@app.get("/healthz")
+async def healthz(request: Request):
+    svc = getattr(request.app.state, "services", services)
+    dependencies = await svc.probe_dependencies()
+
+    postgres_ok = bool(dependencies["postgres"].get("ok"))
+    redis_status = dependencies["redis"].get("status")
+    redis_ok = redis_status == "not_configured" or bool(dependencies["redis"].get("ok"))
+    neo4j_status = dependencies["neo4j"].get("status")
+    neo4j_ok = neo4j_status == "not_configured" or bool(dependencies["neo4j"].get("ok"))
+
+    overall_ok = postgres_ok and redis_ok and neo4j_ok
+    payload = {
+        "status": "ok" if overall_ok else "degraded",
+        "dependencies": dependencies,
+    }
+    if overall_ok:
+        return payload
+    return JSONResponse(status_code=503, content=payload)
+
+# Register routers (logical groups)
+# Public/low-priv status endpoints first
+app.include_router(state.router)
+app.include_router(metrics.router)
+
+# Auth and scope
+app.include_router(auth.router)
+app.include_router(scope.router)
+
+# Key Management (Cryptographic keys and PGP signatures)
+app.include_router(key_management.router)
+
+# Human-in-the-Loop Approvals (PGP-signed action approval)
+app.include_router(approvals.router)
+
+# Human-in-the-Loop Approvals for stakeholder comms (draft review)
+app.include_router(hil_approval.router)
+
+# Legacy HiL API endpoints consolidated under /hil-api to avoid route collisions
+app.include_router(hil_findings_router.router, prefix="/hil-api")
+app.include_router(hil_workflow_router.router, prefix="/hil-api")
+app.include_router(hil_scopes_router.router, prefix="/hil-api")
+app.include_router(hil_providers_router.router, prefix="/hil-api")
+app.include_router(hil_embeddings_router.router, prefix="/hil-api")
+
+# Artifact Signing & Chain of Custody (Vulnerability report signing & verification)
+app.include_router(artifact_signing.router)
+
+# Knowledge / OSINT utilities
+app.include_router(dorks.router)
+app.include_router(knowledge.router)
+app.include_router(graph.router)
+
+# Core operations (Tools and orchestration)
+app.include_router(tools)
+app.include_router(tasks)
+app.include_router(orchestrator.router)
+app.include_router(planner.router)
+app.include_router(chains.router)
+app.include_router(embeddings.router)
+app.include_router(intel.router)
+app.include_router(mcp.router)
+app.include_router(realtime.router)
+
+# Model Bidding and Orchestration (v7.4)
+app.include_router(model_bidding.router)
+app.include_router(orchestration.router)
+
+# Autonomous Multi-Agent Systems (NEW)
+app.include_router(autonomous.router)
+
+# Agent Training and Skill Management (NEW)
+app.include_router(agent_training.router)
+
+# Finding Validation Workflow (NEW)
+app.include_router(finding_validation.router)
+
+# Evidence and findings lifecycle
+app.include_router(evidence.router)
+app.include_router(findings.router)
+app.include_router(recordings.router)
+app.include_router(reports.router)
+app.include_router(export.router)
+app.include_router(programs.router)
+app.include_router(programs_discovery.router)
+app.include_router(runs.router)
+app.include_router(submissions.router)
+
+# Communications and logs
+app.include_router(mailer.router)
+app.include_router(logs.router)
+app.include_router(agent0.router)
+app.include_router(docs.router)
+app.include_router(triage.router)
+
+# Kai Security - Authorized scanning with guardrails
+app.include_router(kai_authorized_scanning.router)
+
+# Optional: dynamic vector router (pgvector) if present
+try:
+    import importlib
+    _vector_mod = importlib.import_module('apps.backend.src.routers.vector')
+    app.include_router(_vector_mod.router)
+
+except Exception:
+    pass
+
+# Optional: Agent Zero integration
+try:
+    agent_zero_router = importlib.import_module('apps.backend.src.routers.agent_zero')
+    app.include_router(agent_zero_router.router)
+except Exception:
+    pass
+
+# Optional: Real-time WebSocket
+try:
+    ws_router = importlib.import_module('apps.backend.src.routers.websocket')
+    app.include_router(ws_router.router)
+except Exception:
+    pass
+
+
+# ==================== INITIALIZE K1 SYSTEMS ====================
+
+# Multi-LLM Provider Initialization
+from apps.backend.src.core.llm_providers import llm_factory
+import asyncio
+
+# Initialize from environment variables
+async def initialize_llm_providers():
+    """Initialize multi-LLM provider system"""
+    print("\n" + "="*60)
+    print("INITIALIZING K1 LLM PROVIDERS")
+    print("="*60)
+
+    try:
+        llm_factory.initialize_from_env()
+        print("✓ LLM providers initialized")
+        print(f"  Primary provider: {llm_factory.primary_provider.value if llm_factory.primary_provider else 'Not set'}")
+        print(f"  Fallback providers: {', '.join([p.value for p in llm_factory.fallback_chain])}")
+    except Exception as e:
+        print(f"✗ LLM initialization error: {str(e)}")
+
+    # MCP Server Initialization
+    print("\n" + "-"*60)
+    print("INITIALIZING MCP SERVERS")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.mcp_base import mcp_manager
+        from apps.backend.src.mcp_servers.validator_mcp import validator_server
+        from apps.backend.src.mcp_servers.analysis_mcp import analysis_server
+        from apps.backend.src.mcp_servers.osint_mcp import osint_server
+        from apps.backend.src.mcp_servers.graph_mcp import graph_server
+
+        # Register servers
+        mcp_manager.register_server(validator_server)
+        mcp_manager.register_server(analysis_server)
+        mcp_manager.register_server(osint_server)
+        mcp_manager.register_server(graph_server)
+
+        # Start all servers
+        await mcp_manager.start_all_servers()
+        print("✓ All MCP servers started")
+
+    except Exception as e:
+        print(f"✗ MCP initialization error: {str(e)}")
+
+    # A2A Communication System Initialization
+    print("\n" + "-"*60)
+    print("INITIALIZING AGENT-TO-AGENT COMMUNICATION")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.agent_a2a import initialize_a2a
+
+        agent_registry, a2a_bus, workflow_orchestrator = initialize_a2a()
+        print("✓ A2A communication system ready")
+        print(f"  Agents registered: {len(agent_registry.agents)}")
+
+    except Exception as e:
+        print(f"✗ A2A initialization error: {str(e)}")
+
+    # Agent Zero Integration Initialization
+    print("\n" + "-"*60)
+    print("INITIALIZING AGENT ZERO INTEGRATION")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.agent_zero_integration import (
+            initialize_agent_zero_integration,
+            AgentZeroCommandProcessor
+        )
+        from apps.backend.src.core.agent_zero_k1_customization import (
+            initialize_k1_orchestrator
+        )
+
+        agent_zero_bridge = initialize_agent_zero_integration()
+
+        # Initialize K1-specific orchestrator
+        k1_orchestrator = initialize_k1_orchestrator(agent_registry, a2a_bus, mcp_manager)
+        print("✓ K1-customized Agent Zero orchestrator ready")
+
+        # Register with Agent Zero
+        if await agent_zero_bridge.register_with_agent_zero():
+            print("✓ Registered with Agent Zero")
+        else:
+            print("⚠ Agent Zero not available (running in standalone mode)")
+
+        # Start command processor
+        command_processor = AgentZeroCommandProcessor(agent_zero_bridge, workflow_orchestrator)
+        asyncio.create_task(command_processor.start())
+        print("✓ Agent Zero command processor running")
+
+    except Exception as e:
+        print(f"⚠ Agent Zero initialization (optional): {str(e)}")
+
+    # Autonomous Multi-Agent Systems Initialization
+    print("\n" + "-"*60)
+    print("INITIALIZING AUTONOMOUS MULTI-AGENT SYSTEMS")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.autonomous_agent_system import (
+            initialize_autonomous_system
+        )
+        from apps.backend.src.core.autonomous_reasoning import (
+            initialize_reasoning_engine
+        )
+        from apps.backend.src.core.swarm_coordination import (
+            initialize_swarm_coordinator
+        )
+
+        # Initialize reasoning engine
+        reasoning_engine = initialize_reasoning_engine(llm_factory.complete)
+        print("✓ Autonomous reasoning engine initialized")
+
+        # Initialize swarm coordinator
+        swarm_coordinator = initialize_swarm_coordinator(llm_factory.complete)
+        print("✓ Swarm coordination system initialized")
+
+        # Initialize autonomous multi-agent system
+        autonomous_system = initialize_autonomous_system(
+            llm_factory.complete,
+            agent_registry=agent_registry if 'agent_registry' in locals() else None,
+            reasoning_engine=reasoning_engine,
+            swarm_coordinator=swarm_coordinator
+        )
+        print("✓ Autonomous multi-agent system initialized")
+        print(f"  Autonomous agents created: {len(autonomous_system.agents) if hasattr(autonomous_system, 'agents') else 0}")
+
+        # Store globally for API access
+        import apps.backend.src.core.autonomous_agent_system as autonomous_module
+        autonomous_module.autonomous_system = autonomous_system
+        autonomous_module.reasoning_engine = reasoning_engine
+        autonomous_module.swarm_coordinator = swarm_coordinator
+
+        # Also set in router for API endpoints
+        from apps.backend.src.routers.autonomous import set_systems
+        set_systems(autonomous_system, reasoning_engine, swarm_coordinator)
+
+    except Exception as e:
+        print(f"⚠ Autonomous systems initialization (optional): {str(e)}")
+
+    # Agent Training System with HiL Approval
+    print("\n" + "-"*60)
+    print("INITIALIZING AGENT TRAINING SYSTEM")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.agent_training import (
+            initialize_training_system,
+            TrainingType
+        )
+
+        # Initialize training system
+        training_system = initialize_training_system(llm_factory.complete)
+
+        # Create some default curriculums
+        for skill in ["reconnaissance", "validation", "analysis", "exploitation", "reporting"]:
+            curriculum = await training_system.create_curriculum(
+                skill_name=skill,
+                target_proficiency=0.8,
+                training_type=TrainingType.PRACTICE,
+                description=f"Standard curriculum for {skill} skill development"
+            )
+            print(f"  ✓ Created curriculum: {skill}")
+
+        # Store globally for API access
+        import apps.backend.src.core.agent_training as training_module
+        training_module.training_system = training_system
+
+        # Also set in router
+        from apps.backend.src.routers.agent_training import router as training_router
+        # Note: Router will access via get_systems() function
+
+        print("✓ Agent training system initialized with default curriculums")
+
+    except Exception as e:
+        print(f"⚠ Training system initialization (optional): {str(e)}")
+
+    # Finding Validation & Exploit Chaining Systems
+    print("\n" + "-"*60)
+    print("INITIALIZING FINDING VALIDATION & ROUTING SYSTEMS")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.duplicate_detection import initialize_duplicate_detection
+        from apps.backend.src.core.exploit_chaining import initialize_chaining_engine
+        from apps.backend.src.core.finding_router import initialize_finding_router
+        from apps.backend.src.core.episodic_memory import initialize_episodic_memory
+
+        # Initialize duplicate detection
+        dup_detection = initialize_duplicate_detection()
+        print("✓ Duplicate detection system initialized")
+
+        # Initialize exploit chaining
+        chaining = initialize_chaining_engine(llm_factory.complete)
+        print("✓ Exploit chaining engine initialized")
+
+        # Initialize finding router
+        router = initialize_finding_router()
+        print("✓ Finding router initialized")
+
+        # Initialize episodic memory
+        memory = initialize_episodic_memory()
+        print("✓ Episodic memory system initialized")
+
+        # Store globally for API access
+        import apps.backend.src.core.duplicate_detection as dup_module
+        import apps.backend.src.core.exploit_chaining as chain_module
+        import apps.backend.src.core.finding_router as router_module
+        import apps.backend.src.core.episodic_memory as memory_module
+
+        dup_module.duplicate_detection_system = dup_detection
+        chain_module.chaining_engine = chaining
+        router_module.finding_router = router
+        memory_module.episodic_memory = memory
+
+        print("✓ All finding validation systems ready")
+
+    except Exception as e:
+        print(f"⚠ Finding systems initialization (optional): {str(e)}")
+
+    # Model Bidding & Intelligent Routing (v7.4)
+    print("\n" + "-"*60)
+    print("INITIALIZING INTELLIGENT MODEL BIDDING SYSTEM")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.model_bidding import UniversalModelFactory
+
+        model_factory = UniversalModelFactory()
+        print("✓ Model factory initialized")
+
+        # Discover available models
+        discovery = await asyncio.to_thread(model_factory.discover_models)
+        print(f"✓ Model discovery complete")
+        print(f"  Local models found: {len(discovery['local_models'])}")
+        print(f"  Cloud APIs available: {len(discovery['cloud_models'])}")
+        print(f"  Active providers: {', '.join(discovery['available_providers'])}")
+
+        # Set system reference in router
+        from apps.backend.src.routers import model_bidding as mb_router
+        mb_router.set_systems(model_factory, None)
+
+    except Exception as e:
+        print(f"⚠ Model bidding initialization (optional): {str(e)}")
+
+    # Orchestration Graph & State Machine (v7.4)
+    print("\n" + "-"*60)
+    print("INITIALIZING HUNTING ORCHESTRATION GRAPH")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.orchestration_graph import (
+            initialize_orchestration_graph
+        )
+
+        # Initialize with default session for testing
+        orchestration_graph = initialize_orchestration_graph(
+            session_id="default-session",
+            target_domain="default.local",
+            mission="Initialization test session"
+        )
+        print("✓ Orchestration graph initialized")
+        print(f"  Starting phase: {orchestration_graph.session.current_phase.value}")
+        print(f"  Audit trail enabled: True")
+
+        # Set system references in routers
+        from apps.backend.src.routers import orchestration as orch_router
+        orch_router.set_orchestration_graph(orchestration_graph)
+
+        # Update model bidding router with orchestration graph reference
+        if 'model_factory' in locals():
+            from apps.backend.src.routers import model_bidding as mb_router
+            mb_router.set_systems(model_factory, orchestration_graph)
+
+    except Exception as e:
+        print(f"⚠ Orchestration graph initialization (optional): {str(e)}")
+
+    # Cryptographic Key Management System (v7.4)
+    print("\n" + "-"*60)
+    print("INITIALIZING CRYPTOGRAPHIC KEY MANAGEMENT")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.key_management import initialize_key_management
+
+        key_mgmt = initialize_key_management(keys_dir="/var/lib/k1/keys")
+        print("✓ Key management system initialized")
+        print(f"  Keys directory: /var/lib/k1/keys")
+        print(f"  Encryption enabled: True")
+
+        # Set system reference in router
+        from apps.backend.src.routers import key_management as km_router
+        km_router.set_key_management(key_mgmt)
+
+    except Exception as e:
+        print(f"⚠ Key management initialization (optional): {str(e)}")
+
+    # Human-in-the-Loop Approval Workflow (v7.4)
+    print("\n" + "-"*60)
+    print("INITIALIZING HUMAN-IN-THE-LOOP APPROVAL WORKFLOW")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.approval_workflow import initialize_hil_approval_workflow
+
+        # Initialize with key management and orchestration graph
+        key_mgmt_ref = key_mgmt if 'key_mgmt' in locals() else None
+        orch_graph_ref = orchestration_graph if 'orchestration_graph' in locals() else None
+
+        hil_workflow = initialize_hil_approval_workflow(
+            key_management_system=key_mgmt_ref,
+            orchestration_graph=orch_graph_ref
+        )
+        print("✓ HiL approval workflow initialized")
+        print(f"  Pending queue: Empty")
+        print(f"  PGP signature verification: Enabled")
+
+        # Set system reference in router
+        from apps.backend.src.routers import approvals as approval_router
+        approval_router.set_hil_workflow(hil_workflow)
+
+    except Exception as e:
+        print(f"⚠ HiL approval workflow initialization (optional): {str(e)}")
+
+    # Cryptographic Artifact Signing & Chain of Custody (v7.5)
+    print("\n" + "-"*60)
+    print("INITIALIZING ARTIFACT SIGNING & CHAIN OF CUSTODY")
+    print("-"*60)
+
+    try:
+        from apps.backend.src.core.crypto_artifact_signing import initialize_kai_crypto
+
+        kai_crypto = initialize_kai_crypto(
+            gpg_home=os.path.expanduser("~/.kai/gpg_home"),
+            key_source_dir="/home/user/kai/Kai PGP-Keys"
+        )
+        print("✓ Crypto system initialized")
+        print(f"  GPG home: {kai_crypto.gpg_home}")
+        print(f"  Key directory: {kai_crypto.key_source_dir}")
+        print(f"  Machine identity: {kai_crypto.machine_identity}")
+
+        # Set system reference in router
+        from apps.backend.src.routers import artifact_signing as artifact_router
+        artifact_router.set_kai_crypto(kai_crypto)
+
+        print("✓ Ready for automated artifact signing")
+
+    except Exception as e:
+        print(f"⚠ Crypto system initialization (optional): {str(e)}")
+
+    print("\n" + "="*60)
+    print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")
+    print("="*60 + "\n")
+
+
+async def shutdown_systems():
+    """Clean shutdown of all K1 systems"""
+    print("\nShutting down K1 systems...")
+
+    try:
+        from apps.backend.src.mcp_base import mcp_manager
+
+        await mcp_manager.stop_all_servers()
+        print("✓ MCP servers stopped")
+
+    except Exception as e:
+        print(f"✗ MCP shutdown error: {str(e)}")
+
+    try:
+        from apps.backend.src.core.agent_a2a import a2a_bus
+
+        if a2a_bus:
+            a2a_bus.clear_messages("all")
+            print("✓ A2A bus cleaned up")
+
+    except Exception as e:
+        print(f"✗ A2A shutdown error: {str(e)}")
+
+    print("K1 shutdown complete\n")

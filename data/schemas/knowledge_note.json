@@ -1,0 +1,17 @@
+
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["id","type","classification","scope_ref","status","evidence_refs","created_at"],
+  "properties": {
+    "id": {"type": "string"},
+    "type": {"type": "string", "enum": ["run","finding","chain","playbook","taxonomy","reference"]},
+    "classification": {"type": "string"},
+    "scope_ref": {"type": "string"},
+    "status": {"type": "string"},
+    "evidence_refs": {"type": "array", "items": {"type": "string"}},
+    "created_at": {"type": "string"},
+    "title": {"type": ["string","null"]},
+    "path": {"type": ["string","null"]}
+  }
+}

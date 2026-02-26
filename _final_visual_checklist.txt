@@ -1,0 +1,6 @@
+K1 Visual Finalization Checklist (generated 2026-01-03T05:58:26.966544Z)
+- Color discipline: audited theme.css for white/#fff/rgb(255,255,255) — no changes needed
+- Tablet-first grids: Arsenal canvas responsive, Intelligence table→card @900px, Persona grid 3/2/1 cols, Logs 2→1 cols, MCP rack fluid.
+- Motion: only active edges in Arsenal animate; prefers-reduced-motion respected.
+- Accessibility: ARIA labels present on key canvases/lists; text contrast uses muted light on near-black.
+- Unused UI: no unused scaffolds detected during pass; keep audit on future modules.

@@ -1,0 +1,106 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: k1
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: recordings-pvc
+  namespace: k1
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recorder
+  namespace: k1
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: recorder }
+  template:
+    metadata:
+      labels: { app: recorder }
+    spec:
+      containers:
+      - name: recorder
+        image: ghcr.io/example/k1-recorder:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: RECORDINGS_DIR
+          value: /data/recordings
+        - name: SEGMENT_SECONDS
+          value: "300"
+        - name: RETENTION_DAYS
+          value: "14"
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: recordings-pvc
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: recorder-retention
+  namespace: k1
+spec:
+  schedule: "30 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+          - name: retention
+            image: python:3.11-slim
+            command: ["python","/job/retention_job.py"]
+            env:
+            - name: RECORDINGS_DIR
+              value: /data/recordings
+            - name: RETENTION_DAYS
+              value: "14"
+            volumeMounts:
+            - name: data
+              mountPath: /data
+            - name: job
+              mountPath: /job
+          volumes:
+          - name: data
+            persistentVolumeClaim:
+              claimName: recordings-pvc
+          - name: job
+            configMap:
+              name: recorder-retention-scripts
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recorder-retention-scripts
+  namespace: k1
+data:
+  retention_job.py: |
+    import os, json, time
+    from pathlib import Path
+    DAYS = int(os.getenv('RETENTION_DAYS', '14'))
+    ROOT = Path(os.getenv('RECORDINGS_DIR','/data/recordings'))
+    cutoff = time.time() - DAYS*86400
+    removed = []
+    for run in ROOT.glob('*'):
+      if not run.is_dir():
+        continue
+      for f in run.glob('**/*'):
+        try:
+          if f.is_file() and f.stat().st_mtime < cutoff:
+            f.unlink()
+            removed.append(str(f))
+        except Exception:
+          pass
+    print(json.dumps({'removed': len(removed)}))

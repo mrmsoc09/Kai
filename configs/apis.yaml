@@ -1,0 +1,29 @@
+version: 1
+sources:
+  shodan:
+    base_url: https://api.shodan.io
+    auth: api_key
+  censys:
+    base_url: https://search.censys.io/api
+    auth: id_secret
+  virustotal:
+    base_url: https://www.virustotal.com/api/v3
+    auth: api_key
+  securitytrails:
+    base_url: https://api.securitytrails.com/v1
+    auth: api_key
+  hunter:
+    base_url: https://api.hunter.io/v2
+    auth: api_key
+  hibp:
+    base_url: https://haveibeenpwned.com/api/v3
+    auth: api_key
+  crtsh:
+    base_url: https://crt.sh
+    auth: none
+  commoncrawl:
+    base_url: https://index.commoncrawl.org
+    auth: none
+  google_cse:
+    base_url: https://www.googleapis.com/customsearch/v1
+    auth: api_key_cx

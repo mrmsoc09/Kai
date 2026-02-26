@@ -1,0 +1,5 @@
+K1 Reasoning & Learning Logs implemented:
+- Backend schemas: DecisionTraceEntry, ReasoningSummary, EvidenceLink, KnowledgeDeltaEntry, LogIndex (timestamped, categorized, structured; no raw CoT).
+- Backend router: /logs/{run_id}/index, /decision_trace, /summary (auto-synth if missing), /evidence_links, /knowledge_delta, /logs/search.
+- Frontend: TS types, API clients; components (LogFilters, TraceTable, SummaryPanel, EvidenceList, KnowledgeList); route /logs.
+- Visual: minimal, calm, readable; chips per category; searchable with query + category filters.
