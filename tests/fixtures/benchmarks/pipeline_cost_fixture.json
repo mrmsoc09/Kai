@@ -1,0 +1,14 @@
+{
+  "scenario": "pipeline_cost_fixture",
+  "discovered_assets": 79,
+  "total_assets": 100,
+  "reported_positives": 41,
+  "true_positives": 27,
+  "ground_truth": 49,
+  "total_execution_time": 149,
+  "llm_cost": 4.8,
+  "api_cost": 5.1,
+  "failed_runs": 2,
+  "retries": 11,
+  "total_runs": 160
+}

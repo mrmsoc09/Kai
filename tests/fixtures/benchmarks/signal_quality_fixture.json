@@ -1,0 +1,14 @@
+{
+  "scenario": "signal_quality_fixture",
+  "discovered_assets": 67,
+  "total_assets": 90,
+  "reported_positives": 45,
+  "true_positives": 30,
+  "ground_truth": 52,
+  "total_execution_time": 155,
+  "llm_cost": 2.5,
+  "api_cost": 3.6,
+  "failed_runs": 3,
+  "retries": 9,
+  "total_runs": 140
+}

@@ -1,0 +1,14 @@
+{
+  "scenario": "reliability_fixture",
+  "discovered_assets": 70,
+  "total_assets": 95,
+  "reported_positives": 39,
+  "true_positives": 24,
+  "ground_truth": 46,
+  "total_execution_time": 167,
+  "llm_cost": 2.9,
+  "api_cost": 3.8,
+  "failed_runs": 5,
+  "retries": 12,
+  "total_runs": 180
+}

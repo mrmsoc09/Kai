@@ -1,0 +1,56 @@
+schema_version: "1.0"
+updated_at: "2026-03-05"
+
+claims:
+  - id: coverage_recon_core
+    metric: coverage
+    threshold: 0.80
+    benchmark_scenario: recon_core_fixture
+    validation_condition: "discovered_assets / total_assets >= 0.80"
+    owner: "Backend"
+
+  - id: precision_signal_quality
+    metric: precision
+    threshold: 0.60
+    benchmark_scenario: signal_quality_fixture
+    validation_condition: "true_positives / reported_positives >= 0.60"
+    owner: "SecOps"
+
+  - id: recall_signal_quality
+    metric: recall
+    threshold: 0.55
+    benchmark_scenario: signal_quality_fixture
+    validation_condition: "true_positives / ground_truth >= 0.55"
+    owner: "SecOps"
+
+  - id: runtime_pipeline_limit
+    metric: runtime_seconds
+    threshold: 180
+    comparator: "<="
+    benchmark_scenario: pipeline_runtime_fixture
+    validation_condition: "total_execution_time <= 180"
+    owner: "SRE"
+
+  - id: cost_efficiency_limit
+    metric: cost_usd
+    threshold: 12.0
+    comparator: "<="
+    benchmark_scenario: pipeline_cost_fixture
+    validation_condition: "llm_cost + api_cost <= 12.0"
+    owner: "Finance"
+
+  - id: reliability_error_rate
+    metric: error_rate
+    threshold: 0.05
+    comparator: "<="
+    benchmark_scenario: reliability_fixture
+    validation_condition: "failed_runs / total_runs <= 0.05"
+    owner: "SRE"
+
+  - id: reliability_retry_rate
+    metric: retry_rate
+    threshold: 0.15
+    comparator: "<="
+    benchmark_scenario: reliability_fixture
+    validation_condition: "retries / total_runs <= 0.15"
+    owner: "SRE"

@@ -1,0 +1,14 @@
+{
+  "scenario": "recon_core_fixture",
+  "discovered_assets": 82,
+  "total_assets": 100,
+  "reported_positives": 50,
+  "true_positives": 32,
+  "ground_truth": 58,
+  "total_execution_time": 142,
+  "llm_cost": 3.2,
+  "api_cost": 4.1,
+  "failed_runs": 2,
+  "retries": 8,
+  "total_runs": 120
+}

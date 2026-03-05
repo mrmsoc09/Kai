@@ -1,5 +1,5 @@
 version: 1
-test_mode: true
+test_mode: false
 external_queries_enabled: false
 allowlist: []
 rate_limits:
@@ -42,6 +42,6 @@ autonomy:
   - 'Batch approvals: present a single approval request per run containing the bounded
     execute plan'
 policies:
-  allowed_targets:
+  allowed_scopes:
   - '*.adobe.com'
   require_hil: true

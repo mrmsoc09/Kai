@@ -36,6 +36,12 @@ jobs:
           PYTHONPATH: .
         run: python -m mypy apps/backend/src modules tests
 
+      - name: Validate claims registry
+        run: python scripts/validate_claims.py
+
+      - name: Run deterministic benchmarks (claims gate)
+        run: python scripts/run_benchmarks.py --verify-claims
+
       - name: Tests with coverage
         env:
           PYTHONPATH: .

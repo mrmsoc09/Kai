@@ -4,7 +4,7 @@ Ensures all vulnerability scanning is authorized, logged, and compliant
 """
 
 from typing import Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Header, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
 from fastapi.responses import JSONResponse
 import logging
 from datetime import datetime, timedelta
@@ -15,11 +15,18 @@ from ..core.kai_security_guardrails import (
     ScanAuthorization,
     ScanScope,
 )
+from ..core.auth import get_current_user, require_roles, ROLE_ADMIN
 from ..schemas.common import Response
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/kai", tags=["Kai Authorized Scanning"])
+router = APIRouter(
+    prefix="/api/v1/kai",
+    tags=["Kai Authorized Scanning"],
+    dependencies=[Depends(get_current_user)],  # all endpoints require auth
+)
+
+_require_admin = Depends(require_roles(ROLE_ADMIN))
 
 # Get the guardrail engine
 guardrails = get_guardrail_engine()
