@@ -53,12 +53,12 @@ class LlamaIndexRAG:
         self,
         persist_dir: str = "var/lib/kai/rag/chroma",
         ollama_model: str = "llama3:8b",
-        ollama_base_url: str = "http://localhost:11434",
+        ollama_base_url: str = "",
         embedding_model: str = "BAAI/bge-small-en-v1.5"
     ):
         self.persist_dir = os.path.join(os.getcwd(), persist_dir)
         self.ollama_model = ollama_model
-        self.ollama_base_url = ollama_base_url
+        self.ollama_base_url = ollama_base_url or os.getenv("OLLAMA_HOST", os.getenv("OLLAMA_API_URL", "http://localhost:11434"))
         self.embedding_model_name = embedding_model
 
         self.index: Optional[VectorStoreIndex] = None

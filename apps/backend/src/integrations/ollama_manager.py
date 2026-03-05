@@ -108,8 +108,8 @@ class OllamaManager:
         }
     }
 
-    def __init__(self, ollama_url: str = "http://localhost:11434"):
-        self.ollama_url = ollama_url
+    def __init__(self, ollama_url: str = ""):
+        self.ollama_url = ollama_url or os.getenv("OLLAMA_HOST", os.getenv("OLLAMA_API_URL", "http://localhost:11434"))
         self.http_client = httpx.AsyncClient(timeout=120.0)
 
     async def __aenter__(self):

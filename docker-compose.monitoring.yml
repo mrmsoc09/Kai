@@ -1,0 +1,49 @@
+version: '3.8'
+
+# K1 Monitoring Stack
+# Usage:
+#   docker-compose -f docker-compose.dev.yml -f docker-compose.monitoring.yml up -d
+# Dashboards: http://localhost:3000 (Grafana, admin/admin)
+# Metrics:    http://localhost:9090 (Prometheus)
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: k1_prometheus
+    volumes:
+      - ./ops/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=15d"
+    ports:
+      - "9090:9090"
+    networks:
+      - k1_network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: k1_grafana
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./ops/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./ops/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - k1_network
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  k1_network:
+    external: true

@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import DOMPurify from 'dompurify';
 import {
   listPendingApprovals,
   getApproval,
@@ -15,6 +16,8 @@ import {
   ApprovalStats
 } from '../api/approvals';
 import StatusChip from '../components/StatusChip';
+import { useStore } from '../store/system';
+import { toast } from '../store/toasts';
 
 export default function ApprovalsDashboard() {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
@@ -24,8 +27,9 @@ export default function ApprovalsDashboard() {
   const [actionInProgress, setActionInProgress] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const token = localStorage.getItem('token') || 'devtoken';
-  const userId = localStorage.getItem('userId') || 'user1';
+  const authToken = useStore((s) => s.auth.token) || '';
+  const userId = useStore((s) => s.auth.user?.id) || 'user1';
+  const token = authToken;
 
   async function loadData() {
     setLoading(true);
@@ -37,8 +41,7 @@ export default function ApprovalsDashboard() {
       setApprovals(approvalsResp.approvals);
       setStats(statsResp);
     } catch (e: any) {
-      console.error('Failed to load approvals:', e);
-      alert(`Error loading approvals: ${e.message}`);
+      toast.error(`Error loading approvals: ${e.message}`);
     } finally {
       setLoading(false);
     }
@@ -68,11 +71,11 @@ export default function ApprovalsDashboard() {
     setActionInProgress(true);
     try {
       await approveRequest(selected.approval_id, userId, undefined, token);
-      alert('✅ Draft approved! You can now manually send the email.');
+      toast.success('Draft approved! You can now manually send the email.');
       setSelected(null);
       void loadData();
     } catch (e: any) {
-      alert(`Failed to approve: ${e.message}`);
+      toast.error(`Failed to approve: ${e.message}`);
     } finally {
       setActionInProgress(false);
     }
@@ -81,20 +84,20 @@ export default function ApprovalsDashboard() {
   async function handleReject() {
     if (!selected) return;
     if (!rejectReason.trim()) {
-      alert('Please provide a rejection reason');
+      toast.warning('Please provide a rejection reason');
       return;
     }
 
     setActionInProgress(true);
     try {
       await rejectRequest(selected.approval_id, userId, rejectReason, token);
-      alert('❌ Draft rejected');
+      toast.info('Draft rejected.');
       setSelected(null);
       setShowRejectModal(false);
       setRejectReason('');
       void loadData();
     } catch (e: any) {
-      alert(`Failed to reject: ${e.message}`);
+      toast.error(`Failed to reject: ${e.message}`);
     } finally {
       setActionInProgress(false);
     }
@@ -107,9 +110,9 @@ export default function ApprovalsDashboard() {
     const emailText = `To: ${draft.to}\nSubject: ${draft.subject}\n\n${draft.body}`;
 
     navigator.clipboard.writeText(emailText).then(() => {
-      alert('📋 Email copied to clipboard');
-    }).catch(err => {
-      alert('Failed to copy email');
+      toast.success('Email copied to clipboard');
+    }).catch(() => {
+      toast.error('Failed to copy email to clipboard');
     });
   }
 
@@ -316,9 +319,16 @@ export default function ApprovalsDashboard() {
                           fontSize: '13px',
                           color: '#D1D5DB',
                           maxHeight: '300px',
-                          overflowY: 'auto'
+                          overflowY: 'auto',
+                          whiteSpace: 'pre-wrap',
+                          wordBreak: 'break-word',
                         }}
-                        dangerouslySetInnerHTML={{ __html: selected.content.email_draft.body }}
+                        dangerouslySetInnerHTML={{
+                          __html: DOMPurify.sanitize(selected.content.email_draft.body, {
+                            ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'u', 'strong', 'em', 'a', 'ul', 'ol', 'li'],
+                            ALLOWED_ATTR: ['href'],
+                          }),
+                        }}
                       />
                     </div>
                   </div>

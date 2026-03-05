@@ -2,23 +2,40 @@
 import { create } from 'zustand'
 import type { SystemState } from '../api/types'
 
-type AuthState = { token?: string; setToken: (t?: string)=>void }
+export type UserProfile = {
+  id: string
+  roles: string[]
+}
 
-const initialToken =
-  (typeof window !== "undefined" &&
-    (sessionStorage.getItem("USER_TOKEN") || localStorage.getItem("USER_TOKEN"))) ||
-  "dev"
+type AuthState = {
+  token: string | null
+  user: UserProfile | null
+}
 
 type K1Store = {
   auth: AuthState
   system: SystemState | null
-  setSystem: (s: SystemState)=>void
+  login: (token: string, user: UserProfile) => void
+  logout: () => void
+  setSystem: (s: SystemState) => void
 }
 
-export const useStore = create<K1Store>()((set)=>({
-  auth: { token: initialToken, setToken: (t?: string)=> set((s)=> { try{ if(t){ sessionStorage.setItem('USER_TOKEN', t) } else { sessionStorage.removeItem('USER_TOKEN') } }catch(e){} return ({...s, auth: { ...s.auth, token: t }}) }) },
+export const useStore = create<K1Store>()((set) => ({
+  auth: { token: null, user: null },
   system: null,
-  setSystem: (s)=> set(()=>({system:s}))
+  login: (token, user) => set((s) => ({ ...s, auth: { token, user } })),
+  logout: () => set((s) => ({ ...s, auth: { token: null, user: null } })),
+  setSystem: (s) => set(() => ({ system: s })),
 }))
 
-export const useAuth = { getState: ()=> useStore.getState().auth }
+// Backward-compat shim.
+// api/client.ts:  useAuth.getState().token     (object access)
+// UnifiedAgentZeroDashboard: useAuth().getState().token  (function call)
+// This shim satisfies both patterns.
+const _authShim = {
+  getState: () => ({
+    token: useStore.getState().auth.token ?? undefined,
+  }),
+}
+export const useAuth: typeof _authShim & (() => typeof _authShim) =
+  Object.assign(() => _authShim, _authShim)

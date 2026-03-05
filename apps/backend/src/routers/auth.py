@@ -9,10 +9,13 @@ from pydantic import BaseModel
 from ..core.auth import (
     User,
     access_expiry_minutes,
+    create_access_token,
+    extract_jti_and_exp,
     get_current_user,
     issue_dev_access_token,
 )
 from ..core.csrf import csrf_manager
+from ..core.token_blocklist import revoke_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -56,6 +59,30 @@ def get_csrf_token(request: Request, response: Response):
         path="/",
     )
     return {"csrf_token": csrf_token}
+
+
+@router.post("/logout")
+def logout(request: Request, user: User = Depends(get_current_user)):
+    """Revoke the current access token by adding its jti to the blocklist."""
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header.removeprefix("Bearer ").strip()
+    if token:
+        jti, exp = extract_jti_and_exp(token)
+        if jti:
+            revoke_token(jti, exp)
+    return {"ok": True}
+
+
+@router.post("/refresh")
+def refresh(user: User = Depends(get_current_user)):
+    """Issue a new access token for the currently authenticated user."""
+    new_token = create_access_token(subject=user.id, roles=user.roles)
+    return {
+        "ok": True,
+        "access_token": new_token,
+        "token_type": "bearer",
+        "expires_in_minutes": access_expiry_minutes(),
+    }
 
 
 @router.get("/me")

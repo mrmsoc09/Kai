@@ -11,3 +11,4 @@ api.interceptors.request.use((config)=>{
 })
 
 export default api
+export const apiClient = api

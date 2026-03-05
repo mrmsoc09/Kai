@@ -10,6 +10,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 
+from .token_blocklist import is_revoked
+
 security = HTTPBearer(auto_error=True)
 
 
@@ -121,16 +123,38 @@ def decode_access_token(token: str) -> User:
 
     subject = payload.get("sub")
     roles = payload.get("roles", [])
+    jti = payload.get("jti")
 
     if not isinstance(subject, str) or not subject:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token_subject")
     if not isinstance(roles, list) or any(not isinstance(role, str) for role in roles):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token_roles")
+
+    if is_revoked(jti):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="token_revoked")
+
     try:
         normalized_roles = _normalize_roles(roles)
     except AuthConfigError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token_roles")
     return User(id=subject, roles=normalized_roles)
+
+
+def extract_jti_and_exp(token: str) -> tuple[Optional[str], int]:
+    """
+    Decode a token WITHOUT blocklist/expiry enforcement (for use in logout).
+    Returns (jti, exp). Does not raise on expired tokens.
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            _jwt_secret(),
+            algorithms=[_jwt_algorithm()],
+            options={"verify_exp": False},
+        )
+        return payload.get("jti"), int(payload.get("exp", 0))
+    except Exception:
+        return None, 0
 
 
 def get_current_user(creds: HTTPAuthorizationCredentials = Depends(security)) -> User:

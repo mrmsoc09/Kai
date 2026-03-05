@@ -3,7 +3,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './theme.css'
 import './theme/branding.css'
 
-// Main Dashboard Component - Updated with K1 branding
+// Auth
+import Login from './routes/Login'
+import PrivateRoute from './components/PrivateRoute'
+
+// Main Dashboard Component
 import Dashboard from './components/Dashboard'
 
 // Route Components
@@ -35,48 +39,86 @@ import ApprovalsDashboard from './pages/ApprovalsDashboard'
 // Layout
 import Layout from './components/Layout'
 
-export default function App(){
-  return <BrowserRouter>
-    <Layout>
+// Finding Management (Phase 2)
+import Findings from './routes/Findings'
+import FindingDetail from './routes/FindingDetail'
+
+// Scope Management (Phase 3)
+import Scopes from './routes/Scopes'
+
+function NotFound() {
+  return (
+    <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace' }}>
+      <div style={{ color: '#00FF41', fontSize: '3rem', fontWeight: 700 }}>404</div>
+      <div style={{ color: '#8892a4', marginTop: 8 }}>Page not found</div>
+      <a href='/dashboard' style={{ color: '#00FF41', marginTop: 16, display: 'inline-block' }}>← Back to Dashboard</a>
+    </div>
+  )
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
       <Routes>
-        {/* Main Dashboard - K1 Unified Platform */}
-        <Route path='/' element={<Navigate to='/dashboard' replace />} />
-        <Route path='/dashboard' element={<Dashboard />} />
+        {/* Public: Login (no sidebar) */}
+        <Route path='/login' element={<Login />} />
 
-        {/* Core Operations */}
-        <Route path='/operations' element={<Operations />} />
-        <Route path='/operations/hil-review' element={<HiLReview />} />
-        <Route path='/operations/approvals' element={<ApprovalsDashboard />} />
-        <Route path='/operations/outbox' element={<Outbox />} />
-        <Route path='/operations/logs' element={<Logs />} />
+        {/* All authenticated routes inside PrivateRoute + Layout */}
+        <Route path='/*' element={
+          <PrivateRoute>
+            <Layout>
+              <Routes>
+                <Route path='/' element={<Navigate to='/dashboard' replace />} />
+                <Route path='/dashboard' element={<Dashboard />} />
 
-        {/* Reconnaissance & Analysis */}
-        <Route path='/recon' element={<Recon />} />
-        <Route path='/attack-graph' element={<AttackGraph />} />
-        <Route path='/chains' element={<Chains />} />
+                {/* Core Operations */}
+                <Route path='/operations' element={<Operations />} />
+                <Route path='/operations/hil-review' element={<HiLReview />} />
+                <Route path='/operations/approvals' element={<ApprovalsDashboard />} />
+                <Route path='/operations/outbox' element={<Outbox />} />
+                <Route path='/operations/logs' element={<Logs />} />
 
-        {/* Tools & Execution */}
-        <Route path='/arsenal' element={<Arsenal />} />
-        <Route path='/validation' element={<Validation />} />
-        <Route path='/intelligence' element={<Intelligence />} />
-        <Route path='/agent-zero' element={<AgentZero />} />
+                {/* Finding Management */}
+                <Route path='/findings' element={<Findings />} />
+                <Route path='/findings/:id' element={<FindingDetail />} />
 
-        {/* Reporting & Planning */}
-        <Route path='/report-builder' element={<ReportBuilder />} />
-        <Route path='/plans' element={<Plans />} />
-        <Route path='/recordings' element={<Recordings />} />
+                {/* Scope Management */}
+                <Route path='/scopes' element={<Scopes />} />
 
-        {/* Platform Management */}
-        <Route path='/programs' element={<Programs />} />
-        <Route path='/mcp-registry' element={<MCPRegistry />} />
-        <Route path='/persona-market' element={<PersonaMarket />} />
+                {/* Reconnaissance & Analysis */}
+                <Route path='/recon' element={<Recon />} />
+                <Route path='/attack-graph' element={<AttackGraph />} />
+                <Route path='/chains' element={<Chains />} />
 
-        {/* Admin & Settings */}
-        <Route path='/logs' element={<Logs />} />
-        <Route path='/settings' element={<Settings />} />
-        <Route path='/docs' element={<Docs />} />
-        <Route path='/wizard' element={<Wizard />} />
+                {/* Tools & Execution */}
+                <Route path='/arsenal' element={<Arsenal />} />
+                <Route path='/validation' element={<Validation />} />
+                <Route path='/intelligence' element={<Intelligence />} />
+                <Route path='/agent-zero' element={<AgentZero />} />
+
+                {/* Reporting & Planning */}
+                <Route path='/report-builder' element={<ReportBuilder />} />
+                <Route path='/plans' element={<Plans />} />
+                <Route path='/recordings' element={<Recordings />} />
+
+                {/* Platform Management */}
+                <Route path='/programs' element={<Programs />} />
+                <Route path='/mcp-registry' element={<MCPRegistry />} />
+                <Route path='/persona-market' element={<PersonaMarket />} />
+
+                {/* Admin & Settings */}
+                <Route path='/logs' element={<Logs />} />
+                <Route path='/settings' element={<Settings />} />
+                <Route path='/docs' element={<Docs />} />
+                <Route path='/wizard' element={<Wizard />} />
+
+                {/* 404 */}
+                <Route path='*' element={<NotFound />} />
+              </Routes>
+            </Layout>
+          </PrivateRoute>
+        } />
       </Routes>
-    </Layout>
-  </BrowserRouter>
+    </BrowserRouter>
+  )
 }
