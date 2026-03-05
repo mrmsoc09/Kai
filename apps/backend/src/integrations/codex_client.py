@@ -10,6 +10,8 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 from enum import Enum
 
+from apps.backend.src.core.secret_manager import get_secret_manager, SecretManagerError
+
 logger = logging.getLogger(__name__)
 
 
@@ -59,7 +61,13 @@ class CodexClient:
         max_tokens: int = 2000
     ):
         """Initialize Codex client"""
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        if api_key:
+            self.api_key = api_key
+        else:
+            try:
+                self.api_key = get_secret_manager().get_required("OPENAI_API_KEY")
+            except SecretManagerError:
+                self.api_key = os.getenv("OPENAI_API_KEY")
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens

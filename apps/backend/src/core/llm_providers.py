@@ -11,6 +11,7 @@ from enum import Enum
 import os
 import json
 from datetime import datetime
+from .secret_manager import get_secret_manager, SecretManagerError
 
 # Provider Libraries (install as needed)
 try:
@@ -191,6 +192,20 @@ class BaseLLMProvider(ABC):
         return round(input_cost + output_cost, 6)
 
 
+def _resolve_api_key(explicit_api_key: Optional[str], env_name: str) -> str:
+    if explicit_api_key:
+        return explicit_api_key
+    try:
+        secret = get_secret_manager().get_required(env_name)
+        return secret
+    except SecretManagerError:
+        # Backward-compatible last chance; still fail closed if absent.
+        fallback = os.getenv(env_name)
+        if fallback and fallback.strip():
+            return fallback.strip()
+        raise ValueError(f"{env_name} not found")
+
+
 class AnthropicProvider(BaseLLMProvider):
     """Anthropic Claude provider"""
 
@@ -198,9 +213,7 @@ class AnthropicProvider(BaseLLMProvider):
         if not AnthropicClient:
             raise ImportError("anthropic package not installed")
 
-        api_key = self.config.api_key or os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY not found")
+        api_key = _resolve_api_key(self.config.api_key, "ANTHROPIC_API_KEY")
 
         self.client = AnthropicClient(api_key=api_key)
         self.model = os.getenv("K1_ANTHROPIC_MODEL", LLMModel.CLAUDE_3_5_SONNET.value)
@@ -313,9 +326,7 @@ class OpenAIProvider(BaseLLMProvider):
         if not openai:
             raise ImportError("openai package not installed")
 
-        api_key = self.config.api_key or os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY not found")
+        api_key = _resolve_api_key(self.config.api_key, "OPENAI_API_KEY")
 
         openai.api_key = api_key
         self.model = os.getenv("K1_OPENAI_MODEL", LLMModel.GPT_4O.value)
@@ -434,9 +445,7 @@ class GeminiProvider(BaseLLMProvider):
         if not genai:
             raise ImportError("google-generativeai package not installed")
 
-        api_key = self.config.api_key or os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found")
+        api_key = _resolve_api_key(self.config.api_key, "GOOGLE_API_KEY")
 
         genai.configure(api_key=api_key)
         self.model = os.getenv("K1_GEMINI_MODEL", LLMModel.GEMINI_2_FLASH.value)
@@ -657,9 +666,7 @@ class GemmaProvider(BaseLLMProvider):
         if not genai:
             raise ImportError("google-generativeai package not installed")
 
-        api_key = self.config.api_key or os.getenv("GOOGLE_API_KEY")
-        if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found")
+        api_key = _resolve_api_key(self.config.api_key, "GOOGLE_API_KEY")
 
         genai.configure(api_key=api_key)
         # Note: Gemma is served via Google's API

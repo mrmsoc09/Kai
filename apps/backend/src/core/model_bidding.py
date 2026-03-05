@@ -251,11 +251,26 @@ class UniversalModelFactory:
         available = []
 
         import os
+        from .secret_manager import get_secret_manager, SecretManagerError
+
+        manager = None
+        try:
+            manager = get_secret_manager()
+        except SecretManagerError:
+            manager = None
+
+        def _lookup(name: str) -> str | None:
+            if manager:
+                try:
+                    return manager.get_optional(name)
+                except SecretManagerError:
+                    pass
+            return os.getenv(name)
 
         api_keys = {
-            ModelFamily.CLAUDE: os.getenv("ANTHROPIC_API_KEY"),
-            ModelFamily.OPENAI: os.getenv("OPENAI_API_KEY"),
-            ModelFamily.GEMINI: os.getenv("GOOGLE_API_KEY"),
+            ModelFamily.CLAUDE: _lookup("ANTHROPIC_API_KEY"),
+            ModelFamily.OPENAI: _lookup("OPENAI_API_KEY"),
+            ModelFamily.GEMINI: _lookup("GOOGLE_API_KEY"),
         }
 
         for family, key in api_keys.items():

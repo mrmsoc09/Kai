@@ -20,6 +20,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from apps.backend.src.core.secret_manager import get_secret_manager, SecretManagerError
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +51,19 @@ class NotificationService:
         self.enabled_providers: List[EmailProvider] = []
         self.notification_rules: Dict[str, Any] = {}
 
+        secret_manager = None
+        try:
+            secret_manager = get_secret_manager()
+        except SecretManagerError:
+            secret_manager = None
+
         # Gmail OAuth2 settings
-        self.gmail_client_id = os.getenv("GMAIL_CLIENT_ID")
-        self.gmail_client_secret = os.getenv("GMAIL_CLIENT_SECRET")
+        self.gmail_client_id = (
+            secret_manager.get_optional("GMAIL_CLIENT_ID") if secret_manager else None
+        ) or os.getenv("GMAIL_CLIENT_ID")
+        self.gmail_client_secret = (
+            secret_manager.get_optional("GMAIL_CLIENT_SECRET") if secret_manager else None
+        ) or os.getenv("GMAIL_CLIENT_SECRET")
         self.gmail_redirect_uri = os.getenv("GMAIL_REDIRECT_URI", "http://localhost:8000/api/v1/notifications/email/gmail/callback")
 
         # Protonmail settings

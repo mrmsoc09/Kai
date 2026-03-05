@@ -11,6 +11,8 @@ from dataclasses import dataclass
 from abc import ABC, abstractmethod
 import logging
 
+from .secret_manager import get_secret_manager, SecretManagerError
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,6 +80,18 @@ class BaseLLMClient(ABC):
         """Get provider type"""
         pass
 
+
+def _resolve_api_key(explicit_api_key: Optional[str], env_name: str) -> str:
+    if explicit_api_key:
+        return explicit_api_key
+    try:
+        return get_secret_manager().get_required(env_name)
+    except SecretManagerError:
+        fallback = os.getenv(env_name)
+        if fallback and fallback.strip():
+            return fallback.strip()
+        raise ValueError(f"{env_name} not provided")
+
     @abstractmethod
     def complete(
         self,
@@ -109,9 +123,7 @@ class AnthropicClient(BaseLLMClient):
     """Claude (Anthropic) LLM client"""
 
     def __init__(self, api_key: Optional[str] = None, model: LLMModel = LLMModel.CLAUDE_SONNET):
-        api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise ValueError("ANTHROPIC_API_KEY not provided")
+        api_key = _resolve_api_key(api_key, "ANTHROPIC_API_KEY")
 
         super().__init__(api_key, model)
 
@@ -246,9 +258,7 @@ class OpenAIClient(BaseLLMClient):
     """GPT (OpenAI) LLM client"""
 
     def __init__(self, api_key: Optional[str] = None, model: LLMModel = LLMModel.GPT_4_TURBO):
-        api_key = api_key or os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY not provided")
+        api_key = _resolve_api_key(api_key, "OPENAI_API_KEY")
 
         super().__init__(api_key, model)
 

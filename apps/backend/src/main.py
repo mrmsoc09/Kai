@@ -8,11 +8,15 @@ from fastapi.responses import JSONResponse
 
 # Import security configurations and middleware
 from apps.backend.src.config.cors_config import get_cors_config, print_cors_config
+from apps.backend.src.middleware.correlation import CorrelationIdMiddleware
 from apps.backend.src.middleware.rate_limit import RateLimitMiddleware
 from apps.backend.src.middleware.csrf import CSRFProtectionMiddleware
 from apps.backend.src.middleware.security_headers import SecurityHeadersMiddleware
 from apps.backend.src.core.exception_handlers import register_exception_handlers
 from apps.backend.src.core.services import Services
+from apps.backend.src.core.tools import get_registry, initialize_default_tools
+from apps.backend.src.core.toolpacks import validate_toolpacks_or_raise
+from apps.backend.src.core.secret_manager import get_secret_manager
 
 # Import routers exactly once
 from apps.backend.src.routers import (
@@ -84,6 +88,35 @@ def _required_startup_services() -> list[str]:
     return [item for item in values if item in allowed]
 
 
+def _required_secrets() -> list[str]:
+    raw = os.getenv("K1_REQUIRED_SECRETS", "")
+    values = [item.strip() for item in raw.split(",") if item.strip()]
+
+    # Contract-based required secrets from selected providers/features.
+    providers = [os.getenv("K1_PRIMARY_LLM_PROVIDER", "anthropic")] + os.getenv(
+        "K1_FALLBACK_LLM_PROVIDERS", "openai,gemini,ollama"
+    ).split(",")
+    normalized = {provider.strip().lower() for provider in providers if provider.strip()}
+    if "anthropic" in normalized:
+        values.append("ANTHROPIC_API_KEY")
+    if "openai" in normalized:
+        values.append("OPENAI_API_KEY")
+    if "gemini" in normalized or "gemma" in normalized:
+        values.append("GOOGLE_API_KEY")
+
+    if (os.getenv("K1_ENABLE_EXTERNAL_INTEL", "false").strip().lower() in {"1", "true", "yes", "on"}):
+        values.extend(["SHODAN_API_KEY", "CENSYS_API_ID", "CENSYS_API_SECRET"])
+
+    # Preserve order while deduplicating.
+    deduped: list[str] = []
+    seen = set()
+    for name in values:
+        if name not in seen:
+            deduped.append(name)
+            seen.add(name)
+    return deduped
+
+
 async def _validate_startup_dependencies() -> None:
     dependencies = await services.probe_dependencies()
     failures: list[str] = []
@@ -101,6 +134,14 @@ async def _validate_startup_dependencies() -> None:
         raise RuntimeError("startup dependency checks failed: " + "; ".join(failures))
 
 
+def _validate_required_secrets() -> None:
+    required = _required_secrets()
+    if not required:
+        return
+    manager = get_secret_manager()
+    manager.validate_required(required)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.services = services
@@ -109,6 +150,11 @@ async def lifespan(app: FastAPI):
         await services.startup()
         if _env_bool("K1_STARTUP_VALIDATE_DEPENDENCIES", True):
             await _validate_startup_dependencies()
+        if _env_bool("K1_STARTUP_VALIDATE_TOOLPACKS", True):
+            initialize_default_tools()
+            validate_toolpacks_or_raise(get_registry().get_all_schemas().keys())
+        if _env_bool("K1_STARTUP_VALIDATE_SECRETS", True):
+            _validate_required_secrets()
         await initialize_llm_providers()
     try:
         yield
@@ -131,13 +177,16 @@ register_exception_handlers(app)
 # 1. Security Headers (should be last, applied to all responses)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# 2. CSRF Protection (before rate limiting)
+# 2. Correlation ID — attach/echo X-Request-ID on every response
+app.add_middleware(CorrelationIdMiddleware)
+
+# 3. CSRF Protection (before rate limiting)
 app.add_middleware(CSRFProtectionMiddleware)
 
-# 3. Rate Limiting (before CORS)
+# 4. Rate Limiting (before CORS)
 app.add_middleware(RateLimitMiddleware)
 
-# 4. CORS (outermost, handles preflight requests)
+# 5. CORS (outermost, handles preflight requests)
 cors_config = get_cors_config()
 app.add_middleware(CORSMiddleware, **cors_config)
 

@@ -29,13 +29,25 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
     """Invoke a registered tool adapter by ID."""
     from apps.backend.src.core.tools import get_registry, initialize_default_tools
     from apps.backend.src.core.artifacts import write_json
+    from apps.backend.src.core.toolpacks import get_toolpack_manager
+    from apps.backend.src.core.authorization_gate import enforce_authorization_gates, AuthorizationGateError
     import time
 
     initialize_default_tools()
     registry = get_registry()
+    manager = get_toolpack_manager()
+    if manager.config is None:
+        manager.load()
+        manager.resolve_mappings(registry.get_all_schemas().keys())
     tool = registry.get(tool_id)
     if not tool:
         return {"status": "failed", "error": f"tool not found: {tool_id}"}
+    if not manager.is_adapter_enabled(tool_id):
+        return {"status": "failed", "error": f"tool disabled by toolpack policy: {tool_id}"}
+    try:
+        enforce_authorization_gates(tool_id, params)
+    except AuthorizationGateError as exc:
+        return {"status": "failed", "error": f"authorization gate blocked execution: {exc}"}
 
     start = time.time()
     result = tool.execute(**params)

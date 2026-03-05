@@ -9,6 +9,8 @@ from typing import List, Dict, Any, Optional, Tuple
 from abc import ABC, abstractmethod
 from enum import Enum
 
+from .secret_manager import get_secret_manager, SecretManagerError
+
 logger = logging.getLogger(__name__)
 
 
@@ -52,7 +54,11 @@ class OpenAIEmbeddingClient(BaseEmbeddingClient):
     """OpenAI Embeddings API client"""
 
     def __init__(self, api_key: Optional[str] = None, model: EmbeddingModel = EmbeddingModel.OPENAI_LARGE):
-        api_key = api_key or os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            try:
+                api_key = get_secret_manager().get_required("OPENAI_API_KEY")
+            except SecretManagerError:
+                api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY not provided")
 
@@ -146,9 +152,16 @@ class HybridEmbeddingClient:
         self.primary_client = None
         self.fallback_client = None
 
-        if openai_api_key or os.getenv("OPENAI_API_KEY"):
+        resolved_openai_key = openai_api_key
+        if not resolved_openai_key:
             try:
-                self.primary_client = OpenAIEmbeddingClient(api_key=openai_api_key, model=primary_model)
+                resolved_openai_key = get_secret_manager().get_optional("OPENAI_API_KEY")
+            except SecretManagerError:
+                resolved_openai_key = os.getenv("OPENAI_API_KEY")
+
+        if resolved_openai_key:
+            try:
+                self.primary_client = OpenAIEmbeddingClient(api_key=resolved_openai_key, model=primary_model)
                 logger.info("OpenAI embedding client initialized")
             except Exception as e:
                 logger.warning(f"Failed to initialize OpenAI client: {str(e)}")

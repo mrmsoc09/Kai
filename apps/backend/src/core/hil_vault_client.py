@@ -8,8 +8,12 @@ import hvac
 
 class VaultClient:
     def __init__(self, url: Optional[str] = None, token: Optional[str] = None, mount_point: str = "secret"):
-        self.url = url or os.getenv("VAULT_ADDR", "http://localhost:8200")
-        self.token = token or os.getenv("VAULT_TOKEN", "root")
+        self.url = (url or os.getenv("VAULT_ADDR", "")).strip()
+        self.token = (token or os.getenv("VAULT_TOKEN", "")).strip()
+        if not self.url:
+            raise RuntimeError("Vault address not configured")
+        if not self.token:
+            raise RuntimeError("Vault token not configured")
         self.mount_point = mount_point
         self.client = hvac.Client(url=self.url, token=self.token)
         if not self.client.is_authenticated():

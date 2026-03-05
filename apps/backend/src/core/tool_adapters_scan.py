@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
+from .evidence_objects import create_evidence_object
 from .tools import (
     BaseTool,
     ToolParameter,
@@ -155,6 +156,7 @@ class TrivyTool(ScannerCLITool):
                 ToolParameter("target", "string", "Path, image, or repo to scan"),
                 ToolParameter("mode", "string", "fs|image|repo", required=False, default="fs", enum=["fs", "image", "repo"]),
                 ToolParameter("severity", "string", "Severity filter", required=False, default="HIGH,CRITICAL"),
+                ToolParameter("run_id", "string", "Execution run ID", required=False, default=None),
             ],
             version="0.1.0",
         )
@@ -166,6 +168,7 @@ class TrivyTool(ScannerCLITool):
         target = kwargs["target"]
         mode = kwargs.get("mode", "fs")
         severity = kwargs.get("severity", "HIGH,CRITICAL")
+        run_id = kwargs.get("run_id")
         base_args = ["--severity", severity, "--quiet"]
         if mode == "image":
             args = ["image", *base_args, target]
@@ -176,7 +179,18 @@ class TrivyTool(ScannerCLITool):
         start = time.time()
         success, stdout, stderr = self._run(ScanCommandSpec(self.binary_name, args, timeout=420))
         elapsed = (time.time() - start) * 1000
-        output = {"target": target, "mode": mode, "raw": stdout}
+        evidence = create_evidence_object(
+            tool=self.id,
+            target=target,
+            run_id=run_id,
+            evidence_type="sca",
+            structured_data={"target": target, "mode": mode, "severity": severity},
+            raw_payload={"stdout": stdout, "stderr": stderr},
+            confidence_score=0.8 if success else 0.2,
+            scope_status="validated",
+            description="trivy scan results",
+        )
+        output = {"target": target, "mode": mode, "raw": stdout, "evidence": evidence}
         status = ToolStatus.COMPLETED if success else ToolStatus.FAILED
         return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
 
@@ -227,4 +241,3 @@ def register_phase2_scanner_tools():
     ]
     for tool in tools:
         _register(tool)
-

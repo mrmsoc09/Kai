@@ -33,6 +33,8 @@ from typing import Any, Dict, List, Optional
 
 import httpx
 
+from .evidence_objects import create_evidence_object
+from .secret_manager import get_secret_manager, SecretManagerError
 from .tools import (
     BaseTool,
     ToolParameter,
@@ -143,7 +145,10 @@ class ShodanHostTool(BaseTool):
             description="Retrieve Shodan host data for an IP using SHODAN_API_KEY.",
             category=ToolCategory.OSINT,
             autonomy_tier=ToolAutonomyTier.TIER_2_APPROVE,
-            parameters=[ToolParameter("ip", "string", "IP address to query")],
+            parameters=[
+                ToolParameter("ip", "string", "IP address to query"),
+                ToolParameter("run_id", "string", "Execution run ID", required=False, default=None),
+            ],
             version="0.1.0",
         )
 
@@ -152,11 +157,13 @@ class ShodanHostTool(BaseTool):
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
 
-        api_key = os.getenv("SHODAN_API_KEY")
-        if not api_key:
-            return ToolResult(self.id, ToolStatus.FAILED, {}, error="SHODAN_API_KEY env var not set")
+        try:
+            api_key = get_secret_manager().get_required("SHODAN_API_KEY")
+        except SecretManagerError as exc:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(exc))
 
         ip = kwargs["ip"]
+        run_id = kwargs.get("run_id")
         url = f"https://api.shodan.io/shodan/host/{ip}"
         start = time.time()
         try:
@@ -165,6 +172,21 @@ class ShodanHostTool(BaseTool):
             if resp.status_code != 200:
                 return ToolResult(self.id, ToolStatus.FAILED, {}, error=f"HTTP {resp.status_code}: {resp.text}", execution_time_ms=elapsed)
             data = resp.json()
+            evidence = create_evidence_object(
+                tool=self.id,
+                target=ip,
+                run_id=run_id,
+                evidence_type="host_intel",
+                structured_data={
+                    "ip": ip,
+                    "ports": data.get("ports", []),
+                    "vulns": data.get("vulns", {}),
+                },
+                raw_payload=data,
+                confidence_score=0.8,
+                scope_status="validated",
+                description="shodan host response",
+            )
             return ToolResult(
                 self.id,
                 ToolStatus.COMPLETED,
@@ -173,6 +195,7 @@ class ShodanHostTool(BaseTool):
                     "ports": data.get("ports", []),
                     "vulns": data.get("vulns", {}),
                     "raw": data,
+                    "evidence": evidence,
                 },
                 execution_time_ms=elapsed,
             )
@@ -333,6 +356,68 @@ class SubfinderTool(CLITool):
         return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
 
 
+class DnsxTool(CLITool):
+    binary_name = "dnsx"
+
+    def __init__(self):
+        super().__init__(
+            id="dnsx",
+            name="DNSX Resolution",
+            description="Resolve and validate DNS records for discovered hosts.",
+            category=ToolCategory.OSINT,
+            autonomy_tier=ToolAutonomyTier.TIER_1_NOTIFY,
+            parameters=[
+                ToolParameter("target", "string", "Host or domain to resolve"),
+                ToolParameter("record_type", "string", "DNS record type", required=False, default="a"),
+                ToolParameter("run_id", "string", "Execution run ID", required=False, default=None),
+            ],
+            version="0.1.0",
+        )
+
+    def execute(self, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+
+        target = kwargs["target"]
+        record_type = str(kwargs.get("record_type", "a")).lower()
+        run_id = kwargs.get("run_id")
+
+        args = ["-silent", "-json", "-a", "-resp", "-l", "-"]
+        start = time.time()
+        success, stdout, stderr = self._run(
+            CommandSpec(self.binary_name, args, timeout=180, workdir=None)
+        )
+        elapsed = (time.time() - start) * 1000
+
+        # dnsx expects stdin for list mode; fallback to direct single target invocation.
+        if not success:
+            args = ["-silent", "-json", "-a", "-resp", "-d", target]
+            success, stdout, stderr = self._run(CommandSpec(self.binary_name, args, timeout=180))
+
+        records: List[Dict[str, Any]] = []
+        for line in stdout.splitlines():
+            try:
+                records.append(json.loads(line))
+            except Exception:
+                continue
+
+        evidence = create_evidence_object(
+            tool=self.id,
+            target=target,
+            run_id=run_id,
+            evidence_type="dns",
+            structured_data={"target": target, "record_type": record_type, "records": records},
+            raw_payload={"stdout": stdout, "stderr": stderr, "records": records},
+            confidence_score=0.85 if success else 0.2,
+            scope_status="validated",
+            description="dnsx resolution results",
+        )
+        output = {"target": target, "record_type": record_type, "records": records, "evidence": evidence}
+        status = ToolStatus.COMPLETED if success else ToolStatus.FAILED
+        return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
+
+
 class NaabuTool(CLITool):
     binary_name = "naabu"
 
@@ -346,6 +431,7 @@ class NaabuTool(CLITool):
             parameters=[
                 ToolParameter("host", "string", "Target host"),
                 ToolParameter("ports", "string", "Port list/range (optional)", required=False, default="top-100"),
+                ToolParameter("run_id", "string", "Execution run ID", required=False, default=None),
             ],
             version="0.1.0",
         )
@@ -357,6 +443,7 @@ class NaabuTool(CLITool):
 
         host = kwargs["host"]
         ports = kwargs.get("ports", "top-100")
+        run_id = kwargs.get("run_id")
         args = ["-host", host, "-silent"]
         if ports:
             args.extend(["-p", ports])
@@ -366,7 +453,65 @@ class NaabuTool(CLITool):
         elapsed = (time.time() - start) * 1000
 
         open_ports = [line.strip() for line in stdout.splitlines() if line.strip()]
-        output = {"host": host, "ports": open_ports, "raw": stdout}
+        evidence = create_evidence_object(
+            tool=self.id,
+            target=host,
+            run_id=run_id,
+            evidence_type="portscan",
+            structured_data={"host": host, "open_ports": open_ports},
+            raw_payload={"stdout": stdout, "stderr": stderr, "ports": open_ports},
+            confidence_score=0.8 if success else 0.2,
+            scope_status="validated",
+            description="naabu open ports",
+        )
+        output = {"host": host, "ports": open_ports, "raw": stdout, "evidence": evidence}
+        status = ToolStatus.COMPLETED if success else ToolStatus.FAILED
+        return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
+
+
+class GauTool(CLITool):
+    binary_name = "gau"
+
+    def __init__(self):
+        super().__init__(
+            id="gau",
+            name="GAU URL Harvest",
+            description="Collect historical URLs from public archives for a domain.",
+            category=ToolCategory.OSINT,
+            autonomy_tier=ToolAutonomyTier.TIER_1_NOTIFY,
+            parameters=[
+                ToolParameter("domain", "string", "Domain to enumerate URLs for"),
+                ToolParameter("run_id", "string", "Execution run ID", required=False, default=None),
+            ],
+            version="0.1.0",
+        )
+
+    def execute(self, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+
+        domain = kwargs["domain"]
+        run_id = kwargs.get("run_id")
+
+        args = ["--subs", domain]
+        start = time.time()
+        success, stdout, stderr = self._run(CommandSpec(self.binary_name, args, timeout=240))
+        elapsed = (time.time() - start) * 1000
+
+        urls = [line.strip() for line in stdout.splitlines() if line.strip()]
+        evidence = create_evidence_object(
+            tool=self.id,
+            target=domain,
+            run_id=run_id,
+            evidence_type="crawl",
+            structured_data={"domain": domain, "url_count": len(urls), "urls": urls[:2000]},
+            raw_payload={"stdout": stdout, "stderr": stderr, "url_count": len(urls)},
+            confidence_score=0.75 if success else 0.25,
+            scope_status="validated",
+            description="gau historical URLs",
+        )
+        output = {"domain": domain, "urls": urls, "evidence": evidence}
         status = ToolStatus.COMPLETED if success else ToolStatus.FAILED
         return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
 
@@ -381,7 +526,10 @@ class HttpxTool(CLITool):
             description="HTTP probe with tech + status",
             category=ToolCategory.OSINT,
             autonomy_tier=ToolAutonomyTier.TIER_1_NOTIFY,
-            parameters=[ToolParameter("target", "string", "URL or host to probe")],
+            parameters=[
+                ToolParameter("target", "string", "URL or host to probe"),
+                ToolParameter("run_id", "string", "Execution run ID", required=False, default=None),
+            ],
             version="0.1.0",
         )
 
@@ -391,6 +539,7 @@ class HttpxTool(CLITool):
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
 
         target = kwargs["target"]
+        run_id = kwargs.get("run_id")
         args = ["-u", target, "-status-code", "-title", "-tech-detect", "-json"]
 
         start = time.time()
@@ -404,7 +553,18 @@ class HttpxTool(CLITool):
             except Exception:
                 continue
 
-        output = {"target": target, "records": records, "raw": stdout}
+        evidence = create_evidence_object(
+            tool=self.id,
+            target=target,
+            run_id=run_id,
+            evidence_type="http",
+            structured_data={"target": target, "records": records},
+            raw_payload={"stdout": stdout, "stderr": stderr},
+            confidence_score=0.85 if success else 0.2,
+            scope_status="validated",
+            description="httpx probe results",
+        )
+        output = {"target": target, "records": records, "raw": stdout, "evidence": evidence}
         status = ToolStatus.COMPLETED if success else ToolStatus.FAILED
         return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
 
@@ -470,6 +630,7 @@ class FfufTool(CLITool):
                 ToolParameter("url", "string", "Target URL with FUZZ placeholder"),
                 ToolParameter("wordlist", "string", "Wordlist path", required=False, default="/usr/share/wordlists/dirb/common.txt"),
                 ToolParameter("extensions", "string", "Extensions (csv)", required=False, default=None),
+                ToolParameter("run_id", "string", "Execution run ID", required=False, default=None),
             ],
             version="0.1.0",
         )
@@ -482,6 +643,7 @@ class FfufTool(CLITool):
         url = kwargs["url"]
         wordlist = kwargs.get("wordlist", "/usr/share/wordlists/dirb/common.txt")
         extensions = kwargs.get("extensions")
+        run_id = kwargs.get("run_id")
 
         args = ["-u", url, "-w", wordlist, "-mc", "200,204,301,302,307,401,403", "-json"]
         if extensions:
@@ -499,9 +661,95 @@ class FfufTool(CLITool):
             except Exception:
                 results = []
 
-        output = {"url": url, "results": results, "raw": stdout}
+        evidence = create_evidence_object(
+            tool=self.id,
+            target=url,
+            run_id=run_id,
+            evidence_type="http",
+            structured_data={"url": url, "results": results},
+            raw_payload={"stdout": stdout, "stderr": stderr, "result_count": len(results)},
+            confidence_score=0.75 if success else 0.2,
+            scope_status="validated",
+            description="ffuf content discovery results",
+        )
+        output = {"url": url, "results": results, "raw": stdout, "evidence": evidence}
         status = ToolStatus.COMPLETED if success else ToolStatus.FAILED
         return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
+
+
+class CensysHostTool(BaseTool):
+    def __init__(self):
+        super().__init__(
+            id="censys",
+            name="Censys Host Intel",
+            description="Retrieve Censys host intelligence for an IP.",
+            category=ToolCategory.OSINT,
+            autonomy_tier=ToolAutonomyTier.TIER_2_APPROVE,
+            parameters=[
+                ToolParameter("ip", "string", "IP address to query"),
+                ToolParameter("run_id", "string", "Execution run ID", required=False, default=None),
+            ],
+            version="0.1.0",
+        )
+
+    def execute(self, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+
+        try:
+            secret_manager = get_secret_manager()
+            api_id = secret_manager.get_required("CENSYS_API_ID")
+            api_secret = secret_manager.get_required("CENSYS_API_SECRET")
+        except SecretManagerError as exc:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(exc))
+
+        ip = kwargs["ip"]
+        run_id = kwargs.get("run_id")
+        url = f"https://search.censys.io/api/v2/hosts/{ip}"
+        start = time.time()
+        try:
+            resp = httpx.get(url, auth=(api_id, api_secret), timeout=30)
+            elapsed = (time.time() - start) * 1000
+            if resp.status_code != 200:
+                return ToolResult(
+                    self.id,
+                    ToolStatus.FAILED,
+                    {},
+                    error=f"HTTP {resp.status_code}: {resp.text}",
+                    execution_time_ms=elapsed,
+                )
+            data = resp.json()
+            result = data.get("result", {})
+            services = result.get("services", [])
+            evidence = create_evidence_object(
+                tool=self.id,
+                target=ip,
+                run_id=run_id,
+                evidence_type="host_intel",
+                structured_data={
+                    "ip": ip,
+                    "service_count": len(services),
+                    "services": services,
+                },
+                raw_payload=data,
+                confidence_score=0.8,
+                scope_status="validated",
+                description="censys host response",
+            )
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED,
+                {
+                    "ip": ip,
+                    "services": services,
+                    "raw": result,
+                    "evidence": evidence,
+                },
+                execution_time_ms=elapsed,
+            )
+        except Exception as e:  # pragma: no cover
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=str(e))
 
 
 # ---------------------------------------------------------------------------
@@ -517,7 +765,10 @@ def register_phase1_osint_tools():
     register_tool(ExifToolMetadata())
     register_tool(TrufflehogSecrets())
     register_tool(SubfinderTool())
+    register_tool(DnsxTool())
     register_tool(NaabuTool())
+    register_tool(GauTool())
     register_tool(HttpxTool())
     register_tool(NucleiTool())
     register_tool(FfufTool())
+    register_tool(CensysHostTool())

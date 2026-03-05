@@ -14,6 +14,8 @@ from pathlib import Path
 from typing import Dict, List, Optional, Any
 from enum import Enum
 
+from apps.backend.src.core.secret_manager import get_secret_manager, SecretManagerError
+
 logger = logging.getLogger(__name__)
 
 
@@ -64,7 +66,13 @@ class GeminiCLIClient:
     ):
         """Initialize Gemini CLI client"""
         self.cli_path = cli_path
-        self.api_key = api_key or os.getenv("GOOGLE_API_KEY")
+        if api_key:
+            self.api_key = api_key
+        else:
+            try:
+                self.api_key = get_secret_manager().get_required("GOOGLE_API_KEY")
+            except SecretManagerError:
+                self.api_key = os.getenv("GOOGLE_API_KEY")
         self.default_context_window = default_context_window
         self.timeout_seconds = timeout_seconds
         self.available = False

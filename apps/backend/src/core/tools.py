@@ -5,6 +5,7 @@ Base classes, registry, and execution context for all tools
 
 import json
 import uuid
+from threading import Lock
 from typing import Any, Dict, List, Optional, Callable, Set
 from enum import Enum
 from abc import ABC, abstractmethod
@@ -336,6 +337,8 @@ class ToolRegistry:
 
 # Global registry instance
 _global_registry = ToolRegistry()
+_DEFAULT_TOOLS_INITIALIZED = False
+_DEFAULT_TOOLS_LOCK = Lock()
 
 
 def get_registry() -> ToolRegistry:
@@ -346,24 +349,33 @@ def get_registry() -> ToolRegistry:
 # Register default adapters if present (idempotent guard in caller)
 def initialize_default_tools():
     """Load built-in tool adapters that are safe for Phase 1."""
-    try:
-        from apps.backend.src.core.tool_adapters_osint import (
-            register_phase1_osint_tools,
-        )
-        from apps.backend.src.core.tool_adapters_recon import (
-            register_phase2_recon_tools,
-        )
-        from apps.backend.src.core.tool_adapters_scan import (
-            register_phase2_scanner_tools,
-        )
-        from apps.backend.src.core.tool_adapters_validate import (
-            register_phase3_validation_tools,
-        )
+    global _DEFAULT_TOOLS_INITIALIZED
+    if _DEFAULT_TOOLS_INITIALIZED:
+        return
 
-        register_phase1_osint_tools()
-        register_phase2_recon_tools()
-        register_phase2_scanner_tools()
-        register_phase3_validation_tools()
+    try:
+        with _DEFAULT_TOOLS_LOCK:
+            if _DEFAULT_TOOLS_INITIALIZED:
+                return
+
+            from apps.backend.src.core.tool_adapters_osint import (
+                register_phase1_osint_tools,
+            )
+            from apps.backend.src.core.tool_adapters_recon import (
+                register_phase2_recon_tools,
+            )
+            from apps.backend.src.core.tool_adapters_scan import (
+                register_phase2_scanner_tools,
+            )
+            from apps.backend.src.core.tool_adapters_validate import (
+                register_phase3_validation_tools,
+            )
+
+            register_phase1_osint_tools()
+            register_phase2_recon_tools()
+            register_phase2_scanner_tools()
+            register_phase3_validation_tools()
+            _DEFAULT_TOOLS_INITIALIZED = True
     except Exception as e:  # pragma: no cover - defensive
         logger.error(f"Failed to initialize default tools: {e}")
 

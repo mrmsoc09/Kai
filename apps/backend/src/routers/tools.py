@@ -15,6 +15,8 @@ from ..core.tools import (
     ToolAutonomyTier,
     ToolExecutionContext,
 )
+from ..core.toolpacks import get_toolpack_manager, ToolpackValidationError
+from ..core.authorization_gate import enforce_authorization_gates, AuthorizationGateError
 from ..core.tools_validators import FindingValidatorTool, QuickClassifierTool
 from ..core.tools_analysis import (
     VulnerabilityAnalyzerTool,
@@ -41,6 +43,9 @@ def get_tool_registry():
         try:
             from apps.backend.src.core.tools import initialize_default_tools
             initialize_default_tools()
+            manager = get_toolpack_manager()
+            manager.load()
+            manager.resolve_mappings(_registry.get_all_schemas().keys())
         except Exception as e:
             logger.error(f"Tool init error: {e}")
         # Register validation tools
@@ -52,6 +57,18 @@ def get_tool_registry():
         _registry.register(ProgramMatcherTool())
         logger.info(f"Tool registry initialized with {_registry.count()} tools")
     return _registry
+
+
+def _ensure_tool_enabled(tool_id: str) -> None:
+    try:
+        manager = get_toolpack_manager()
+        if manager.config is None:
+            manager.load()
+            manager.resolve_mappings(get_tool_registry().get_all_schemas().keys())
+        if not manager.is_adapter_enabled(tool_id):
+            raise HTTPException(status_code=403, detail=f"Tool disabled by toolpack policy: {tool_id}")
+    except ToolpackValidationError as exc:
+        raise HTTPException(status_code=503, detail=f"Toolpack policy unavailable: {exc}") from exc
 
 
 # ============================================================================
@@ -184,6 +201,9 @@ async def execute_tool(
     params: Dict[str, Any],
     run_id: Optional[str] = Query(None),
     user_id: Optional[str] = Query(None),
+    program_id: Optional[str] = Query(None),
+    certificate_id: Optional[str] = Query(None),
+    method: Optional[str] = Query(None),
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     """Execute a tool with given parameters"""
@@ -192,6 +212,18 @@ async def execute_tool(
 
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
+    _ensure_tool_enabled(tool_id)
+    try:
+        enforce_authorization_gates(
+            tool_id,
+            params,
+            user_id=user_id,
+            program_id=program_id,
+            certificate_id=certificate_id,
+            method=method,
+        )
+    except AuthorizationGateError as exc:
+        raise HTTPException(status_code=403, detail=f"Authorization gate blocked execution: {exc}") from exc
 
     try:
         # Create execution context
@@ -239,6 +271,9 @@ async def execute_tool_async(
     background_tasks: BackgroundTasks,
     run_id: Optional[str] = Query(None),
     user_id: Optional[str] = Query(None),
+    program_id: Optional[str] = Query(None),
+    certificate_id: Optional[str] = Query(None),
+    method: Optional[str] = Query(None),
 ):
     """Execute a tool asynchronously"""
     registry = get_tool_registry()
@@ -246,6 +281,18 @@ async def execute_tool_async(
 
     if not tool:
         raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
+    _ensure_tool_enabled(tool_id)
+    try:
+        enforce_authorization_gates(
+            tool_id,
+            params,
+            user_id=user_id,
+            program_id=program_id,
+            certificate_id=certificate_id,
+            method=method,
+        )
+    except AuthorizationGateError as exc:
+        raise HTTPException(status_code=403, detail=f"Authorization gate blocked execution: {exc}") from exc
 
     context = ToolExecutionContext(
         tool_id=tool_id,

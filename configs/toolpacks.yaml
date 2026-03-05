@@ -1,0 +1,170 @@
+schema_version: "1.0"
+
+platform:
+  primary_os:
+    - "debian13"
+    - "ubuntu2204"
+  compatible_os:
+    - "kali"
+    - "parrot"
+    - "tsurugi"
+  tools_root: "/opt/kai/tools"
+  artifacts_root: "/opt/kai/artifacts"
+  cache_root: "/opt/kai/cache"
+
+toolpacks:
+  recon_core:
+    description: "Core defensive recon for DNS, HTTP probing, and conservative port discovery."
+    enabled: true
+    opsec_profile: "medium"
+    allowed_methods:
+      - "dns_enum"
+      - "http_probe"
+      - "port_discovery"
+    tools:
+      - id: "subfinder"
+        adapter_id: "subfinder"
+        enabled: true
+        method: "dns_enum"
+        evidence_type: "dns"
+        integration_mode: "local_cli"
+        binary: "subfinder"
+        allowed_targets: ["domain"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "medium"
+      - id: "httpx"
+        adapter_id: "httpx_probe"
+        enabled: true
+        method: "http_probe"
+        evidence_type: "http"
+        integration_mode: "local_cli"
+        binary: "httpx"
+        allowed_targets: ["url", "domain"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "medium"
+      - id: "naabu"
+        adapter_id: "naabu"
+        enabled: true
+        method: "port_discovery"
+        evidence_type: "portscan"
+        integration_mode: "local_cli"
+        binary: "naabu"
+        allowed_targets: ["domain", "host"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "high"
+
+  web_surface:
+    description: "Web surface discovery and endpoint enumeration with conservative defaults."
+    enabled: true
+    opsec_profile: "medium"
+    allowed_methods:
+      - "endpoint_discovery"
+      - "content_enum"
+    tools:
+      - id: "ffuf"
+        adapter_id: "ffuf"
+        enabled: true
+        method: "content_enum"
+        evidence_type: "http"
+        integration_mode: "local_cli"
+        binary: "ffuf"
+        allowed_targets: ["url"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "high"
+          forbidden_flags:
+            - "-t 1000"
+            - "-rate 0"
+      - id: "gau"
+        adapter_id: "gau"
+        enabled: false
+        method: "endpoint_discovery"
+        evidence_type: "crawl"
+        integration_mode: "local_cli"
+        binary: "gau"
+        allowed_targets: ["domain", "url"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "medium"
+
+  vuln_signals:
+    description: "Non-exploitative vulnerability signal detection."
+    enabled: true
+    opsec_profile: "medium"
+    allowed_methods:
+      - "vuln_templates"
+      - "safe_validation"
+    tools:
+      - id: "nuclei"
+        adapter_id: "nuclei_scan"
+        enabled: true
+        method: "vuln_templates"
+        evidence_type: "http"
+        integration_mode: "local_cli"
+        binary: "nuclei"
+        allowed_targets: ["url", "domain"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "high"
+
+  supply_chain:
+    description: "Supply-chain scanning (SCA/SBOM) for repositories and images."
+    enabled: true
+    opsec_profile: "low"
+    allowed_methods:
+      - "sca"
+      - "sbom"
+    tools:
+      - id: "trivy"
+        adapter_id: "trivy_scan"
+        enabled: true
+        method: "sca"
+        evidence_type: "sca"
+        integration_mode: "local_cli"
+        binary: "trivy"
+        allowed_targets: ["repo", "image", "path"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "low"
+
+  external_intel:
+    description: "External intelligence connectors requiring managed API credentials."
+    enabled: false
+    opsec_profile: "low"
+    allowed_methods:
+      - "internet_intel"
+    tools:
+      - id: "shodan"
+        adapter_id: "shodan_host"
+        enabled: true
+        method: "internet_intel"
+        evidence_type: "host_intel"
+        integration_mode: "api_connector"
+        allowed_targets: ["ip"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "low"
+      - id: "censys"
+        adapter_id: "censys"
+        enabled: false
+        method: "internet_intel"
+        evidence_type: "host_intel"
+        integration_mode: "api_connector"
+        allowed_targets: ["ip", "domain"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "low"
+      - id: "dnsx"
+        adapter_id: "dnsx"
+        enabled: false
+        method: "dns_enum"
+        evidence_type: "dns"
+        integration_mode: "local_cli"
+        binary: "dnsx"
+        allowed_targets: ["domain"]
+        safety:
+          requires_scope: true
+          rate_limit_class: "medium"
