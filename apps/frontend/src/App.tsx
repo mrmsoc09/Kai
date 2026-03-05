@@ -46,6 +46,10 @@ import FindingDetail from './routes/FindingDetail'
 // Scope Management (Phase 3)
 import Scopes from './routes/Scopes'
 
+// Opportunity Hub + Workflow (Phase 6)
+import Opportunities from './routes/Opportunities'
+import WorkflowDashboard from './routes/WorkflowDashboard'
+
 function NotFound() {
   return (
     <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace' }}>
@@ -100,6 +104,10 @@ export default function App() {
                 <Route path='/report-builder' element={<ReportBuilder />} />
                 <Route path='/plans' element={<Plans />} />
                 <Route path='/recordings' element={<Recordings />} />
+
+                {/* Opportunity Hub + Hunt Workflows */}
+                <Route path='/opportunities' element={<Opportunities />} />
+                <Route path='/workflows' element={<WorkflowDashboard />} />
 
                 {/* Platform Management */}
                 <Route path='/programs' element={<Programs />} />

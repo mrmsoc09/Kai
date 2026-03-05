@@ -45,6 +45,7 @@ from apps.backend.src.routers import (
     mcp,
     metrics,
     model_bidding,
+    opportunities,
     orchestration,
     orchestrator,
     persona,
@@ -60,6 +61,7 @@ from apps.backend.src.routers import (
     submissions,
     tools,
     tasks,
+    workflows,
 )
 from apps.backend.src.routers import triage
 from apps.backend.src.routers import (
@@ -285,6 +287,10 @@ app.include_router(agent_training.router)
 
 # Finding Validation Workflow (NEW)
 app.include_router(finding_validation.router)
+
+# Opportunity Hub + Hunt Workflows (Phase 6)
+app.include_router(opportunities.router)
+app.include_router(workflows.router)
 
 # Evidence and findings lifecycle
 app.include_router(evidence.router)

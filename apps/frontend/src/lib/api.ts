@@ -121,6 +121,63 @@ export const Planner = null
 /** @deprecated Use useStore instead */
 export const State = null
 
+// Opportunities
+export function listOpportunities(params?: {
+  platform?: string
+  access_type?: string
+  min_payout?: number
+  tag?: string
+  search?: string
+  public_only?: boolean
+  sort_by?: 'score' | 'payout' | 'name'
+  limit?: number
+  offset?: number
+}) {
+  return api.get('/opportunities', { params })
+}
+export function getRankedOpportunities(params?: { limit?: number; public_only?: boolean }) {
+  return api.get('/opportunities/ranked', { params })
+}
+export function getOpportunity(id: string) {
+  return api.get(`/opportunities/${encodeURIComponent(id)}`)
+}
+export function getOpportunityStats() {
+  return api.get('/opportunities/stats')
+}
+
+// Workflows
+export function listWorkflows(params?: {
+  status?: string
+  platform?: string
+  opportunity_id?: string
+  created_by?: string
+  limit?: number
+  offset?: number
+}) {
+  return api.get('/workflows', { params })
+}
+export function createWorkflow(opportunity_id: string, notes?: string) {
+  return api.post('/workflows', { opportunity_id, notes: notes ?? '' })
+}
+export function getWorkflow(wf_id: string) {
+  return api.get(`/workflows/${wf_id}`)
+}
+export function updateWorkflow(wf_id: string, notes: string) {
+  return api.patch(`/workflows/${wf_id}`, { notes })
+}
+export function transitionWorkflow(wf_id: string, to_state: string, notes?: string) {
+  return api.post(`/workflows/${wf_id}/transition`, { to_state, notes: notes ?? '' })
+}
+export function linkWorkflowRun(wf_id: string, run_id: string) {
+  return api.post(`/workflows/${wf_id}/link-run`, { run_id })
+}
+export function getWorkflowScope(wf_id: string) {
+  return api.get(`/workflows/${wf_id}/scope`)
+}
+export function deleteWorkflow(wf_id: string) {
+  return api.delete(`/workflows/${wf_id}`)
+}
+
 // Providers
 export function getProviderCatalog(market?: string) {
   const params = market ? { market } : undefined

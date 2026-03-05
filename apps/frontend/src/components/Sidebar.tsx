@@ -6,13 +6,15 @@ import { authLogout } from '../lib/api'
 
 const links = [
   {to:'/dashboard', label:'Dashboard'},
+  {to:'/opportunities', label:'Opportunities'},
+  {to:'/workflows', label:'Active Hunts'},
   {to:'/findings', label:'Findings'},
   {to:'/operations', label:'Operations'},
   {to:'/operations/approvals', label:'HiL Approvals'},
   {to:'/scopes', label:'Scopes'},
   {to:'/arsenal', label:'Arsenal'},
   {to:'/intelligence', label:'Intelligence'},
-  {to:'/programs', label:'Programs'},
+  {to:'/programs', label:'BBP Archive'},
   {to:'/mcp-registry', label:'MCP Registry'},
   {to:'/persona-market', label:'Persona Market'},
   {to:'/logs', label:'Logs'},
