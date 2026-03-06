@@ -58,7 +58,7 @@ class SessionResponse(BaseModel):
 
 class PlanActionRequest(BaseModel):
     """Add action to hunting plan"""
-    action_type: str  # reconnaissance, analysis, exploitation, validation, reporting
+    action_type: str  # reconnaissance, analysis, signal_validation, validation, reporting
     target: str
     description: str
     expected_outcome: str
@@ -98,6 +98,15 @@ class FindingRequest(BaseModel):
 class PhaseTransitionRequest(BaseModel):
     """Request phase transition"""
     target_phase: str
+
+
+_DEFENSIVE_ACTION_TYPES = {
+    "reconnaissance",
+    "analysis",
+    "signal_validation",
+    "validation",
+    "reporting",
+}
 
 
 # ==================== Session Management ====================
@@ -167,6 +176,10 @@ async def add_plan_action(session_id: str, action: PlanActionRequest):
 
     if graph.session.session_id != session_id:
         raise HTTPException(status_code=404, detail=f"Session {session_id} not found")
+    if action.action_type not in _DEFENSIVE_ACTION_TYPES:
+        raise HTTPException(status_code=400, detail="non_defensive_action_type_not_allowed")
+    if "exploit" in action.description.lower() or "attack" in action.description.lower():
+        raise HTTPException(status_code=400, detail="offensive_action_description_not_allowed")
 
     try:
         from apps.backend.src.core.orchestration_graph import PlanAction, ApprovalStatus

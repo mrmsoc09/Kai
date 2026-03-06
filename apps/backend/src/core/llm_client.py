@@ -87,9 +87,6 @@ def _resolve_api_key(explicit_api_key: Optional[str], env_name: str) -> str:
     try:
         return get_secret_manager().get_required(env_name)
     except SecretManagerError:
-        fallback = os.getenv(env_name)
-        if fallback and fallback.strip():
-            return fallback.strip()
         raise ValueError(f"{env_name} not provided")
 
     @abstractmethod

@@ -4,7 +4,6 @@ Integration for code generation, PoC creation, and vulnerability fix generation
 """
 
 import logging
-import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Dict, List, Optional, Any
@@ -67,14 +66,14 @@ class CodexClient:
             try:
                 self.api_key = get_secret_manager().get_required("OPENAI_API_KEY")
             except SecretManagerError:
-                self.api_key = os.getenv("OPENAI_API_KEY")
+                self.api_key = None
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.available = False
 
         if not self.api_key:
-            logger.warning("OpenAI API key not found. Set OPENAI_API_KEY environment variable.")
+            logger.warning("OpenAI API key not found via secret manager.")
         else:
             self.available = True
             logger.info(f"✓ Codex client initialized with model: {model}")

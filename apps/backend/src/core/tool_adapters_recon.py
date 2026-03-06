@@ -9,7 +9,6 @@ FAILED ToolResult with a clear error instead of throwing.
 
 from __future__ import annotations
 
-import os
 import shutil
 import subprocess
 import time
@@ -29,6 +28,7 @@ from .tools import (
 )
 from .tool_adapters_osint import CLITool, CommandSpec  # reuse lightweight runner
 from .kai_security_guardrails import set_tool_tier, ToolRiskTier
+from .secret_manager import get_secret_manager, SecretManagerError
 
 
 # ---------------------------------------------------------------------------
@@ -318,9 +318,10 @@ class GrayhatWarfareTool(CLITool):
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
-        api_key = os.getenv("GRAYHAT_API_KEY")
-        if not api_key:
-            return ToolResult(self.id, ToolStatus.FAILED, {}, error="GRAYHAT_API_KEY env var not set")
+        try:
+            api_key = get_secret_manager().get_required("GRAYHAT_API_KEY")
+        except SecretManagerError:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error="required secret missing: GRAYHAT_API_KEY")
         query = kwargs["query"]
         args = ["search", query, "--key", api_key, "--json"]
         start = time.time()
@@ -445,4 +446,3 @@ def register_phase2_recon_tools():
             set_tool_tier(tool.id, ToolRiskTier.TIER_1_NOTIFY)
         else:
             set_tool_tier(tool.id, ToolRiskTier.TIER_2_INTRUSIVE)
-

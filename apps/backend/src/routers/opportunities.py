@@ -25,6 +25,8 @@ from apps.backend.src.core.opportunity_catalog import (
     list_filtered,
     rank_opportunities,
 )
+from apps.backend.src.core.opportunity_scoring import rank_opportunities_v1
+from apps.backend.src.core.duplicates import _collect_existing_titles
 from apps.backend.src.core.auth import get_current_user
 
 router = APIRouter(
@@ -136,6 +138,37 @@ async def ranked_opportunities(
     return {
         "count": len(ranked),
         "opportunities": [_out(o) for o in ranked],
+    }
+
+
+@router.get("/ranked_v1", response_model=dict)
+async def ranked_opportunities_v1(
+    limit: int = Query(50, ge=1, le=500),
+    public_only: bool = Query(False),
+    effort_bias: float = Query(0.5, ge=0.0, le=1.0, description="Higher values penalize high-effort programs more"),
+):
+    opportunities = rank_opportunities(public_only=public_only)
+    prior_reports = _collect_existing_titles()
+    scored = rank_opportunities_v1(
+        opportunities,
+        prior_reports=prior_reports,
+        effort_bias=effort_bias,
+    )[:limit]
+    score_lookup = {s.opportunity_id: s for s in scored}
+    rows = []
+    for opp in opportunities:
+        score = score_lookup.get(opp.id)
+        if not score:
+            continue
+        row = _out(opp).model_dump(mode="json")
+        row["v1_score"] = round(score.score, 4)
+        row["v1_factors"] = {k: round(v, 4) for k, v in score.factors.items()}
+        row["v1_reasoning"] = score.reasoning
+        rows.append(row)
+    return {
+        "count": len(rows),
+        "effort_bias": effort_bias,
+        "opportunities": rows,
     }
 
 

@@ -79,7 +79,7 @@ services:
         condition: service_healthy
     command: >
       sh -c "
-        pip install -q -r requirements.txt &&
+        pip install -q --use-deprecated=legacy-resolver -r requirements.txt &&
         python3 -m uvicorn apps.backend.src.main:app --host 0.0.0.0 --port 8080 --reload
       "
     networks:
@@ -107,7 +107,7 @@ services:
     restart: unless-stopped
     command: >
       sh -c "
-        pip install -q -r requirements.txt &&
+        pip install -q --use-deprecated=legacy-resolver -r requirements.txt &&
         celery -A apps.backend.src.worker.celery_app.celery_app worker -Q tools,intrusive --loglevel=info
       "
 

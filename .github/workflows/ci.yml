@@ -42,6 +42,18 @@ jobs:
       - name: Run deterministic benchmarks (claims gate)
         run: python scripts/run_benchmarks.py --verify-claims
 
+      - name: Toolpack adapter compatibility gate
+        env:
+          PYTHONPATH: .
+          K1_TEST_MODE: "true"
+        run: python scripts/check_toolpack_adapter_compat.py
+
+      - name: Secret manager unmanaged-read gate
+        run: python scripts/check_unmanaged_secrets.py
+
+      - name: Non-bypassability gate
+        run: python scripts/check_non_bypassability.py
+
       - name: Tests with coverage
         env:
           PYTHONPATH: .

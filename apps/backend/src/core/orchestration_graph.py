@@ -3,7 +3,7 @@ K1 LangGraph Orchestration State Machine
 Manages the complete hunting workflow from planning through execution and verification
 """
 
-from typing import Dict, List, Optional, Any, Annotated
+from typing import Dict, List, Optional, Any, Annotated, Tuple
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -15,7 +15,7 @@ class HuntPhase(str, Enum):
     PLANNING = "planning"
     RECONNAISSANCE = "reconnaissance"
     ANALYSIS = "analysis"
-    EXPLOITATION = "exploitation"
+    SIGNAL_VALIDATION = "signal_validation"
     VALIDATION = "validation"
     REPORTING = "reporting"
     COMPLETE = "complete"
@@ -33,7 +33,7 @@ class ApprovalStatus(str, Enum):
 class PlanAction:
     """Single action in the plan"""
     action_id: str
-    action_type: str  # reconnaissance, exploitation, analysis
+    action_type: str  # reconnaissance, analysis, validation, reporting
     target: str
     description: str
     expected_outcome: str
@@ -130,9 +130,9 @@ class OrchestrationGraph:
         self.transitions = {
             HuntPhase.PLANNING: [HuntPhase.RECONNAISSANCE],
             HuntPhase.RECONNAISSANCE: [HuntPhase.ANALYSIS],
-            HuntPhase.ANALYSIS: [HuntPhase.EXPLOITATION, HuntPhase.REPORTING],
-            HuntPhase.EXPLOITATION: [HuntPhase.VALIDATION, HuntPhase.ANALYSIS],
-            HuntPhase.VALIDATION: [HuntPhase.REPORTING, HuntPhase.EXPLOITATION],
+            HuntPhase.ANALYSIS: [HuntPhase.SIGNAL_VALIDATION, HuntPhase.REPORTING],
+            HuntPhase.SIGNAL_VALIDATION: [HuntPhase.VALIDATION, HuntPhase.ANALYSIS],
+            HuntPhase.VALIDATION: [HuntPhase.REPORTING, HuntPhase.SIGNAL_VALIDATION],
             HuntPhase.REPORTING: [HuntPhase.COMPLETE]
         }
 

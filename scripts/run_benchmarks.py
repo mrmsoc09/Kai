@@ -26,6 +26,11 @@ def compute_metrics(payload: Dict[str, Any]) -> Dict[str, float]:
     failed_runs = float(payload.get("failed_runs", 0))
     retries = float(payload.get("retries", 0))
     total_runs = float(payload.get("total_runs", 1))
+    reports_submitted = float(payload.get("reports_submitted", 0))
+    reports_accepted = float(payload.get("reports_accepted", 0))
+    gross_payout_usd = float(payload.get("gross_payout_usd", 0))
+    operating_cost_usd = float(payload.get("operating_cost_usd", 0))
+    net_payout_usd = gross_payout_usd - operating_cost_usd
 
     return {
         "coverage": discovered_assets / max(total_assets, 1.0),
@@ -35,6 +40,8 @@ def compute_metrics(payload: Dict[str, Any]) -> Dict[str, float]:
         "cost_usd": llm_cost + api_cost,
         "error_rate": failed_runs / max(total_runs, 1.0),
         "retry_rate": retries / max(total_runs, 1.0),
+        "accepted_rate": reports_accepted / max(reports_submitted, 1.0),
+        "payout_efficiency": net_payout_usd / max(operating_cost_usd, 1.0),
     }
 
 

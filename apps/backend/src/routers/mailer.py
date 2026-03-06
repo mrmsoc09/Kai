@@ -8,6 +8,9 @@ from email.parser import BytesParser
 from email.policy import default
 from ..core.auth import require_roles, ROLE_OPERATOR
 from ..core.logs import log_decision
+from ..core.comms_store import append_message
+from ..core.hil_approval_system import ApprovalStatus
+from .hil_approval import get_hil_system
 
 router = APIRouter(prefix='/mailer', tags=['mailer'], dependencies=[Depends(require_roles(ROLE_OPERATOR))])
 
@@ -54,6 +57,21 @@ def _send_via_smtp(raw_eml: bytes, smtp_cfg: Dict[str, Any]) -> Dict[str, Any]:
     return {'sent': True, 'to': to_addrs, 'from': from_addr, 'host': host, 'port': port}
 
 
+def _ensure_approval_granted(approval_id: str | None, expected_type: str) -> None:
+    if not approval_id:
+        raise HTTPException(409, 'approval_id_required_for_outbound_send')
+    hil = get_hil_system()
+    # Approved requests are moved to history.
+    for item in hil.approval_history:
+        if item.approval_id == approval_id:
+            if item.status != ApprovalStatus.APPROVED:
+                raise HTTPException(409, f'approval_not_granted:{approval_id}')
+            if item.approval_type.value != expected_type:
+                raise HTTPException(409, f'approval_type_mismatch:{item.approval_type.value}')
+            return
+    raise HTTPException(409, f'approval_not_found:{approval_id}')
+
+
 @router.post('/send')
 async def send(payload: Dict[str, Any]) -> Dict[str, Any]:
     run_id = payload.get('run_id')
@@ -78,10 +96,31 @@ async def send(payload: Dict[str, Any]) -> Dict[str, Any]:
         sent_path = SENT / f'{run_id}_{stakeholder}.eml'
         sent_path.write_bytes(raw)
         log_decision(run_id, 'report_email_archived', {'stakeholder': stakeholder, 'eml': str(sent_path)})
+        append_message(
+            run_id=run_id,
+            stakeholder=stakeholder,
+            channel="email",
+            direction="outbound",
+            subject=f"Submission delivery ({stakeholder})",
+            body="Submission email archived in local sent mailbox.",
+            artifact_path=str(sent_path),
+            metadata={"mode": "archive"},
+        )
         return {'status': 'archived', 'eml': str(sent_path)}
     # attempt SMTP send
+    _ensure_approval_granted(payload.get("approval_id"), "report_submission")
     info = _send_via_smtp(raw, smtp_cfg)
     log_decision(run_id, 'report_email_sent', {'stakeholder': stakeholder, **info})
+    append_message(
+        run_id=run_id,
+        stakeholder=stakeholder,
+        channel="email",
+        direction="outbound",
+        subject=f"Submission delivery ({stakeholder})",
+        body="Submission email sent via SMTP.",
+        artifact_path=str(eml),
+        metadata=info,
+    )
     return {'status': 'sent', **info}
 
 
@@ -110,10 +149,66 @@ async def followup(payload: Dict[str, Any]) -> Dict[str, Any]:
     fpath = FOLLOWUPS / f'{run_id}_{stakeholder}_followup.eml'
     fpath.write_bytes(raw)
     log_decision(run_id, 'report_followup_prepared', {'stakeholder': stakeholder, 'eml': str(fpath)})
+    append_message(
+        run_id=run_id,
+        stakeholder=stakeholder,
+        channel="email",
+        direction="outbound",
+        subject=subj,
+        body=body,
+        artifact_path=str(fpath),
+        metadata={"kind": "followup", "status": "prepared"},
+    )
     # Optionally send via SMTP if provided
     smtp_cfg = payload.get('smtp') or {}
     if smtp_cfg:
+        _ensure_approval_granted(payload.get("approval_id"), "email_reply")
         info = _send_via_smtp(raw, smtp_cfg)
         log_decision(run_id, 'report_followup_sent', {'stakeholder': stakeholder, **info})
         return {'status': 'sent', **info, 'eml': str(fpath)}
     return {'status': 'prepared', 'eml': str(fpath)}
+
+
+@router.post('/reply_draft')
+async def reply_draft(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Create approval-gated draft reply for stakeholder communication.
+    Does not send email.
+    """
+    run_id = payload.get("run_id")
+    program_id = payload.get("program_id") or payload.get("stakeholder") or "unknown"
+    program_name = payload.get("program_name") or payload.get("stakeholder") or "unknown"
+    incoming = payload.get("incoming_email") or {}
+    if not run_id:
+        raise HTTPException(400, "run_id required")
+
+    draft = {
+        "subject": payload.get("subject") or f"Re: {incoming.get('subject', 'Security report')}",
+        "body": payload.get("body")
+        or (
+            "Thanks for the update. We reviewed your request and attached additional "
+            "defensive evidence required for triage."
+        ),
+    }
+    hil = get_hil_system()
+    approval = await hil.request_email_reply_approval(
+        scan_id=str(run_id),
+        program_id=str(program_id),
+        program_name=str(program_name),
+        incoming_email=dict(incoming),
+        draft_reply=draft,
+    )
+    append_message(
+        run_id=str(run_id),
+        stakeholder=str(program_name),
+        channel="email",
+        direction="draft",
+        subject=draft["subject"],
+        body=draft["body"],
+        metadata={"approval_id": approval.approval_id, "status": approval.status.value},
+    )
+    return {
+        "status": "approval_required",
+        "approval_id": approval.approval_id,
+        "draft": draft,
+    }

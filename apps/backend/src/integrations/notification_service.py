@@ -4,6 +4,7 @@ Supports Gmail OAuth2 and Protonmail OpenPGP for security notifications
 """
 
 import asyncio
+import json
 import logging
 import os
 import smtplib
@@ -21,6 +22,7 @@ from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from apps.backend.src.core.secret_manager import get_secret_manager, SecretManagerError
+from apps.backend.src.core.hil_vault_client import VaultClient
 
 logger = logging.getLogger(__name__)
 
@@ -60,10 +62,10 @@ class NotificationService:
         # Gmail OAuth2 settings
         self.gmail_client_id = (
             secret_manager.get_optional("GMAIL_CLIENT_ID") if secret_manager else None
-        ) or os.getenv("GMAIL_CLIENT_ID")
+        )
         self.gmail_client_secret = (
             secret_manager.get_optional("GMAIL_CLIENT_SECRET") if secret_manager else None
-        ) or os.getenv("GMAIL_CLIENT_SECRET")
+        )
         self.gmail_redirect_uri = os.getenv("GMAIL_REDIRECT_URI", "http://localhost:8000/api/v1/notifications/email/gmail/callback")
 
         # Protonmail settings
@@ -95,25 +97,41 @@ class NotificationService:
 
     def _load_credentials(self):
         """Load stored credentials from vault"""
-        # TODO: Load from secure vault storage
-        # For now, check if token file exists
-        token_path = os.path.join(os.getcwd(), "var/lib/kai/credentials/gmail_token.json")
-        if os.path.exists(token_path):
+        try:
+            vault = VaultClient()
+            token_bundle = vault.read_secret(path="notifications/gmail")
+            token_json = (token_bundle or {}).get("token_json")
+            if token_json:
+                self.gmail_credentials = Credentials.from_authorized_user_info(json.loads(token_json))
+        except Exception:
+            token_path = os.path.join(os.getcwd(), "var/lib/kai/credentials/gmail_token.json")
+            if os.path.exists(token_path):
+                try:
+                    self.gmail_credentials = Credentials.from_authorized_user_file(token_path)
+                except Exception as e:
+                    logger.error(f"Failed to load Gmail credentials: {e}")
+
+        if self.gmail_credentials and self.gmail_credentials.expired and self.gmail_credentials.refresh_token:
             try:
-                self.gmail_credentials = Credentials.from_authorized_user_file(token_path)
-                if self.gmail_credentials.expired and self.gmail_credentials.refresh_token:
-                    self.gmail_credentials.refresh(Request())
-                    self._save_credentials()
+                self.gmail_credentials.refresh(Request())
+                self._save_credentials()
             except Exception as e:
-                logger.error(f"Failed to load Gmail credentials: {e}")
+                logger.error(f"Failed refreshing Gmail credentials: {e}")
 
     def _save_credentials(self):
         """Save credentials to vault"""
-        # TODO: Save to secure vault storage
-        token_path = os.path.join(os.getcwd(), "var/lib/kai/credentials/gmail_token.json")
-        os.makedirs(os.path.dirname(token_path), exist_ok=True)
-        with open(token_path, 'w') as token_file:
-            token_file.write(self.gmail_credentials.to_json())
+        if not self.gmail_credentials:
+            return
+        token_json = self.gmail_credentials.to_json()
+        try:
+            vault = VaultClient()
+            vault.write_secret(path="notifications/gmail", data={"token_json": token_json})
+            return
+        except Exception:
+            token_path = os.path.join(os.getcwd(), "var/lib/kai/credentials/gmail_token.json")
+            os.makedirs(os.path.dirname(token_path), exist_ok=True)
+            with open(token_path, 'w', encoding="utf-8") as token_file:
+                token_file.write(token_json)
 
     async def _test_protonmail_connection(self) -> bool:
         """Test Protonmail Bridge connection"""

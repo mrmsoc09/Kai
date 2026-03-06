@@ -7,11 +7,14 @@ import os
 
 from ..core.auth import require_roles, ROLE_OPERATOR
 from ..core.packager import build_submission_package
-from ..core.duplicates import check_title_duplicate, vector_duplicate
+from ..core.duplicates import assess_duplicate_risk, check_title_duplicate, vector_duplicate
 from ..core.vector_store import VectorStore
 from ..core.logs import log_decision
 from ..core.recordings import has_recording
 from ..core.finalize import finalize_report
+from ..core.evidence_contract import normalize_report_evidence
+from ..core.submission_lifecycle import transition_submission_state
+from ..core.report_validator import evaluate_report_quality_gate
 
 try:
     from ..core.report_formats import get_format, render_report, validate_rendered  # type: ignore
@@ -26,7 +29,7 @@ async def render(payload: Dict[str, Any]) -> Dict[str, Any]:
     if not fid:
         raise HTTPException(400, 'format_id required')
     finding = payload.get('finding') or {}
-    evidence = payload.get('evidence') or {}
+    evidence = normalize_report_evidence(payload.get('evidence') or {})
     mitigation = payload.get('mitigation') or {}
     run_id = (payload.get('run_id') or 'n/a')
     content = render_report(get_format(fid), finding, evidence, mitigation)
@@ -45,11 +48,27 @@ async def validate(payload: Dict[str, Any]) -> Dict[str, Any]:
     if not run_id:
         raise HTTPException(400, 'run_id required')
     finding = payload.get('finding') or {}
-    evidence = payload.get('evidence') or {}
+    evidence = normalize_report_evidence(payload.get('evidence') or {})
     mitigation = payload.get('mitigation') or {}
     has_rec = bool(payload.get('has_recording'))
     fmt = get_format(fid)
     content = render_report(fmt, finding, evidence, mitigation)
+    quality_gate = evaluate_report_quality_gate(
+        stakeholder=fmt.get("stakeholder", "generic"),
+        rendered_content=content,
+        has_recording=True,
+        finding_data=finding,
+        evidence_data=evidence,
+    )
+    if not quality_gate.get("ok"):
+        return JSONResponse(
+            status_code=409,
+            content={
+                "ok": False,
+                "reason": "report_quality_gate_failed",
+                "quality_gate": quality_gate,
+            },
+        )
     result = validate_rendered(fmt.get('stakeholder', 'generic'), content, run_id=run_id, has_recording=has_rec)
     try:
         log_decision(run_id, 'report_validate', {'format': fid, 'ok': bool(result.get('ok'))})
@@ -73,7 +92,7 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise HTTPException(409, 'screen_recording_required')
 
     finding = payload.get('finding') or {}
-    evidence = payload.get('evidence') or {}
+    evidence = normalize_report_evidence(payload.get('evidence') or {})
     mitigation = payload.get('mitigation') or {}
     fmt = get_format(fid)
     content = render_report(fmt, finding, evidence, mitigation)
@@ -86,6 +105,15 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
         'duplicate_check': payload.get('duplicate_check') or {},
         'stakeholder': fmt.get('stakeholder', 'generic')
     })
+    try:
+        transition_submission_state(
+            run_id,
+            "ready_for_submission",
+            actor="reports.submit_hil",
+            metadata={"format_id": fid, "stakeholder": fmt.get("stakeholder", "generic")},
+        )
+    except Exception:
+        pass
 
     # Vector memory upsert for duplicate/chain signals
     try:
@@ -109,10 +137,8 @@ async def duplicate_check(payload: Dict[str, Any]) -> Dict[str, Any]:
     title = (payload.get('finding') or {}).get('title') or payload.get('title')
     if not title:
         raise HTTPException(400, 'title required')
-    td = check_title_duplicate(title)
-    vd = vector_duplicate(title, (payload.get('summary') or (payload.get('finding') or {}).get('summary')))
-    status = 'duplicate_suspected' if (td.get('count', 0) > 0 or vd.get('count', 0) > 0) else 'clear'
-    return {'duplicate_check': {'status': status, 'title': td, 'vector': vd}}
+    summary = payload.get('summary') or (payload.get('finding') or {}).get('summary')
+    return {'duplicate_check': assess_duplicate_risk(title, summary)}
 
 @router.post('/finalize')
 async def finalize(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -146,7 +172,7 @@ async def package(payload: Dict[str, Any]) -> Dict[str, Any]:
     ctx = {
         'run_id': run_id,
         'finding': payload.get('finding') or {},
-        'evidence': payload.get('evidence') or {},
+        'evidence': normalize_report_evidence(payload.get('evidence') or {}),
         'mitigation': payload.get('mitigation') or {},
         'hil_approved': True,
         'duplicate_check': payload.get('duplicate_check') or {}
@@ -157,7 +183,27 @@ async def package(payload: Dict[str, Any]) -> Dict[str, Any]:
         if not fin.get('ok'):
             raise HTTPException(409, 'finalize_requirements_not_met')
 
+    rendered_for_quality = render_report(fmt, ctx.get("finding") or {}, ctx.get("evidence") or {}, ctx.get("mitigation") or {})
+    quality_gate = evaluate_report_quality_gate(
+        stakeholder=stakeholder,
+        rendered_content=rendered_for_quality,
+        has_recording=True,
+        finding_data=ctx.get("finding") or {},
+        evidence_data=ctx.get("evidence") or {},
+    )
+    if not quality_gate.get("ok"):
+        raise HTTPException(409, 'report_quality_gate_failed')
+
     out = build_submission_package(run_id, stakeholder, ctx)
+    try:
+        transition_submission_state(
+            run_id,
+            "packaged",
+            actor="reports.package",
+            metadata={"stakeholder": stakeholder, "zip": out.get("zip")},
+        )
+    except Exception:
+        pass
     try:
         log_decision(run_id, 'report_package', {'stakeholder': stakeholder, 'zip': out.get('zip')})
     except Exception:
@@ -168,7 +214,7 @@ async def package(payload: Dict[str, Any]) -> Dict[str, Any]:
 async def format_validate(payload: Dict[str, Any]) -> Dict[str, Any]:
     fmt_id = (payload.get('format_id') or 'google_vrp')
     finding = payload.get('finding') or {}
-    evidence = payload.get('evidence') or {}
+    evidence = normalize_report_evidence(payload.get('evidence') or {})
     mitigation = payload.get('mitigation') or {}
     rendered = render_report(get_format(fmt_id), finding, evidence, mitigation)
     ok, errs = validate_rendered(fmt_id, rendered)
@@ -198,7 +244,7 @@ async def checklist(payload: Dict[str, Any]) -> Dict[str, Any]:
         raise HTTPException(400, 'run_id required')
     fmt = get_format(fid)
     finding = payload.get('finding') or {}
-    evidence = payload.get('evidence') or {}
+    evidence = normalize_report_evidence(payload.get('evidence') or {})
     mitigation = payload.get('mitigation') or {}
     rendered = render_report(fmt, finding, evidence, mitigation)
     # format validation
@@ -208,17 +254,31 @@ async def checklist(payload: Dict[str, Any]) -> Dict[str, Any]:
     title_res = check_title_duplicate(title) if title else {'status':'clear','count':0}
     vec_res = vector_duplicate(title, (finding.get('summary') or '')) if title else {'status':'clear','count':0}
     duplicate_status = 'duplicate_suspected' if (title_res.get('count',0) > 0 or vec_res.get('count',0) > 0) else 'clear'
+    duplicate_risk = assess_duplicate_risk(title, finding.get('summary') or '')
     # recording present
     rec_ok = has_recording(run_id)
     # mitigation plan
     mit_ok = bool((mitigation or {}).get('plan'))
-    ok = bool(v.get('ok') and rec_ok and mit_ok and duplicate_status == 'clear')
+    duplicate_override = bool(payload.get("duplicate_override"))
+    duplicate_override_reason = bool((payload.get("duplicate_override_reason") or "").strip())
+    duplicate_gate_ok = duplicate_risk.get("risk_level") in {"none", "low"} or (
+        duplicate_override and duplicate_override_reason
+    )
+    ok = bool(v.get('ok') and rec_ok and mit_ok and duplicate_gate_ok)
     out = {
         'ok': ok,
         'format_ok': bool(v.get('ok')),
         'recording_ok': rec_ok,
         'mitigation_ok': mit_ok,
-        'duplicate': {'status': duplicate_status, 'title': title_res, 'vector': vec_res},
+        'duplicate': {
+            'status': duplicate_status,
+            'title': title_res,
+            'vector': vec_res,
+            'risk_level': duplicate_risk.get("risk_level"),
+            'risk_score': duplicate_risk.get("risk_score"),
+            'override_required': duplicate_risk.get("override_required"),
+            'override_applied': duplicate_override,
+        },
         'stakeholder': fmt.get('stakeholder','generic')
     }
     try:
@@ -323,7 +383,7 @@ async def generate_all_formats(payload: Dict[str, Any]) -> Dict[str, Any]:
     try:
         stakeholder = payload.get('stakeholder') or payload.get('format_id') or 'google_vrp'
         finding = payload.get('finding') or {}
-        evidence = payload.get('evidence') or {}
+        evidence = normalize_report_evidence(payload.get('evidence') or {})
         mitigation = payload.get('mitigation') or {}
         run_id = payload.get('run_id') or 'n/a'
 

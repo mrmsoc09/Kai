@@ -15,6 +15,7 @@ from apps.backend.src.core.authorization_gate import (
     enforce_authorization_gates,
     AuthorizationGateError,
 )
+from apps.backend.src.core.hook_registry import get_hook_registry
 
 
 class ToolRunner:
@@ -35,6 +36,7 @@ class ToolRunner:
         approved: bool = False,
     ) -> str:
         initialize_default_tools()
+        hooks = get_hook_registry()
         registry = get_registry()
         manager = get_toolpack_manager()
         try:
@@ -60,15 +62,44 @@ class ToolRunner:
             )
         except AuthorizationGateError as exc:
             raise HTTPException(status_code=403, detail=f"Authorization gate blocked execution: {exc}") from exc
+        hook_ctx = hooks.run(
+            "safety_gate",
+            {
+                "hook_type": "safety_gate",
+                "tool_id": tool_id,
+                "run_id": params.get("run_id"),
+                "status": "authorized",
+            },
+        )
+        params = dict(params)
+        params.update(hook_ctx.get("params_patch") or {})
 
         risk_tier = get_tool_tier(tool_id)
         needs_approval = risk_tier == ToolRiskTier.TIER_2_INTRUSIVE or tool.autonomy_tier in {
             ToolAutonomyTier.TIER_2_APPROVE,
             ToolAutonomyTier.TIER_3_HARD_STOP,
         }
+        hooks.run(
+            "approval_gate",
+            {
+                "hook_type": "approval_gate",
+                "tool_id": tool_id,
+                "run_id": params.get("run_id"),
+                "status": "required" if needs_approval else "not_required",
+            },
+        )
         if require_approval and needs_approval and not approved:
             raise HTTPException(status_code=403, detail="Approval required for this tool/run")
 
+        hooks.run(
+            "pre_run",
+            {
+                "hook_type": "pre_run",
+                "tool_id": tool_id,
+                "run_id": params.get("run_id"),
+                "status": "queued",
+            },
+        )
         queue = self.default_queue
         if risk_tier == ToolRiskTier.TIER_2_INTRUSIVE:
             queue = "intrusive"

@@ -27,6 +27,7 @@ from apps.backend.src.routers import (
     auth,
     autonomous,
     chains,
+    comms,
     docs,
     dorks,
     embeddings,
@@ -35,6 +36,7 @@ from apps.backend.src.routers import (
     finding_validation,
     findings,
     graph,
+    governance,
     hil_approval,
     intel,
     kai_authorized_scanning,
@@ -46,6 +48,7 @@ from apps.backend.src.routers import (
     metrics,
     model_bidding,
     opportunities,
+    payouts,
     orchestration,
     orchestrator,
     persona,
@@ -235,6 +238,7 @@ async def healthz(request: Request):
 # Public/low-priv status endpoints first
 app.include_router(state.router)
 app.include_router(metrics.router)
+app.include_router(governance.router)
 
 # Auth and scope
 app.include_router(auth.router)
@@ -302,6 +306,8 @@ app.include_router(programs.router)
 app.include_router(programs_discovery.router)
 app.include_router(runs.router)
 app.include_router(submissions.router)
+app.include_router(comms.router)
+app.include_router(payouts.router)
 
 # Communications and logs
 app.include_router(mailer.router)

@@ -12,6 +12,9 @@ import json
 import subprocess
 import logging
 
+from .confidence_policy import evaluate_confidence_policy
+from .model_decision_observability import emit_model_decision_event
+
 logger = logging.getLogger(__name__)
 
 
@@ -94,6 +97,8 @@ class TaskAssignment:
     actual_cost_cents: Optional[float] = None
     actual_latency_ms: Optional[float] = None
     result: Optional[Dict[str, Any]] = None
+    policy_action: str = "allow"
+    policy_reason: str = "confidence_within_policy"
 
 
 class UniversalModelFactory:
@@ -250,7 +255,6 @@ class UniversalModelFactory:
         """Verify cloud API keys are available"""
         available = []
 
-        import os
         from .secret_manager import get_secret_manager, SecretManagerError
 
         manager = None
@@ -265,7 +269,7 @@ class UniversalModelFactory:
                     return manager.get_optional(name)
                 except SecretManagerError:
                     pass
-            return os.getenv(name)
+            return None
 
         api_keys = {
             ModelFamily.CLAUDE: _lookup("ANTHROPIC_API_KEY"),
@@ -466,13 +470,48 @@ class UniversalModelFactory:
         # Select verification model (different family)
         verifier = self._select_verification_model(winner, task)
 
+        local_fallback = next(
+            (b for b in bids if self.available_models.get(b.model_id) and self.available_models[b.model_id].local),
+            None,
+        )
+        decision = evaluate_confidence_policy(
+            confidence_score=winner.confidence_score,
+            security_sensitive=task.security_sensitive,
+            has_local_fallback=local_fallback is not None,
+        )
+        if decision.action == "stop":
+            raise ValueError(
+                f"confidence policy stop: {decision.reason} ({winner.confidence_score:.2f} < {decision.threshold:.2f})"
+            )
+        if decision.action == "fallback_local" and local_fallback is not None:
+            winner = local_fallback
+
         assignment = TaskAssignment(
             task_id=task.task_id,
             assigned_model=winner.model_id,
             assigned_family=winner.family,
             bid=winner,
             verification_model=verifier.model_id if verifier else None,
-            verification_family=verifier.family if verifier else None
+            verification_family=verifier.family if verifier else None,
+            policy_action=decision.action,
+            policy_reason=decision.reason,
+        )
+
+        emit_model_decision_event(
+            {
+                "location_id": "model_bidding.select_winner",
+                "task_id": task.task_id,
+                "strategy": strategy,
+                "assigned_model": assignment.assigned_model,
+                "assigned_family": assignment.assigned_family.value,
+                "verification_model": assignment.verification_model,
+                "confidence_score": round(winner.confidence_score, 6),
+                "estimated_cost_cents": round(winner.estimated_cost_cents, 6),
+                "estimated_latency_ms": round(winner.estimated_latency_ms, 6),
+                "policy_action": assignment.policy_action,
+                "policy_reason": assignment.policy_reason,
+                "security_sensitive": bool(task.security_sensitive),
+            }
         )
 
         self.task_history.append(assignment)

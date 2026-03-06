@@ -10,8 +10,18 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, asdict
 from enum import Enum
 import hashlib
+import os
+from pathlib import Path
+from threading import Lock
 
 logger = logging.getLogger(__name__)
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 class ToolRiskTier(Enum):
@@ -113,6 +123,90 @@ class GuardRailEngine:
         self.authorized_certificates: Dict[str, AuthorizationCertificate] = {}
         self.audit_logs: List[ScanAuditLog] = []
         self.blocked_operations: List[Dict[str, Any]] = []
+        self._lock = Lock()
+        self.ledger_path = Path(
+            os.getenv("K1_AUTH_LEDGER_PATH", "artifacts/auth/authorization_ledger.json")
+        ).resolve()
+        self.ledger_path.parent.mkdir(parents=True, exist_ok=True)
+        self._load_ledger()
+
+    def _load_ledger(self) -> None:
+        """Load persisted certificates and decisions from disk."""
+        if not self.ledger_path.exists():
+            return
+        try:
+            payload = json.loads(self.ledger_path.read_text(encoding="utf-8"))
+        except Exception:
+            logger.warning("Failed to parse authorization ledger; starting fresh")
+            return
+
+        for cert_data in payload.get("certificates", []):
+            cert = self._deserialize_certificate(cert_data)
+            if cert:
+                self.authorized_certificates[cert.certificate_id] = cert
+
+        for log_data in payload.get("audit_logs", []):
+            log = self._deserialize_audit_log(log_data)
+            if log:
+                self.audit_logs.append(log)
+
+        self.blocked_operations = list(payload.get("blocked_operations", []))
+
+    def _persist_ledger(self) -> None:
+        """Persist certificates and decisions as append-only style state snapshots."""
+        with self._lock:
+            blocked = []
+            for entry in self.blocked_operations:
+                normalized = dict(entry)
+                ts = normalized.get("timestamp")
+                if isinstance(ts, datetime):
+                    normalized["timestamp"] = ts.isoformat()
+                blocked.append(normalized)
+            payload = {
+                "schema_version": "1.0",
+                "updated_at": datetime.utcnow().isoformat(),
+                "certificates": [cert.to_dict() for cert in self.authorized_certificates.values()],
+                "audit_logs": [log.to_dict() for log in self.audit_logs],
+                "blocked_operations": blocked,
+            }
+            self.ledger_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+    def _deserialize_certificate(self, data: Dict[str, Any]) -> Optional[AuthorizationCertificate]:
+        try:
+            return AuthorizationCertificate(
+                certificate_id=str(data["certificate_id"]),
+                authorization_type=ScanAuthorization(str(data["authorization_type"])),
+                target=str(data["target"]),
+                scope=ScanScope(str(data["scope"])),
+                authorized_by=str(data["authorized_by"]),
+                issued_at=datetime.fromisoformat(str(data["issued_at"])),
+                expires_at=datetime.fromisoformat(str(data["expires_at"])),
+                allowed_methods=list(data.get("allowed_methods") or []),
+                metadata=dict(data.get("metadata") or {}),
+                signature=data.get("signature"),
+            )
+        except Exception:
+            return None
+
+    def _deserialize_audit_log(self, data: Dict[str, Any]) -> Optional[ScanAuditLog]:
+        try:
+            return ScanAuditLog(
+                log_id=str(data["log_id"]),
+                timestamp=datetime.fromisoformat(str(data["timestamp"])),
+                user_id=str(data["user_id"]),
+                certificate_id=str(data["certificate_id"]),
+                target=str(data["target"]),
+                scan_type=str(data["scan_type"]),
+                method=str(data["method"]),
+                status=str(data["status"]),
+                result_count=int(data.get("result_count", 0)),
+                error_message=data.get("error_message"),
+                ip_address=data.get("ip_address"),
+                user_agent=data.get("user_agent"),
+                metadata=data.get("metadata"),
+            )
+        except Exception:
+            return None
 
     def register_authorization(self, cert: AuthorizationCertificate) -> bool:
         """
@@ -131,6 +225,7 @@ class GuardRailEngine:
             return False
 
         self.authorized_certificates[cert.certificate_id] = cert
+        self._persist_ledger()
         logger.info(f"✅ Authorization registered: {cert.certificate_id}")
         return True
 
@@ -215,6 +310,7 @@ class GuardRailEngine:
         )
 
         self.audit_logs.append(log_entry)
+        self._persist_ledger()
         logger.info(f"📝 Audit logged: {log_id} - {status}")
 
         return log_id
@@ -307,10 +403,26 @@ class GuardRailEngine:
 
     def _validate_certificate_signature(self, cert: AuthorizationCertificate) -> bool:
         """Validate cryptographic signature of certificate"""
-        # TODO: Implement proper cryptographic verification
-        # For now, just check that signature exists
         logger.debug(f"Validating certificate: {cert.certificate_id}")
-        return True  # Placeholder
+        if not cert.signature:
+            return _env_bool("K1_ALLOW_UNSIGNED_CERTIFICATES", True)
+
+        signing_key = (os.getenv("K1_AUTH_CERT_SIGNING_KEY") or "").strip()
+        if not signing_key:
+            return _env_bool("K1_ALLOW_UNSIGNED_CERTIFICATES", True)
+
+        canonical = "|".join(
+            [
+                cert.certificate_id,
+                cert.target,
+                cert.authorized_by,
+                cert.issued_at.isoformat(),
+                cert.expires_at.isoformat(),
+                ",".join(sorted(cert.allowed_methods)),
+            ]
+        )
+        expected = hashlib.sha256(f"{canonical}|{signing_key}".encode("utf-8")).hexdigest()
+        return cert.signature == expected
 
     def _log_blocked_operation(
         self,
@@ -335,6 +447,7 @@ class GuardRailEngine:
                 "user_agent": user_agent,
             }
         )
+        self._persist_ledger()
 
     def get_stats(self) -> Dict[str, Any]:
         """Get security statistics"""

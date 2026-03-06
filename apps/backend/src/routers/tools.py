@@ -18,6 +18,7 @@ from ..core.tools import (
 from ..core.toolpacks import get_toolpack_manager, ToolpackValidationError
 from ..core.authorization_gate import enforce_authorization_gates, AuthorizationGateError
 from ..core.tools_validators import FindingValidatorTool, QuickClassifierTool
+from ..core.tool_execution_store import get_tool_execution_store
 from ..core.tools_analysis import (
     VulnerabilityAnalyzerTool,
     ChainAnalyzerTool,
@@ -237,6 +238,13 @@ async def execute_tool(
 
         # Check if approval is needed
         if context.requires_approval:
+            get_tool_execution_store().create_pending(
+                execution_id=context.execution_id,
+                tool_id=tool_id,
+                params=params,
+                run_id=run_id,
+                user_id=user_id,
+            )
             return Response(
                 success=True,
                 data={
@@ -304,7 +312,14 @@ async def execute_tool_async(
         try:
             result = tool.execute(**params)
             logger.info(f"Async execution completed: {tool_id} - {context.execution_id}")
-            # TODO: Store result in database
+            get_tool_execution_store().create_pending(
+                execution_id=context.execution_id,
+                tool_id=tool_id,
+                params=params,
+                run_id=run_id,
+                user_id=user_id,
+            )
+            get_tool_execution_store().mark_completed(context.execution_id, result.to_dict())
         except Exception as e:
             logger.error(f"Async execution error: {str(e)}")
 
@@ -335,17 +350,24 @@ async def approve_tool_execution(
         raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
 
     try:
-        # TODO: Verify execution_id exists and is pending
-        # TODO: Execute tool with stored parameters
-        # TODO: Return execution result
+        store = get_tool_execution_store()
+        execution = store.get(execution_id)
+        if not execution or execution.tool_id != tool_id:
+            raise HTTPException(status_code=404, detail="Execution request not found")
+        if execution.status != "pending_approval":
+            raise HTTPException(status_code=409, detail=f"Execution is not pending: {execution.status}")
+
+        result = tool.execute(**execution.params)
+        store.mark_completed(execution_id, result.to_dict())
 
         return Response(
             success=True,
             data={
                 "execution_id": execution_id,
-                "status": "approved",
+                "status": "approved_and_executed",
                 "approved_by": user_id,
                 "approved_at": datetime.utcnow().isoformat(),
+                "result": result.to_dict(),
             },
         )
 
@@ -369,7 +391,13 @@ async def reject_tool_execution(
         raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
 
     try:
-        # TODO: Mark execution as rejected in database
+        store = get_tool_execution_store()
+        execution = store.get(execution_id)
+        if not execution or execution.tool_id != tool_id:
+            raise HTTPException(status_code=404, detail="Execution request not found")
+        if execution.status != "pending_approval":
+            raise HTTPException(status_code=409, detail=f"Execution is not pending: {execution.status}")
+        store.mark_rejected(execution_id, reason)
 
         return Response(
             success=True,

@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+from apps.backend.src.schemas.evidence import EvidenceObject, ArtifactMetadata
+
 
 def _artifacts_root() -> Path:
     return Path(os.getenv("K1_ARTIFACTS_ROOT", "artifacts")).resolve()
@@ -45,21 +47,22 @@ def create_evidence_object(
     artifact_path.write_bytes(artifact_bytes)
     artifact_hash = _sha256_bytes(artifact_bytes)
 
-    return {
-        "evidence_id": evidence_id,
-        "type": evidence_type,
-        "tool": tool_id,
-        "target": target,
-        "timestamp": timestamp,
-        "structured_data": structured_data,
-        "confidence_score": confidence_score,
-        "artifacts": [
-            {
-                "artifact_path": str(artifact_path),
-                "sha256": artifact_hash,
-                "mime_type": "application/json",
-                "description": description,
-            }
+    evidence = EvidenceObject(
+        evidence_id=evidence_id,
+        type=evidence_type,
+        tool=tool_id,
+        target=target,
+        timestamp=datetime.fromisoformat(timestamp),
+        structured_data=structured_data,
+        confidence_score=confidence_score,
+        artifacts=[
+            ArtifactMetadata(
+                artifact_path=str(artifact_path),
+                sha256=artifact_hash,
+                mime_type="application/json",
+                description=description,
+            )
         ],
-        "scope_status": scope_status,
-    }
+        scope_status=scope_status,
+    )
+    return evidence.model_dump(mode="json")

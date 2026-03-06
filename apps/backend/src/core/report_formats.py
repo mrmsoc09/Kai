@@ -4,6 +4,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 import yaml
 from jinja2 import Template, TemplateError, TemplateNotFound
+from .evidence_contract import normalize_report_evidence
 
 BASE = Path(__file__).resolve().parents[4]
 FMT_DIR = BASE / 'configs' / 'report_formats'
@@ -87,6 +88,7 @@ def render_report(fmt: dict, finding: dict, evidence: dict, mitigation: dict, re
 
 def _render_basic_report(fmt: dict, finding: dict, evidence: dict, mitigation: dict) -> str:
     """Fallback basic report rendering when no template is defined."""
+    normalized_evidence = normalize_report_evidence(evidence)
     lines = []
     lines.append(f"# {fmt.get('name','Bug Report')} — {finding.get('title','Untitled')}")
     lines.append("")
@@ -96,8 +98,8 @@ def _render_basic_report(fmt: dict, finding: dict, evidence: dict, mitigation: d
     lines.append("## Summary\n" + finding.get('summary',''))
     lines.append("## Impact\n" + finding.get('impact',''))
     lines.append("## Affected Scope\n" + finding.get('scope',''))
-    lines.append("## Steps to Reproduce\n" + evidence.get('repro',''))
-    lines.append("## Evidence\n" + '\n'.join(f"- {k}: {v}" for k,v in evidence.get('artifacts',{}).items()))
+    lines.append("## Steps to Reproduce\n" + normalized_evidence.get('repro', ''))
+    lines.append("## Evidence\n" + '\n'.join(f"- {k}: {v}" for k, v in normalized_evidence.get('artifacts', {}).items()))
     lines.append("## Mitigation\n" + mitigation.get('plan',''))
     lines.append("## Timeline\n" + mitigation.get('timeline',''))
     lines.append("## References\n" + '\n'.join(f"- {r}" for r in (finding.get('references') or [])))

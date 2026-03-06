@@ -5,6 +5,14 @@ from pathlib import Path
 from ..core.auth import require_roles, ROLE_OPERATOR
 from ..core.packager import build_submission_package
 from ..core.logs import log_decision
+from ..core.submission_lifecycle import (
+    SubmissionLifecycleError,
+    get_submission_state,
+    transition_submission_state,
+)
+from ..core.submission_sla import compute_submission_sla
+from ..core.comms_store import append_message
+from ..core.reflective_learning import summarize_reflection
 from fastapi.responses import FileResponse
 import re
 import os
@@ -46,6 +54,25 @@ async def dispatch(payload: Dict[str, Any]) -> Dict[str, Any]:
             raise HTTPException(500, 'email.eml missing in package')
         data = z.read('email.eml')
         out_eml.write_bytes(data)
+    try:
+        transition_submission_state(
+            run_id,
+            "dispatched",
+            actor="submissions.dispatch",
+            metadata={"stakeholder": stakeholder, "zip": str(pkg), "eml": str(out_eml)},
+        )
+    except SubmissionLifecycleError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    append_message(
+        run_id=run_id,
+        stakeholder=stakeholder,
+        channel="email",
+        direction="outbound",
+        subject=f"Submission dispatched ({stakeholder})",
+        body="Submission package dispatched to outbox for operator delivery.",
+        artifact_path=str(out_eml),
+        metadata={"zip": str(pkg), "format_id": fid},
+    )
     try:
         log_decision(run_id, 'report_dispatch', {'stakeholder': stakeholder, 'zip': str(pkg), 'eml': str(out_eml)})
     except Exception:
@@ -98,8 +125,58 @@ async def followup(payload: Dict[str, Any]) -> Dict[str, Any]:
     msg.set_content(body)
     out_eml = OUTBOX / f'{run_id}_{stakeholder}_followup.eml'
     out_eml.write_bytes(msg.as_bytes())
+    append_message(
+        run_id=run_id,
+        stakeholder=stakeholder,
+        channel="email",
+        direction="outbound",
+        subject=msg['Subject'],
+        body=body,
+        artifact_path=str(out_eml),
+        metadata={"kind": "followup"},
+    )
     try:
         log_decision(run_id, 'report_followup', {'stakeholder': stakeholder, 'eml': str(out_eml)})
     except Exception:
         pass
     return {'status': 'followup_dispatched', 'eml': str(out_eml)}
+
+
+@router.get('/state/{run_id}')
+async def submission_state(run_id: str) -> Dict[str, Any]:
+    state = get_submission_state(run_id)
+    return {"state": state, "sla": compute_submission_sla(state)}
+
+
+@router.post('/state')
+async def submission_state_transition(payload: Dict[str, Any]) -> Dict[str, Any]:
+    run_id = payload.get("run_id")
+    to_state = payload.get("to_state")
+    actor = payload.get("actor") or "operator"
+    if not run_id or not to_state:
+        raise HTTPException(400, "run_id and to_state required")
+    try:
+        state = transition_submission_state(
+            run_id,
+            str(to_state),
+            actor=str(actor),
+            metadata=dict(payload.get("metadata") or {}),
+        )
+    except SubmissionLifecycleError as exc:
+        raise HTTPException(409, str(exc)) from exc
+    try:
+        log_decision(run_id, "submission_state_transition", {"to_state": to_state, "actor": actor})
+    except Exception:
+        pass
+    return {"ok": True, "state": state, "sla": compute_submission_sla(state)}
+
+
+@router.get('/sla/{run_id}')
+async def submission_sla(run_id: str) -> Dict[str, Any]:
+    state = get_submission_state(run_id)
+    return {"run_id": run_id, "sla": compute_submission_sla(state)}
+
+
+@router.get('/learning/summary')
+async def submission_learning_summary(limit: int = 20) -> Dict[str, Any]:
+    return {"ok": True, "summary": summarize_reflection(limit=limit)}

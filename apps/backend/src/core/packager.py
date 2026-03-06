@@ -7,7 +7,9 @@ from email.utils import formatdate
 import mimetypes, zipfile, json
 import logging
 import os
+import hashlib
 from .email_formats import render_email
+from .evidence_contract import normalize_report_evidence
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +45,58 @@ def _read(p: Path) -> bytes:
     return p.read_bytes()
 
 
+def _sha256_file(path: Path) -> str:
+    h = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _resolve_artifact_path(raw_path: str) -> Path:
+    path = Path(raw_path).expanduser()
+    if path.is_absolute():
+        return path
+    return (Path(__file__).resolve().parents[4] / path).resolve()
+
+
+def revalidate_evidence_artifacts(artifacts: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Revalidate evidence artifacts before report assembly.
+    Rejects missing artifacts and hash mismatches for artifacts with declared sha256.
+    """
+    failures: List[Dict[str, str]] = []
+    checked = 0
+
+    for artifact in artifacts:
+        raw_path = str(artifact.get("artifact_path") or "").strip()
+        if not raw_path:
+            failures.append({"error": "artifact_path_missing"})
+            continue
+
+        path = _resolve_artifact_path(raw_path)
+        if not path.exists():
+            failures.append({"artifact_path": str(path), "error": "artifact_missing"})
+            continue
+
+        declared_sha = str(artifact.get("sha256") or "").strip().lower()
+        if declared_sha:
+            actual_sha = _sha256_file(path)
+            if actual_sha != declared_sha:
+                failures.append(
+                    {
+                        "artifact_path": str(path),
+                        "error": "artifact_hash_mismatch",
+                        "expected_sha256": declared_sha,
+                        "actual_sha256": actual_sha,
+                    }
+                )
+                continue
+            checked += 1
+
+    return {"ok": not failures, "validated_hash_count": checked, "failures": failures}
+
+
 def _build_email(stakeholder: str, ctx: Dict[str, Any], attachments: Dict[str, bytes]) -> bytes:
     msg = EmailMessage()
     rendered = render_email(stakeholder, ctx)
@@ -70,6 +124,15 @@ def build_submission_package(run_id: str, stakeholder: str, context: Dict[str, A
     recs = _gather_recordings(run_id)
     artifact_paths: Dict[str, Path] = {}
     total_attachment_bytes = 0
+
+    normalized_evidence = normalize_report_evidence(context.get("evidence") or {})
+    artifact_validation = revalidate_evidence_artifacts(
+        normalized_evidence.get("artifacts_list") or []
+    )
+    if not artifact_validation["ok"]:
+        raise ValueError(
+            f"artifact_integrity_check_failed: {json.dumps(artifact_validation['failures'])}"
+        )
 
     def add_attachment(name: str, path: Path, *, required: bool = False) -> bool:
         nonlocal total_attachment_bytes
@@ -133,6 +196,7 @@ def build_submission_package(run_id: str, stakeholder: str, context: Dict[str, A
             'run_id': run_id,
             'attachment_file_count': len(artifact_paths),
             'attachment_total_bytes': total_attachment_bytes,
+            'evidence_artifact_validation': artifact_validation,
         }
         z.writestr('SUBMISSION_CHECKLIST.json', json.dumps(checklist, indent=2))
     return {

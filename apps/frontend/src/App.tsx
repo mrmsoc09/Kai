@@ -29,6 +29,7 @@ import PersonaMarket from './routes/PersonaMarket'
 import Logs from './routes/Logs'
 import Settings from './routes/Settings'
 import Validation from './routes/Validation'
+import KPI from './routes/KPI'
 
 // Pages
 import Planner from './pages/Planner'
@@ -98,6 +99,7 @@ export default function App() {
                 <Route path='/arsenal' element={<Arsenal />} />
                 <Route path='/validation' element={<Validation />} />
                 <Route path='/intelligence' element={<Intelligence />} />
+                <Route path='/kpi' element={<KPI />} />
                 <Route path='/agent-zero' element={<AgentZero />} />
 
                 {/* Reporting & Planning */}

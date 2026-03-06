@@ -13,6 +13,8 @@ ALLOWED_METRICS = {
     "cost_usd",
     "error_rate",
     "retry_rate",
+    "accepted_rate",
+    "payout_efficiency",
 }
 
 

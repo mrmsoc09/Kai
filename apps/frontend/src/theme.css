@@ -1,6 +1,7 @@
 
 /* Kaison K1 v7.6 - Dark IDE Aesthetic with Matrix Neon Green */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import './styles/overlays.css';
 
 :root{
   /* Primary Neon Green Accent */
@@ -322,4 +323,3 @@ a:hover{color:var(--color-primary-dim);}
 .lasers::before{ content:''; position:fixed; left:0; top:0; right:0; bottom:0; pointer-events:none; background: repeating-linear-gradient( to bottom, rgba(122,42,122,0.03), rgba(122,42,122,0.03) 1px, rgba(0,0,0,0) 3px, rgba(0,0,0,0) 4px ); mix-blend-mode: screen }
 .lasers::after{ content:''; position:fixed; left:0; top:0; right:0; height:2px; pointer-events:none; background: linear-gradient(90deg, transparent, rgba(42,122,122,0.5), rgba(122,42,122,0.8), transparent); animation: sweep 4s linear infinite }
 @keyframes sweep { 0%{ transform: translateY(-2px) } 100%{ transform: translateY(calc(100vh - var(--console-h))) } }
-@import './styles/overlays.css';

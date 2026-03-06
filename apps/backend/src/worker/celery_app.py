@@ -31,9 +31,12 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
     from apps.backend.src.core.artifacts import write_json
     from apps.backend.src.core.toolpacks import get_toolpack_manager
     from apps.backend.src.core.authorization_gate import enforce_authorization_gates, AuthorizationGateError
+    from apps.backend.src.core.opsec_policy import get_opsec_policy_engine, OPSECPolicyError
+    from apps.backend.src.core.hook_registry import get_hook_registry
     import time
 
     initialize_default_tools()
+    hooks = get_hook_registry()
     registry = get_registry()
     manager = get_toolpack_manager()
     if manager.config is None:
@@ -47,13 +50,79 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
     try:
         enforce_authorization_gates(tool_id, params)
     except AuthorizationGateError as exc:
+        hooks.run(
+            "safety_gate",
+            {
+                "hook_type": "safety_gate",
+                "tool_id": tool_id,
+                "run_id": params.get("run_id"),
+                "status": "blocked",
+            },
+        )
         return {"status": "failed", "error": f"authorization gate blocked execution: {exc}"}
+    hooks.run(
+        "safety_gate",
+        {
+            "hook_type": "safety_gate",
+            "tool_id": tool_id,
+            "run_id": params.get("run_id"),
+            "status": "authorized",
+        },
+    )
+
+    opsec_method = str(
+        params.get("scan_method")
+        or params.get("method")
+        or params.get("execution_method")
+        or "osint"
+    )
+    opsec_engine = get_opsec_policy_engine()
+    try:
+        opsec_ticket = opsec_engine.acquire(opsec_method, tool_id)
+    except OPSECPolicyError as exc:
+        return {
+            "status": "failed",
+            "error": f"opsec policy blocked execution: {exc}",
+            "opsec_method": opsec_method,
+        }
 
     start = time.time()
-    result = tool.execute(**params)
-    elapsed = (time.time() - start) * 1000
-    result.execution_time_ms = result.execution_time_ms or elapsed
-    result_dict = result.to_dict()
+    try:
+        hooks.run(
+            "pre_run",
+            {
+                "hook_type": "pre_run",
+                "tool_id": tool_id,
+                "run_id": params.get("run_id"),
+                "status": "running",
+            },
+        )
+        result = tool.execute(**params)
+        elapsed = (time.time() - start) * 1000
+        result.execution_time_ms = result.execution_time_ms or elapsed
+        result_dict = result.to_dict()
+    finally:
+        status_value = result.status.value if "result" in locals() else "failed"
+        hooks.run(
+            "post_run",
+            {
+                "hook_type": "post_run",
+                "tool_id": tool_id,
+                "run_id": params.get("run_id"),
+                "status": status_value,
+            },
+        )
+        if status_value == "failed":
+            hooks.run(
+                "retry_gate",
+                {
+                    "hook_type": "retry_gate",
+                    "tool_id": tool_id,
+                    "run_id": params.get("run_id"),
+                    "status": "candidate",
+                },
+            )
+        opsec_engine.release(opsec_ticket, status_value)
 
     # Persist artifact for traceability (best-effort)
     try:
@@ -74,6 +143,7 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
             "tool_id": tool_id,
             "status": result.status.value,
             "execution_time_ms": result_dict.get("execution_time_ms"),
+            "opsec_method": opsec_method,
             "timestamp": time.time(),
         }
         with open(metrics_dir / "tool_runs.jsonl", "a") as f:

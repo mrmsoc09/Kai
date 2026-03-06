@@ -11,6 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from ..core.hil_db import dispose_async_engine, get_async_engine
+from ..core.secret_manager import get_secret_manager, SecretManagerError
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,10 @@ class Services:
     async def probe_neo4j(self) -> dict[str, Any]:
         neo4j_uri = os.getenv("NEO4J_URI")
         neo4j_user = os.getenv("NEO4J_USER")
-        neo4j_password = os.getenv("NEO4J_PASSWORD")
+        try:
+            neo4j_password = get_secret_manager().get_optional("NEO4J_PASSWORD")
+        except SecretManagerError:
+            neo4j_password = None
 
         if not (neo4j_uri and neo4j_user and neo4j_password):
             return {"ok": False, "status": "not_configured"}
@@ -118,7 +122,10 @@ class Services:
 
         neo4j_uri = os.getenv("NEO4J_URI")
         neo4j_user = os.getenv("NEO4J_USER")
-        neo4j_password = os.getenv("NEO4J_PASSWORD")
+        try:
+            neo4j_password = get_secret_manager().get_optional("NEO4J_PASSWORD")
+        except SecretManagerError:
+            neo4j_password = None
         if neo4j_uri and neo4j_user and neo4j_password:
             try:
                 from ..integrations.neo4j_client import (

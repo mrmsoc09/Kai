@@ -7,6 +7,7 @@ from datetime import datetime
 import json
 import logging
 from .report_formats import render_report, get_format
+from .evidence_contract import normalize_report_evidence
 from .pdf_generator import markdown_to_html, generate_pdf_from_markdown
 
 logger = logging.getLogger(__name__)
@@ -205,6 +206,7 @@ class ReportExporter:
         report_id: str
     ) -> str:
         """Export report as JSON with structured data."""
+        normalized_evidence = normalize_report_evidence(evidence)
         # Create structured JSON representation
         json_report = {
             "report_id": report_id,
@@ -225,11 +227,13 @@ class ReportExporter:
                 "references": finding.get('references', []),
             },
             "evidence": {
-                "reproduction": evidence.get('repro', ''),
-                "artifacts": evidence.get('artifacts', {}),
-                "screenshots": evidence.get('screenshots', []),
-                "network_captures": evidence.get('network_captures', []),
-                "proof_of_concept": evidence.get('poc_code'),
+                "reproduction": normalized_evidence.get('repro', ''),
+                "artifacts": normalized_evidence.get('artifacts', {}),
+                "artifacts_list": normalized_evidence.get('artifacts_list', []),
+                "screenshots": normalized_evidence.get('screenshots', []),
+                "network_captures": normalized_evidence.get('network_captures', []),
+                "proof_of_concept": normalized_evidence.get('poc_code'),
+                "evidence_object": normalized_evidence.get('evidence_object', {}),
             },
             "mitigation": {
                 "plan": mitigation.get('plan', ''),

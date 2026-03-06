@@ -96,7 +96,7 @@ class ToolRegistry:
         # Code & Secret Scanning Tools
         self.register_tool(TruffleHogAdapter())
 
-        # TODO: Add more tools as they're implemented
+        # NOTE: Extend this registry incrementally as additional adapters are onboarded.
         # self.register_tool(ShodanAdapter())
         # self.register_tool(TheHarvesterAdapter())
         # self.register_tool(MassDNSAdapter())

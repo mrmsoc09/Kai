@@ -34,6 +34,7 @@ from .tools import (
     get_registry,
 )
 from .kai_security_guardrails import set_tool_tier, ToolRiskTier
+from .secret_manager import get_secret_manager, SecretManagerError
 
 
 @dataclass
@@ -404,7 +405,10 @@ class MetasploitRPCValidate(SecureBaseTool):
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
         rpc_url = os.getenv("MSF_RPC_URL")
         rpc_user = os.getenv("MSF_RPC_USER")
-        rpc_pass = os.getenv("MSF_RPC_PASS")
+        try:
+            rpc_pass = get_secret_manager().get_required("MSF_RPC_PASS")
+        except SecretManagerError:
+            rpc_pass = None
         if not all([rpc_url, rpc_user, rpc_pass]):
             return ToolResult(self.id, ToolStatus.FAILED, {}, error="MSF_RPC_URL/USER/PASS not set")
 
@@ -460,7 +464,10 @@ class CalderaEmulation(SecureBaseTool):
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
         api_url = os.getenv("CALDERA_API_URL")
-        api_key = os.getenv("CALDERA_API_KEY")
+        try:
+            api_key = get_secret_manager().get_required("CALDERA_API_KEY")
+        except SecretManagerError:
+            api_key = None
         if not api_url or not api_key:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error="CALDERA_API_URL/API_KEY not set")
 

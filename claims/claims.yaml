@@ -54,3 +54,17 @@ claims:
     benchmark_scenario: reliability_fixture
     validation_condition: "retries / total_runs <= 0.15"
     owner: "SRE"
+
+  - id: accepted_rate_leading_indicator
+    metric: accepted_rate
+    threshold: 0.25
+    benchmark_scenario: outcomes_fixture
+    validation_condition: "reports_accepted / reports_submitted >= 0.25"
+    owner: "Product"
+
+  - id: payout_efficiency_leading_indicator
+    metric: payout_efficiency
+    threshold: 1.50
+    benchmark_scenario: outcomes_fixture
+    validation_condition: "(gross_payout_usd - operating_cost_usd) / operating_cost_usd >= 1.50"
+    owner: "Finance"

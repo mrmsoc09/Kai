@@ -12,6 +12,7 @@ KNOW_IDX = ROOT / 'artifacts' / 'knowledge' / 'index.json'
 
 
 def build_graph() -> Dict[str, Any]:
+    ART.mkdir(parents=True, exist_ok=True)
     nodes: List[Dict[str, Any]] = []
     edges: List[Dict[str, Any]] = []
     runs = load_all_runs()

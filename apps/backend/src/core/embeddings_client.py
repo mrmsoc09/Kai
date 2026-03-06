@@ -3,7 +3,6 @@ Embeddings Client and Vector Management
 Supports OpenAI embeddings with local fallback
 """
 
-import os
 import logging
 from typing import List, Dict, Any, Optional, Tuple
 from abc import ABC, abstractmethod
@@ -58,7 +57,7 @@ class OpenAIEmbeddingClient(BaseEmbeddingClient):
             try:
                 api_key = get_secret_manager().get_required("OPENAI_API_KEY")
             except SecretManagerError:
-                api_key = os.getenv("OPENAI_API_KEY")
+                api_key = None
         if not api_key:
             raise ValueError("OPENAI_API_KEY not provided")
 
@@ -157,7 +156,7 @@ class HybridEmbeddingClient:
             try:
                 resolved_openai_key = get_secret_manager().get_optional("OPENAI_API_KEY")
             except SecretManagerError:
-                resolved_openai_key = os.getenv("OPENAI_API_KEY")
+                resolved_openai_key = None
 
         if resolved_openai_key:
             try:

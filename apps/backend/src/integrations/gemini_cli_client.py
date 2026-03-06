@@ -72,13 +72,13 @@ class GeminiCLIClient:
             try:
                 self.api_key = get_secret_manager().get_required("GOOGLE_API_KEY")
             except SecretManagerError:
-                self.api_key = os.getenv("GOOGLE_API_KEY")
+                self.api_key = None
         self.default_context_window = default_context_window
         self.timeout_seconds = timeout_seconds
         self.available = False
 
         if not self.api_key:
-            logger.warning("Google API key not found. Set GOOGLE_API_KEY environment variable.")
+            logger.warning("Google API key not found via secret manager.")
         else:
             self.available = True
 

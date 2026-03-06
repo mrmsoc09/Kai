@@ -1,0 +1,2 @@
+api.example.com:80
+api.example.com:443

@@ -101,3 +101,40 @@ def vector_duplicate(title: str, summary: str | None = None, threshold: float = 
 
     status = 'duplicate_suspected' if final else 'clear'
     return {'status': status, 'matches': final, 'count': len(final), 'threshold': threshold}
+
+
+def assess_duplicate_risk(title: str, summary: str | None = None) -> Dict[str, Any]:
+    """
+    Aggregate title + vector duplicate checks into a normalized duplicate risk.
+    """
+    title_res = check_title_duplicate(title)
+    vector_res = vector_duplicate(title, summary)
+
+    title_max = max([float(m.get("similarity") or 0.0) for m in title_res.get("matches", [])], default=0.0)
+    vector_max = max([float(m.get("similarity") or 0.0) for m in vector_res.get("matches", [])], default=0.0)
+
+    title_count = int(title_res.get("count") or 0)
+    vector_count = int(vector_res.get("count") or 0)
+    density = min((title_count + vector_count) / 10.0, 1.0)
+
+    risk_score = max(title_max, vector_max)
+    risk_score = min(1.0, (risk_score * 0.75) + (density * 0.25))
+
+    if risk_score >= 0.85:
+        risk_level = "high"
+    elif risk_score >= 0.60:
+        risk_level = "medium"
+    elif risk_score >= 0.30:
+        risk_level = "low"
+    else:
+        risk_level = "none"
+
+    status = "duplicate_suspected" if risk_level in {"high", "medium"} else "clear"
+    return {
+        "status": status,
+        "risk_level": risk_level,
+        "risk_score": round(risk_score, 4),
+        "title": title_res,
+        "vector": vector_res,
+        "override_required": risk_level == "high",
+    }

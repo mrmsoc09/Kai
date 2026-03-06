@@ -5,18 +5,20 @@ from typing import Optional
 
 import requests
 
+from .secret_manager import get_secret_manager
+
 
 THEHIVE_URL = os.getenv("THEHIVE_URL", "http://localhost:9000")
-THEHIVE_API_KEY = os.getenv("THEHIVE_API_KEY", "")
+THEHIVE_API_KEY = ""
 
 
 class TheHiveClient:
     def __init__(self, base_url: str = THEHIVE_URL, api_key: str = THEHIVE_API_KEY):
         self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
+        self.api_key = api_key or get_secret_manager().get_optional("THEHIVE_API_KEY") or ""
         self.session = requests.Session()
-        if api_key:
-            self.session.headers.update({"X-Api-Key": api_key, "Content-Type": "application/json"})
+        if self.api_key:
+            self.session.headers.update({"X-Api-Key": self.api_key, "Content-Type": "application/json"})
 
     def ensure_case(self, title: str, summary: str) -> Optional[str]:
         url = f"{self.base_url}/api/v1/case"

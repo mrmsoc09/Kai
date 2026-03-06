@@ -1,0 +1,18 @@
+{
+  "scenario": "outcomes_fixture",
+  "discovered_assets": 80,
+  "total_assets": 100,
+  "reported_positives": 44,
+  "true_positives": 28,
+  "ground_truth": 50,
+  "total_execution_time": 165,
+  "llm_cost": 3.4,
+  "api_cost": 4.1,
+  "failed_runs": 3,
+  "retries": 10,
+  "total_runs": 150,
+  "reports_submitted": 40,
+  "reports_accepted": 12,
+  "gross_payout_usd": 9000,
+  "operating_cost_usd": 2500
+}

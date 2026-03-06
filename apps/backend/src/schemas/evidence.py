@@ -6,7 +6,28 @@ from typing import Any, Optional
 from pydantic import BaseModel, Field
 
 
+class ArtifactMetadata(BaseModel):
+    artifact_path: str
+    sha256: str
+    mime_type: str
+    description: str
+
+
+class EvidenceObject(BaseModel):
+    evidence_id: str
+    type: str
+    tool: str
+    target: str
+    timestamp: datetime
+    structured_data: dict[str, Any] = Field(default_factory=dict)
+    confidence_score: float = 0.0
+    artifacts: list[ArtifactMetadata] = Field(default_factory=list)
+    scope_status: str = "unknown"
+
+
 class Evidence(BaseModel):
+    # Legacy schema retained for backward compatibility while platform migrates
+    # to `EvidenceObject`.
     id: str
     title: Optional[str] = None
     description: Optional[str] = None

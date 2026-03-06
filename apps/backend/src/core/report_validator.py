@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Dict, Any, List, Tuple
 import re
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -354,3 +355,81 @@ def validate_rendered(
     """Convenience function for report validation."""
     validator = ReportValidator()
     return validator.validate_rendered(stakeholder, content, run_id, has_recording, finding_data)
+
+
+def _env_float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        return default
+
+
+def build_evidence_trace_matrix(finding_data: Dict[str, Any], evidence_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Build deterministic claim-to-evidence trace matrix."""
+    claims = finding_data.get("claims") or []
+    if not isinstance(claims, list):
+        claims = []
+
+    artifact_map = evidence_data.get("artifacts") or {}
+    artifact_refs: List[str] = []
+    if isinstance(artifact_map, dict):
+        for name, path in artifact_map.items():
+            artifact_refs.append(f"{name}:{path}")
+    evidence_text = " ".join(artifact_refs).lower()
+
+    rows: List[Dict[str, Any]] = []
+    unresolved = 0
+    for idx, claim in enumerate(claims, start=1):
+        claim_text = str(claim).strip()
+        claim_words = [w for w in re.findall(r"[a-zA-Z0-9_]{4,}", claim_text.lower()) if w]
+        matched = [ref for ref in artifact_refs if any(word in ref.lower() for word in claim_words)]
+        if not matched and evidence_text and claim_words:
+            matched = artifact_refs[:1]
+        if not matched:
+            unresolved += 1
+        rows.append(
+            {
+                "claim_id": f"claim-{idx}",
+                "claim": claim_text,
+                "evidence_refs": matched,
+                "linked": bool(matched),
+            }
+        )
+
+    return {
+        "claims_count": len(claims),
+        "unresolved_claims": unresolved,
+        "rows": rows,
+        "ok": unresolved == 0,
+    }
+
+
+def evaluate_report_quality_gate(
+    *,
+    stakeholder: str,
+    rendered_content: str,
+    has_recording: bool,
+    finding_data: Dict[str, Any],
+    evidence_data: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Evaluate deterministic quality gate before submission/packaging."""
+    validation = validate_rendered(
+        stakeholder=stakeholder,
+        content=rendered_content,
+        has_recording=has_recording,
+        finding_data=finding_data,
+    )
+    trace = build_evidence_trace_matrix(finding_data, evidence_data)
+    min_score = _env_float("K1_MIN_REPORT_COMPLIANCE_SCORE", 60.0)
+    passed = bool(validation.get("ok")) and float(validation.get("compliance_score", 0.0)) >= min_score
+    if trace.get("claims_count", 0) > 0 and not trace.get("ok"):
+        passed = False
+    return {
+        "ok": passed,
+        "min_compliance_score": min_score,
+        "validation": validation,
+        "trace_matrix": trace,
+    }

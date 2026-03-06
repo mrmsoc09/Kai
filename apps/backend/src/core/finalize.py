@@ -48,8 +48,19 @@ def finalize_report(run_id: str, stakeholder: str, payload: Dict[str, Any]) -> D
         return {"ok": False, "reason": ";".join(f"{m}_required" for m in missing)}
 
     dup = (payload.get('duplicate_check') or {}).get('status')
-    if dup and dup != 'clear':
-        return {'ok': False, 'reason': 'duplicate_suspected'}
+    dup_risk = (payload.get('duplicate_check') or {}).get('risk_level')
+    override = bool(payload.get("duplicate_override"))
+    override_reason = (payload.get("duplicate_override_reason") or "").strip()
+
+    if dup_risk == "high":
+        if not override:
+            return {'ok': False, 'reason': 'duplicate_high_risk_override_required'}
+        if not override_reason:
+            return {'ok': False, 'reason': 'duplicate_override_reason_required'}
+    elif dup and dup != 'clear':
+        # Medium-risk duplicates are blocked unless explicitly overridden.
+        if not override:
+            return {'ok': False, 'reason': 'duplicate_suspected'}
 
     # Do not require HiL at finalize stage; finalize prepares for HiL review.
     return {'ok': True}

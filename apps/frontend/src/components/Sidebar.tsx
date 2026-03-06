@@ -14,6 +14,7 @@ const links = [
   {to:'/scopes', label:'Scopes'},
   {to:'/arsenal', label:'Arsenal'},
   {to:'/intelligence', label:'Intelligence'},
+  {to:'/kpi', label:'KPI Dashboard'},
   {to:'/programs', label:'BBP Archive'},
   {to:'/mcp-registry', label:'MCP Registry'},
   {to:'/persona-market', label:'Persona Market'},

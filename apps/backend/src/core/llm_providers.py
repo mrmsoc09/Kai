@@ -199,10 +199,7 @@ def _resolve_api_key(explicit_api_key: Optional[str], env_name: str) -> str:
         secret = get_secret_manager().get_required(env_name)
         return secret
     except SecretManagerError:
-        # Backward-compatible last chance; still fail closed if absent.
-        fallback = os.getenv(env_name)
-        if fallback and fallback.strip():
-            return fallback.strip()
+        # Fail closed in production paths to avoid unmanaged secret reads.
         raise ValueError(f"{env_name} not found")
 
 
