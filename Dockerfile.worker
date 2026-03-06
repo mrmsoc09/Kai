@@ -7,13 +7,12 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ca-certificates curl wget git jq python3 python3-pip python3-venv \
       libssl-dev libffi-dev build-essential \
-      # common wordlists
-      wordlists \
       # exiftool dependency
       libimage-exiftool-perl \
       # ffuf deps
       libpcap0.8 && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /usr/share/wordlists
 
 # Install Go tools (ProjectDiscovery suite + trufflehog, theHarvester)
 RUN apt-get update && apt-get install -y --no-install-recommends golang && rm -rf /var/lib/apt/lists/*
@@ -50,4 +49,3 @@ COPY . /app
 
 # Default command: start Celery worker (queue name tools)
 CMD ["bash", "-lc", "cd /app && celery -A apps.backend.src.worker.celery_app worker -Q tools -l info"]
-
