@@ -1,0 +1,19 @@
+schema: 1
+name: routing_policy
+description: Capability-aware routing constraints.
+rules:
+  - id: route-001
+    description: Select providers/models based on capability registry entries, not hardcoded names.
+    severity: high
+  - id: route-002
+    description: Prefer privacy_tier>=2 for sensitive data; block providers without encryption guarantees.
+    severity: high
+  - id: route-003
+    description: Disallow routing tasks requiring tool-calling to models lacking tool_calling capability.
+    severity: high
+  - id: route-004
+    description: Obey cost ceilings per environment profile (local/hybrid/cloud).
+    severity: medium
+  - id: route-005
+    description: Fallback chain must degrade gracefully; never retry on the same failing provider more than N=2.
+    severity: medium

@@ -17,12 +17,25 @@ from __future__ import annotations
 
 import math
 from dataclasses import asdict, dataclass, field
-from typing import Optional
+from typing import List, Optional
 
 
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
+
+@dataclass
+class CredentialRequirement:
+    """Describes one credential or access item needed before deep scanning."""
+    kind: str          # "signup" | "api_key" | "oauth" | "paid_plan" | "vpn" | "other"
+    label: str         # Human-readable label, e.g. "Test Account (Free Tier)"
+    signup_url: str    # Direct URL to sign up / obtain access
+    notes: str         # Additional context from program guidelines
+    required: bool     # True = must have before RECON; False = optional/recommended
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
 
 @dataclass
 class Opportunity:
@@ -43,6 +56,7 @@ class Opportunity:
     vuln_types: list[str]     # ["xss","sqli","idor","rce","ssrf","auth_bypass","oauth","logic"]
     priority_score: float     # 0.0–1.0, auto-computed
     notes: str = ""
+    credential_requirements: List[CredentialRequirement] = field(default_factory=list)
 
     def is_public(self) -> bool:
         """Returns True when the program requires no express written permission."""
@@ -61,6 +75,7 @@ class Opportunity:
         d = asdict(self)
         d["is_public"] = self.is_public()
         d["payout_label"] = self.payout_label()
+        d["credential_requirements"] = [cr.to_dict() for cr in self.credential_requirements]
         return d
 
 
@@ -1087,6 +1102,237 @@ _CATALOG: list[Opportunity] = [
         vuln_types=["xss", "sqli", "idor", "auth_bypass", "logic"],
     ),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Credential requirements — what each program needs before deep scanning
+# ---------------------------------------------------------------------------
+# Keys match Opportunity.id. Values are lists of CredentialRequirement.
+# Programs omitted here have no prerequisites (pure public surface scanning).
+# ---------------------------------------------------------------------------
+
+def _cr(kind: str, label: str, signup_url: str, notes: str = "", required: bool = True) -> CredentialRequirement:
+    return CredentialRequirement(kind=kind, label=label, signup_url=signup_url, notes=notes, required=required)
+
+
+_CREDENTIAL_REQUIREMENTS: dict[str, list[CredentialRequirement]] = {
+    # ── HackerOne programs ───────────────────────────────────────────────────
+    "hackerone:shopify": [
+        _cr("signup", "Merchant Store Account", "https://www.shopify.com/free-trial",
+            "Create a free dev store. Use your personal email. Do not use production stores."),
+        _cr("api_key", "Shopify Partner API Key", "https://partners.shopify.com",
+            "Optional: Partner API key enables API endpoint testing.", required=False),
+    ],
+    "hackerone:hackerone": [
+        _cr("signup", "HackerOne Researcher Account", "https://hackerone.com/users/sign_up",
+            "A registered researcher account is required to submit. Use your existing account."),
+    ],
+    "hackerone:gitlab": [
+        _cr("signup", "GitLab.com Account (Free)", "https://gitlab.com/users/sign_up",
+            "Create a free GitLab account. Use a dedicated test account, not your primary one."),
+        _cr("api_key", "GitLab Personal Access Token", "https://gitlab.com/-/user_settings/personal_access_tokens",
+            "Generate a PAT with api scope for REST/GraphQL endpoint testing.", required=False),
+    ],
+    "hackerone:coinbase": [
+        _cr("signup", "Coinbase Account", "https://www.coinbase.com/signup",
+            "Standard Coinbase account. Use a dedicated test account with no real funds."),
+    ],
+    "hackerone:twitter": [
+        _cr("signup", "X / Twitter Account", "https://x.com/i/flow/signup",
+            "Create a dedicated test account. Do not use your personal Twitter account for testing."),
+        _cr("api_key", "X Developer API v2 Credentials", "https://developer.x.com/en/portal/dashboard",
+            "Apply for developer access to test API endpoints. Free Basic tier is sufficient.", required=False),
+    ],
+    "hackerone:yahoo": [
+        _cr("signup", "Yahoo Account", "https://login.yahoo.com/account/create",
+            "Create a dedicated Yahoo account for testing."),
+    ],
+    "hackerone:riot_games": [
+        _cr("signup", "Riot Games Account", "https://auth.riotgames.com/login#create_account",
+            "Create a Riot account. Install the client if testing game clients."),
+    ],
+    "hackerone:reddit": [
+        _cr("signup", "Reddit Account", "https://www.reddit.com/register/",
+            "Create a dedicated test Reddit account. Do not test with your personal account."),
+        _cr("api_key", "Reddit API Credentials", "https://www.reddit.com/prefs/apps",
+            "Register a Reddit app (script type) for OAuth and API testing.", required=False),
+    ],
+    "hackerone:dropbox": [
+        _cr("signup", "Dropbox Account (Free 2 GB)", "https://www.dropbox.com/register",
+            "Free tier is sufficient for most API and web testing."),
+        _cr("api_key", "Dropbox API App Key", "https://www.dropbox.com/developers/apps",
+            "Create a Dropbox app for API access token testing.", required=False),
+    ],
+    "hackerone:grammarly": [
+        _cr("signup", "Grammarly Free Account", "https://www.grammarly.com/signup",
+            "Create a free account. Premium features may require a paid plan for full scope coverage.", required=True),
+    ],
+    "hackerone:mozilla": [
+        _cr("signup", "Firefox Account (Mozilla)", "https://accounts.firefox.com/signup",
+            "Create a Mozilla account for testing Firefox Sync, Monitor, and Relay."),
+    ],
+    "hackerone:nordvpn": [
+        _cr("signup", "NordVPN Trial Account", "https://nordvpn.com/risk-free/",
+            "30-day money-back guarantee enables full feature testing including client apps."),
+    ],
+    "hackerone:paypal": [
+        _cr("signup", "PayPal Personal Account", "https://www.paypal.com/us/webapps/mpp/account-selection",
+            "Create a dedicated sandbox/personal account. NEVER test with real payment methods."),
+        _cr("api_key", "PayPal Developer Sandbox", "https://developer.paypal.com/dashboard/",
+            "Create sandbox accounts (buyer + seller) for payment flow testing."),
+    ],
+    "hackerone:slack": [
+        _cr("signup", "Slack Workspace (Free)", "https://slack.com/get-started#/createnew",
+            "Create a free Slack workspace for testing. You can also test as a guest in your own workspace."),
+        _cr("api_key", "Slack App + Bot Token", "https://api.slack.com/apps",
+            "Create a Slack app in your test workspace for API endpoint testing.", required=False),
+    ],
+    "hackerone:proton": [
+        _cr("signup", "Proton Account (Free)", "https://account.proton.me/signup",
+            "Free Proton account covers Mail, Calendar, and Drive scope."),
+    ],
+    "hackerone:twitch": [
+        _cr("signup", "Twitch Streamer Account", "https://www.twitch.tv/signup",
+            "Create a dedicated Twitch account. Streamer features available to all accounts."),
+        _cr("api_key", "Twitch Developer App", "https://dev.twitch.tv/console/apps/create",
+            "Register a Twitch application for OAuth and API testing.", required=False),
+    ],
+    "hackerone:tiktok": [
+        _cr("signup", "TikTok Account", "https://www.tiktok.com/signup",
+            "Create a dedicated TikTok account for testing."),
+        _cr("api_key", "TikTok Developer API Access", "https://developers.tiktok.com/",
+            "Apply for TikTok API access for endpoint testing.", required=False),
+    ],
+    "hackerone:doordash": [
+        _cr("signup", "DoorDash Customer Account", "https://www.doordash.com/en-US/register/",
+            "Free customer account. Dasher (driver) account available if testing delivery flows."),
+    ],
+    "hackerone:cloudflare": [
+        _cr("signup", "Cloudflare Free Account", "https://dash.cloudflare.com/sign-up",
+            "Free tier gives access to dashboard, API, and Workers. Add a test domain."),
+        _cr("api_key", "Cloudflare API Token", "https://dash.cloudflare.com/profile/api-tokens",
+            "Create a scoped API token for API endpoint testing."),
+    ],
+    "hackerone:uber": [
+        _cr("signup", "Uber Rider Account", "https://auth.uber.com/v2/",
+            "Create a dedicated Uber account. Use a separate phone number if possible."),
+    ],
+
+    # ── Bugcrowd programs ────────────────────────────────────────────────────
+    "bugcrowd:tesla": [
+        _cr("signup", "Tesla Account", "https://auth.tesla.com/en_us/oauth2/v3/authorize?...",
+            "Standard Tesla account. If testing mobile app, install on a dedicated test device."),
+    ],
+    "bugcrowd:atlassian": [
+        _cr("signup", "Atlassian Account (Free)", "https://id.atlassian.com/signup",
+            "Free Atlassian account. Create a Jira Software / Confluence free-tier site for testing."),
+        _cr("api_key", "Atlassian API Token", "https://id.atlassian.com/manage-profile/security/api-tokens",
+            "Generate an API token for REST API testing.", required=False),
+    ],
+    "bugcrowd:okta": [
+        _cr("signup", "Okta Developer Account (Free)", "https://developer.okta.com/signup/",
+            "Free Okta Developer Edition includes full admin access to a test org."),
+        _cr("api_key", "Okta API Token", "https://developer.okta.com/docs/guides/create-an-api-token/",
+            "Create an API token from your dev org for REST API testing."),
+    ],
+    "bugcrowd:square": [
+        _cr("signup", "Square Seller Account", "https://squareup.com/signup/us",
+            "Free Square account. Use sandbox mode for payment testing."),
+        _cr("api_key", "Square Sandbox API Key", "https://developer.squareup.com/apps",
+            "Create a Square app and use the sandbox access token — never use production keys."),
+    ],
+    "bugcrowd:netgear": [
+        _cr("other", "NETGEAR Device / Firmware", "https://www.netgear.com/support/",
+            "Physical device or firmware image required. Check if program covers specific models.", required=False),
+    ],
+    "bugcrowd:western_digital": [
+        _cr("signup", "WD Account", "https://accounts.mycloud.com/",
+            "WD account required for My Cloud services testing."),
+    ],
+
+    # ── VRP programs ─────────────────────────────────────────────────────────
+    "vrp:google": [
+        _cr("signup", "Google Account", "https://accounts.google.com/signup",
+            "Create a dedicated Google account for testing. Never use your personal Google account."),
+        _cr("api_key", "Google Cloud Free Trial", "https://cloud.google.com/free",
+            "300 USD free credit for GCP API and service testing.", required=False),
+    ],
+    "vrp:microsoft": [
+        _cr("signup", "Microsoft Account", "https://account.microsoft.com/",
+            "Create a dedicated Microsoft account. Azure free account available."),
+        _cr("api_key", "Azure Free Account + Subscription", "https://azure.microsoft.com/en-us/free/",
+            "Azure free tier for testing Azure services and Microsoft Graph API.", required=False),
+    ],
+    "vrp:apple": [
+        _cr("signup", "Apple ID", "https://appleid.apple.com/account#!&page=create",
+            "Dedicated Apple ID for testing. Required for App Store, iCloud, and Apple services."),
+    ],
+    "vrp:github": [
+        _cr("signup", "GitHub Account (Free)", "https://github.com/signup",
+            "Free GitHub account. Create test repositories and organizations as needed."),
+        _cr("api_key", "GitHub Personal Access Token", "https://github.com/settings/tokens",
+            "Create a fine-grained PAT for API testing.", required=False),
+    ],
+    "vrp:mozilla_foundation": [
+        _cr("signup", "Firefox Account", "https://accounts.firefox.com/signup",
+            "Mozilla account for testing Firefox Sync, Monitor, VPN, and related services."),
+    ],
+    "vrp:meta": [
+        _cr("signup", "Facebook / Meta Account", "https://www.facebook.com/r.php",
+            "Create a dedicated test Facebook account. Do not test using your personal account."),
+        _cr("api_key", "Meta Developer App", "https://developers.facebook.com/apps/",
+            "Create a Meta app for Graph API and Webhook testing.", required=False),
+    ],
+    "vrp:samsung": [
+        _cr("signup", "Samsung Account", "https://account.samsung.com/membership/intro.do",
+            "Samsung account for testing Samsung services, Galaxy Store, and cloud features."),
+    ],
+    "vrp:intel": [
+        _cr("other", "Intel Product / Firmware", "https://www.intel.com/content/www/us/en/download-center/home.html",
+            "Check program scope for specific Intel hardware or driver targets.", required=False),
+    ],
+
+    # ── Intigriti programs ───────────────────────────────────────────────────
+    "intigriti:ing": [
+        _cr("signup", "ING Bank Account (Sandbox)", "https://developer.ing.com/api-marketplace/",
+            "Use the ING Open Banking sandbox environment with test credentials."),
+        _cr("api_key", "ING Developer API Key", "https://developer.ing.com/api-marketplace/",
+            "Register for API access to test Open Banking endpoints."),
+    ],
+    "intigriti:adidas": [
+        _cr("signup", "Adidas Account", "https://www.adidas.com/us/join",
+            "Create a free Adidas account for testing the website and app."),
+    ],
+    "intigriti:ab_inbev": [
+        _cr("signup", "AB InBev / Bees Account", "https://www.beesapp.com/",
+            "Bees platform account for B2B portal testing if in scope."),
+    ],
+    "intigriti:eu_commision": [],  # Public EU infrastructure — no credentials needed
+    "intigriti:bol_com": [
+        _cr("signup", "bol.com Account", "https://www.bol.com/nl/rnwy/account/registreren/",
+            "Dutch/Belgian marketplace account for testing customer-facing features."),
+        _cr("api_key", "bol.com Partner API", "https://developers.bol.com/",
+            "Partner API access for testing seller and order API endpoints.", required=False),
+    ],
+
+    # ── Government CVD programs ──────────────────────────────────────────────
+    # Government programs typically have no authentication requirements.
+    # Only include entries where a government portal requires registration.
+    "govt:us_dod": [],   # DISA public-facing systems — no login needed
+    "govt:ncsc_uk": [],  # Public UK government systems
+    "govt:bsi_de": [],   # Public German federal systems
+}
+
+
+def _inject_credentials() -> None:
+    """Inject credential_requirements into each catalog entry from the mapping."""
+    for opp in _CATALOG:
+        creds = _CREDENTIAL_REQUIREMENTS.get(opp.id)
+        if creds is not None:
+            opp.credential_requirements = creds
+
+
+_inject_credentials()
 
 
 # ---------------------------------------------------------------------------

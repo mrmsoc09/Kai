@@ -37,12 +37,12 @@ export default function TopHUD(){
     <div className='left'>
       <GradientLogo/>
       <NeonChip color='purple'>Hacker Persona</NeonChip>
-      <NeonChip color={health==='OK'? 'teal':'cyan'}>API {health}</NeonChip>
-      <NeonChip color={ws==='ON'? 'teal':'cyan'}>WS {ws}</NeonChip>
+      <NeonChip color={health==='OK'? 'green':'orange'}>API {health}</NeonChip>
+      <NeonChip color={ws==='ON'? 'green':'orange'}>WS {ws}</NeonChip>
     </div>
     <div className='right'>
-      <NeonChip color={userKeySet? 'teal':'cyan'}>UserKey {userKeySet? 'SET':'MISSING'}</NeonChip>
-      <NeonChip color={adminKeySet? 'teal':'cyan'}>AdminKey {adminKeySet? 'SET':'MISSING'}</NeonChip>
+      <NeonChip color={userKeySet? 'green':'orange'}>UserKey {userKeySet? 'SET':'MISSING'}</NeonChip>
+      <NeonChip color={adminKeySet? 'green':'orange'}>AdminKey {adminKeySet? 'SET':'MISSING'}</NeonChip>
     </div>
   </div>
 }

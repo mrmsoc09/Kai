@@ -1,0 +1,16 @@
+provider: openai
+models:
+  - name: gpt-4.1
+    capabilities:
+      tool_calling: true
+      structured_output: true
+      multimodal: false
+      context_window: 128000
+      privacy_tier: 2
+      cost_tier: 3
+      speed_tier: 2
+      local_or_remote: remote
+      preferred_workloads: [coding, planning, summarization]
+auth:
+  method: env
+  token_env: OPENAI_API_KEY

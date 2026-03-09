@@ -26,6 +26,7 @@ from apps.backend.src.routers import (
     artifact_signing,
     auth,
     autonomous,
+    campaigns,
     chains,
     comms,
     docs,
@@ -41,8 +42,10 @@ from apps.backend.src.routers import (
     intel,
     kai_authorized_scanning,
     key_management,
+    keys,
     knowledge,
     logs,
+    logs_api,
     mailer,
     mcp,
     metrics,
@@ -59,6 +62,7 @@ from apps.backend.src.routers import (
     recordings,
     reports,
     runs,
+    runs_api,
     scope,
     state,
     submissions,
@@ -74,6 +78,7 @@ from apps.backend.src.routers import (
     hil_scopes as hil_scopes_router,
     hil_workflow as hil_workflow_router,
 )
+from apps.backend.src.routers import platform_settings as platform_settings_router
 
 
 services = Services()
@@ -246,6 +251,7 @@ app.include_router(scope.router)
 
 # Key Management (Cryptographic keys and PGP signatures)
 app.include_router(key_management.router)
+app.include_router(keys.router)
 
 # Human-in-the-Loop Approvals (PGP-signed action approval)
 app.include_router(approvals.router)
@@ -295,6 +301,10 @@ app.include_router(finding_validation.router)
 # Opportunity Hub + Hunt Workflows (Phase 6)
 app.include_router(opportunities.router)
 app.include_router(workflows.router)
+app.include_router(campaigns.router)
+
+# Platform Settings (LLM config, runtime settings)
+app.include_router(platform_settings_router.router)
 
 # Evidence and findings lifecycle
 app.include_router(evidence.router)
@@ -305,6 +315,7 @@ app.include_router(export.router)
 app.include_router(programs.router)
 app.include_router(programs_discovery.router)
 app.include_router(runs.router)
+app.include_router(runs_api.router)
 app.include_router(submissions.router)
 app.include_router(comms.router)
 app.include_router(payouts.router)
@@ -312,6 +323,7 @@ app.include_router(payouts.router)
 # Communications and logs
 app.include_router(mailer.router)
 app.include_router(logs.router)
+app.include_router(logs_api.router)
 app.include_router(agent0.router)
 app.include_router(docs.router)
 app.include_router(triage.router)

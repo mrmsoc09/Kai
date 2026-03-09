@@ -1,6 +1,6 @@
 /**
  * Kaison K1 - Ollama Setup Component
- * Manage local AI models for RAG and Agent Zero
+ * Manage local AI models for RAG and Kaison Composer
  * Download, configure, and monitor Ollama models
  */
 
@@ -222,7 +222,7 @@ const OllamaSetup: React.FC = () => {
         <div>
           <h1 style={{ color: COLORS.primary.main }}>Ollama Model Manager</h1>
           <p style={{ color: COLORS.textSecondary }}>
-            Manage local AI models for RAG and Agent Zero
+            Manage local AI models for RAG and Kaison Composer
           </p>
         </div>
         <div className="status-badge" style={{

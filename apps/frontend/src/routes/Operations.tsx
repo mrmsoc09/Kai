@@ -100,8 +100,8 @@ export default function Operations() {
     <div style={{ padding: '1.5rem', fontFamily: "'JetBrains Mono', monospace", maxWidth: 800 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
         <div>
-          <h1 style={{ color: '#00FF41', fontSize: '1.3rem', fontWeight: 700, margin: 0 }}>Operations</h1>
-          <div style={{ color: '#4a5568', fontSize: '0.75rem', marginTop: 4 }}>HiL finding workflow</div>
+          <h1 style={{ color: '#355E3B', fontSize: '1.3rem', fontWeight: 700, margin: 0 }}>Operations</h1>
+          <div style={{ color: '#6F8E7A', fontSize: '0.75rem', marginTop: 4 }}>HiL finding workflow</div>
         </div>
         <Link to='/findings/new' style={{ color: '#a78bfa', fontSize: '0.8rem', textDecoration: 'none' }}>
           Full form →
@@ -114,13 +114,13 @@ export default function Operations() {
           <div key={label} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
             <div style={{
               width: 28, height: 28, borderRadius: '50%',
-              background: i < stepIdx ? '#00FF41' : i === stepIdx ? '#a78bfa' : '#1e2330',
-              color: i < stepIdx ? '#000' : '#e2e8f0',
+              background: i < stepIdx ? '#355E3B' : i === stepIdx ? '#a78bfa' : '#355E3B',
+              color: i < stepIdx ? '#000' : '#8FAF9B',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.7rem', fontWeight: 700, flexShrink: 0,
             }}>{i < stepIdx ? '✓' : i + 1}</div>
-            <div style={{ flex: 1, height: 2, background: i < stepIdx ? '#00FF41' : '#1e2330' }} />
-            <span style={{ color: i === stepIdx ? '#a78bfa' : '#4a5568', fontSize: '0.65rem', marginLeft: 4, marginRight: 4 }}>{label}</span>
+            <div style={{ flex: 1, height: 2, background: i < stepIdx ? '#355E3B' : '#355E3B' }} />
+            <span style={{ color: i === stepIdx ? '#a78bfa' : '#6F8E7A', fontSize: '0.65rem', marginLeft: 4, marginRight: 4 }}>{label}</span>
           </div>
         ))}
       </div>
@@ -169,11 +169,11 @@ export default function Operations() {
       {/* Step: Evidence */}
       {step === 'evidence' && (
         <div>
-          <div style={{ color: '#8892a4', fontSize: '0.8rem', marginBottom: '1rem' }}>
-            Finding <span style={{ color: '#00FF41' }}>{fid.slice(0, 12)}…</span> created.
+          <div style={{ color: '#8FAF9B', fontSize: '0.8rem', marginBottom: '1rem' }}>
+            Finding <span style={{ color: '#355E3B' }}>{fid.slice(0, 12)}…</span> created.
             Add supporting evidence then proceed.
           </div>
-          <div style={{ padding: '1rem', background: '#0a0c10', border: '1px solid #1e2330', borderRadius: 6, marginBottom: '1rem' }}>
+          <div style={{ padding: '1rem', background: '#0B0C0D', border: '1px solid #355E3B', borderRadius: 6, marginBottom: '1rem' }}>
             <EvidencePanel findingId={fid} existingEvidence={evidence} onAdded={(item) => setEvidence((p) => [...p, item])} />
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -188,10 +188,10 @@ export default function Operations() {
       {/* Step: HiL approval */}
       {step === 'hil' && (
         <div>
-          <div style={{ padding: '1rem', background: '#0a0c10', border: '1px solid #a78bfa44', borderRadius: 6, marginBottom: '1rem', color: '#a78bfa', fontSize: '0.85rem' }}>
+          <div style={{ padding: '1rem', background: '#0B0C0D', border: '1px solid #a78bfa44', borderRadius: 6, marginBottom: '1rem', color: '#a78bfa', fontSize: '0.85rem' }}>
             HiL review pending for finding {fid.slice(0, 12)}…
             <br />
-            In production, a reviewer approves this in the <Link to='/operations/approvals' style={{ color: '#00FF41' }}>Approvals Dashboard</Link>.
+            In production, a reviewer approves this in the <Link to='/operations/approvals' style={{ color: '#355E3B' }}>Approvals Dashboard</Link>.
             <br />
             Click below to approve directly (admin action).
           </div>
@@ -207,7 +207,7 @@ export default function Operations() {
       {/* Step: Submit */}
       {step === 'submit' && (
         <div>
-          <div style={{ color: '#8892a4', fontSize: '0.8rem', marginBottom: '1rem' }}>
+          <div style={{ color: '#8FAF9B', fontSize: '0.8rem', marginBottom: '1rem' }}>
             HiL approved. Ready to submit finding to the program.
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
@@ -222,8 +222,8 @@ export default function Operations() {
       {/* Step: Done */}
       {step === 'done' && (
         <div style={{ textAlign: 'center', padding: '2rem' }}>
-          <div style={{ color: '#00FF41', fontSize: '2rem', marginBottom: 12 }}>✓</div>
-          <div style={{ color: '#e2e8f0', fontSize: '0.9rem', marginBottom: 16 }}>
+          <div style={{ color: '#355E3B', fontSize: '2rem', marginBottom: 12 }}>✓</div>
+          <div style={{ color: '#8FAF9B', fontSize: '0.9rem', marginBottom: 16 }}>
             Finding {fid.slice(0, 12)}… submitted successfully.
           </div>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -241,7 +241,7 @@ export default function Operations() {
 function FormRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ color: '#4a5568', fontSize: '0.7rem', letterSpacing: '0.1em' }}>{label}</label>
+      <label style={{ color: '#6F8E7A', fontSize: '0.7rem', letterSpacing: '0.1em' }}>{label}</label>
       {children}
     </div>
   )
@@ -250,17 +250,17 @@ function FormRow({ label, children }: { label: string; children: React.ReactNode
 const input: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box',
   padding: '0.55rem 0.75rem',
-  background: '#070809',
-  border: '1px solid #1e2330',
+  background: '#0B0C0D',
+  border: '1px solid #355E3B',
   borderRadius: 4,
-  color: '#e2e8f0',
+  color: '#8FAF9B',
   fontFamily: 'inherit',
   fontSize: '0.85rem',
 }
 
 const btnGreen: React.CSSProperties = {
   padding: '0.55rem 1.25rem',
-  background: '#00FF41',
+  background: '#355E3B',
   color: '#000',
   border: 'none',
   borderRadius: 4,
@@ -274,9 +274,9 @@ const btnGreen: React.CSSProperties = {
 const btnSecondary: React.CSSProperties = {
   padding: '0.55rem 1rem',
   background: 'transparent',
-  border: '1px solid #1e2330',
+  border: '1px solid #355E3B',
   borderRadius: 4,
-  color: '#8892a4',
+  color: '#8FAF9B',
   fontFamily: 'inherit',
   fontSize: '0.85rem',
   cursor: 'pointer',

@@ -1,0 +1,19 @@
+schema: 1
+name: provider_policy
+description: Provider onboarding and usage controls.
+rules:
+  - id: provider-001
+    description: Providers must be declared in config/providers/*.yaml with auth method and allowed use-cases.
+    severity: high
+  - id: provider-002
+    description: Secrets must be retrieved via secret manager (Vault/env); never committed.
+    severity: high
+  - id: provider-003
+    description: Each provider entry must declare data residency, logging posture, and privacy tier.
+    severity: medium
+  - id: provider-004
+    description: Disable providers lacking TLS or with unclear data retention policies.
+    severity: medium
+  - id: provider-005
+    description: Local providers (Ollama, Gemma, Qwen) must isolate model weights and disable outbound calls.
+    severity: medium

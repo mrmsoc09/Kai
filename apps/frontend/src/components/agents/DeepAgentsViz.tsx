@@ -13,7 +13,7 @@ export const DeepAgentsViz: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', gap: UI.spacing.lg, height: '100%' }}>
-      <div style={{ flex: 1, backgroundColor: COLORS.neutral.white, borderRadius: UI.borderRadius.large, padding: UI.spacing.lg, border: `1px solid ${COLORS.neutral.gray_200}` }}>
+      <div style={{ flex: 1, backgroundColor: COLORS.surface, borderRadius: UI.borderRadius.large, padding: UI.spacing.lg, border: `1px solid ${COLORS.neutral.gray_200}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'between', marginBottom: UI.spacing.md }}>
           <h3 style={{ margin: 0 }}>Agent Network</h3>
           <div style={{ display: 'flex', alignItems: 'center', gap: UI.spacing.xs, fontSize: UI.fonts.size_sm }}>

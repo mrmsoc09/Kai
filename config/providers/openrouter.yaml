@@ -1,0 +1,16 @@
+provider: openrouter
+models:
+  - name: openrouter/anthropic/claude-3.7-sonnet
+    capabilities:
+      tool_calling: true
+      structured_output: true
+      multimodal: false
+      context_window: 200000
+      privacy_tier: 2
+      cost_tier: 2
+      speed_tier: 2
+      local_or_remote: remote
+      preferred_workloads: [coding, triage]
+auth:
+  method: env
+  token_env: OPENROUTER_API_KEY

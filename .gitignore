@@ -27,7 +27,15 @@ Thumbs.db
 *.zip
 *.tgz
 
+# Backup files
+*.bak
+*.bak.*
+*.bak_*
+
 # Environment files (never commit secrets)
 .env
 .env.*
 !.env.example
+
+.gemini/
+gha-creds-*.json

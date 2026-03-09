@@ -75,16 +75,18 @@ const Dashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
+      const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || '';
+      const headers = tok ? { Authorization: `Bearer ${tok}` } : undefined;
       // Fetch tools
-      const toolsRes = await fetch('/api/v1/tools');
+      const toolsRes = await fetch('/api/v1/tools', { headers });
       const toolsData = await toolsRes.json();
 
       // Fetch programs
-      const programsRes = await fetch('/api/v1/programs');
+      const programsRes = await fetch('/api/v1/programs', { headers });
       const programsData = await programsRes.json();
 
       // Fetch Kai authorizations
-      const authRes = await fetch('/api/v1/kai/authorizations');
+      const authRes = await fetch('/api/v1/kai/authorizations', { headers });
       const authData = await authRes.json();
 
       // Update state
@@ -179,7 +181,7 @@ const Dashboard: React.FC = () => {
           className={`nav-tab ${activeTab === 'agentzero' ? 'active' : ''}`}
           onClick={() => setActiveTab('agentzero')}
         >
-          🤖 Agent Zero
+          🤖 Kaison Composer
         </button>
         <button
           className={`nav-tab ${activeTab === 'intelligence' ? 'active' : ''}`}
@@ -348,43 +350,92 @@ const OverviewSection: React.FC<{ stats: SystemStats; authStatus: AuthorizationS
 /**
  * Tools Section - Manage and execute tools
  */
-const ToolsSection: React.FC<{ tools: ToolSummary[] }> = ({ tools }) => (
-  <div className="tools-section">
-    <h2>Available Tools</h2>
+const ToolsSection: React.FC<{ tools: ToolSummary[] }> = ({ tools }) => {
+  const [localTools, setLocalTools] = useState<ToolSummary[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('k1_local_tools') || '[]')
+    } catch {
+      return []
+    }
+  })
+  const [name, setName] = useState('')
+  const [category, setCategory] = useState('')
 
-    {/* Tool Categories */}
-    <div className="tools-grid">
-      {tools.length === 0 ? (
-        <div className="empty-state">
-          <p>No tools available. Initialize system to load tools.</p>
+  const allTools = [...localTools, ...tools]
+
+  const addTool = () => {
+    if (!name.trim()) return
+    const newTool: ToolSummary = {
+      id: `local-${Date.now()}`,
+      name: name.trim(),
+      category: category.trim() || 'custom',
+      use_count: 0,
+    }
+    const next = [newTool, ...localTools]
+    setLocalTools(next)
+    localStorage.setItem('k1_local_tools', JSON.stringify(next))
+    setName('')
+    setCategory('')
+  }
+
+  return (
+    <div className="tools-section">
+      <h2>Available Tools</h2>
+
+      <div className="tool-details" style={{ marginBottom: 16 }}>
+        <h3>Add Tool</h3>
+        <p>Add a local placeholder tool while the backend registry loads. This does not execute anything.</p>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tool name"
+            style={{ flex: '1 1 180px', padding: '6px 8px', background: 'var(--color-neutral-gray-50)', color: 'var(--color-neutral-gray-900)', border: '1px solid var(--color-neutral-gray-300)', borderRadius: 6 }}
+          />
+          <input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Category"
+            style={{ flex: '1 1 140px', padding: '6px 8px', background: 'var(--color-neutral-gray-50)', color: 'var(--color-neutral-gray-900)', border: '1px solid var(--color-neutral-gray-300)', borderRadius: 6 }}
+          />
+          <button className="btn btn-small btn-secondary" onClick={addTool}>Add Tool</button>
         </div>
-      ) : (
-        tools.map((tool) => (
-          <div key={tool.id} className="tool-card">
-            <div className="tool-header">
-              <h3>{tool.name}</h3>
-              <span className="tool-category">{tool.category}</span>
-            </div>
-            <div className="tool-stats">
-              <p>Used {tool.use_count} times</p>
-              {tool.last_used && <p>Last used: {tool.last_used}</p>}
-            </div>
-            <button className="btn btn-small btn-primary">Execute</button>
-          </div>
-        ))
-      )}
-    </div>
+      </div>
 
-    {/* Tool Details */}
-    <div className="tool-details">
-      <h3>Tool Information</h3>
-      <p>
-        Click on any tool to execute it. Tools are categorized by function:
-        validation, analysis, reporting, and orchestration.
-      </p>
+      {/* Tool Categories */}
+      <div className="tools-grid">
+        {allTools.length === 0 ? (
+          <div className="empty-state">
+            <p>No tools available. Initialize the backend registry or add a local tool above.</p>
+          </div>
+        ) : (
+          allTools.map((tool) => (
+            <div key={tool.id} className="tool-card">
+              <div className="tool-header">
+                <h3>{tool.name}</h3>
+                <span className="tool-category">{tool.category}</span>
+              </div>
+              <div className="tool-stats">
+                <p>Used {tool.use_count} times</p>
+                {tool.last_used && <p>Last used: {tool.last_used}</p>}
+              </div>
+              <button className="btn btn-small btn-primary">Execute</button>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Tool Details */}
+      <div className="tool-details">
+        <h3>Tool Information</h3>
+        <p>
+          Click on any tool to execute it. Tools are categorized by function:
+          validation, analysis, reporting, and orchestration.
+        </p>
+      </div>
     </div>
-  </div>
-);
+  )
+};
 
 /**
  * Programs Section - Manage bug bounty programs

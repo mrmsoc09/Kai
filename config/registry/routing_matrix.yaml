@@ -1,0 +1,13 @@
+routing:
+  planning:
+    min_privacy: 2
+    preferred_tasks: [planning]
+  coding:
+    min_privacy: 2
+    preferred_tasks: [coding]
+  summarization:
+    min_privacy: 1
+    preferred_tasks: [summarization]
+  multimodal:
+    min_privacy: 2
+    preferred_tasks: [multimodal]

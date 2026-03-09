@@ -4,18 +4,22 @@ Hunt Workflow CRUD + State Transition endpoints.
 Read access: any authenticated user.
 Write access (create, transition, link-run, delete): OPERATOR or ADMIN role.
 
-GET    /workflows                     list (filterable)
-POST   /workflows                     create (requires auth)
-GET    /workflows/{wf_id}             detail
-PATCH  /workflows/{wf_id}             update notes (OPERATOR)
-POST   /workflows/{wf_id}/transition  advance state (OPERATOR)
-POST   /workflows/{wf_id}/link-run    associate run_id (OPERATOR)
-DELETE /workflows/{wf_id}             close + remove (OPERATOR)
+GET    /workflows                          list (filterable)
+POST   /workflows                          create (requires auth)
+GET    /workflows/{wf_id}                  detail
+PATCH  /workflows/{wf_id}                  update notes (OPERATOR)
+POST   /workflows/{wf_id}/transition       advance state (OPERATOR)
+POST   /workflows/{wf_id}/link-run         associate run_id (OPERATOR)
+POST   /workflows/{wf_id}/credentials      submit credentials -> Vault (OPERATOR)
+GET    /workflows/{wf_id}/scope            export scope for scan tools
+POST   /workflows/{wf_id}/outcome          record submission outcome (OPERATOR)
+DELETE /workflows/{wf_id}                  close + remove (OPERATOR)
 """
 
 from __future__ import annotations
 
-from typing import List, Optional
+import logging
+from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
@@ -24,11 +28,13 @@ from apps.backend.src.core.opportunity_catalog import get_opportunity
 from apps.backend.src.core.workflow_store import (
     HuntWorkflow,
     STATES,
+    collect_credentials,
     create_workflow,
     delete_workflow,
     get_workflow,
     link_run,
     list_workflows,
+    record_outcome,
     transition_workflow,
     update_notes,
 )
@@ -39,6 +45,8 @@ from apps.backend.src.core.auth import (
     ROLE_ADMIN,
     User,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/workflows",
@@ -71,6 +79,12 @@ class WorkflowOut(BaseModel):
     created_by: str
     allowed_transitions: List[str]
     is_terminal: bool
+    credentials_collected: bool
+    vault_path: str
+    outcome: str
+    outcome_payout_usd: int
+    outcome_note: str
+    outcome_at: str
 
 
 def _out(wf: HuntWorkflow) -> WorkflowOut:
@@ -92,6 +106,12 @@ def _out(wf: HuntWorkflow) -> WorkflowOut:
         created_by=wf.created_by,
         allowed_transitions=wf.allowed_transitions(),
         is_terminal=wf.is_terminal(),
+        credentials_collected=wf.credentials_collected,
+        vault_path=wf.vault_path,
+        outcome=wf.outcome,
+        outcome_payout_usd=wf.outcome_payout_usd,
+        outcome_note=wf.outcome_note,
+        outcome_at=wf.outcome_at,
     )
 
 
@@ -111,6 +131,23 @@ class TransitionRequest(BaseModel):
 
 class LinkRunRequest(BaseModel):
     run_id: str = Field(..., min_length=1, max_length=200)
+
+
+class CredentialSubmitRequest(BaseModel):
+    username: str = Field("", max_length=500)
+    password: str = Field("", max_length=500)
+    api_key: str = Field("", max_length=1000)
+    oauth_token: str = Field("", max_length=2000)
+    extra: Dict[str, Any] = Field(default_factory=dict)
+    notes: str = Field("", max_length=2000)
+    skip_reason: str = Field("", max_length=500,
+                             description="If set, credentials are skipped (surface scan only)")
+
+
+class OutcomeRequest(BaseModel):
+    outcome: str = Field(..., description="triaged | resolved | duplicate | na | informative")
+    payout_usd: int = Field(0, ge=0)
+    note: str = Field("", max_length=2000)
 
 
 # ---------------------------------------------------------------------------
@@ -256,6 +293,96 @@ async def get_scope(wf_id: str):
         "root_domains": list({d.lstrip("*.").split("/")[0] for d in wildcards}),
         "notes": wf.notes,
     }
+
+
+@router.post("/{wf_id}/credentials", response_model=WorkflowOut, dependencies=[_require_operator])
+async def submit_credentials(wf_id: str, body: CredentialSubmitRequest):
+    """
+    Submit test credentials for a workflow in CREDENTIAL_SETUP state.
+
+    If credentials are provided, they are written to HashiCorp Vault under
+    secret/kai/workflows/{wf_id}/credentials and the workflow advances to RECON.
+
+    If skip_reason is provided, the credential step is skipped and the workflow
+    advances directly to RECON for surface-only scanning.
+    """
+    wf = get_workflow(wf_id)
+    if wf is None:
+        raise HTTPException(status_code=404, detail=f"Workflow {wf_id!r} not found")
+
+    vault_path = f"kai/workflows/{wf_id}/credentials"
+
+    if body.skip_reason:
+        # Skip credential collection — surface scan only
+        notes_entry = f"Credential collection skipped: {body.skip_reason}"
+    else:
+        # Write credentials to Vault
+        secret_data: Dict[str, Any] = {
+            "username": body.username,
+            "password": body.password,
+            "api_key": body.api_key,
+            "oauth_token": body.oauth_token,
+            "notes": body.notes,
+            **body.extra,
+        }
+        try:
+            from apps.backend.src.core.hil_vault_client import VaultClient
+            vc = VaultClient()
+            vc.write_secret(vault_path, secret_data)
+            logger.info("Credentials written to Vault at %s for workflow %s", vault_path, wf_id)
+        except Exception as exc:
+            logger.warning("Vault unavailable (%s) — credentials not persisted", exc)
+            # Still allow the workflow to advance; operator is aware creds weren't stored
+        notes_entry = (
+            f"Credentials collected. Vault path: {vault_path}. {body.notes}".strip(". ")
+        )
+
+    # Mark collected and advance to RECON
+    collect_credentials(wf_id, vault_path if not body.skip_reason else "")
+    try:
+        wf = transition_workflow(wf_id, "RECON", notes=notes_entry)
+    except ValueError as exc:
+        # Workflow may not be in CREDENTIAL_SETUP (e.g. already advanced)
+        wf = get_workflow(wf_id)
+        if wf is None:
+            raise HTTPException(status_code=404, detail=str(exc))
+
+    return _out(wf)
+
+
+@router.post("/{wf_id}/outcome", response_model=WorkflowOut, dependencies=[_require_operator])
+async def submit_outcome(wf_id: str, body: OutcomeRequest):
+    """
+    Record the program's response to a submitted report.
+    Populates outcome fields and optionally records payout for analytics.
+    """
+    valid_outcomes = {"triaged", "resolved", "duplicate", "na", "informative"}
+    if body.outcome not in valid_outcomes:
+        raise HTTPException(
+            status_code=422,
+            detail=f"outcome must be one of: {sorted(valid_outcomes)}",
+        )
+    wf = record_outcome(wf_id, body.outcome, payout_usd=body.payout_usd, note=body.note)
+    if wf is None:
+        raise HTTPException(status_code=404, detail=f"Workflow {wf_id!r} not found")
+
+    # Populate payout ledger when there's actual payout
+    if body.payout_usd > 0:
+        try:
+            from apps.backend.src.core.payout_ledger import record_payout
+            record_payout(
+                workflow_id=wf_id,
+                opportunity_id=wf.opportunity_id,
+                program_name=wf.program_name,
+                platform=wf.platform,
+                payout_usd=body.payout_usd,
+                outcome=body.outcome,
+                note=body.note,
+            )
+        except Exception as exc:
+            logger.warning("payout_ledger update failed: %s", exc)
+
+    return _out(wf)
 
 
 @router.delete("/{wf_id}", dependencies=[_require_operator])

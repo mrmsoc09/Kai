@@ -50,7 +50,7 @@ async def kai_health():
 # ============================================================================
 
 
-@router.post("/authorize", response_model=Response)
+@router.post("/authorize", response_model=Response, dependencies=[_require_admin])
 async def register_authorization(
     authorization_type: str = Query(...),
     target: str = Query(...),
@@ -438,7 +438,7 @@ async def generate_compliance_report(
 # ============================================================================
 
 
-@router.post("/admin/revoke-authorization", response_model=Response)
+@router.post("/admin/revoke-authorization", response_model=Response, dependencies=[_require_admin])
 async def revoke_authorization(
     certificate_id: str = Query(...),
     revoked_by: str = Query(...),
@@ -477,7 +477,7 @@ async def revoke_authorization(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/admin/security-stats", response_model=Response)
+@router.get("/admin/security-stats", response_model=Response, dependencies=[_require_admin])
 async def get_security_stats():
     """Get comprehensive security statistics"""
     try:

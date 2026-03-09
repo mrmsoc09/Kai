@@ -7,7 +7,7 @@ This document captures the stabilization state for K1 (Kaison One), aligning wit
 - Frontend: Dashboard, Operations, Arsenal (attack graph), Intelligence Database, MCP Registry, Persona Market, Logs.
 - Backend API: Auth, state, dorks (plan-mode by default with HiL gates), intelligence (/intel), MCP (/mcp), personas (/personas), logs (/logs), graph (/graph), metrics/knowledge.
 - Documentation: This file and CONTRIBUTING.md outline architecture, guardrails, and development flow.
-- Separation: Agent Zero (builder) is distinct from K1 (product). K1 runs with env tokens and strict policies; Agent Zero remains a development orchestrator.
+- Separation: Kaison Composer (builder) is distinct from K1 (product). K1 runs with env tokens and strict policies; Kaison Composer remains a development orchestrator.
 
 ## Visual & Accessibility Compliance
 - Dark-first, no pure white; muted semantic accents only.

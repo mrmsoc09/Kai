@@ -1,57 +1,62 @@
 /**
- * Kaison K1 Unified Platform - Global Branding CSS
- * Defines color scheme and visual identity for entire platform
+ * Kaison K1 Unified Platform - Enterprise Dark Mode Branding
+ * Hunter green + black lettering with orange/purple highlights
  */
 
 :root {
-  /* Primary Brand Colors */
-  --color-primary-main: #1a472a;
-  --color-primary-light: #2d7a47;
-  --color-primary-lighter: #45a369;
-  --color-primary-contrast: #ffffff;
+  /* Primary Brand Colors - Hunter Green */
+  --color-primary-main: #355e3b;
+  --color-primary-light: #3f6a44;
+  --color-primary-lighter: #4e6d5a;
+  --color-primary-contrast: #0b0c0d;
 
-  /* Secondary Colors */
-  --color-secondary-main: #d4571e;
-  --color-secondary-light: #ff7a3d;
-  --color-secondary-contrast: #ffffff;
+  /* Secondary Colors - Deep Purple */
+  --color-secondary-main: #5a2e8a;
+  --color-secondary-light: #6d3aa6;
+  --color-secondary-contrast: #0b0c0d;
 
-  /* Status Colors */
-  --color-status-success: #22c55e;
-  --color-status-warning: #f59e0b;
-  --color-status-error: #ef4444;
-  --color-status-info: #3b82f6;
-  --color-status-pending: #8b5cf6;
+  /* Accent Orange */
+  --color-accent-orange: #d97706;
 
-  /* Neutral Palette */
-  --color-neutral-black: #000000;
-  --color-neutral-white: #ffffff;
-  --color-neutral-gray-50: #f9fafb;
-  --color-neutral-gray-100: #f3f4f6;
-  --color-neutral-gray-200: #e5e7eb;
-  --color-neutral-gray-300: #d1d5db;
-  --color-neutral-gray-400: #9ca3af;
-  --color-neutral-gray-500: #6b7280;
-  --color-neutral-gray-600: #4b5563;
-  --color-neutral-gray-700: #374151;
-  --color-neutral-gray-800: #1f2937;
-  --color-neutral-gray-900: #111827;
+  /* Backgrounds - Black base */
+  --color-neutral-black: #0b0c0d;
+  --color-neutral-white: #8faf9b;
+  
+  /* Layered Backgrounds */
+  --color-neutral-gray-50: #0b0c0d; /* Base background */
+  --color-neutral-gray-100: #111316; /* Card background */
+  --color-neutral-gray-200: #1a1d21; /* Hover state */
+  --color-neutral-gray-300: #4e7a57; /* Borders (green boxes) */
+  --color-neutral-gray-400: #6f8e7a; /* Muted text */
+  --color-neutral-gray-500: #5b7366;
+  --color-neutral-gray-600: #8faf9b;
+  --color-neutral-gray-700: #8faf9b;
+  --color-neutral-gray-800: #8faf9b;
+  --color-neutral-gray-900: #8faf9b; /* Primary text */
+
+  /* Status Colors - Neon for Dark Mode */
+  --color-status-success: #355e3b;
+  --color-status-warning: #d97706;
+  --color-status-error: #a12b2b;
+  --color-status-info: #5a2e8a;
+  --color-status-pending: #6d3aa6;
 
   /* Severity Colors */
-  --color-severity-critical: #dc2626;
-  --color-severity-high: #ea580c;
-  --color-severity-medium: #eab308;
-  --color-severity-low: #84cc16;
-  --color-severity-info: #0ea5e9;
+  --color-severity-critical: #a12b2b;
+  --color-severity-high: #d97706;
+  --color-severity-medium: #e0a43a;
+  --color-severity-low: #355e3b;
+  --color-severity-info: #5a2e8a;
 
   /* Reasoning Colors */
-  --color-reasoning-thinking: #8b5cf6;
-  --color-reasoning-analyzing: #06b6d4;
-  --color-reasoning-verifying: #10b981;
-  --color-reasoning-concluding: #f59e0b;
+  --color-reasoning-thinking: #5a2e8a;
+  --color-reasoning-analyzing: #6d3aa6;
+  --color-reasoning-verifying: #355e3b;
+  --color-reasoning-concluding: #d97706;
 
   /* Typography */
-  --font-sans: "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-  --font-mono: "Fira Code", "Monaco", "Courier New", monospace;
+  --font-sans: "Space Grotesk", "JetBrains Mono", "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
   --font-size-xs: 12px;
   --font-size-sm: 14px;
   --font-size-base: 16px;
@@ -76,12 +81,12 @@
   --border-radius-xl: 16px;
   --border-radius-full: 9999px;
 
-  /* Shadows */
+  /* Shadows - Glow effects */
   --shadow-none: none;
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
 
   /* Transitions */
   --transition-fast: 150ms;
@@ -100,6 +105,7 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: var(--color-neutral-gray-50);
 }
 
 body {
@@ -107,7 +113,8 @@ body {
   font-size: var(--font-size-base);
   line-height: 1.6;
   color: var(--color-neutral-gray-900);
-  background-color: var(--color-neutral-white);
+  background-color: var(--color-neutral-gray-50);
+  font-weight: 600;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -115,10 +122,11 @@ body {
 /* ===== Typography ===== */
 
 h1, h2, h3, h4, h5, h6 {
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   margin-bottom: var(--spacing-md);
-  color: var(--color-neutral-gray-900);
+  color: var(--color-neutral-white);
+  letter-spacing: -0.025em;
 }
 
 h1 { font-size: var(--font-size-3xl); }
@@ -130,6 +138,7 @@ h6 { font-size: var(--font-size-sm); }
 
 p {
   margin-bottom: var(--spacing-md);
+  color: var(--color-neutral-gray-400);
 }
 
 a {
@@ -140,281 +149,80 @@ a {
 
 a:hover {
   color: var(--color-primary-light);
-  text-decoration: underline;
+  text-decoration: none;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
 }
 
 code {
   font-family: var(--font-mono);
   background-color: var(--color-neutral-gray-100);
+  color: var(--color-secondary-light);
   padding: 2px 6px;
   border-radius: var(--border-radius-small);
   font-size: 0.9em;
+  border: 1px solid var(--color-neutral-gray-200);
 }
 
 pre {
-  background-color: var(--color-neutral-gray-900);
-  color: var(--color-neutral-white);
+  background-color: var(--color-neutral-gray-50);
+  color: var(--color-neutral-gray-400);
   padding: var(--spacing-md);
   border-radius: var(--border-radius-medium);
   overflow-x: auto;
   margin-bottom: var(--spacing-md);
+  border: 1px solid var(--color-neutral-gray-200);
 }
 
 pre code {
   background-color: transparent;
   color: inherit;
   padding: 0;
-}
-
-/* ===== Buttons ===== */
-
-button {
-  font-family: var(--font-sans);
-  font-size: var(--font-size-base);
-  font-weight: 600;
-  padding: var(--spacing-sm) var(--spacing-md);
   border: none;
+}
+
+/* ===== Components ===== */
+
+/* Cards/Panels */
+.card, .panel, .widget {
+  background-color: var(--color-neutral-gray-100);
+  border: 1px solid var(--color-neutral-gray-200);
   border-radius: var(--border-radius-medium);
-  cursor: pointer;
-  transition: all var(--transition-base) var(--transition-function);
-}
-
-.btn-primary {
-  background-color: var(--color-primary-main);
-  color: var(--color-primary-contrast);
-  box-shadow: var(--shadow-none);
-}
-
-.btn-primary:hover {
-  background-color: var(--color-primary-light);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-primary:active {
-  background-color: var(--color-primary-main);
+  padding: var(--spacing-md);
   box-shadow: var(--shadow-sm);
 }
 
-.btn-secondary {
-  background-color: var(--color-secondary-main);
-  color: var(--color-secondary-contrast);
-}
-
-.btn-secondary:hover {
-  background-color: var(--color-secondary-light);
-  box-shadow: var(--shadow-md);
-}
-
-.btn-outline {
-  background-color: var(--color-neutral-white);
-  color: var(--color-primary-main);
-  border: 2px solid var(--color-primary-main);
-}
-
-.btn-outline:hover {
-  background-color: rgba(26, 71, 42, 0.05);
-}
-
-.btn-danger {
-  background-color: var(--color-status-error);
-  color: var(--color-neutral-white);
-}
-
-.btn-danger:hover {
-  opacity: 0.9;
-}
-
-.btn-small {
-  padding: var(--spacing-xs) var(--spacing-sm);
-  font-size: var(--font-size-sm);
-}
-
-.btn-large {
-  padding: var(--spacing-md) var(--spacing-lg);
-  font-size: var(--font-size-lg);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-/* ===== Forms ===== */
-
-input,
-textarea,
-select {
-  font-family: var(--font-sans);
-  font-size: var(--font-size-base);
-  padding: var(--spacing-sm) var(--spacing-md);
+/* Inputs */
+input, select, textarea {
+  background-color: var(--color-neutral-gray-50);
   border: 1px solid var(--color-neutral-gray-300);
-  border-radius: var(--border-radius-medium);
-  transition: border-color var(--transition-base) var(--transition-function);
+  color: var(--color-neutral-white);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-small);
+  width: 100%;
+  font-family: inherit;
 }
 
-input:focus,
-textarea:focus,
-select:focus {
+input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--color-primary-main);
-  box-shadow: 0 0 0 3px rgba(26, 71, 42, 0.1);
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
 }
 
-input::placeholder {
-  color: var(--color-neutral-gray-400);
-}
-
-/* ===== Cards ===== */
-
-.card {
-  background-color: var(--color-neutral-white);
-  border: 1px solid var(--color-neutral-gray-200);
-  border-radius: var(--border-radius-large);
-  box-shadow: var(--shadow-md);
-  padding: var(--spacing-lg);
-  transition: box-shadow var(--transition-base) var(--transition-function);
-}
-
-.card:hover {
-  box-shadow: var(--shadow-lg);
-}
-
-/* ===== Alerts ===== */
-
-.alert {
-  padding: var(--spacing-md);
+/* Buttons */
+button {
+  cursor: pointer;
+  border: none;
   border-radius: var(--border-radius-small);
-  margin-bottom: var(--spacing-md);
-  border-left: 4px solid;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-weight: 500;
+  transition: all var(--transition-fast);
 }
 
-.alert-success {
-  background-color: rgba(34, 197, 94, 0.1);
-  border-left-color: var(--color-status-success);
-  color: #166534;
-}
-
-.alert-warning {
-  background-color: rgba(245, 158, 11, 0.1);
-  border-left-color: var(--color-status-warning);
-  color: #92400e;
-}
-
-.alert-error {
-  background-color: rgba(239, 68, 68, 0.1);
-  border-left-color: var(--color-status-error);
-  color: #7f1d1d;
-}
-
-.alert-info {
-  background-color: rgba(59, 130, 246, 0.1);
-  border-left-color: var(--color-status-info);
-  color: #1e3a8a;
-}
-
-/* ===== Badges ===== */
-
-.badge {
-  display: inline-block;
-  padding: var(--spacing-xs) var(--spacing-sm);
-  border-radius: var(--border-radius-full);
-  font-size: var(--font-size-sm);
-  font-weight: 600;
-}
-
-.badge-primary {
+button.primary {
   background-color: var(--color-primary-main);
   color: var(--color-primary-contrast);
 }
 
-.badge-secondary {
-  background-color: var(--color-secondary-main);
-  color: var(--color-secondary-contrast);
-}
-
-.badge-success {
-  background-color: var(--color-status-success);
-  color: var(--color-neutral-white);
-}
-
-.badge-critical {
-  background-color: var(--color-severity-critical);
-  color: var(--color-neutral-white);
-}
-
-.badge-high {
-  background-color: var(--color-severity-high);
-  color: var(--color-neutral-white);
-}
-
-.badge-medium {
-  background-color: var(--color-severity-medium);
-  color: var(--color-neutral-gray-900);
-}
-
-.badge-low {
-  background-color: var(--color-severity-low);
-  color: var(--color-neutral-gray-900);
-}
-
-/* ===== Severity-based Styling ===== */
-
-.severity-critical { color: var(--color-severity-critical); font-weight: 700; }
-.severity-high { color: var(--color-severity-high); font-weight: 700; }
-.severity-medium { color: var(--color-severity-medium); font-weight: 600; }
-.severity-low { color: var(--color-severity-low); font-weight: 600; }
-.severity-info { color: var(--color-severity-info); }
-
-/* ===== Loading States ===== */
-
-.loading {
-  display: inline-block;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ===== Responsive ===== */
-
-@media (max-width: 768px) {
-  :root {
-    --font-size-base: 14px;
-    --spacing-md: 12px;
-    --spacing-lg: 16px;
-  }
-
-  h1 { font-size: var(--font-size-2xl); }
-  h2 { font-size: var(--font-size-xl); }
-  h3 { font-size: var(--font-size-lg); }
-
-  .card {
-    padding: var(--spacing-md);
-  }
-}
-
-/* ===== Print Styles ===== */
-
-@media print {
-  body {
-    background-color: white;
-    color: black;
-  }
-
-  a {
-    text-decoration: underline;
-  }
-
-  .no-print {
-    display: none;
-  }
+button.primary:hover {
+  background-color: var(--color-primary-light);
 }

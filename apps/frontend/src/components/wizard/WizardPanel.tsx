@@ -6,7 +6,7 @@ export default function WizardPanel(){
   const inputRef = useRef<HTMLInputElement>(null)
   return <div className='wizard-wrap' data-open={open}>
     <div className='wizard-header'>
-      <span>Agent Zero — HiL Wizard</span>
+      <span>Kaison Composer — HiL Wizard</span>
       <button onClick={toggle}>Close</button>
     </div>
     <div className='wizard-body'>
@@ -17,7 +17,7 @@ export default function WizardPanel(){
       </div>)}
     </div>
     <div className='wizard-input'>
-      <input ref={inputRef} placeholder='Ask Agent Zero…' onKeyDown={e=>{ if(e.key==='Enter'){ const v=(e.target as HTMLInputElement).value; (e.target as HTMLInputElement).value=''; ask(v) }}} />
+      <input ref={inputRef} placeholder='Ask Kaison Composer…' onKeyDown={e=>{ if(e.key==='Enter'){ const v=(e.target as HTMLInputElement).value; (e.target as HTMLInputElement).value=''; ask(v) }}} />
       <button disabled={busy} onClick={()=>{ const v=inputRef.current?.value||''; if(!v) return; inputRef.current!.value=''; ask(v) }}>{busy? '…':'Send'}</button>
     </div>
   </div>

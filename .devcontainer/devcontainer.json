@@ -1,0 +1,30 @@
+{
+    "name": "Kaison K1 Development",
+    "dockerComposeFile": [
+        "../docker-compose.dev.yml"
+    ],
+    "service": "backend",
+    "workspaceFolder": "/app",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-azuretools.vscode-docker",
+                "njpwerner.autodocstring",
+                "redhat.vscode-yaml",
+                "tamasfe.even-better-toml",
+                "mtxr.sqltools",
+                "mtxr.sqltools-driver-pg"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+                "python.analysis.typeCheckingMode": "basic",
+                "editor.formatOnSave": true
+            }
+        }
+    },
+    "remoteUser": "root"
+}

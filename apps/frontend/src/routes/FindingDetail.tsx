@@ -19,7 +19,7 @@ type FindingData = {
 }
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#ef4444', high: '#f97316', medium: '#f59e0b',
+  critical: '#ef4444', high: '#D97706', medium: '#D97706',
   low: '#22c55e', info: '#60a5fa',
 }
 
@@ -86,30 +86,30 @@ export default function FindingDetail() {
     }
   }
 
-  if (loading) return <div style={{ padding: '2rem', color: '#4a5568', fontFamily: 'monospace' }}>Loading finding…</div>
-  if (!finding) return <div style={{ padding: '2rem', color: '#f97316', fontFamily: 'monospace' }}>Finding not found.</div>
+  if (loading) return <div style={{ padding: '2rem', color: '#6F8E7A', fontFamily: 'monospace' }}>Loading finding…</div>
+  if (!finding) return <div style={{ padding: '2rem', color: '#D97706', fontFamily: 'monospace' }}>Finding not found.</div>
 
   const sevColor = SEVERITY_COLORS[finding.severity] || '#6b7280'
 
   return (
     <div style={{ padding: '1.5rem', fontFamily: "'JetBrains Mono', monospace", maxWidth: 900 }}>
       {/* Breadcrumb */}
-      <div style={{ color: '#4a5568', fontSize: '0.75rem', marginBottom: '1rem' }}>
-        <Link to='/findings' style={{ color: '#4a5568', textDecoration: 'none' }}>Findings</Link>
+      <div style={{ color: '#6F8E7A', fontSize: '0.75rem', marginBottom: '1rem' }}>
+        <Link to='/findings' style={{ color: '#6F8E7A', textDecoration: 'none' }}>Findings</Link>
         {' → '}
-        <span style={{ color: '#8892a4' }}>{finding.id.slice(0, 8)}…</span>
+        <span style={{ color: '#8FAF9B' }}>{finding.id.slice(0, 8)}…</span>
       </div>
 
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
         <div>
-          <h1 style={{ color: '#e2e8f0', fontSize: '1.2rem', fontWeight: 700, margin: '0 0 6px' }}>
+          <h1 style={{ color: '#8FAF9B', fontSize: '1.2rem', fontWeight: 700, margin: '0 0 6px' }}>
             {finding.title}
           </h1>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Badge color={sevColor}>{finding.severity.toUpperCase()}</Badge>
             <Badge color='#60a5fa'>{finding.status.replace(/_/g, ' ').toUpperCase()}</Badge>
-            <span style={{ color: '#4a5568', fontSize: '0.75rem', alignSelf: 'center' }}>{finding.program}</span>
+            <span style={{ color: '#6F8E7A', fontSize: '0.75rem', alignSelf: 'center' }}>{finding.program}</span>
           </div>
         </div>
 
@@ -121,7 +121,7 @@ export default function FindingDetail() {
             </ActionBtn>
           )}
           {finding.status === 'hil_approved' && (
-            <ActionBtn onClick={handleSubmit} disabled={acting} color='#00FF41'>
+            <ActionBtn onClick={handleSubmit} disabled={acting} color='#355E3B'>
               Submit to Program
             </ActionBtn>
           )}
@@ -140,13 +140,13 @@ export default function FindingDetail() {
 
       {/* Description */}
       <section style={{ marginBottom: '2rem' }}>
-        <div style={{ color: '#4a5568', fontSize: '0.7rem', letterSpacing: '0.1em', marginBottom: 8 }}>DESCRIPTION</div>
+        <div style={{ color: '#6F8E7A', fontSize: '0.7rem', letterSpacing: '0.1em', marginBottom: 8 }}>DESCRIPTION</div>
         <div style={{
           padding: '1rem',
-          background: '#070809',
-          border: '1px solid #1e2330',
+          background: '#0B0C0D',
+          border: '1px solid #355E3B',
           borderRadius: 6,
-          color: '#cbd5e1',
+          color: '#8FAF9B',
           fontSize: '0.85rem',
           lineHeight: 1.7,
           whiteSpace: 'pre-wrap',
@@ -157,7 +157,7 @@ export default function FindingDetail() {
       </section>
 
       {/* Evidence */}
-      <section style={{ padding: '1rem', background: '#0a0c10', border: '1px solid #1e2330', borderRadius: 6 }}>
+      <section style={{ padding: '1rem', background: '#0B0C0D', border: '1px solid #355E3B', borderRadius: 6 }}>
         <EvidencePanel
           findingId={finding.id}
           existingEvidence={evidence}
@@ -185,9 +185,9 @@ function Badge({ children, color }: { children: React.ReactNode; color: string }
 
 function MetaCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ padding: '0.6rem 0.75rem', background: '#070809', border: '1px solid #1e2330', borderRadius: 4 }}>
-      <div style={{ color: '#4a5568', fontSize: '0.65rem', letterSpacing: '0.08em', marginBottom: 4 }}>{label.toUpperCase()}</div>
-      <div style={{ color: '#e2e8f0', fontSize: '0.82rem', wordBreak: 'break-all' }}>{value}</div>
+    <div style={{ padding: '0.6rem 0.75rem', background: '#0B0C0D', border: '1px solid #355E3B', borderRadius: 4 }}>
+      <div style={{ color: '#6F8E7A', fontSize: '0.65rem', letterSpacing: '0.08em', marginBottom: 4 }}>{label.toUpperCase()}</div>
+      <div style={{ color: '#8FAF9B', fontSize: '0.82rem', wordBreak: 'break-all' }}>{value}</div>
     </div>
   )
 }
@@ -200,7 +200,7 @@ function ActionBtn({ children, onClick, disabled, color }: { children: React.Rea
       style={{
         padding: '0.5rem 1rem',
         background: disabled ? '#1a2030' : color,
-        color: disabled ? '#4a5568' : color === '#00FF41' ? '#000' : '#fff',
+        color: disabled ? '#6F8E7A' : color === '#355E3B' ? '#000' : '#c7d2e0',
         border: 'none',
         borderRadius: 4,
         fontFamily: 'inherit',

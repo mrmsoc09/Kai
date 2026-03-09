@@ -2,7 +2,7 @@
 # Contributing to K1
 
 ## Separation of Concerns
-- Agent Zero (builder): development orchestrator, code generation and automation. Not deployed with K1.
+- Kaison Composer (builder): development orchestrator, code generation and automation. Not deployed with K1.
 - K1 (product): FastAPI backend + React frontend. Operates under HiL, policy gates, and token auth. External actions disabled by default.
 
 ## Principles

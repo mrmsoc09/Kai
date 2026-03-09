@@ -1,6 +1,6 @@
 /**
- * Unified Agent Zero Dashboard Hub
- * K1 + Agent Zero Integration Frontend
+ * Unified Kaison Composer Dashboard Hub
+ * K1 + Kaison Composer Integration Frontend
  * Primary user communication interface
  *
  * Features:
@@ -8,7 +8,7 @@
  * - Natural language command input
  * - Findings stream
  * - Workflow progress tracking
- * - Agent Zero integration status
+ * - Kaison Composer integration status
  */
 
 import React, { useState, useEffect, useRef } from 'react'
@@ -69,13 +69,13 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
-        // Check Agent Zero connection
+        // Check Kaison Composer connection
         const healthResponse = await axios.get(`${API_URL}/agent-zero/health`, {
           headers: { Authorization: `Bearer ${token}` }
         })
 
         setAgentZeroConnected(
-          healthResponse.data.systems.agent_zero.status === 'operational'
+          healthResponse.data.systems.kaison_composer.status === 'operational'
         )
 
         // Get agent status
@@ -241,7 +241,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
           <span className="agent-role" style={{ fontWeight: 600 }}>
             {agent.name}
           </span>
-          <span className="agent-status" style={{ fontSize: '12px', color: '#666' }}>
+          <span className="agent-status" style={{ fontSize: '12px', color: '#8a95a7' }}>
             ({agent.status})
           </span>
         </div>
@@ -266,14 +266,14 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
         className="workflow-progress"
         style={{
           padding: '12px',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: '#0f141b',
           borderRadius: '4px',
           marginBottom: '12px'
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
           <span style={{ fontWeight: 600 }}>{workflow.target}</span>
-          <span style={{ fontSize: '12px', color: '#666' }}>
+          <span style={{ fontSize: '12px', color: '#8a95a7' }}>
             {completedSteps}/{workflow.steps.length} steps
           </span>
         </div>
@@ -283,7 +283,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
           style={{
             width: '100%',
             height: '6px',
-            backgroundColor: '#e0e0e0',
+            backgroundColor: '#2a3445',
             borderRadius: '3px',
             overflow: 'hidden'
           }}
@@ -320,32 +320,32 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
         gridTemplateColumns: '300px 1fr 350px',
         gap: '16px',
         padding: '16px',
-        backgroundColor: '#fff',
+        backgroundColor: '#0b0f14',
         minHeight: '100vh'
       }}
     >
       {/* Left Sidebar: Agent Status */}
-      <div className="agent-panel" style={{ borderRight: '1px solid #e0e0e0' }}>
+      <div className="agent-panel" style={{ borderRight: '1px solid #355E3B' }}>
         <h3 style={{ marginBottom: '16px' }}>Active Agents</h3>
 
         <div
           className="connection-status"
           style={{
             padding: '8px',
-            backgroundColor: agentZeroConnected ? '#e8f5e9' : '#ffebee',
+            backgroundColor: agentZeroConnected ? 'rgba(95, 143, 107, 0.12)' : 'rgba(239, 68, 68, 0.12)',
             borderRadius: '4px',
             marginBottom: '16px',
             fontSize: '12px'
           }}
         >
-          Agent Zero: {agentZeroConnected ? '🟢 Connected' : '🔴 Offline'}
+          Kaison Composer: {agentZeroConnected ? '🟢 Connected' : '🔴 Offline'}
         </div>
 
         <div className="agents-list">
           {agents.length > 0 ? (
             agents.map((agent) => renderAgentLane(agent))
           ) : (
-            <p style={{ color: '#999', fontSize: '12px' }}>No agents active</p>
+            <p style={{ color: '#7b8798', fontSize: '12px' }}>No agents active</p>
           )}
         </div>
 
@@ -355,7 +355,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
         <div className="mcp-status">
           {mcpServers.map((server) => (
             <div key={server.server_id} style={{ fontSize: '12px', marginBottom: '8px' }}>
-              <span style={{ color: server.status === 'online' ? '#4caf50' : '#999' }}>●</span>
+              <span style={{ color: server.status === 'online' ? '#22c55e' : '#7b8798' }}>●</span>
               {' '}
               {server.name} ({server.tools?.length || 0} tools)
             </div>
@@ -367,7 +367,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
         <h4 style={{ marginBottom: '12px' }}>LLM Status</h4>
         <div className="llm-status" style={{ fontSize: '12px' }}>
           <div>Primary: {llmStats?.primary || 'N/A'}</div>
-          <div style={{ marginTop: '4px', color: '#666' }}>
+          <div style={{ marginTop: '4px', color: '#8a95a7' }}>
             Cost (session): ${llmStats?.stats?.total_cost_usd?.toFixed(2) || '0.00'}
           </div>
         </div>
@@ -380,7 +380,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
           className="quick-hunt-section"
           style={{
             padding: '16px',
-            backgroundColor: '#f9f9f9',
+            backgroundColor: '#0f141b',
             borderRadius: '8px',
             marginBottom: '24px'
           }}
@@ -397,7 +397,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
               style={{
                 flex: 1,
                 padding: '8px',
-                border: '1px solid #ddd',
+                border: '1px solid #2a3445',
                 borderRadius: '4px',
                 fontFamily: 'monospace'
               }}
@@ -408,8 +408,8 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
               disabled={isHunting || !target.trim()}
               style={{
                 padding: '8px 16px',
-                backgroundColor: isHunting ? '#ccc' : '#0066CC',
-                color: 'white',
+                backgroundColor: isHunting ? '#2a3445' : '#0066CC',
+                color: '#c7d2e0',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: isHunting ? 'not-allowed' : 'pointer',
@@ -420,7 +420,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
             </button>
           </div>
 
-          <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
+          <p style={{ fontSize: '12px', color: '#8a95a7', margin: 0 }}>
             Agents will automatically discover vulnerabilities, validate findings, analyze chains, and generate reports.
           </p>
         </div>
@@ -430,7 +430,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
           className="command-section"
           style={{
             padding: '16px',
-            backgroundColor: '#f9f9f9',
+            backgroundColor: '#0f141b',
             borderRadius: '8px',
             marginBottom: '24px'
           }}
@@ -447,7 +447,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
               style={{
                 flex: 1,
                 padding: '8px',
-                border: '1px solid #ddd',
+                border: '1px solid #2a3445',
                 borderRadius: '4px'
               }}
             />
@@ -456,8 +456,8 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
               disabled={!command.trim()}
               style={{
                 padding: '8px 16px',
-                backgroundColor: command.trim() ? '#0066CC' : '#ccc',
-                color: 'white',
+                backgroundColor: command.trim() ? '#0066CC' : '#2a3445',
+                color: '#c7d2e0',
                 border: 'none',
                 borderRadius: '4px',
                 cursor: command.trim() ? 'pointer' : 'not-allowed'
@@ -467,7 +467,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
             </button>
           </div>
 
-          <div style={{ fontSize: '12px', color: '#666' }}>
+          <div style={{ fontSize: '12px', color: '#8a95a7' }}>
             <strong>Examples:</strong>
             <ul style={{ marginTop: '8px', paddingLeft: '16px' }}>
               <li>Find all critical vulnerabilities</li>
@@ -484,7 +484,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
             className="workflow-section"
             style={{
               padding: '16px',
-              backgroundColor: '#f9f9f9',
+              backgroundColor: '#0f141b',
               borderRadius: '8px',
               marginBottom: '24px'
             }}
@@ -500,7 +500,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
             className="findings-section"
             style={{
               padding: '16px',
-              backgroundColor: '#f9f9f9',
+              backgroundColor: '#0f141b',
               borderRadius: '8px'
             }}
           >
@@ -521,7 +521,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
                   key={finding.finding_id}
                   style={{
                     padding: '12px',
-                    backgroundColor: 'white',
+                    backgroundColor: '#111316',
                     borderLeft: `4px solid ${color}`,
                     marginBottom: '8px',
                     borderRadius: '2px'
@@ -530,17 +530,17 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ fontWeight: 600 }}>{finding.title}</div>
                     {finding.validated && (
-                      <span style={{ background: '#e8f5e9', color: '#2e7d32', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
+                      <span style={{ background: 'rgba(95, 143, 107, 0.12)', color: '#22c55e', padding: '2px 6px', borderRadius: 4, fontSize: 11 }}>
                         Validated
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                  <div style={{ fontSize: '12px', color: '#8a95a7', marginTop: '4px' }}>
                     Severity: <strong>{(finding.severity || 'INFO').toUpperCase()}</strong> | Confidence:{' '}
                     {typeof finding.confidence === 'number' ? `${(finding.confidence as number) * 100}%` : finding.confidence ?? '—'}
                   </div>
                   {finding.source_tool && (
-                    <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
+                    <div style={{ fontSize: '11px', color: '#7b8798', marginTop: '4px' }}>
                       Source: {finding.source_tool}
                     </div>
                   )}
@@ -552,20 +552,20 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
       </div>
 
       {/* Right Sidebar: Activity & Status */}
-      <div className="activity-panel" style={{ borderLeft: '1px solid #e0e0e0' }}>
+      <div className="activity-panel" style={{ borderLeft: '1px solid #355E3B' }}>
         <h3 style={{ marginBottom: '16px' }}>📊 Statistics</h3>
 
         <div style={{ fontSize: '14px', marginBottom: '12px' }}>
           <div style={{ marginBottom: '8px' }}>
-            <span style={{ color: '#666' }}>Active Workflows:</span>
+            <span style={{ color: '#8a95a7' }}>Active Workflows:</span>
             <strong style={{ marginLeft: '4px' }}>{workflows.length}</strong>
           </div>
           <div style={{ marginBottom: '8px' }}>
-            <span style={{ color: '#666' }}>Findings:</span>
+            <span style={{ color: '#8a95a7' }}>Findings:</span>
             <strong style={{ marginLeft: '4px' }}>{findings.length}</strong>
           </div>
           <div>
-            <span style={{ color: '#666' }}>Active Agents:</span>
+            <span style={{ color: '#8a95a7' }}>Active Agents:</span>
             <strong style={{ marginLeft: '4px' }}>
               {agents.filter((a) => a.status !== 'idle').length}/{agents.length}
             </strong>
@@ -590,13 +590,13 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
           <div>✓ LLM System</div>
           <div>✓ MCP Servers</div>
           <div>✓ A2A Bus</div>
-          <div>{agentZeroConnected && '✓ Agent Zero'}</div>
+          <div>{agentZeroConnected && '✓ Kaison Composer'}</div>
         </div>
 
         <hr style={{ margin: '12px 0' }} />
 
-        <p style={{ fontSize: '12px', color: '#666', margin: 0 }}>
-          K1 v7.0 | Powered by Agent Zero
+        <p style={{ fontSize: '12px', color: '#8a95a7', margin: 0 }}>
+          K1 v7.0 | Powered by Kaison Composer
         </p>
       </div>
     </div>

@@ -1,5 +1,5 @@
 /**
- * WebSocket hook for Agent Zero chat streaming
+ * WebSocket hook for Kaison Composer chat streaming
  * Handles real-time message streaming and approval workflows
  */
 
@@ -67,8 +67,11 @@ interface UseAgentZeroStreamReturn {
 }
 
 export function useAgentZeroStream(options: UseAgentZeroStreamOptions = {}): UseAgentZeroStreamReturn {
+  const defaultApiUrl = typeof window !== 'undefined'
+    ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/api/v1/agent-zero/ws/chat`
+    : 'ws://localhost:8000/api/v1/agent-zero/ws/chat';
   const {
-    apiUrl = 'ws://localhost:8000/api/v1/agent-zero/ws/chat',
+    apiUrl = defaultApiUrl,
     sessionId: initialSessionId,
     onMessage,
     onToken,

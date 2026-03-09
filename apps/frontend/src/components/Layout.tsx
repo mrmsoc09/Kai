@@ -12,7 +12,7 @@ export default function Layout({children}:{children: React.ReactNode}){
     <Sidebar />
     <TopHUD />
     <main className='content'>{children}</main>
-    <button className='fab' onClick={toggle} title='Agent Zero Wizard'>✦</button>
+    <button className='fab' onClick={toggle} title='Kaison Composer Wizard'>✦</button>
     <WizardPanel />
     <ConsoleStrip />
   </div>

@@ -1,0 +1,10 @@
+name = "reporting_agent"
+role = "Reporting and evidence packaging specialist"
+focus = [
+  "submission drafts",
+  "report generation",
+  "artifact manifests",
+  "operator review readiness",
+  "audit-friendly summaries"
+]
+must_read = ["AGENTS.md"]

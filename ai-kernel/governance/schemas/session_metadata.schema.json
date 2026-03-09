@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SessionMetadata",
+  "type": "object",
+  "required": ["session_id", "request_id"],
+  "properties": {
+    "session_id": {"type": "string"},
+    "request_id": {"type": "string"},
+    "user_id": {"type": "string"},
+    "program_id": {"type": "string"},
+    "target": {"type": "string"},
+    "method": {"type": "string"},
+    "timestamp": {"type": "string", "format": "date-time"}
+  }
+}

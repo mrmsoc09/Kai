@@ -48,8 +48,8 @@ export default function Dashboard(){
           <NeonChip color={adminKey? 'teal':'cyan'}>AdminKey {adminKey? 'SET':'MISSING'}</NeonChip>
         </div>
         <div style={{marginTop:12, display:'flex', gap:12}}>
-          <label>User API Key <input value={userKey} onChange={e=>setUserKey(e.target.value)} style={{width:360, background:'#0b0c0d', color:'#c9d1d9', border:'1px solid var(--border)', padding:'6px 8px', borderRadius:6}}/></label>
-          <label>Admin API Key <input value={adminKey} onChange={e=>setAdminKey(e.target.value)} style={{width:360, background:'#0b0c0d', color:'#c9d1d9', border:'1px solid var(--border)', padding:'6px 8px', borderRadius:6}}/></label>
+          <label>User API Key <input value={userKey} onChange={e=>setUserKey(e.target.value)} style={{width:360, background:'#0b0c0d', color:'#8FAF9B', border:'1px solid var(--border)', padding:'6px 8px', borderRadius:6}}/></label>
+          <label>Admin API Key <input value={adminKey} onChange={e=>setAdminKey(e.target.value)} style={{width:360, background:'#0b0c0d', color:'#8FAF9B', border:'1px solid var(--border)', padding:'6px 8px', borderRadius:6}}/></label>
         </div>
         <div style={{marginTop:8, color:'var(--text-muted)', fontSize:12}}>API Base: <code>{apiBase}</code></div>
       </section>

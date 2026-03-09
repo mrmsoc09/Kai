@@ -1,10 +1,10 @@
 # K1 Display Hub — Operator Overview
 
-This is the SOC-style hub for the K1 vulnerability hunting platform with mandatory Human-in-the-Loop (HiL) controls. All external communications are relayed via Agent Zero.
+This is the SOC-style hub for the K1 vulnerability hunting platform with mandatory Human-in-the-Loop (HiL) controls. All external communications are relayed via Kaison Composer.
 
 Core areas:
-- Agent Zero Wizard (HiL chat): Human approval, guidance, and controlled comms relay
-- Agent Zero Comms Panel: Auditable logs of HiL chat events
+- Kaison Composer Wizard (HiL chat): Human approval, guidance, and controlled comms relay
+- Kaison Composer Comms Panel: Auditable logs of HiL chat events
 - Docs Hub: Operational manuals, runbooks, policies
 - Recon Planner: Plan-only dork chain generation (execute requires HiL + policy)
 - Attack Graph: Knowledge graph snapshot (nodes/edges) and upcoming force-graph
@@ -13,7 +13,7 @@ Core areas:
 
 Security & Governance:
 - RBAC: /agent0/*, /docs/*, /dorks/* require ROLE_OPERATOR (Bearer token)
-- HiL: Execute-mode OSINT and all outbound comms are gated through Agent Zero
+- HiL: Execute-mode OSINT and all outbound comms are gated through Kaison Composer
 - Audit: Chat logs persisted to k1/artifacts/logs/ (Merkle-ready bundle planned)
 
 Environment:

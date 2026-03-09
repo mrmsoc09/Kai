@@ -96,20 +96,20 @@ export default function ReportBuilder() {
               {finalizing ? 'Finalizing…' : 'Finalize for HiL'}
             </button>
           </div>
-          <p style={{ color: '#4a5568', fontSize: '0.7rem' }}>
+          <p style={{ color: '#6F8E7A', fontSize: '0.7rem' }}>
             Finalize submits the report for HiL review. A finding ID is required.
           </p>
         </div>
 
         {/* Preview */}
-        <div style={{ background: '#070809', border: '1px solid #1e2330', borderRadius: 6, padding: '1rem', position: 'relative', minHeight: '60vh', overflow: 'auto' }}>
+        <div style={{ background: '#0B0C0D', border: '1px solid #355E3B', borderRadius: 6, padding: '1rem', position: 'relative', minHeight: '60vh', overflow: 'auto' }}>
           {content && (
-            <button onClick={copyContent} style={{ position: 'absolute', top: 10, right: 10, padding: '3px 8px', background: '#1e2330', border: 'none', borderRadius: 3, color: '#8892a4', cursor: 'pointer', fontSize: '0.75rem' }}>
+            <button onClick={copyContent} style={{ position: 'absolute', top: 10, right: 10, padding: '3px 8px', background: '#355E3B', border: 'none', borderRadius: 3, color: '#8FAF9B', cursor: 'pointer', fontSize: '0.75rem' }}>
               Copy
             </button>
           )}
-          <pre style={{ color: '#cbd5e1', fontSize: '0.78rem', whiteSpace: 'pre-wrap', margin: 0 }}>
-            {content || <span style={{ color: '#1e2330' }}>Report preview will appear here…</span>}
+          <pre style={{ color: '#8FAF9B', fontSize: '0.78rem', whiteSpace: 'pre-wrap', margin: 0 }}>
+            {content || <span style={{ color: '#355E3B' }}>Report preview will appear here…</span>}
           </pre>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function ReportBuilder() {
   )
 }
 
-const lbl: React.CSSProperties = { display: 'block', color: '#4a5568', fontSize: '0.7rem', letterSpacing: '0.1em', marginBottom: 6 }
-const inp: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '0.5rem 0.65rem', background: '#070809', border: '1px solid #1e2330', borderRadius: 4, color: '#e2e8f0', fontFamily: 'inherit', fontSize: '0.85rem' }
-const btnCyan: React.CSSProperties = { padding: '0.55rem', background: '#0891b2', color: '#fff', border: 'none', borderRadius: 4, fontFamily: 'inherit', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }
-const btnOrange: React.CSSProperties = { padding: '0.55rem', background: '#f97316', color: '#fff', border: 'none', borderRadius: 4, fontFamily: 'inherit', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }
+const lbl: React.CSSProperties = { display: 'block', color: '#6F8E7A', fontSize: '0.7rem', letterSpacing: '0.1em', marginBottom: 6 }
+const inp: React.CSSProperties = { width: '100%', boxSizing: 'border-box', padding: '0.5rem 0.65rem', background: '#0B0C0D', border: '1px solid #355E3B', borderRadius: 4, color: '#8FAF9B', fontFamily: 'inherit', fontSize: '0.85rem' }
+const btnCyan: React.CSSProperties = { padding: '0.55rem', background: '#0891b2', color: '#c7d2e0', border: 'none', borderRadius: 4, fontFamily: 'inherit', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }
+const btnOrange: React.CSSProperties = { padding: '0.55rem', background: '#D97706', color: '#c7d2e0', border: 'none', borderRadius: 4, fontFamily: 'inherit', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer' }

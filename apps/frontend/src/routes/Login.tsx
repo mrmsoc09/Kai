@@ -23,6 +23,8 @@ export default function Login() {
       const meRes = await api.get('/auth/me', {
         headers: { Authorization: `Bearer ${access_token}` },
       })
+      localStorage.setItem('k1_token', access_token)
+      localStorage.setItem('K1_DEV_TOKEN', access_token)
       login(access_token, { id: meRes.data.id, roles: meRes.data.roles ?? [] })
       navigate(from, { replace: true })
     } catch (err: any) {
@@ -36,7 +38,7 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0a0c10',
+      background: '#0B0C0D',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -46,9 +48,9 @@ export default function Login() {
         width: 400,
         padding: '2.5rem',
         background: '#0f1117',
-        border: '1px solid #1e2330',
+        border: '1px solid #355E3B',
         borderRadius: 8,
-        boxShadow: '0 0 40px rgba(0,255,65,0.06)',
+        boxShadow: '0 0 40px rgba(95,143,107,0.06)',
       }}>
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
@@ -56,17 +58,17 @@ export default function Login() {
             fontSize: '2rem',
             fontWeight: 700,
             letterSpacing: '0.1em',
-            background: 'linear-gradient(135deg, #00FF41 0%, #00cc33 100%)',
+            background: 'linear-gradient(135deg, #355E3B 0%, #2D4E33 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
           }}>K1</div>
-          <div style={{ color: '#4a5568', fontSize: '0.75rem', marginTop: 4, letterSpacing: '0.2em' }}>
+          <div style={{ color: '#6F8E7A', fontSize: '0.75rem', marginTop: 4, letterSpacing: '0.2em' }}>
             SECURITY RESEARCH PLATFORM
           </div>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <label style={{ display: 'block', color: '#8892a4', fontSize: '0.75rem', marginBottom: 6, letterSpacing: '0.1em' }}>
+          <label style={{ display: 'block', color: '#8FAF9B', fontSize: '0.75rem', marginBottom: 6, letterSpacing: '0.1em' }}>
             ACCESS TOKEN
           </label>
           <input
@@ -80,10 +82,10 @@ export default function Login() {
               width: '100%',
               boxSizing: 'border-box',
               padding: '0.6rem 0.75rem',
-              background: '#070809',
-              border: `1px solid ${error ? '#f97316' : '#1e2330'}`,
+              background: '#0B0C0D',
+              border: `1px solid ${error ? '#D97706' : '#355E3B'}`,
               borderRadius: 4,
-              color: '#e2e8f0',
+              color: '#8FAF9B',
               fontSize: '0.875rem',
               fontFamily: 'inherit',
               outline: 'none',
@@ -91,7 +93,7 @@ export default function Login() {
             }}
           />
           {error && (
-            <div style={{ color: '#f97316', fontSize: '0.75rem', marginBottom: 12 }}>{error}</div>
+            <div style={{ color: '#D97706', fontSize: '0.75rem', marginBottom: 12 }}>{error}</div>
           )}
           <button
             type="submit"
@@ -99,8 +101,8 @@ export default function Login() {
             style={{
               width: '100%',
               padding: '0.65rem',
-              background: loading ? '#1a2e1a' : '#00FF41',
-              color: loading ? '#4a5568' : '#000',
+              background: loading ? '#1a2e1a' : '#355E3B',
+              color: loading ? '#6F8E7A' : '#000',
               border: 'none',
               borderRadius: 4,
               fontFamily: 'inherit',
@@ -115,9 +117,9 @@ export default function Login() {
           </button>
         </form>
 
-        <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: '#070809', borderRadius: 4, border: '1px solid #1a2030' }}>
-          <div style={{ color: '#4a5568', fontSize: '0.7rem', lineHeight: 1.6 }}>
-            Set <span style={{ color: '#00FF41' }}>K1_DEV_TOKEN</span> in your environment and enter it above.
+        <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: '#0B0C0D', borderRadius: 4, border: '1px solid #1a2030' }}>
+          <div style={{ color: '#6F8E7A', fontSize: '0.7rem', lineHeight: 1.6 }}>
+            Set <span style={{ color: '#355E3B' }}>K1_DEV_TOKEN</span> in your environment and enter it above.
             The token is exchanged for a signed JWT — it is not stored in the browser.
           </div>
         </div>

@@ -1,0 +1,53 @@
+models:
+  - provider: openai
+    model: gpt-4.1
+    capabilities:
+      tool_calling: true
+      structured_output: true
+      multimodal: false
+      context_window: 128000
+      privacy_tier: 2
+      cost_tier: 3
+      speed_tier: 2
+      local_or_remote: remote
+      preferred_workloads: [coding, planning, summarization]
+      status: active
+  - provider: anthropic
+    model: claude-3-7-sonnet-20250219
+    capabilities:
+      tool_calling: true
+      structured_output: true
+      multimodal: false
+      context_window: 200000
+      privacy_tier: 2
+      cost_tier: 2
+      speed_tier: 2
+      local_or_remote: remote
+      preferred_workloads: [coding, triage]
+      status: active
+  - provider: gemini
+    model: gemini-2.0-pro
+    capabilities:
+      tool_calling: true
+      structured_output: true
+      multimodal: true
+      context_window: 1000000
+      privacy_tier: 2
+      cost_tier: 2
+      speed_tier: 2
+      local_or_remote: remote
+      preferred_workloads: [analysis, multimodal]
+      status: active
+  - provider: ollama
+    model: llama3.2
+    capabilities:
+      tool_calling: false
+      structured_output: true
+      multimodal: false
+      context_window: 32000
+      privacy_tier: 3
+      cost_tier: 1
+      speed_tier: 2
+      local_or_remote: local
+      preferred_workloads: [summarization, planning]
+      status: active

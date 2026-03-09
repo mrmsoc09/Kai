@@ -1,0 +1,10 @@
+{
+  "model": "gemini-2.0-pro",
+  "temperature": 0.2,
+  "top_p": 0.9,
+  "max_output_tokens": 2048,
+  "safety": {
+    "enforce_scope": true,
+    "allow_tools": true
+  }
+}

@@ -72,6 +72,51 @@ def upsert_payout_record(record: Dict[str, Any]) -> Dict[str, Any]:
     return normalized
 
 
+def record_payout(
+    *,
+    workflow_id: str,
+    opportunity_id: str,
+    program_name: str,
+    platform: str,
+    payout_usd: int,
+    outcome: str,
+    note: str = "",
+) -> Dict[str, Any]:
+    """
+    Append a workflow-level payout entry to the ledger.
+    Uses workflow_id as the unique key (upserts on re-submission).
+    """
+    payload = _load()
+    records: List[Dict[str, Any]] = list(payload.get("records") or [])
+
+    normalized: Dict[str, Any] = {
+        "workflow_id": workflow_id,
+        "opportunity_id": opportunity_id,
+        "program_name": program_name,
+        "platform": platform,
+        "actual_amount": float(payout_usd),
+        "currency": "USD",
+        "outcome": outcome,
+        "notes": note,
+        "updated_at": _now(),
+    }
+
+    idx = next(
+        (i for i, item in enumerate(records) if item.get("workflow_id") == workflow_id),
+        None,
+    )
+    if idx is None:
+        normalized["created_at"] = _now()
+        records.append(normalized)
+    else:
+        normalized["created_at"] = records[idx].get("created_at") or _now()
+        records[idx] = normalized
+
+    payload["records"] = records
+    _save(payload)
+    return normalized
+
+
 def list_payout_records() -> List[Dict[str, Any]]:
     return list(_load().get("records") or [])
 

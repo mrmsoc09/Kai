@@ -12,7 +12,7 @@ export default function Logs() {
     setItems(j.decision_trace || []);
   }
   return (
-    <div style={{ padding: 20, color: '#e2e8f0' }}>
+    <div style={{ padding: 20, color: '#8FAF9B' }}>
       <h2>Decision Logs</h2>
       <input value={runId} onChange={e=>setRunId(e.target.value)} placeholder='run_id' />
       <button onClick={() => load()}>Load</button>

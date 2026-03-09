@@ -1,0 +1,19 @@
+schema: 1
+name: report_policy
+description: Reporting quality, provenance, and reproducibility requirements.
+rules:
+  - id: report-001
+    description: Every finding must reference supporting Evidence Object IDs and artifact hashes.
+    severity: high
+  - id: report-002
+    description: Reports must exclude secrets, tokens, and customer data; redact before storage.
+    severity: high
+  - id: report-003
+    description: Include explicit scope and authorization references in each report.
+    severity: medium
+  - id: report-004
+    description: Enforce reproducibility steps and expected impact with clear severity rationale.
+    severity: medium
+  - id: report-005
+    description: Auto-reject drafts failing lint/quality gates; require human sign-off for submission.
+    severity: medium

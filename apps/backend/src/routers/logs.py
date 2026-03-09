@@ -1,9 +1,14 @@
 from __future__ import annotations
 from fastapi import APIRouter, Depends
 from ..core.auth import require_roles, ROLE_OPERATOR
-from ..core.logs import read_decision_trace, read_summary, write_summary
+from ..core.logs import read_decision_trace, read_summary, write_summary, list_recent_logs
 
 router = APIRouter(prefix='/logs', tags=['logs'], dependencies=[Depends(require_roles(ROLE_OPERATOR))])
+
+@router.get('')
+@router.get('/')
+async def list_logs(limit: int = 200):
+    return {"logs": list_recent_logs(limit=limit)}
 
 @router.get('/{run_id}/decision_trace')
 async def get_decision_trace(run_id: str):

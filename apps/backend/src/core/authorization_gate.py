@@ -7,6 +7,7 @@ from urllib.parse import urlparse
 
 from .kai_security_guardrails import get_guardrail_engine
 from .scope import is_in_scope
+from .scope_resolver import is_in_scope_for_workflow
 from .toolpacks import get_toolpack_manager
 
 
@@ -41,7 +42,12 @@ def _normalize_target(target: str) -> str:
     return text
 
 
-def scope_validator(target: str, program_id: str, method: str) -> bool:
+def scope_validator(
+    target: str,
+    program_id: str,
+    method: str,
+    workflow_id: Optional[str] = None,
+) -> bool:
     normalized_target = _normalize_target(target)
     if not normalized_target:
         return False
@@ -49,7 +55,9 @@ def scope_validator(target: str, program_id: str, method: str) -> bool:
         return False
     if not (method or "").strip():
         return False
-    return is_in_scope(normalized_target)
+    # Use workflow-aware resolver first (accepts targets in any active workflow scope)
+    # then fall back to static policy
+    return is_in_scope_for_workflow(normalized_target, workflow_id=workflow_id)
 
 
 def authorization_certificate_check(
@@ -108,6 +116,7 @@ def build_authorization_context(
     user_id: Optional[str] = None,
     program_id: Optional[str] = None,
     certificate_id: Optional[str] = None,
+    workflow_id: Optional[str] = None,
     method: Optional[str] = None,
 ) -> AuthorizationGateContext:
     target = _extract_target(params) or ""
@@ -128,6 +137,7 @@ def enforce_authorization_gates(
     user_id: Optional[str] = None,
     program_id: Optional[str] = None,
     certificate_id: Optional[str] = None,
+    workflow_id: Optional[str] = None,
     method: Optional[str] = None,
 ) -> AuthorizationGateContext:
     # Tests can disable strict gate checks when exercising unrelated flows.
@@ -141,17 +151,22 @@ def enforce_authorization_gates(
             method=method or "tool_execution",
         )
 
+    # Resolve workflow_id from params if not explicitly provided
+    _workflow_id = workflow_id or params.get("workflow_id") or None
+
     ctx = build_authorization_context(
         tool_id,
         params,
         user_id=user_id,
         program_id=program_id,
         certificate_id=certificate_id,
+        workflow_id=_workflow_id,
         method=method,
     )
     if not ctx.target:
         raise AuthorizationGateError("missing target for scope validation")
-    if not scope_validator(ctx.target, ctx.program_id, ctx.method):
+    # Pass workflow_id to scope_validator so it can match against workflow scope_domains
+    if not scope_validator(ctx.target, ctx.program_id, ctx.method, workflow_id=_workflow_id):
         raise AuthorizationGateError("scope_validator failed")
     if not authorization_certificate_check(ctx.user_id, ctx.certificate_id, ctx.target, ctx.method):
         raise AuthorizationGateError("authorization_certificate_check failed")

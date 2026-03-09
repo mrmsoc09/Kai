@@ -13,7 +13,7 @@ export default function AgentZero(){
   useEffect(()=>{ load(); const id = setInterval(load, 5000); return ()=> clearInterval(id); },[]);
   return (
     <div className='h-full'>
-      <h2 className='text-xl mb-2 font-semibold text-purple-300'>Agent Zero Communications</h2>
+      <h2 className='text-xl mb-2 font-semibold text-purple-300'>Kaison Composer Communications</h2>
       <div className='grid grid-cols-12 gap-4'>
         <div className='col-span-7 p-3 bg-slate-950/60 rounded border border-slate-800 h-[70vh] overflow-auto'>
           <table className='w-full text-sm'>
@@ -32,7 +32,7 @@ export default function AgentZero(){
         <div className='col-span-5 space-y-3'>
           <section className='p-3 bg-slate-950/60 rounded border border-slate-800'>
             <h3 className='text-sm uppercase tracking-wider text-slate-400'>Policy</h3>
-            <p className='text-slate-300 text-sm'>Human-in-the-Loop required for all external comms and submissions. Agent Zero is the single gateway.</p>
+            <p className='text-slate-300 text-sm'>Human-in-the-Loop required for all external comms and submissions. Kaison Composer is the single gateway.</p>
           </section>
           <section className='p-3 bg-slate-950/60 rounded border border-slate-800'>
             <h3 className='text-sm uppercase tracking-wider text-slate-400'>Status</h3>

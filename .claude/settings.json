@@ -1,0 +1,75 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Write",
+      "Edit",
+      "MultiEdit",
+      "Glob",
+      "Grep",
+      "LS"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[KAI-PRE-WRITE] $(date -u +%Y-%m-%dT%H:%M:%SZ) | File modification initiated. Intention tracking required.'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[KAI-PRE-BASH] $(date -u +%Y-%m-%dT%H:%M:%SZ) | Shell execution initiated. Verify scope and band policy.'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[KAI-POST-WRITE] $(date -u +%Y-%m-%dT%H:%M:%SZ) | File modification completed.'"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[KAI-POST-BASH] $(date -u +%Y-%m-%dT%H:%M:%SZ) | Shell execution completed.'"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[KAI-PRE-COMPACT] $(date -u +%Y-%m-%dT%H:%M:%SZ) | Context compaction triggered. Session state should be written to docs/session_state.md before proceeding.'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '[KAI-SESSION-STOP] $(date -u +%Y-%m-%dT%H:%M:%SZ) | Session ending. Verify open branches and write HANDOFF.md if mid-phase.'"
+          }
+        ]
+      }
+    ]
+  }
+}

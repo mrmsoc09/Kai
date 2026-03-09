@@ -25,6 +25,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: #0b0c0d;
+  border: 2px solid #355e3b;
+  color: #8faf9b;
 }
 
 .message button {
@@ -43,9 +46,9 @@
 .settings-section {
   margin-bottom: 3rem;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: #111316;
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid #355e3b;
 }
 
 .settings-section h2 {
@@ -80,7 +83,8 @@
 .provider-card {
   padding: 1.5rem;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #355e3b;
+  background: #0b0c0d;
 }
 
 .provider-card h3 {
@@ -98,13 +102,15 @@
   padding: 0.75rem;
   margin-bottom: 0.75rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #355e3b;
+  background: #0b0c0d;
+  color: #8faf9b;
   font-size: 0.95rem;
 }
 
 .provider-card input:focus {
   outline: none;
-  border-color: var(--primary-color, #00ff41);
+  border-color: var(--primary-color, #355E3B);
 }
 
 .slack-config,
@@ -120,14 +126,16 @@
 .webhook-config input {
   padding: 0.75rem;
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid #355e3b;
+  background: #0b0c0d;
+  color: #8faf9b;
   font-size: 0.95rem;
 }
 
 .slack-config input:focus,
 .webhook-config input:focus {
   outline: none;
-  border-color: var(--primary-color, #00ff41);
+  border-color: var(--primary-color, #355E3B);
 }
 
 .webhook-events {
@@ -135,8 +143,9 @@
   flex-direction: column;
   gap: 0.5rem;
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.03);
+  background: #0b0c0d;
   border-radius: 8px;
+  border: 1px solid #355e3b;
 }
 
 .checkbox-label {
@@ -151,7 +160,7 @@
   width: 18px;
   height: 18px;
   cursor: pointer;
-  accent-color: var(--primary-color, #00ff41);
+  accent-color: var(--primary-color, #355E3B);
 }
 
 .rule-item {
@@ -168,7 +177,7 @@
   width: 100%;
   height: 8px;
   border-radius: 4px;
-  background: rgba(255, 255, 255, 0.1);
+  background: #1a1d21;
   outline: none;
   cursor: pointer;
 }
@@ -187,7 +196,7 @@
 
 .btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 255, 65, 0.3);
+  box-shadow: 0 4px 12px rgba(95, 143, 107, 0.3);
 }
 
 .btn-primary:disabled,

@@ -177,6 +177,61 @@ export function getWorkflowScope(wf_id: string) {
 export function deleteWorkflow(wf_id: string) {
   return api.delete(`/workflows/${wf_id}`)
 }
+export function submitCredentials(wf_id: string, payload: {
+  username?: string
+  password?: string
+  api_key?: string
+  oauth_token?: string
+  extra?: Record<string, string>
+  notes?: string
+  skip_reason?: string
+}) {
+  return api.post(`/workflows/${wf_id}/credentials`, {
+    username: payload.username ?? '',
+    password: payload.password ?? '',
+    api_key: payload.api_key ?? '',
+    oauth_token: payload.oauth_token ?? '',
+    extra: payload.extra ?? {},
+    notes: payload.notes ?? '',
+    skip_reason: payload.skip_reason ?? '',
+  })
+}
+export function submitOutcome(wf_id: string, payload: {
+  outcome: string
+  payout_usd?: number
+  note?: string
+}) {
+  return api.post(`/workflows/${wf_id}/outcome`, {
+    outcome: payload.outcome,
+    payout_usd: payload.payout_usd ?? 0,
+    note: payload.note ?? '',
+  })
+}
+
+// Platform / LLM Settings
+export function getLLMConfig() {
+  return api.get('/settings/llm')
+}
+export function saveLLMConfig(payload: {
+  provider: string
+  model: string
+  api_key?: string
+  base_url?: string
+  temperature?: number
+  notes?: string
+}) {
+  return api.post('/settings/llm', {
+    provider: payload.provider,
+    model: payload.model,
+    api_key: payload.api_key ?? '',
+    base_url: payload.base_url ?? '',
+    temperature: payload.temperature ?? 0.3,
+    notes: payload.notes ?? '',
+  })
+}
+export function getLLMProviders() {
+  return api.get('/settings/llm/providers')
+}
 
 // Providers
 export function getProviderCatalog(market?: string) {

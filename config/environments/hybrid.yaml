@@ -1,0 +1,6 @@
+name: hybrid
+max_cost_tier: 2
+privacy_tier: 2
+routing:
+  prefer_local: false
+  allow_remote: true

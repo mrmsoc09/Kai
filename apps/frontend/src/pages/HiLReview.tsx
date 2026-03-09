@@ -60,7 +60,7 @@ export default function HiLReview() {
   }
 
   return (
-    <div style={{ padding: 20, color: '#e2e8f0' }}>
+    <div style={{ padding: 20, color: '#8FAF9B' }}>
       <h2>HiL Review & Dispatch</h2>
       <div style={{ display: 'flex', gap: 24 }}>
         <div style={{ flex: 1 }}>

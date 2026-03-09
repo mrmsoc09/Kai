@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ToolResult",
+  "type": "object",
+  "required": ["id", "tool_id", "status"],
+  "properties": {
+    "id": {"type": "string"},
+    "tool_id": {"type": "string"},
+    "status": {"type": "string", "enum": ["ok", "error"]},
+    "output": {"type": "object"},
+    "artifacts": {"type": "array", "items": {"$ref": "runtime_artifact.schema.json"}},
+    "warnings": {"type": "array", "items": {"type": "string"}},
+    "errors": {"type": "array", "items": {"type": "string"}}
+  }
+}

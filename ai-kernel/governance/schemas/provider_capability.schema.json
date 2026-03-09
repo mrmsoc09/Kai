@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ProviderCapability",
+  "type": "object",
+  "required": ["provider", "model", "capabilities"],
+  "properties": {
+    "provider": {"type": "string"},
+    "model": {"type": "string"},
+    "capabilities": {
+      "type": "object",
+      "properties": {
+        "tool_calling": {"type": "boolean"},
+        "structured_output": {"type": "boolean"},
+        "multimodal": {"type": "boolean"},
+        "context_window": {"type": "integer"},
+        "privacy_tier": {"type": "integer"},
+        "cost_tier": {"type": "integer"},
+        "speed_tier": {"type": "integer"},
+        "local_or_remote": {"type": "string", "enum": ["local", "remote"]},
+        "preferred_workloads": {"type": "array", "items": {"type": "string"}},
+        "status": {"type": "string", "enum": ["active", "degraded", "disabled"]}
+      },
+      "additionalProperties": false
+    }
+  }
+}
