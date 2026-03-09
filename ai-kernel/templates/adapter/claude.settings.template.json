@@ -1,0 +1,10 @@
+{
+  "model": "claude-3-7-sonnet-20250219",
+  "temperature": 0.2,
+  "max_tokens": 2048,
+  "tool_choice": "auto",
+  "safety": {
+    "enforce_scope": true,
+    "allow_tools": true
+  }
+}

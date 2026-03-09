@@ -72,7 +72,7 @@ export default function FindingForm() {
 
   return (
     <div style={{ padding: '1.5rem', maxWidth: 700, fontFamily: "'JetBrains Mono', monospace" }}>
-      <h1 style={{ color: '#00FF41', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1.5rem' }}>
+      <h1 style={{ color: '#355E3B', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1.5rem' }}>
         New Finding
       </h1>
 
@@ -102,7 +102,7 @@ export default function FindingForm() {
         <Field label='TITLE' error={errors.title?.message}>
           <input {...register('title')} placeholder='Concise vulnerability title (min 10 chars)' style={inputStyle(!!errors.title)} />
           {touchedFields.title && !errors.title && (
-            <span style={{ color: '#00FF41', fontSize: '0.7rem', marginTop: 4 }}>✓ Looks good</span>
+            <span style={{ color: '#355E3B', fontSize: '0.7rem', marginTop: 4 }}>✓ Looks good</span>
           )}
         </Field>
 
@@ -148,8 +148,8 @@ export default function FindingForm() {
             style={{
               padding: '0.6rem 1.25rem',
               background: 'transparent',
-              border: '1px solid #1e2330',
-              color: '#8892a4',
+              border: '1px solid #355E3B',
+              color: '#8FAF9B',
               borderRadius: 4,
               fontFamily: 'inherit',
               fontSize: '0.85rem',
@@ -163,8 +163,8 @@ export default function FindingForm() {
             disabled={!isValid || submitting}
             style={{
               padding: '0.6rem 1.5rem',
-              background: !isValid || submitting ? '#1a2e1a' : '#00FF41',
-              color: !isValid || submitting ? '#4a5568' : '#000',
+              background: !isValid || submitting ? '#1a2e1a' : '#355E3B',
+              color: !isValid || submitting ? '#6F8E7A' : '#000',
               border: 'none',
               borderRadius: 4,
               fontFamily: 'inherit',
@@ -185,9 +185,9 @@ export default function FindingForm() {
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ color: '#8892a4', fontSize: '0.7rem', letterSpacing: '0.1em' }}>{label}</label>
+      <label style={{ color: '#8FAF9B', fontSize: '0.7rem', letterSpacing: '0.1em' }}>{label}</label>
       {children}
-      {error && <span style={{ color: '#f97316', fontSize: '0.72rem' }}>{error}</span>}
+      {error && <span style={{ color: '#D97706', fontSize: '0.72rem' }}>{error}</span>}
     </div>
   )
 }
@@ -196,10 +196,10 @@ const inputStyle = (hasError: boolean): React.CSSProperties => ({
   width: '100%',
   boxSizing: 'border-box',
   padding: '0.55rem 0.75rem',
-  background: '#070809',
-  border: `1px solid ${hasError ? '#f97316' : '#1e2330'}`,
+  background: '#0B0C0D',
+  border: `1px solid ${hasError ? '#D97706' : '#355E3B'}`,
   borderRadius: 4,
-  color: '#e2e8f0',
+  color: '#8FAF9B',
   fontFamily: 'inherit',
   fontSize: '0.85rem',
   outline: 'none',

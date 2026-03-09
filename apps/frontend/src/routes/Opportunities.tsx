@@ -39,20 +39,20 @@ function InviteModal({
       display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
     }}>
       <div style={{
-        background: '#0d1117', border: '1px solid #2d3748', borderRadius: 8,
+        background: '#111316', border: '1px solid #3A4F43', borderRadius: 8,
         padding: '2rem', maxWidth: 480, width: '90%',
       }}>
-        <div style={{ color: '#f59e0b', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 8 }}>
+        <div style={{ color: '#D97706', fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.1em', marginBottom: 8 }}>
           INVITE-ONLY PROGRAM
         </div>
-        <div style={{ color: '#e2e8f0', fontWeight: 700, marginBottom: 8 }}>{opp.name}</div>
-        <p style={{ color: '#8892a4', fontSize: '0.82rem', lineHeight: 1.55, margin: '0 0 16px' }}>
+        <div style={{ color: '#8FAF9B', fontWeight: 700, marginBottom: 8 }}>{opp.name}</div>
+        <p style={{ color: '#8FAF9B', fontSize: '0.82rem', lineHeight: 1.55, margin: '0 0 16px' }}>
           This is a private/invite-only program. You must have received a valid invitation
           from the program owner before any testing activity.
         </p>
         <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start', cursor: 'pointer', marginBottom: 20 }}>
           <input type='checkbox' checked={checked} onChange={e => setChecked(e.target.checked)} style={{ marginTop: 3 }} />
-          <span style={{ color: '#8892a4', fontSize: '0.78rem', lineHeight: 1.45 }}>
+          <span style={{ color: '#8FAF9B', fontSize: '0.78rem', lineHeight: 1.45 }}>
             I confirm I have received a valid invitation and that unauthorized testing
             is prohibited. I accept full legal responsibility for my actions.
           </span>
@@ -80,13 +80,13 @@ function gBtn(v: 'primary' | 'ghost' | 'disabled'): React.CSSProperties {
     fontSize: '0.75rem', fontWeight: 600, letterSpacing: '0.06em',
     cursor: v === 'disabled' ? 'not-allowed' : 'pointer', border: 'none',
   }
-  if (v === 'primary') return { ...base, background: '#00FF41', color: '#0d1117' }
-  if (v === 'ghost') return { ...base, background: 'transparent', border: '1px solid #2d3748', color: '#8892a4' }
-  return { ...base, background: '#1e2330', color: '#4a5568' }
+  if (v === 'primary') return { ...base, background: '#355E3B', color: '#111316' }
+  if (v === 'ghost') return { ...base, background: 'transparent', border: '1px solid #3A4F43', color: '#8FAF9B' }
+  return { ...base, background: '#355E3B', color: '#6F8E7A' }
 }
 
 const PLATFORM_COLORS: Record<string, string> = {
-  hackerone: '#25a244', bugcrowd: '#f97316', intigriti: '#7c3aed',
+  hackerone: '#25a244', bugcrowd: '#D97706', intigriti: '#7c3aed',
   vrp: '#2563eb', government_cvd: '#0891b2',
 }
 const PLATFORM_LABELS: Record<string, string> = {
@@ -99,27 +99,27 @@ const PLATFORM_LABELS: Record<string, string> = {
 function OppCard({ opp, onStart, loading }: {
   opp: Opportunity; onStart: (o: Opportunity) => void; loading: boolean
 }) {
-  const pc = PLATFORM_COLORS[opp.platform] || '#4a5568'
+  const pc = PLATFORM_COLORS[opp.platform] || '#6F8E7A'
   return (
     <div style={{
-      background: '#0d1117', border: '1px solid #1e2330', borderRadius: 8,
+      background: '#111316', border: '1px solid #355E3B', borderRadius: 8,
       padding: '1rem 1.1rem', display: 'flex', flexDirection: 'column', gap: 10,
       transition: 'border-color 0.15s',
     }}
-      onMouseEnter={e => (e.currentTarget.style.borderColor = '#2d3748')}
-      onMouseLeave={e => (e.currentTarget.style.borderColor = '#1e2330')}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = '#3A4F43')}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = '#355E3B')}
     >
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
         <div>
-          <div style={{ color: '#e2e8f0', fontWeight: 600, fontSize: '0.88rem', lineHeight: 1.3 }}>{opp.name}</div>
-          <div style={{ color: '#4a5568', fontSize: '0.7rem', marginTop: 2 }}>{opp.organization}</div>
+          <div style={{ color: '#8FAF9B', fontWeight: 600, fontSize: '0.88rem', lineHeight: 1.3 }}>{opp.name}</div>
+          <div style={{ color: '#6F8E7A', fontSize: '0.7rem', marginTop: 2 }}>{opp.organization}</div>
         </div>
         <div style={{ display: 'flex', gap: 5, flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
           {opp.is_public && (
             <span style={{
-              background: 'rgba(0,255,65,0.1)', color: '#00FF41',
-              border: '1px solid rgba(0,255,65,0.25)',
+              background: 'rgba(95,143,107,0.1)', color: '#355E3B',
+              border: '1px solid rgba(95,143,107,0.25)',
               fontSize: '0.6rem', fontWeight: 700, padding: '1px 6px', borderRadius: 3, letterSpacing: '0.08em',
             }}>PUBLIC</span>
           )}
@@ -135,13 +135,13 @@ function OppCard({ opp, onStart, loading }: {
       <div style={{ color: '#4a8fa8', fontSize: '0.72rem', lineHeight: 1.4 }}>
         {opp.scope_domains.slice(0, 2).join(', ')}
         {opp.scope_domains.length > 2 && (
-          <span style={{ color: '#2d3748' }}> +{opp.scope_domains.length - 2} more</span>
+          <span style={{ color: '#3A4F43' }}> +{opp.scope_domains.length - 2} more</span>
         )}
-        {opp.scope_domains.length === 0 && <span style={{ color: '#2d3748' }}>See program scope page</span>}
+        {opp.scope_domains.length === 0 && <span style={{ color: '#3A4F43' }}>See program scope page</span>}
       </div>
 
       {/* Payout */}
-      <div style={{ color: opp.vdp_only ? '#4a5568' : '#00FF41', fontSize: '0.8rem', fontWeight: 600 }}>
+      <div style={{ color: opp.vdp_only ? '#6F8E7A' : '#355E3B', fontSize: '0.8rem', fontWeight: 600 }}>
         {opp.payout_label}
       </div>
 
@@ -149,7 +149,7 @@ function OppCard({ opp, onStart, loading }: {
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
         {opp.tags.slice(0, 5).map(t => (
           <span key={t} style={{
-            background: '#1e2330', color: '#4a5568', fontSize: '0.62rem',
+            background: '#355E3B', color: '#6F8E7A', fontSize: '0.62rem',
             padding: '2px 6px', borderRadius: 3,
           }}>{t}</span>
         ))}
@@ -157,13 +157,13 @@ function OppCard({ opp, onStart, loading }: {
 
       {/* Priority bar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ flex: 1, height: 3, background: '#1e2330', borderRadius: 2 }}>
+        <div style={{ flex: 1, height: 3, background: '#355E3B', borderRadius: 2 }}>
           <div style={{
             width: `${Math.round(opp.priority_score * 100)}%`,
-            height: '100%', background: '#00FF41', borderRadius: 2,
+            height: '100%', background: '#355E3B', borderRadius: 2,
           }} />
         </div>
-        <span style={{ color: '#4a5568', fontSize: '0.62rem', minWidth: 24, textAlign: 'right' }}>
+        <span style={{ color: '#6F8E7A', fontSize: '0.62rem', minWidth: 24, textAlign: 'right' }}>
           {Math.round(opp.priority_score * 100)}
         </span>
       </div>
@@ -271,10 +271,10 @@ export default function Opportunities() {
     <div style={{ padding: '1.5rem 2rem', maxWidth: 1400 }}>
       {/* Page header */}
       <div style={{ marginBottom: '1.2rem' }}>
-        <h1 style={{ color: '#e2e8f0', margin: 0, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
+        <h1 style={{ color: '#8FAF9B', margin: 0, fontSize: '1.4rem', fontWeight: 700, letterSpacing: '-0.02em' }}>
           Opportunity Hub
         </h1>
-        <p style={{ color: '#4a5568', margin: '4px 0 0', fontSize: '0.78rem' }}>
+        <p style={{ color: '#6F8E7A', margin: '4px 0 0', fontSize: '0.78rem' }}>
           Public programs require zero additional authorization — the program listing IS the permission.
         </p>
       </div>
@@ -288,8 +288,8 @@ export default function Opportunities() {
           value={searchInput}
           onChange={e => setSearchInput(e.target.value)}
           style={{
-            background: '#0d1117', border: '1px solid #1e2330', borderRadius: 4,
-            color: '#e2e8f0', fontFamily: 'inherit', fontSize: '0.78rem',
+            background: '#111316', border: '1px solid #355E3B', borderRadius: 4,
+            color: '#8FAF9B', fontFamily: 'inherit', fontSize: '0.78rem',
             padding: '6px 10px', width: 240, outline: 'none',
           }}
         />
@@ -315,8 +315,8 @@ export default function Opportunities() {
           value={sort}
           onChange={e => setSort(e.target.value as SortKey)}
           style={{
-            background: '#0d1117', border: '1px solid #1e2330', borderRadius: 4,
-            color: '#8892a4', fontFamily: 'inherit', fontSize: '0.72rem', padding: '5px 8px',
+            background: '#111316', border: '1px solid #355E3B', borderRadius: 4,
+            color: '#8FAF9B', fontFamily: 'inherit', fontSize: '0.72rem', padding: '5px 8px',
           }}
         >
           <option value='score'>Sort: Score</option>
@@ -327,12 +327,12 @@ export default function Opportunities() {
         {/* Public-only toggle */}
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
           <input type='checkbox' checked={publicOnly} onChange={e => setPublicOnly(e.target.checked)} />
-          <span style={{ color: '#8892a4', fontSize: '0.75rem' }}>Public only</span>
+          <span style={{ color: '#8FAF9B', fontSize: '0.75rem' }}>Public only</span>
         </label>
 
         {/* Result count */}
         {!loading && (
-          <span style={{ color: '#4a5568', fontSize: '0.72rem', marginLeft: 'auto' }}>
+          <span style={{ color: '#6F8E7A', fontSize: '0.72rem', marginLeft: 'auto' }}>
             {total} program{total !== 1 ? 's' : ''}
             {totalPages > 1 && ` · page ${page + 1} / ${totalPages}`}
           </span>
@@ -353,13 +353,13 @@ export default function Opportunities() {
 
       {/* Grid */}
       {loading ? (
-        <div style={{ color: '#4a5568', padding: '4rem', textAlign: 'center', fontSize: '0.85rem' }}>Loading…</div>
+        <div style={{ color: '#6F8E7A', padding: '4rem', textAlign: 'center', fontSize: '0.85rem' }}>Loading…</div>
       ) : opps.length === 0 ? (
         <div style={{
-          border: '1px dashed #1e2330', borderRadius: 8,
+          border: '1px dashed #355E3B', borderRadius: 8,
           padding: '4rem', textAlign: 'center',
         }}>
-          <div style={{ color: '#4a5568', marginBottom: 8 }}>No programs match your filters.</div>
+          <div style={{ color: '#6F8E7A', marginBottom: 8 }}>No programs match your filters.</div>
           <button onClick={() => { setPlatform(''); setPublicOnly(false); setSearchInput('') }} style={gBtn('ghost')}>
             Clear filters
           </button>
@@ -386,7 +386,7 @@ export default function Opportunities() {
               >
                 ← Prev
               </button>
-              <span style={{ color: '#4a5568', fontSize: '0.78rem', padding: '6px 8px' }}>
+              <span style={{ color: '#6F8E7A', fontSize: '0.78rem', padding: '6px 8px' }}>
                 {page + 1} / {totalPages}
               </span>
               <button

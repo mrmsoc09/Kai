@@ -25,7 +25,7 @@ export const EPSSRiskMatrix: React.FC<{ height?: number }> = ({ height = 400 }) 
   };
 
   return (
-    <div style={{ backgroundColor: COLORS.neutral.white, borderRadius: UI.borderRadius.large, padding: UI.spacing.lg, border: `1px solid ${COLORS.neutral.gray_200}` }}>
+    <div style={{ backgroundColor: COLORS.surface, borderRadius: UI.borderRadius.large, padding: UI.spacing.lg, border: `1px solid ${COLORS.neutral.gray_200}` }}>
       <h3 style={{ margin: 0, marginBottom: UI.spacing.md }}>EPSS Exploit Probability Matrix</h3>
       <ResponsiveContainer width="100%" height={height}>
         <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 20 }}>
@@ -35,7 +35,7 @@ export const EPSSRiskMatrix: React.FC<{ height?: number }> = ({ height = 400 }) 
             if (!active || !payload?.[0]) return null;
             const d = payload[0].payload;
             return (
-              <div style={{ backgroundColor: COLORS.neutral.white, padding: UI.spacing.sm, border: `1px solid ${COLORS.neutral.gray_200}`, borderRadius: UI.borderRadius.small, boxShadow: UI.shadow.md }}>
+              <div style={{ backgroundColor: COLORS.elevated, padding: UI.spacing.sm, border: `1px solid ${COLORS.neutral.gray_200}`, borderRadius: UI.borderRadius.small, boxShadow: UI.shadow.md }}>
                 <div style={{ fontWeight: 600 }}>{d.label}</div>
                 <div style={{ fontSize: UI.fonts.size_sm }}>EPSS: {(d.x * 100).toFixed(1)}%</div>
                 <div style={{ fontSize: UI.fonts.size_sm }}>Percentile: {(d.y * 100).toFixed(1)}%</div>

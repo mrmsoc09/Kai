@@ -35,6 +35,7 @@ import httpx
 
 from .evidence_objects import create_evidence_object
 from .secret_manager import get_secret_manager, SecretManagerError
+from .kai_security_guardrails import set_tool_tier, ToolRiskTier
 from .tools import (
     BaseTool,
     ToolParameter,
@@ -759,16 +760,27 @@ class CensysHostTool(BaseTool):
 
 def register_phase1_osint_tools():
     """Register core Phase 1 recon tools into the global registry."""
-    register_tool(AmassTool())
-    register_tool(ShodanHostTool())
-    register_tool(TheHarvesterTool())
-    register_tool(ExifToolMetadata())
-    register_tool(TrufflehogSecrets())
-    register_tool(SubfinderTool())
-    register_tool(DnsxTool())
-    register_tool(NaabuTool())
-    register_tool(GauTool())
-    register_tool(HttpxTool())
-    register_tool(NucleiTool())
-    register_tool(FfufTool())
-    register_tool(CensysHostTool())
+    tools = [
+        AmassTool(),
+        ShodanHostTool(),
+        TheHarvesterTool(),
+        ExifToolMetadata(),
+        TrufflehogSecrets(),
+        SubfinderTool(),
+        DnsxTool(),
+        NaabuTool(),
+        GauTool(),
+        HttpxTool(),
+        NucleiTool(),
+        FfufTool(),
+        CensysHostTool(),
+    ]
+    for tool in tools:
+        register_tool(tool)
+        # Map risk tier for guardrails
+        if tool.autonomy_tier == ToolAutonomyTier.TIER_0_AUTO:
+            set_tool_tier(tool.id, ToolRiskTier.TIER_0_SAFE)
+        elif tool.autonomy_tier == ToolAutonomyTier.TIER_1_NOTIFY:
+            set_tool_tier(tool.id, ToolRiskTier.TIER_1_NOTIFY)
+        else:
+            set_tool_tier(tool.id, ToolRiskTier.TIER_2_INTRUSIVE)

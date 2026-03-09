@@ -19,6 +19,8 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional
+from . import run_store
+from .logs import log_decision
 
 ROOT = Path(__file__).resolve().parents[4]
 _WF_DIR = ROOT / "artifacts" / "workflows"
@@ -31,6 +33,7 @@ _WF_DIR.mkdir(parents=True, exist_ok=True)
 STATES: List[str] = [
     "SELECTED",
     "SCOPING",
+    "CREDENTIAL_SETUP",   # HiL checkpoint: operator collects test credentials before recon
     "RECON",
     "SCANNING",
     "TRIAGE",
@@ -40,14 +43,15 @@ STATES: List[str] = [
 ]
 
 TRANSITIONS: Dict[str, List[str]] = {
-    "SELECTED":   ["SCOPING", "CLOSED"],
-    "SCOPING":    ["RECON", "CLOSED"],
-    "RECON":      ["SCANNING", "TRIAGE", "CLOSED"],
-    "SCANNING":   ["TRIAGE", "CLOSED"],
-    "TRIAGE":     ["HIL_REVIEW", "SUBMITTED", "CLOSED"],
-    "HIL_REVIEW": ["SUBMITTED", "TRIAGE", "CLOSED"],
-    "SUBMITTED":  ["CLOSED"],
-    "CLOSED":     [],
+    "SELECTED":         ["SCOPING", "CLOSED"],
+    "SCOPING":          ["CREDENTIAL_SETUP", "RECON", "CLOSED"],  # RECON allowed to skip creds for surface-only
+    "CREDENTIAL_SETUP": ["RECON", "CLOSED"],
+    "RECON":            ["SCANNING", "TRIAGE", "CLOSED"],
+    "SCANNING":         ["TRIAGE", "CLOSED"],
+    "TRIAGE":           ["HIL_REVIEW", "SUBMITTED", "CLOSED"],
+    "HIL_REVIEW":       ["SUBMITTED", "TRIAGE", "CLOSED"],
+    "SUBMITTED":        ["CLOSED"],
+    "CLOSED":           [],
 }
 
 _PUBLIC_ACCESS_TYPES = {"public_bbp", "public_vrp", "government_cvd"}
@@ -79,6 +83,16 @@ class HuntWorkflow:
     run_ids: List[str]
     notes: str
     created_by: str
+    # Credential collection fields (C3)
+    credentials_collected: bool = False
+    vault_path: str = ""            # e.g. "secret/kai/workflows/{id}/credentials"
+    # Authorization certificate for scans (public programs can be auto-issued)
+    authorization_certificate_id: str = ""
+    # Submission outcome fields (F1)
+    outcome: str = ""               # "triaged" | "resolved" | "duplicate" | "na" | "informative"
+    outcome_payout_usd: int = 0
+    outcome_note: str = ""
+    outcome_at: str = ""
 
     def is_terminal(self) -> bool:
         return self.status in ("SUBMITTED", "CLOSED")
@@ -132,6 +146,13 @@ def _from_dict(d: dict) -> HuntWorkflow:
         run_ids=list(d.get("run_ids", [])),
         notes=d.get("notes", ""),
         created_by=d.get("created_by", ""),
+        credentials_collected=bool(d.get("credentials_collected", False)),
+        vault_path=d.get("vault_path", ""),
+        authorization_certificate_id=d.get("authorization_certificate_id", ""),
+        outcome=d.get("outcome", ""),
+        outcome_payout_usd=int(d.get("outcome_payout_usd", 0)),
+        outcome_note=d.get("outcome_note", ""),
+        outcome_at=d.get("outcome_at", ""),
     )
 
 
@@ -166,7 +187,27 @@ def create_workflow(
         run_ids=[],
         notes=notes,
         created_by=created_by,
+        authorization_certificate_id="",
     )
+    _save(wf)
+    return wf
+
+
+def save_workflow(wf: HuntWorkflow) -> HuntWorkflow:
+    """Persist workflow updates."""
+    _save(wf)
+    return wf
+
+
+def update_workflow(wf_id: str, **patch) -> HuntWorkflow:
+    """Update workflow fields and persist."""
+    wf = get_workflow(wf_id)
+    if wf is None:
+        raise KeyError(f"Workflow {wf_id!r} not found")
+    for key, value in patch.items():
+        if hasattr(wf, key):
+            setattr(wf, key, value)
+    wf.updated_at = _now_iso()
     _save(wf)
     return wf
 
@@ -232,6 +273,30 @@ def transition_workflow(
     if to_state == "SCOPING":
         wf.scope_accepted = True
 
+    # Create a run record and log when entering SCANNING
+    if to_state == "SCANNING":
+        if not wf.run_ids:
+            run_id = f"run-{uuid.uuid4()}"
+            wf.run_ids.append(run_id)
+            run_store.write_run_record(run_id, {
+                "run_id": run_id,
+                "workflow_id": wf.id,
+                "program_name": wf.program_name,
+                "platform": wf.platform,
+                "status": "started",
+                "stage": "SCANNING",
+                "created_at": now,
+            })
+            try:
+                log_decision(run_id, "scan_started", {
+                    "workflow_id": wf.id,
+                    "program": wf.program_name,
+                    "platform": wf.platform,
+                    "stage": "SCANNING",
+                })
+            except Exception:
+                pass
+
     _save(wf)
     return wf
 
@@ -265,6 +330,37 @@ def update_notes(wf_id: str, notes: str) -> Optional[HuntWorkflow]:
     if wf is None:
         return None
     wf.notes = notes
+    wf.updated_at = _now_iso()
+    _save(wf)
+    return wf
+
+
+def collect_credentials(wf_id: str, vault_path: str) -> Optional[HuntWorkflow]:
+    """Mark credentials as collected and store the Vault path."""
+    wf = get_workflow(wf_id)
+    if wf is None:
+        return None
+    wf.credentials_collected = True
+    wf.vault_path = vault_path
+    wf.updated_at = _now_iso()
+    _save(wf)
+    return wf
+
+
+def record_outcome(
+    wf_id: str,
+    outcome: str,
+    payout_usd: int = 0,
+    note: str = "",
+) -> Optional[HuntWorkflow]:
+    """Record the platform's response to a submitted report."""
+    wf = get_workflow(wf_id)
+    if wf is None:
+        return None
+    wf.outcome = outcome
+    wf.outcome_payout_usd = payout_usd
+    wf.outcome_note = note
+    wf.outcome_at = _now_iso()
     wf.updated_at = _now_iso()
     _save(wf)
     return wf

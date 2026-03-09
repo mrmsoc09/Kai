@@ -66,7 +66,7 @@ export default function Scopes() {
 
   return (
     <div style={{ padding: '1.5rem', fontFamily: "'JetBrains Mono', monospace" }}>
-      <h1 style={{ color: '#00FF41', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1.25rem' }}>
+      <h1 style={{ color: '#355E3B', fontSize: '1.3rem', fontWeight: 700, marginBottom: '1.25rem' }}>
         Scope Management
       </h1>
 
@@ -87,8 +87,8 @@ export default function Scopes() {
       {policy && (
         <>
           {/* Add entry */}
-          <div style={{ padding: '1rem', background: '#0a0c10', border: '1px solid #1e2330', borderRadius: 6, marginBottom: '1.25rem' }}>
-            <div style={{ color: '#4a5568', fontSize: '0.7rem', letterSpacing: '0.1em', marginBottom: 10 }}>ADD ENTRY</div>
+          <div style={{ padding: '1rem', background: '#0B0C0D', border: '1px solid #355E3B', borderRadius: 6, marginBottom: '1.25rem' }}>
+            <div style={{ color: '#6F8E7A', fontSize: '0.7rem', letterSpacing: '0.1em', marginBottom: 10 }}>ADD ENTRY</div>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <select value={kind} onChange={(e) => setKind(e.target.value as any)} style={{ ...input, minWidth: 130 }}>
                 <option value='in_scope'>In Scope</option>
@@ -103,7 +103,7 @@ export default function Scopes() {
           {/* In scope */}
           <ScopeList
             title='In Scope'
-            color='#00FF41'
+            color='#355E3B'
             entries={policy.in_scope}
             onRemove={(i) => removeEntry('in_scope', i)}
           />
@@ -111,7 +111,7 @@ export default function Scopes() {
           {/* Out of scope */}
           <ScopeList
             title='Out of Scope'
-            color='#f97316'
+            color='#D97706'
             entries={policy.out_of_scope}
             onRemove={(i) => removeEntry('out_of_scope', i)}
           />
@@ -136,14 +136,14 @@ function ScopeList({ title, color, entries, onRemove }: {
         {title} ({entries.length})
       </div>
       {entries.length === 0 ? (
-        <div style={{ color: '#1e2330', fontSize: '0.75rem', padding: '0.5rem' }}>None defined</div>
+        <div style={{ color: '#355E3B', fontSize: '0.75rem', padding: '0.5rem' }}>None defined</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {entries.map((e, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '0.45rem 0.75rem', background: '#070809', border: `1px solid ${color}22`, borderRadius: 4 }}>
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '0.45rem 0.75rem', background: '#0B0C0D', border: `1px solid ${color}22`, borderRadius: 4 }}>
               <span style={{ color, fontFamily: 'monospace', fontSize: '0.82rem', flex: 1 }}>{e.pattern}</span>
-              {e.note && <span style={{ color: '#4a5568', fontSize: '0.72rem' }}>{e.note}</span>}
-              <button onClick={() => onRemove(i)} style={{ background: 'none', border: 'none', color: '#4a5568', cursor: 'pointer', fontSize: '1rem', padding: 0, lineHeight: 1 }}>×</button>
+              {e.note && <span style={{ color: '#6F8E7A', fontSize: '0.72rem' }}>{e.note}</span>}
+              <button onClick={() => onRemove(i)} style={{ background: 'none', border: 'none', color: '#6F8E7A', cursor: 'pointer', fontSize: '1rem', padding: 0, lineHeight: 1 }}>×</button>
             </div>
           ))}
         </div>
@@ -155,9 +155,9 @@ function ScopeList({ title, color, entries, onRemove }: {
 const input: React.CSSProperties = {
   padding: '0.5rem 0.75rem',
   background: '#0f1117',
-  border: '1px solid #1e2330',
+  border: '1px solid #355E3B',
   borderRadius: 4,
-  color: '#e2e8f0',
+  color: '#8FAF9B',
   fontFamily: 'inherit',
   fontSize: '0.85rem',
   minWidth: 200,
@@ -165,7 +165,7 @@ const input: React.CSSProperties = {
 
 const btnGreen: React.CSSProperties = {
   padding: '0.5rem 1rem',
-  background: '#00FF41',
+  background: '#355E3B',
   color: '#000',
   border: 'none',
   borderRadius: 4,

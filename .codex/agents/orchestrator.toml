@@ -1,0 +1,10 @@
+name = "orchestrator"
+role = "Primary backend planning and orchestration agent"
+focus = [
+  "backend architecture",
+  "scan execution flow",
+  "branch-aware orchestration",
+  "approval gates",
+  "intention-aware design"
+]
+must_read = ["AGENTS.md"]

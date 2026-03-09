@@ -1,0 +1,5 @@
+name: local
+max_cost_tier: 1
+privacy_tier: 3
+routing:
+  prefer_local: true

@@ -1,4 +1,4 @@
-.laser-overlay{ background: repeating-linear-gradient(45deg, rgba(0,255,255,0.05) 0, rgba(0,255,255,0.05) 2px, transparent 2px, transparent 6px), radial-gradient(circle at 30% 10%, rgba(255,0,255,0.08), transparent 40%), radial-gradient(circle at 70% 80%, rgba(0,255,200,0.08), transparent 40%); filter: drop-shadow(0 0 10px rgba(0,255,255,0.2)); }
-.scanline{ background: repeating-linear-gradient( to bottom, rgba(255,255,255,0.04) 0px, rgba(255,255,255,0.04) 1px, transparent 1px, transparent 3px ); mix-blend-mode: screen; }
-.nav-item{ display:block; padding:.5rem .75rem; border-radius:.25rem; color:#cbd5e1; }
-.nav-item:hover{ background:#0b1220; color:#67e8f9; }
+.laser-overlay{ background: repeating-linear-gradient(45deg, rgba(90,46,138,0.06) 0, rgba(90,46,138,0.06) 2px, transparent 2px, transparent 6px), radial-gradient(circle at 30% 10%, rgba(217,119,6,0.08), transparent 40%), radial-gradient(circle at 70% 80%, rgba(53,94,59,0.08), transparent 40%); filter: drop-shadow(0 0 10px rgba(90,46,138,0.2)); }
+.scanline{ background: repeating-linear-gradient( to bottom, rgba(53,94,59,0.06) 0px, rgba(53,94,59,0.06) 1px, transparent 1px, transparent 3px ); mix-blend-mode: screen; }
+.nav-item{ display:block; padding:.5rem .75rem; border-radius:.25rem; color:#8FAF9B; }
+.nav-item:hover{ background:#111316; color:#5a2e8a; }

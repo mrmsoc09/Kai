@@ -1,0 +1,19 @@
+schema: 1
+name: memory_policy
+description: Separation of static guidance and runtime operational memory.
+rules:
+  - id: mem-001
+    description: Static platform guidance (GEMINI.md, CLAUDE.md, AGENTS.md) must not contain runtime artifacts or secrets.
+    severity: high
+  - id: mem-002
+    description: Runtime memory resides under runtime/memory/* and is Kai-owned; vendors may read but not persist outside this tree.
+    severity: high
+  - id: mem-003
+    description: Session memory must be timestamped and tied to request_id/session_id for auditability.
+    severity: medium
+  - id: mem-004
+    description: Persistent indexes must include hash-based integrity metadata.
+    severity: medium
+  - id: mem-005
+    description: Provide data minimization by default; expire volatile session memory unless flagged for learning with approval.
+    severity: medium

@@ -26,7 +26,7 @@ def _title_from_report_md(p: Path) -> str | None:
     return None
 
 
-def _collect_existing_titles() -> List[Dict[str, Any]]:
+def collect_existing_titles() -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     if not REPORTS.exists():
         return out
@@ -50,7 +50,7 @@ def _collect_existing_titles() -> List[Dict[str, Any]]:
 
 def check_title_duplicate(title: str, threshold: float = 0.85) -> Dict[str, Any]:
     """Legacy title-based duplicate check using difflib only."""
-    existing = _collect_existing_titles()
+    existing = collect_existing_titles()
     matches: List[Dict[str, Any]] = []
     for e in existing:
         sim = difflib.SequenceMatcher(a=title.lower(), b=e['title'].lower()).ratio()
@@ -84,7 +84,7 @@ def vector_duplicate(title: str, summary: str | None = None, threshold: float = 
             pass
 
     # Add difflib over local titles for robustness
-    existing = _collect_existing_titles()
+    existing = collect_existing_titles()
     for e in existing:
         sim = difflib.SequenceMatcher(a=(title or '').lower(), b=e['title'].lower()).ratio()
         if sim >= threshold:

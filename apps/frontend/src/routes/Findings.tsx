@@ -16,17 +16,17 @@ type Finding = {
 
 const SEVERITY_COLORS: Record<string, string> = {
   critical: '#ef4444',
-  high: '#f97316',
-  medium: '#f59e0b',
+  high: '#D97706',
+  medium: '#D97706',
   low: '#22c55e',
   info: '#60a5fa',
 }
 
 const STATUS_COLORS: Record<string, string> = {
   new: '#60a5fa',
-  in_review: '#f59e0b',
+  in_review: '#D97706',
   hil_approved: '#a78bfa',
-  submitted: '#00FF41',
+  submitted: '#355E3B',
   resolved: '#22c55e',
   rejected: '#ef4444',
   duplicate: '#6b7280',
@@ -87,8 +87,8 @@ export default function Findings() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
         <div>
-          <h1 style={{ color: '#00FF41', fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Findings</h1>
-          <div style={{ color: '#4a5568', fontSize: '0.75rem', marginTop: 4 }}>
+          <h1 style={{ color: '#355E3B', fontSize: '1.4rem', fontWeight: 700, margin: 0 }}>Findings</h1>
+          <div style={{ color: '#6F8E7A', fontSize: '0.75rem', marginTop: 4 }}>
             Vulnerability findings across all programs
           </div>
         </div>
@@ -96,7 +96,7 @@ export default function Findings() {
           to='/findings/new'
           style={{
             padding: '0.5rem 1rem',
-            background: '#00FF41',
+            background: '#355E3B',
             color: '#000',
             fontWeight: 700,
             fontSize: '0.8rem',
@@ -155,24 +155,24 @@ export default function Findings() {
 
       {/* Table */}
       {loading ? (
-        <div style={{ color: '#4a5568', padding: '3rem', textAlign: 'center' }}>Loading findings…</div>
+        <div style={{ color: '#6F8E7A', padding: '3rem', textAlign: 'center' }}>Loading findings…</div>
       ) : sorted.length === 0 ? (
-        <div style={{ color: '#4a5568', padding: '3rem', textAlign: 'center', border: '1px dashed #1e2330', borderRadius: 6 }}>
+        <div style={{ color: '#6F8E7A', padding: '3rem', textAlign: 'center', border: '1px dashed #355E3B', borderRadius: 6 }}>
           <div style={{ fontSize: '2rem', marginBottom: 8 }}>🔍</div>
           No findings match your filters.
           <br />
-          <Link to='/findings/new' style={{ color: '#00FF41', marginTop: 12, display: 'inline-block' }}>
+          <Link to='/findings/new' style={{ color: '#355E3B', marginTop: 12, display: 'inline-block' }}>
             Create your first finding →
           </Link>
         </div>
       ) : (
         <>
-          <div style={{ border: '1px solid #1e2330', borderRadius: 6, overflow: 'hidden' }}>
+          <div style={{ border: '1px solid #355E3B', borderRadius: 6, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
               <thead>
-                <tr style={{ background: '#0f1117', borderBottom: '1px solid #1e2330' }}>
+                <tr style={{ background: '#0f1117', borderBottom: '1px solid #355E3B' }}>
                   {['Severity', 'Title', 'Program', 'Asset', 'Status', 'Created'].map((h) => (
-                    <th key={h} style={{ padding: '0.6rem 0.75rem', textAlign: 'left', color: '#4a5568', fontWeight: 600, letterSpacing: '0.05em' }}>{h}</th>
+                    <th key={h} style={{ padding: '0.6rem 0.75rem', textAlign: 'left', color: '#6F8E7A', fontWeight: 600, letterSpacing: '0.05em' }}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -180,7 +180,7 @@ export default function Findings() {
                 {sorted.map((f, i) => (
                   <tr
                     key={f.id}
-                    style={{ borderBottom: '1px solid #1a2030', background: i % 2 === 0 ? '#070809' : '#0a0c10' }}
+                    style={{ borderBottom: '1px solid #1a2030', background: i % 2 === 0 ? '#0B0C0D' : '#0B0C0D' }}
                   >
                     <td style={{ padding: '0.6rem 0.75rem' }}>
                       <span style={{
@@ -199,13 +199,13 @@ export default function Findings() {
                     <td style={{ padding: '0.6rem 0.75rem', maxWidth: 300 }}>
                       <Link
                         to={`/findings/${f.id}`}
-                        style={{ color: '#e2e8f0', textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                        style={{ color: '#8FAF9B', textDecoration: 'none', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                       >
                         {f.title}
                       </Link>
                     </td>
-                    <td style={{ padding: '0.6rem 0.75rem', color: '#8892a4', fontSize: '0.75rem' }}>{f.program}</td>
-                    <td style={{ padding: '0.6rem 0.75rem', color: '#8892a4', fontSize: '0.75rem', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.asset}</td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: '#8FAF9B', fontSize: '0.75rem' }}>{f.program}</td>
+                    <td style={{ padding: '0.6rem 0.75rem', color: '#8FAF9B', fontSize: '0.75rem', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.asset}</td>
                     <td style={{ padding: '0.6rem 0.75rem' }}>
                       <span style={{
                         display: 'inline-block',
@@ -219,7 +219,7 @@ export default function Findings() {
                         {f.status?.replace(/_/g, ' ').toUpperCase()}
                       </span>
                     </td>
-                    <td style={{ padding: '0.6rem 0.75rem', color: '#4a5568', fontSize: '0.72rem' }}>
+                    <td style={{ padding: '0.6rem 0.75rem', color: '#6F8E7A', fontSize: '0.72rem' }}>
                       {f.created_at ? new Date(f.created_at).toLocaleDateString() : '—'}
                     </td>
                   </tr>
@@ -237,7 +237,7 @@ export default function Findings() {
             >
               ← Prev
             </button>
-            <span style={{ color: '#4a5568', fontSize: '0.8rem', alignSelf: 'center' }}>Page {page}</span>
+            <span style={{ color: '#6F8E7A', fontSize: '0.8rem', alignSelf: 'center' }}>Page {page}</span>
             <button
               disabled={!hasMore}
               onClick={() => handlePageChange(page + 1)}
@@ -255,19 +255,19 @@ export default function Findings() {
 const selectStyle: React.CSSProperties = {
   padding: '0.4rem 0.6rem',
   background: '#0f1117',
-  border: '1px solid #1e2330',
+  border: '1px solid #355E3B',
   borderRadius: 4,
-  color: '#e2e8f0',
+  color: '#8FAF9B',
   fontFamily: 'inherit',
   fontSize: '0.8rem',
 }
 
 const pagerBtn = (disabled: boolean): React.CSSProperties => ({
   padding: '0.35rem 0.75rem',
-  background: disabled ? '#0a0c10' : '#0f1117',
-  border: '1px solid #1e2330',
+  background: disabled ? '#0B0C0D' : '#0f1117',
+  border: '1px solid #355E3B',
   borderRadius: 4,
-  color: disabled ? '#1e2330' : '#8892a4',
+  color: disabled ? '#355E3B' : '#8FAF9B',
   fontFamily: 'inherit',
   fontSize: '0.8rem',
   cursor: disabled ? 'not-allowed' : 'pointer',

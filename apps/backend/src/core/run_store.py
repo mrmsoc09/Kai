@@ -17,6 +17,8 @@ def write_run_record(run_id: str, run: Dict[str, Any]) -> str:
     d = run_dir(run_id)
     p = d / "run.json"
     run.setdefault("timestamp", time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()))
+    run.setdefault("run_id", run_id)
+    run.setdefault("id", run_id)
     run["metrics"] = compute_run_metrics(run)
     p.write_text(json.dumps(run, ensure_ascii=False, indent=2))
     return str(p)

@@ -121,7 +121,7 @@ export default function ApprovalsDashboard() {
   };
 
   const getSeverityColor = (type: string) => {
-    if (type === 'report_submission') return '#F59E0B';
+    if (type === 'report_submission') return '#D97706';
     if (type === 'email_reply') return '#3B82F6';
     return '#6B7280';
   };
@@ -135,7 +135,7 @@ export default function ApprovalsDashboard() {
     }}>
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
-        <h1 style={{ color: '#00FF41', marginBottom: '8px', fontSize: '28px' }}>
+        <h1 style={{ color: '#355E3B', marginBottom: '8px', fontSize: '28px' }}>
           📋 HiL Approvals Dashboard
         </h1>
         <p style={{ color: '#9CA3AF', fontSize: '14px' }}>
@@ -151,7 +151,7 @@ export default function ApprovalsDashboard() {
           gap: '16px',
           marginBottom: '24px'
         }}>
-          <StatCard label="Pending" value={stats.pending} color="#F59E0B" />
+          <StatCard label="Pending" value={stats.pending} color="#D97706" />
           <StatCard label="Approved" value={stats.approved} color="#10B981" />
           <StatCard label="Rejected" value={stats.rejected} color="#EF4444" />
           <StatCard label="Total Requests" value={stats.total_requests} color="#6B7280" />
@@ -170,15 +170,15 @@ export default function ApprovalsDashboard() {
           overflowY: 'auto'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h2 style={{ fontSize: '18px', color: '#00FF41' }}>
+            <h2 style={{ fontSize: '18px', color: '#355E3B' }}>
               Pending Approvals ({approvals.length})
             </h2>
             <button
               onClick={() => loadData()}
               style={{
                 background: '#2A2A2A',
-                border: '1px solid #00FF41',
-                color: '#00FF41',
+                border: '1px solid #355E3B',
+                color: '#355E3B',
                 padding: '4px 12px',
                 borderRadius: '4px',
                 cursor: 'pointer',
@@ -205,7 +205,7 @@ export default function ApprovalsDashboard() {
                   onClick={() => selectApproval(approval)}
                   style={{
                     background: selected?.approval_id === approval.approval_id ? '#2A2A2A' : '#111111',
-                    border: selected?.approval_id === approval.approval_id ? '1px solid #00FF41' : '1px solid #1A1A1A',
+                    border: selected?.approval_id === approval.approval_id ? '1px solid #355E3B' : '1px solid #1A1A1A',
                     borderRadius: '8px',
                     padding: '12px',
                     cursor: 'pointer',
@@ -215,7 +215,7 @@ export default function ApprovalsDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                     <span style={{
                       background: getSeverityColor(approval.approval_type),
-                      color: '#FFFFFF',
+                      color: '#c7d2e0',
                       padding: '2px 8px',
                       borderRadius: '4px',
                       fontSize: '11px',
@@ -234,7 +234,7 @@ export default function ApprovalsDashboard() {
                     {approval.program_name || 'Unknown Program'}
                   </div>
                   {approval.content.findings_count !== undefined && (
-                    <div style={{ fontSize: '11px', color: '#F59E0B', marginTop: '4px' }}>
+                    <div style={{ fontSize: '11px', color: '#D97706', marginTop: '4px' }}>
                       {approval.content.findings_count} findings
                       {approval.content.critical_count ? ` (${approval.content.critical_count} critical)` : ''}
                     </div>
@@ -262,7 +262,7 @@ export default function ApprovalsDashboard() {
             <div>
               {/* Header */}
               <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '20px', color: '#00FF41', marginBottom: '8px' }}>
+                <h2 style={{ fontSize: '20px', color: '#355E3B', marginBottom: '8px' }}>
                   {selected.title}
                 </h2>
                 <p style={{ color: '#9CA3AF', fontSize: '14px' }}>
@@ -274,15 +274,15 @@ export default function ApprovalsDashboard() {
               {selected.content.email_draft && (
                 <div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <h3 style={{ fontSize: '16px', color: '#00FF41' }}>
+                    <h3 style={{ fontSize: '16px', color: '#355E3B' }}>
                       📧 Email Draft
                     </h3>
                     <button
                       onClick={copyEmailToClipboard}
                       style={{
                         background: '#2A2A2A',
-                        border: '1px solid #00FF41',
-                        color: '#00FF41',
+                        border: '1px solid #355E3B',
+                        color: '#355E3B',
                         padding: '4px 12px',
                         borderRadius: '4px',
                         cursor: 'pointer',
@@ -343,7 +343,7 @@ export default function ApprovalsDashboard() {
                   style={{
                     flex: 1,
                     background: '#10B981',
-                    color: '#FFFFFF',
+                    color: '#c7d2e0',
                     border: 'none',
                     padding: '12px 24px',
                     borderRadius: '8px',
@@ -360,7 +360,7 @@ export default function ApprovalsDashboard() {
                   style={{
                     flex: 1,
                     background: '#EF4444',
-                    color: '#FFFFFF',
+                    color: '#c7d2e0',
                     border: 'none',
                     padding: '12px 24px',
                     borderRadius: '8px',
@@ -377,7 +377,7 @@ export default function ApprovalsDashboard() {
                 marginTop: '16px',
                 padding: '12px',
                 background: '#FEF3C7',
-                border: '1px solid #F59E0B',
+                border: '1px solid #D97706',
                 borderRadius: '8px',
                 color: '#92400E',
                 fontSize: '13px'
@@ -442,7 +442,7 @@ export default function ApprovalsDashboard() {
                 style={{
                   flex: 1,
                   background: '#EF4444',
-                  color: '#FFFFFF',
+                  color: '#c7d2e0',
                   border: 'none',
                   padding: '10px 20px',
                   borderRadius: '8px',

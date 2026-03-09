@@ -1,0 +1,10 @@
+name = "vuln_agent"
+role = "Validation and finding-correlation specialist"
+focus = [
+  "template-based validation",
+  "finding normalization",
+  "evidence generation",
+  "risk posture analysis",
+  "approval-required transitions"
+]
+must_read = ["AGENTS.md"]

@@ -1,0 +1,19 @@
+schema: 1
+name: tool_policy
+description: Tool execution safety and deterministic behavior.
+rules:
+  - id: tool-001
+    description: Tools must be invoked only via registered adapters; direct CLI calls are forbidden.
+    severity: high
+  - id: tool-002
+    description: Each tool must emit an Evidence Object with artifact hashes and metadata.
+    severity: high
+  - id: tool-003
+    description: Tools must write artifacts under artifacts/<run_id>/<tool_id>/.
+    severity: high
+  - id: tool-004
+    description: Fail closed if required binaries/configs are missing; do not attempt network fetch at runtime.
+    severity: medium
+  - id: tool-005
+    description: Enforce rate limits and OPSEC profiles defined per toolpack.
+    severity: medium

@@ -1,0 +1,25 @@
+schema: 1
+name: scope_rules
+description: |
+  Defensive-only scope enforcement. All tool execution must be pre-authorized and target-limited.
+rules:
+  - id: scope-001
+    description: All actions must call scope_validator() with target, program_id, method.
+    severity: high
+    applies_to: [tools, orchestrators, adapters]
+  - id: scope-002
+    description: Authorization certificate must be verified via authorization_certificate_check() before tool dispatch.
+    severity: high
+    applies_to: [tools, orchestrators]
+  - id: scope-003
+    description: Block execution if target not in allowed scope or explicitly excluded.
+    severity: high
+    applies_to: [tools]
+  - id: scope-004
+    description: Deny exploit automation, credential attacks, and DoS behaviors.
+    severity: critical
+    applies_to: [tools, agents]
+  - id: scope-005
+    description: Log all scope decisions with request_id and reason for auditability.
+    severity: medium
+    applies_to: [middleware, tools]

@@ -326,7 +326,12 @@ class OpenAIProvider(BaseLLMProvider):
         api_key = _resolve_api_key(self.config.api_key, "OPENAI_API_KEY")
 
         openai.api_key = api_key
-        self.model = os.getenv("K1_OPENAI_MODEL", LLMModel.GPT_4O.value)
+        # Default to requested model, map gpt-4.1 to gpt-4-turbo for API compatibility
+        env_model = os.getenv("K1_OPENAI_MODEL", LLMModel.GPT_4O.value)
+        if env_model == "gpt-4.1":
+            self.model = "gpt-4-turbo" # Closest production equivalent
+        else:
+            self.model = env_model
 
     async def complete(
         self,

@@ -65,7 +65,7 @@ export const ApprovalDialog: React.FC<ApprovalDialogProps> = ({
         {/* Dialog */}
         <div
           style={{
-            backgroundColor: COLORS.neutral.white,
+            backgroundColor: COLORS.surface,
             borderRadius: UI.borderRadius.large,
             boxShadow: UI.shadow.xl,
             maxWidth: '600px',
@@ -145,11 +145,11 @@ export const ApprovalDialog: React.FC<ApprovalDialogProps> = ({
                   padding: `${UI.spacing.xs} ${UI.spacing.md}`,
                   backgroundColor:
                     approval.tier >= 3
-                      ? COLORS.severity.critical
-                      : approval.tier >= 2
-                      ? COLORS.status.warning
-                      : COLORS.status.info,
-                  color: COLORS.neutral.white,
+                  ? COLORS.severity.critical
+                  : approval.tier >= 2
+                  ? COLORS.status.warning
+                  : COLORS.status.info,
+                  color: COLORS.textInverse,
                   borderRadius: UI.borderRadius.medium,
                   fontSize: UI.fonts.size_sm,
                   fontWeight: 600,
@@ -279,8 +279,8 @@ export const ApprovalDialog: React.FC<ApprovalDialogProps> = ({
                 padding: `${UI.spacing.sm} ${UI.spacing.lg}`,
                 borderRadius: UI.borderRadius.medium,
                 border: `1px solid ${COLORS.neutral.gray_300}`,
-                backgroundColor: COLORS.neutral.white,
-                color: COLORS.neutral.gray_700,
+                backgroundColor: COLORS.neutral.gray_100,
+                color: COLORS.textSecondary,
                 fontSize: UI.fonts.size_base,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -290,7 +290,7 @@ export const ApprovalDialog: React.FC<ApprovalDialogProps> = ({
                 e.currentTarget.style.backgroundColor = COLORS.neutral.gray_100;
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = COLORS.neutral.white;
+                e.currentTarget.style.backgroundColor = COLORS.neutral.gray_100;
               }}
             >
               Cancel
@@ -303,7 +303,7 @@ export const ApprovalDialog: React.FC<ApprovalDialogProps> = ({
                 borderRadius: UI.borderRadius.medium,
                 border: 'none',
                 backgroundColor: COLORS.status.error,
-                color: COLORS.neutral.white,
+                color: COLORS.textInverse,
                 fontSize: UI.fonts.size_base,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -326,7 +326,7 @@ export const ApprovalDialog: React.FC<ApprovalDialogProps> = ({
                 borderRadius: UI.borderRadius.medium,
                 border: 'none',
                 backgroundColor: COLORS.status.success,
-                color: COLORS.neutral.white,
+                color: COLORS.textInverse,
                 fontSize: UI.fonts.size_base,
                 fontWeight: 600,
                 cursor: 'pointer',

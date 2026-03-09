@@ -1,7 +1,7 @@
 /**
  * Kaison K1 Unified Platform Branding
  * Centralized theme and branding constants for entire frontend
- * Updated with dark IDE aesthetic and Matrix neon green
+ * Updated with hunter green + black lettering + orange/purple highlights
  */
 
 import { K1_COLORS } from './colors';
@@ -14,11 +14,23 @@ export const BRANDING = {
 } as const;
 
 export const COLORS = {
-  // Primary brand colors (updated to Matrix neon green)
-  primary: K1_COLORS.neon.green,
+  // Primary brand colors — structured as objects so .main/.light/.dark work
+  primary: {
+    main: K1_COLORS.neon.green,
+    light: K1_COLORS.neon.greenDim,
+    lighter: K1_COLORS.neon.greenGlow,
+    dark: K1_COLORS.neon.greenDark,
+  },
+  // Keep flat aliases for components that use COLORS.primaryLight etc directly
   primaryLight: K1_COLORS.neon.greenDim,
   primaryDark: K1_COLORS.neon.greenDark,
   primaryGlow: K1_COLORS.neon.greenGlow,
+  // Secondary — purple highlight
+  secondary: {
+    main: "#5a2e8a",
+    light: "#6d3aa6",
+    dark: "#48226f",
+  },
 
   // Background colors (dark IDE aesthetic)
   background: K1_COLORS.background.default,
@@ -29,13 +41,15 @@ export const COLORS = {
   text: K1_COLORS.text.primary,
   textSecondary: K1_COLORS.text.secondary,
   textDisabled: K1_COLORS.text.disabled,
+  textInverse: K1_COLORS.text.inverse,
 
-  // Status colors
+  // Status colors — spread flat AND keep nested .status object for COLORS.status.error etc
   ...K1_COLORS.status,
+  status: K1_COLORS.status,
 
   // Border colors
   border: K1_COLORS.charcoal.border,
-  borderHover: K1_COLORS.neon.green,
+  borderHover: "#5a2e8a",
 
   // Legacy compatibility (for components not yet updated)
   neutral: {
@@ -58,10 +72,10 @@ export const COLORS = {
 
   // DeepAgent/Reasoning colors (keep existing for compatibility)
   reasoning: {
-    thinking: "#8b5cf6",      // Purple - deep thinking
-    analyzing: "#06b6d4",     // Cyan - analysis step
-    verifying: "#10b981",     // Green - verification
-    concluding: "#f59e0b",    // Amber - conclusion
+    thinking: "#5a2e8a",      // Purple - deep thinking
+    analyzing: "#6d3aa6",     // Purple - analysis step
+    verifying: "#355e3b",     // Hunter green - verification
+    concluding: "#d97706",    // Orange - conclusion
   },
 } as const;
 
@@ -88,7 +102,7 @@ export const UI = {
 
   // Typography (updated to JetBrains Mono)
   fonts: {
-    family_sans: '"Segoe UI", Roboto, "Helvetica Neue", sans-serif',
+    family_sans: '"Space Grotesk", "JetBrains Mono", "Segoe UI", sans-serif',
     family_mono: "'JetBrains Mono', 'Fira Code', 'Consolas', 'Courier New', monospace",
     size_xs: "0.75rem",    // 12px
     size_sm: "0.875rem",   // 14px
@@ -123,7 +137,7 @@ export const COMPONENT_STYLES = {
   button: {
     primary: {
       backgroundColor: COLORS.primary.main,
-      color: COLORS.neutral.white,
+      color: COLORS.textInverse,
       borderRadius: UI.borderRadius.medium,
       padding: `${UI.spacing.sm} ${UI.spacing.md}`,
       cursor: "pointer",
@@ -141,7 +155,7 @@ export const COMPONENT_STYLES = {
     },
     secondary: {
       backgroundColor: COLORS.secondary.main,
-      color: COLORS.neutral.white,
+      color: COLORS.textInverse,
       borderRadius: UI.borderRadius.medium,
       padding: `${UI.spacing.sm} ${UI.spacing.md}`,
       cursor: "pointer",
@@ -154,7 +168,7 @@ export const COMPONENT_STYLES = {
       },
     },
     outline: {
-      backgroundColor: COLORS.neutral.white,
+      backgroundColor: COLORS.surface,
       color: COLORS.primary.main,
       borderRadius: UI.borderRadius.medium,
       padding: `${UI.spacing.sm} ${UI.spacing.md}`,
@@ -169,7 +183,7 @@ export const COMPONENT_STYLES = {
     },
     danger: {
       backgroundColor: COLORS.status.error,
-      color: COLORS.neutral.white,
+      color: COLORS.textInverse,
       borderRadius: UI.borderRadius.medium,
       padding: `${UI.spacing.sm} ${UI.spacing.md}`,
       cursor: "pointer",
@@ -183,7 +197,7 @@ export const COMPONENT_STYLES = {
   },
 
   card: {
-    backgroundColor: COLORS.neutral.white,
+    backgroundColor: COLORS.surface,
     borderRadius: UI.borderRadius.large,
     border: `1px solid ${COLORS.neutral.gray_200}`,
     boxShadow: UI.shadow.md,

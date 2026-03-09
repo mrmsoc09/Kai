@@ -92,7 +92,7 @@ export default function EvidencePanel({ findingId, existingEvidence = [], onAdde
 
   return (
     <div style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-      <h3 style={{ color: '#00FF41', fontSize: '0.9rem', marginBottom: '1rem' }}>Evidence</h3>
+      <h3 style={{ color: '#355E3B', fontSize: '0.9rem', marginBottom: '1rem' }}>Evidence</h3>
 
       {/* Existing evidence list */}
       {existingEvidence.length > 0 && (
@@ -101,14 +101,14 @@ export default function EvidencePanel({ findingId, existingEvidence = [], onAdde
             <div key={ev.id} style={{
               display: 'flex', gap: 10, alignItems: 'center',
               padding: '0.5rem 0.75rem',
-              background: '#0a0c10',
-              border: '1px solid #1e2330',
+              background: '#0B0C0D',
+              border: '1px solid #355E3B',
               borderRadius: 4,
               fontSize: '0.75rem',
             }}>
               <span style={{ color: '#a78bfa', minWidth: 90 }}>{ev.kind}</span>
-              <span style={{ color: '#8892a4', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.uri}</span>
-              <span style={{ color: '#1e2330', fontSize: '0.65rem', fontFamily: 'monospace' }}>
+              <span style={{ color: '#8FAF9B', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.uri}</span>
+              <span style={{ color: '#355E3B', fontSize: '0.65rem', fontFamily: 'monospace' }}>
                 {ev.sha256_hex.slice(0, 12)}…
               </span>
             </div>
@@ -118,16 +118,16 @@ export default function EvidencePanel({ findingId, existingEvidence = [], onAdde
 
       {/* Kind selector */}
       <div style={{ display: 'flex', gap: 8, marginBottom: '0.75rem' }}>
-        <label style={{ color: '#4a5568', fontSize: '0.7rem', alignSelf: 'center' }}>KIND</label>
+        <label style={{ color: '#6F8E7A', fontSize: '0.7rem', alignSelf: 'center' }}>KIND</label>
         <select
           value={kind}
           onChange={(e) => setKind(e.target.value)}
           style={{
             padding: '0.35rem 0.6rem',
             background: '#0f1117',
-            border: '1px solid #1e2330',
+            border: '1px solid #355E3B',
             borderRadius: 4,
-            color: '#e2e8f0',
+            color: '#8FAF9B',
             fontFamily: 'inherit',
             fontSize: '0.8rem',
           }}
@@ -143,20 +143,20 @@ export default function EvidencePanel({ findingId, existingEvidence = [], onAdde
         onDragLeave={() => setDragOver(false)}
         onClick={() => fileRef.current?.click()}
         style={{
-          border: `2px dashed ${dragOver ? '#00FF41' : '#1e2330'}`,
+          border: `2px dashed ${dragOver ? '#355E3B' : '#355E3B'}`,
           borderRadius: 6,
           padding: '2rem',
           textAlign: 'center',
           cursor: 'pointer',
-          background: dragOver ? '#00FF4108' : 'transparent',
+          background: dragOver ? '#355E3B08' : 'transparent',
           transition: 'all 0.15s',
           marginBottom: '0.75rem',
         }}
       >
-        <div style={{ color: '#4a5568', fontSize: '0.8rem' }}>
+        <div style={{ color: '#6F8E7A', fontSize: '0.8rem' }}>
           {uploading ? 'Uploading…' : 'Drop file here or click to browse'}
         </div>
-        <div style={{ color: '#1e2330', fontSize: '0.7rem', marginTop: 4 }}>
+        <div style={{ color: '#355E3B', fontSize: '0.7rem', marginTop: 4 }}>
           SHA-256 computed client-side before upload
         </div>
         <input ref={fileRef} type='file' style={{ display: 'none' }} onChange={onFileChange} />
@@ -171,10 +171,10 @@ export default function EvidencePanel({ findingId, existingEvidence = [], onAdde
           style={{
             flex: 1,
             padding: '0.45rem 0.65rem',
-            background: '#070809',
-            border: '1px solid #1e2330',
+            background: '#0B0C0D',
+            border: '1px solid #355E3B',
             borderRadius: 4,
-            color: '#e2e8f0',
+            color: '#8FAF9B',
             fontFamily: 'inherit',
             fontSize: '0.8rem',
           }}
@@ -185,7 +185,7 @@ export default function EvidencePanel({ findingId, existingEvidence = [], onAdde
           disabled={!uriInput.trim() || uploading}
           style={{
             padding: '0.45rem 0.9rem',
-            background: '#00FF41',
+            background: '#355E3B',
             color: '#000',
             border: 'none',
             borderRadius: 4,

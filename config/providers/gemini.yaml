@@ -1,0 +1,16 @@
+provider: gemini
+models:
+  - name: gemini-2.0-pro
+    capabilities:
+      tool_calling: true
+      structured_output: true
+      multimodal: true
+      context_window: 1000000
+      privacy_tier: 2
+      cost_tier: 2
+      speed_tier: 2
+      local_or_remote: remote
+      preferred_workloads: [analysis, planning, multimodal]
+auth:
+  method: env
+  token_env: GEMINI_API_KEY

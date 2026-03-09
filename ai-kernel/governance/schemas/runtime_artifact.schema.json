@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RuntimeArtifact",
+  "type": "object",
+  "required": ["path", "sha256"],
+  "properties": {
+    "path": {"type": "string"},
+    "sha256": {"type": "string"},
+    "mime_type": {"type": "string"},
+    "description": {"type": "string"}
+  }
+}

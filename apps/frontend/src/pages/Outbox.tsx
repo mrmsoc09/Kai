@@ -11,7 +11,7 @@ export default function Outbox() {
   }
   useEffect(() => { void load(); }, []);
   return (
-    <div style={{ padding: 20, color: '#e2e8f0' }}>
+    <div style={{ padding: 20, color: '#8FAF9B' }}>
       <h2>Outbox</h2>
       <button onClick={() => load()}>Refresh</button>
       <table style={{ width: '100%', marginTop: 12 }}>

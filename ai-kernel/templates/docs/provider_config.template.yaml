@@ -1,0 +1,18 @@
+provider: <name>
+model: <model>
+auth:
+  method: env  # env | vault | file
+  token_env: PROVIDER_API_KEY
+capabilities:
+  tool_calling: true
+  structured_output: true
+  multimodal: false
+  context_window: 128000
+  privacy_tier: 2
+  cost_tier: 2
+  speed_tier: 2
+  local_or_remote: remote
+  preferred_workloads:
+    - coding
+    - planning
+status: active

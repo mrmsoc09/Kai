@@ -1,8 +1,38 @@
 from .base import Base
-from .enums import ExecutionStatusEnum, FindingStatusEnum, HILApprovalStatusEnum, SeverityEnum
+from .campaign import (
+    ApprovalGate,
+    Artifact,
+    AuditEvent,
+    CampaignRun,
+    ExecutionBranch,
+    Observation,
+    PhaseJob,
+    Program,
+    ScanNote,
+    ScopeTarget,
+    SubmissionDraft,
+    ToolExecution,
+)
+from .enums import (
+    ApprovalGateStatusEnum,
+    ArtifactTypeEnum,
+    BranchStatusEnum,
+    CampaignStatusEnum,
+    ExecutionStatusEnum,
+    FindingStatusEnum,
+    HILApprovalStatusEnum,
+    IntentionSourceEnum,
+    IntentionTypeEnum,
+    ObservationTypeEnum,
+    PhaseJobStatusEnum,
+    RiskPolicyClassEnum,
+    SeverityEnum,
+    ToolExecutionStatusEnum,
+)
 from .execution import ExecutionContextRecord
 from .hil import AuditMerkleRoot, Evidence, Finding, HILApproval, Report
 from .hil_extra import ProgramScope
+from .intention import IntentionRecord
 
 __all__ = [
     "Base",
@@ -10,6 +40,16 @@ __all__ = [
     "FindingStatusEnum",
     "HILApprovalStatusEnum",
     "ExecutionStatusEnum",
+    "CampaignStatusEnum",
+    "BranchStatusEnum",
+    "PhaseJobStatusEnum",
+    "ApprovalGateStatusEnum",
+    "ToolExecutionStatusEnum",
+    "ArtifactTypeEnum",
+    "ObservationTypeEnum",
+    "IntentionSourceEnum",
+    "IntentionTypeEnum",
+    "RiskPolicyClassEnum",
     "Finding",
     "Evidence",
     "HILApproval",
@@ -17,4 +57,17 @@ __all__ = [
     "AuditMerkleRoot",
     "ProgramScope",
     "ExecutionContextRecord",
+    "Program",
+    "ScopeTarget",
+    "CampaignRun",
+    "ExecutionBranch",
+    "PhaseJob",
+    "ApprovalGate",
+    "ToolExecution",
+    "Observation",
+    "Artifact",
+    "ScanNote",
+    "SubmissionDraft",
+    "AuditEvent",
+    "IntentionRecord",
 ]

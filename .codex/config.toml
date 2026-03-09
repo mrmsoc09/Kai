@@ -1,0 +1,20 @@
+# Codex project configuration for Kai / K1
+
+project_name = "Kai"
+default_model = "gpt-5-codex"
+temperature = 0.2
+
+[context]
+read_agents_md = true
+prefer_repo_local_rules = true
+
+[execution]
+approval_mode = "manual"
+allow_parallel_planning = true
+intention_tracking = true
+
+[paths]
+prompts_dir = ".codex/prompts"
+agents_dir = ".codex/agents"
+hooks_dir = ".codex/hooks"
+docs_dir = "docs"

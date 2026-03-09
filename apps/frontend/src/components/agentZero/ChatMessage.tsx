@@ -36,8 +36,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isStreaming }
             ? COLORS.neutral.gray_100
             : isTool
             ? COLORS.status.info + '15'
-            : COLORS.neutral.white,
-          color: isUser ? COLORS.neutral.white : COLORS.neutral.gray_900,
+            : COLORS.surface,
+          color: isUser ? COLORS.textInverse : COLORS.text,
           border: isUser ? 'none' : `1px solid ${COLORS.neutral.gray_200}`,
           boxShadow: UI.shadow.sm,
         }}
@@ -57,7 +57,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, isStreaming }
             {message.role === 'user'
               ? 'You'
               : message.role === 'assistant'
-              ? 'Agent Zero'
+              ? 'Kaison Composer'
               : message.role === 'tool'
               ? `Tool: ${message.metadata?.tool || 'Unknown'}`
               : 'System'}
@@ -180,7 +180,7 @@ const ToolCallDisplay: React.FC<{ toolCall: ToolCall }> = ({ toolCall }) => {
                 padding: '2px 6px',
                 backgroundColor:
                   toolCall.tier >= 2 ? COLORS.status.warning : COLORS.status.info,
-                color: COLORS.neutral.white,
+                color: COLORS.textInverse,
                 borderRadius: UI.borderRadius.small,
                 fontWeight: 600,
               }}
@@ -211,7 +211,7 @@ const ToolCallDisplay: React.FC<{ toolCall: ToolCall }> = ({ toolCall }) => {
           style={{
             marginTop: UI.spacing.sm,
             padding: UI.spacing.sm,
-            backgroundColor: COLORS.neutral.white,
+            backgroundColor: COLORS.elevated,
             borderRadius: UI.borderRadius.small,
             fontFamily: UI.fonts.family_mono,
             fontSize: UI.fonts.size_xs,

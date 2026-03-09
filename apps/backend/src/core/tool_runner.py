@@ -32,6 +32,7 @@ class ToolRunner:
         certificate_id: Optional[str] = None,
         method: Optional[str] = None,
         user_id: Optional[str] = None,
+        workflow_id: Optional[str] = None,
         require_approval: bool = True,
         approved: bool = False,
     ) -> str:
@@ -59,6 +60,7 @@ class ToolRunner:
                 certificate_id=certificate_id,
                 method=method,
                 user_id=user_id,
+                workflow_id=workflow_id,
             )
         except AuthorizationGateError as exc:
             raise HTTPException(status_code=403, detail=f"Authorization gate blocked execution: {exc}") from exc
@@ -104,7 +106,16 @@ class ToolRunner:
         if risk_tier == ToolRiskTier.TIER_2_INTRUSIVE:
             queue = "intrusive"
 
-        async_result = run_tool_task.apply_async((tool_id, params), queue=queue)
+        async_result = run_tool_task.apply_async(
+            (tool_id, params),
+            queue=queue,
+            kwargs={
+                "user_id": user_id or "",
+                "program_id": program_id or "",
+                "certificate_id": certificate_id or "",
+                "workflow_id": workflow_id or "",
+            },
+        )
         return async_result.id
 
 

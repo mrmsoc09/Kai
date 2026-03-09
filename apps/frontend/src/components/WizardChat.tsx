@@ -4,7 +4,7 @@ const apiBase = import.meta.env.VITE_API_BASE || '';
 type Msg = { role: 'user'|'assistant', text: string };
 
 export default function WizardChat(){
-  const [msgs, setMsgs] = useState<Msg[]>([{role:'assistant', text:'I am Agent Zero – your HiL wizard. How can I assist?' }]);
+  const [msgs, setMsgs] = useState<Msg[]>([{role:'assistant', text:'I am Kaison Composer – your HiL wizard. How can I assist?' }]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const send = async ()=>{
@@ -16,7 +16,7 @@ export default function WizardChat(){
       const reply = j.reply || '...';
       setMsgs(m=>[...m,{role:'assistant', text: reply}]);
     }catch(err){
-      setMsgs(m=>[...m,{role:'assistant', text: 'Agent Zero relay offline. Try again later.'}]);
+      setMsgs(m=>[...m,{role:'assistant', text: 'Kaison Composer relay offline. Try again later.'}]);
     }finally{ setBusy(false); }
   };
   return (

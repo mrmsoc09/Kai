@@ -18,6 +18,8 @@ import uuid
 from apps.backend.src.core.skill_system import (
     AgentSkillSet, SkillProfile, SkillCategory, SkillExperience, ProficiencyLevel
 )
+# Import AI Security
+from apps.backend.src.core.ai_security import sanitize_input, wrap_input, PromptGuard
 
 
 class AgentObjective(str, Enum):
@@ -208,9 +210,18 @@ class AutonomousAgent:
     ) -> Dict[str, Any]:
         """PLAN phase: Deliberate on situation and decide action"""
 
+        # Sanitize inputs to prevent injection via situation data
+        # We manually sanitize the dictionary values that are strings
+        safe_situation = {}
+        for k, v in situation.items():
+            if isinstance(v, str):
+                safe_situation[k] = sanitize_input(v)
+            else:
+                safe_situation[k] = v
+
         # Step 1: Analyze current situation with memory context
         context = {
-            "situation": situation,
+            "situation": safe_situation,
             "memory_summary": self.memory.to_dict(),
             "recent_successes": self.memory.successful_strategies[-5:],
             "learned_patterns": self.memory.learned_patterns
@@ -308,12 +319,18 @@ class AutonomousAgent:
         llm_complete_fn: Callable
     ) -> List[Dict[str, Any]]:
         """Generate multiple possible actions using LLM"""
+        
+        # Use PromptGuard to wrap context data
+        situation_str = PromptGuard.wrap_context(json.dumps(context['situation']), "current_situation")
+        patterns_str = PromptGuard.wrap_context(json.dumps(context['learned_patterns']), "learned_patterns")
+        successes_str = PromptGuard.wrap_context(json.dumps(context['recent_successes']), "recent_successes")
+
         prompt = f"""
         As a {self.role} agent with autonomy level {self.autonomy_level}:
 
-        Current situation: {json.dumps(context['situation'])}
-        My learned patterns: {json.dumps(context['learned_patterns'])}
-        Recent successes: {json.dumps(context['recent_successes'])}
+        {situation_str}
+        {patterns_str}
+        {successes_str}
 
         Generate 5 different possible actions I could take.
         For each action, provide:

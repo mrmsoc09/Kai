@@ -21,6 +21,7 @@ class FindingCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=200)
     description: str = Field(..., min_length=1, max_length=10_000)
     severity: SeverityLiteral
+    workflow_id: Optional[str] = Field(None, max_length=200)
 
     @classmethod
     def __get_validators__(cls):

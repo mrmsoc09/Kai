@@ -86,7 +86,7 @@ export const CVSSTemporalHeatmap: React.FC<CVSSTemporalHeatmapProps> = ({
     return (
       <div
         style={{
-          backgroundColor: COLORS.neutral.white,
+          backgroundColor: COLORS.elevated,
           padding: UI.spacing.md,
           border: `1px solid ${COLORS.neutral.gray_200}`,
           borderRadius: UI.borderRadius.medium,
@@ -133,7 +133,7 @@ export const CVSSTemporalHeatmap: React.FC<CVSSTemporalHeatmapProps> = ({
   return (
     <div
       style={{
-        backgroundColor: COLORS.neutral.white,
+        backgroundColor: COLORS.surface,
         borderRadius: UI.borderRadius.large,
         padding: UI.spacing.lg,
         border: `1px solid ${COLORS.neutral.gray_200}`,

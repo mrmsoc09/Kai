@@ -55,6 +55,14 @@ async def create_finding(
     db.add(finding)
     await db.flush()
 
+    # Keep workflow findings counter accurate when a workflow_id is supplied
+    if body.workflow_id:
+        try:
+            from ..core.workflow_store import increment_findings
+            increment_findings(body.workflow_id, delta=1)
+        except Exception:
+            pass  # Non-critical; don't fail the finding creation
+
     response = {"id": str(finding.id)}
     ctx.complete(response)
     return {**response, "transaction_id": str(ctx.transaction_id)}

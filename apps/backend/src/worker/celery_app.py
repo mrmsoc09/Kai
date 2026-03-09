@@ -24,16 +24,60 @@ celery_app.conf.update(
 )
 
 
-@celery_app.task(name="run_tool")
-def run_tool_task(tool_id: str, params: dict) -> dict:
-    """Invoke a registered tool adapter by ID."""
+@celery_app.task(name="run_tool", bind=True)
+def run_tool_task(
+    self,
+    tool_id: str,
+    params: dict,
+    *,
+    user_id: str = "",
+    program_id: str = "",
+    certificate_id: str = "",
+    workflow_id: str = "",
+) -> dict:
+    """Invoke a registered tool adapter by ID.
+
+    Auth context (user_id, program_id, certificate_id, workflow_id) should be
+    provided by the enqueuing endpoint so the authorization gate has real
+    credentials rather than falling back to params dict lookups.
+    """
     from apps.backend.src.core.tools import get_registry, initialize_default_tools
     from apps.backend.src.core.artifacts import write_json
     from apps.backend.src.core.toolpacks import get_toolpack_manager
     from apps.backend.src.core.authorization_gate import enforce_authorization_gates, AuthorizationGateError
     from apps.backend.src.core.opsec_policy import get_opsec_policy_engine, OPSECPolicyError
+    from apps.backend.src.core.execution_result_service import (
+        ingest_worker_result_sync,
+        mark_worker_execution_running_sync,
+    )
     from apps.backend.src.core.hook_registry import get_hook_registry
+    from apps.backend.src.models.enums import ToolExecutionStatusEnum
     import time
+
+    task_id = getattr(self.request, "id", "")
+    if task_id:
+        mark_worker_execution_running_sync(
+            worker_task_id=task_id,
+            actor="worker.celery.run_tool",
+        )
+
+    def _ingest(
+        *,
+        status: ToolExecutionStatusEnum,
+        payload: dict,
+        error: str | None = None,
+    ) -> None:
+        if not task_id:
+            return
+        ingest_worker_result_sync(
+            worker_task_id=task_id,
+            tool_status=status,
+            result_payload_json=payload,
+            error_message=error,
+            stdout_ref=payload.get("stdout_ref"),
+            stderr_ref=payload.get("stderr_ref"),
+            actor="worker.celery.run_tool",
+        )
 
     initialize_default_tools()
     hooks = get_hook_registry()
@@ -44,11 +88,39 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
         manager.resolve_mappings(registry.get_all_schemas().keys())
     tool = registry.get(tool_id)
     if not tool:
-        return {"status": "failed", "error": f"tool not found: {tool_id}"}
+        result_payload = {"status": "failed", "error": f"tool not found: {tool_id}"}
+        _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
+        return result_payload
     if not manager.is_adapter_enabled(tool_id):
-        return {"status": "failed", "error": f"tool disabled by toolpack policy: {tool_id}"}
+        result_payload = {
+            "status": "failed",
+            "error": f"tool disabled by toolpack policy: {tool_id}",
+        }
+        _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
+        return result_payload
+
+    # Retrieve credentials from Vault when a vault_path is present in params
+    vault_path = params.get("vault_path") or params.get("_vault_path")
+    if vault_path:
+        try:
+            from apps.backend.src.core.hil_vault_client import VaultClient
+            vc = VaultClient()
+            creds = vc.read_secret(vault_path)
+            if creds:
+                # Inject credentials into params for the tool to consume
+                params = {**params, "_credentials": creds}
+        except Exception:
+            pass  # Vault unavailable — continue without credentials
+
     try:
-        enforce_authorization_gates(tool_id, params)
+        enforce_authorization_gates(
+            tool_id,
+            params,
+            user_id=user_id or None,
+            program_id=program_id or None,
+            certificate_id=certificate_id or None,
+            workflow_id=workflow_id or None,
+        )
     except AuthorizationGateError as exc:
         hooks.run(
             "safety_gate",
@@ -59,7 +131,12 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
                 "status": "blocked",
             },
         )
-        return {"status": "failed", "error": f"authorization gate blocked execution: {exc}"}
+        result_payload = {
+            "status": "failed",
+            "error": f"authorization gate blocked execution: {exc}",
+        }
+        _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
+        return result_payload
     hooks.run(
         "safety_gate",
         {
@@ -80,11 +157,13 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
     try:
         opsec_ticket = opsec_engine.acquire(opsec_method, tool_id)
     except OPSECPolicyError as exc:
-        return {
+        result_payload = {
             "status": "failed",
             "error": f"opsec policy blocked execution: {exc}",
             "opsec_method": opsec_method,
         }
+        _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
+        return result_payload
 
     start = time.time()
     try:
@@ -101,6 +180,15 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
         elapsed = (time.time() - start) * 1000
         result.execution_time_ms = result.execution_time_ms or elapsed
         result_dict = result.to_dict()
+    except Exception as exc:
+        result_dict = {
+            "status": "failed",
+            "error": str(exc),
+            "tool_id": tool_id,
+            "opsec_method": opsec_method,
+        }
+        _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_dict, error=str(exc))
+        raise
     finally:
         status_value = result.status.value if "result" in locals() else "failed"
         hooks.run(
@@ -144,6 +232,8 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
             "status": result.status.value,
             "execution_time_ms": result_dict.get("execution_time_ms"),
             "opsec_method": opsec_method,
+            "user_id": user_id or None,
+            "workflow_id": workflow_id or None,
             "timestamp": time.time(),
         }
         with open(metrics_dir / "tool_runs.jsonl", "a") as f:
@@ -151,4 +241,24 @@ def run_tool_task(tool_id: str, params: dict) -> dict:
     except Exception:
         pass
 
+    normalized_status = str(result_dict.get("status", "")).strip().lower()
+    if normalized_status in {"completed", "success", "ok"}:
+        ingest_status = ToolExecutionStatusEnum.COMPLETED
+    elif normalized_status in {"canceled", "cancelled"}:
+        ingest_status = ToolExecutionStatusEnum.CANCELED
+    else:
+        ingest_status = ToolExecutionStatusEnum.FAILED
+    _ingest(
+        status=ingest_status,
+        payload=result_dict,
+        error=result_dict.get("error"),
+    )
+
     return result_dict
+
+
+# Register additional campaign tasks on worker startup.
+try:
+    from apps.backend.src.worker import campaign_tasks as _campaign_tasks  # noqa: F401
+except Exception:
+    _campaign_tasks = None

@@ -1,0 +1,15 @@
+provider: ollama
+models:
+  - name: llama3.2
+    capabilities:
+      tool_calling: false
+      structured_output: true
+      multimodal: false
+      context_window: 32000
+      privacy_tier: 3
+      cost_tier: 1
+      speed_tier: 2
+      local_or_remote: local
+      preferred_workloads: [summarization, planning]
+auth:
+  method: none

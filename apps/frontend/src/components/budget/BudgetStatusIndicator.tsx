@@ -34,7 +34,15 @@ export const BudgetStatusIndicator: React.FC<BudgetStatusIndicatorProps> = ({
   const loadBudget = async () => {
     try {
       const data = await getDailyBudget();
-      setBudget(data);
+      setBudget({
+        budget_cents: data.budget_cents ?? 0,
+        spent_cents: data.spent_cents ?? 0,
+        remaining_cents: data.remaining_cents ?? 0,
+        utilization_percent: data.utilization_percent ?? 0,
+        status: data.status ?? 'normal',
+        transaction_count: data.transaction_count ?? 0,
+        session_count: data.session_count ?? 0,
+      });
     } catch (err) {
       console.error('Failed to load budget:', err);
     } finally {
@@ -167,7 +175,7 @@ export const BudgetStatusIndicator: React.FC<BudgetStatusIndicatorProps> = ({
                 Utilization
               </Typography>
               <Typography variant="body2">
-                {budget.utilization_percent.toFixed(1)}%
+                {(budget.utilization_percent ?? 0).toFixed(1)}%
               </Typography>
             </Box>
 
@@ -201,7 +209,7 @@ export const BudgetStatusIndicator: React.FC<BudgetStatusIndicatorProps> = ({
 
           {budget.status === 'warning' && (
             <Typography variant="caption" color="warning.main" sx={{ mt: 1, display: 'block' }}>
-              Budget at {budget.utilization_percent.toFixed(1)}% - consider using local models
+              Budget at {(budget.utilization_percent ?? 0).toFixed(1)}% - consider using local models
             </Typography>
           )}
 

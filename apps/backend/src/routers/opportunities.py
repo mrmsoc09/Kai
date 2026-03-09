@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 
 from apps.backend.src.core.opportunity_catalog import (
+    CredentialRequirement,
     Opportunity,
     catalog_stats,
     get_opportunity,
@@ -26,7 +27,7 @@ from apps.backend.src.core.opportunity_catalog import (
     rank_opportunities,
 )
 from apps.backend.src.core.opportunity_scoring import rank_opportunities_v1
-from apps.backend.src.core.duplicates import _collect_existing_titles
+from apps.backend.src.core.duplicates import collect_existing_titles
 from apps.backend.src.core.auth import get_current_user
 
 router = APIRouter(
@@ -39,6 +40,14 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 # Pydantic response model
 # ---------------------------------------------------------------------------
+
+class CredentialRequirementOut(BaseModel):
+    kind: str
+    label: str
+    signup_url: str
+    notes: str
+    required: bool
+
 
 class OpportunityOut(BaseModel):
     id: str
@@ -60,9 +69,21 @@ class OpportunityOut(BaseModel):
     is_public: bool
     payout_label: str
     notes: str
+    credential_requirements: List[CredentialRequirementOut]
+    needs_credentials: bool   # True when at least one required credential exists
 
 
 def _out(o: Opportunity) -> OpportunityOut:
+    cred_outs = [
+        CredentialRequirementOut(
+            kind=cr.kind,
+            label=cr.label,
+            signup_url=cr.signup_url,
+            notes=cr.notes,
+            required=cr.required,
+        )
+        for cr in o.credential_requirements
+    ]
     return OpportunityOut(
         id=o.id,
         name=o.name,
@@ -83,6 +104,8 @@ def _out(o: Opportunity) -> OpportunityOut:
         is_public=o.is_public(),
         payout_label=o.payout_label(),
         notes=o.notes,
+        credential_requirements=cred_outs,
+        needs_credentials=any(cr.required for cr in o.credential_requirements),
     )
 
 
@@ -148,7 +171,7 @@ async def ranked_opportunities_v1(
     effort_bias: float = Query(0.5, ge=0.0, le=1.0, description="Higher values penalize high-effort programs more"),
 ):
     opportunities = rank_opportunities(public_only=public_only)
-    prior_reports = _collect_existing_titles()
+    prior_reports = collect_existing_titles()
     scored = rank_opportunities_v1(
         opportunities,
         prior_reports=prior_reports,

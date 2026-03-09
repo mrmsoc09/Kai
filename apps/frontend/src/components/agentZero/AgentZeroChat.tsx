@@ -1,5 +1,5 @@
 /**
- * Agent Zero Chat Interface
+ * Kaison Composer Chat Interface
  * Main chat component with streaming, tool calls, and HiL approval integration
  */
 
@@ -31,7 +31,6 @@ export const AgentZeroChat: React.FC = () => {
     rejectRequest,
     clearHistory,
   } = useAgentZeroStream({
-    apiUrl: `ws://${window.location.hostname}:8000/api/v1/agent-zero/ws/chat`,
     onApprovalRequired: (approval) => {
       setCurrentApproval(approval);
     },
@@ -109,14 +108,14 @@ export const AgentZeroChat: React.FC = () => {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        backgroundColor: COLORS.neutral.gray_50,
+        backgroundColor: COLORS.background,
       }}
     >
       {/* Header */}
       <div
         style={{
           padding: UI.spacing.lg,
-          backgroundColor: COLORS.neutral.white,
+          backgroundColor: COLORS.surface,
           borderBottom: `1px solid ${COLORS.neutral.gray_200}`,
           boxShadow: UI.shadow.sm,
         }}
@@ -139,7 +138,7 @@ export const AgentZeroChat: React.FC = () => {
             </div>
             <div>
               <h2 style={{ margin: 0, fontSize: UI.fonts.size_xl, fontWeight: 600 }}>
-                Agent Zero
+                Kaison Composer
               </h2>
               <p
                 style={{
@@ -203,8 +202,8 @@ export const AgentZeroChat: React.FC = () => {
                 padding: `${UI.spacing.xs} ${UI.spacing.sm}`,
                 borderRadius: UI.borderRadius.medium,
                 border: `1px solid ${COLORS.neutral.gray_300}`,
-                backgroundColor: COLORS.neutral.white,
-                color: COLORS.neutral.gray_700,
+                backgroundColor: COLORS.neutral.gray_100,
+                color: COLORS.textSecondary,
                 fontSize: UI.fonts.size_sm,
                 cursor: 'pointer',
               }}
@@ -241,7 +240,7 @@ export const AgentZeroChat: React.FC = () => {
                 borderRadius: UI.borderRadius.medium,
                 border: 'none',
                 backgroundColor: COLORS.status.warning,
-                color: COLORS.neutral.white,
+                color: COLORS.textInverse,
                 fontSize: UI.fonts.size_sm,
                 fontWeight: 600,
                 cursor: 'pointer',
@@ -272,7 +271,7 @@ export const AgentZeroChat: React.FC = () => {
           >
             <div style={{ fontSize: '48px', marginBottom: UI.spacing.md }}>🤖</div>
             <h3 style={{ fontSize: UI.fonts.size_lg, marginBottom: UI.spacing.sm }}>
-              Welcome to Agent Zero
+              Welcome to Kaison Composer
             </h3>
             <p style={{ fontSize: UI.fonts.size_base, marginBottom: UI.spacing.lg }}>
               I can help you with security operations, vulnerability hunting, and more.
@@ -299,8 +298,8 @@ export const AgentZeroChat: React.FC = () => {
                     padding: `${UI.spacing.sm} ${UI.spacing.md}`,
                     borderRadius: UI.borderRadius.medium,
                     border: `1px solid ${COLORS.neutral.gray_300}`,
-                    backgroundColor: COLORS.neutral.white,
-                    color: COLORS.neutral.gray_700,
+                    backgroundColor: COLORS.neutral.gray_100,
+                    color: COLORS.textSecondary,
                     fontSize: UI.fonts.size_sm,
                     cursor: 'pointer',
                     maxWidth: '400px',
@@ -339,7 +338,7 @@ export const AgentZeroChat: React.FC = () => {
       <div
         style={{
           padding: UI.spacing.lg,
-          backgroundColor: COLORS.neutral.white,
+          backgroundColor: COLORS.surface,
           borderTop: `1px solid ${COLORS.neutral.gray_200}`,
           boxShadow: '0 -2px 10px rgba(0,0,0,0.05)',
         }}
@@ -352,8 +351,8 @@ export const AgentZeroChat: React.FC = () => {
             onChange={(e) => setInputValue(e.target.value)}
             placeholder={
               isConnected
-                ? 'Ask Agent Zero anything...'
-                : 'Connecting to Agent Zero...'
+                ? 'Ask Kaison Composer anything...'
+                : 'Connecting to Kaison Composer...'
             }
             disabled={!isConnected || isStreaming}
             style={{
@@ -383,7 +382,7 @@ export const AgentZeroChat: React.FC = () => {
               backgroundColor: isConnected && inputValue.trim() && !isStreaming
                 ? COLORS.primary.main
                 : COLORS.neutral.gray_300,
-              color: COLORS.neutral.white,
+              color: COLORS.textInverse,
               fontSize: UI.fonts.size_base,
               fontWeight: 600,
               cursor: isConnected && inputValue.trim() && !isStreaming ? 'pointer' : 'not-allowed',
@@ -404,7 +403,7 @@ export const AgentZeroChat: React.FC = () => {
         >
           {sessionId && `Session: ${sessionId.substring(0, 8)}`}
           {' • '}
-          Agent Zero integrates with K1's security orchestration and HiL approval workflow
+          Kaison Composer integrates with K1's security orchestration and HiL approval workflow
         </div>
       </div>
 

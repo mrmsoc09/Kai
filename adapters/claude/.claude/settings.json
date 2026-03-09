@@ -1,0 +1,6 @@
+{
+  "model": "claude-3-7-sonnet-20250219",
+  "temperature": 0.2,
+  "hooks": ["session_init", "scope_guard", "tool_filter", "result_normalizer", "quality_gate"],
+  "memory_path": "runtime/memory/sessions"
+}

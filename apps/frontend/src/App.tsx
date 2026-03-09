@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import './theme.css'
 import './theme/branding.css'
@@ -51,17 +51,35 @@ import Scopes from './routes/Scopes'
 import Opportunities from './routes/Opportunities'
 import WorkflowDashboard from './routes/WorkflowDashboard'
 
+// Phase 7 — Consolidated 8-page nav
+import HuntOps from './routes/HuntOps'
+import AIEngine from './routes/AIEngine'
+import ScanOps from './routes/ScanOps'
+
 function NotFound() {
   return (
     <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace' }}>
-      <div style={{ color: '#00FF41', fontSize: '3rem', fontWeight: 700 }}>404</div>
-      <div style={{ color: '#8892a4', marginTop: 8 }}>Page not found</div>
-      <a href='/dashboard' style={{ color: '#00FF41', marginTop: 16, display: 'inline-block' }}>← Back to Dashboard</a>
+      <div style={{ color: '#355E3B', fontSize: '3rem', fontWeight: 700 }}>404</div>
+      <div style={{ color: '#6F8E7A', marginTop: 8 }}>Page not found</div>
+      <a href='/dashboard' style={{ color: '#355E3B', marginTop: 16, display: 'inline-block' }}>← Back to Dashboard</a>
     </div>
   )
 }
 
 export default function App() {
+  useEffect(() => {
+    const applyIcon = () => {
+      const icon = localStorage.getItem('k1_icon_dataurl')
+      const link = document.querySelector<HTMLLinkElement>('#app-favicon')
+      if (icon && link) {
+        link.href = icon
+      }
+    }
+    applyIcon()
+    window.addEventListener('k1-branding', applyIcon)
+    return () => window.removeEventListener('k1-branding', applyIcon)
+  }, [])
+
   return (
     <BrowserRouter>
       <Routes>
@@ -107,7 +125,14 @@ export default function App() {
                 <Route path='/plans' element={<Plans />} />
                 <Route path='/recordings' element={<Recordings />} />
 
-                {/* Opportunity Hub + Hunt Workflows */}
+                {/* Consolidated 8-page nav (Phase 7) */}
+                <Route path='/hunt' element={<HuntOps />} />
+                <Route path='/ai' element={<AIEngine />} />
+                <Route path='/scans' element={<ScanOps />} />
+                <Route path='/intel' element={<Intelligence />} />
+                <Route path='/reports' element={<KPI />} />
+
+                {/* Legacy routes — keep for deep-link compatibility */}
                 <Route path='/opportunities' element={<Opportunities />} />
                 <Route path='/workflows' element={<WorkflowDashboard />} />
 

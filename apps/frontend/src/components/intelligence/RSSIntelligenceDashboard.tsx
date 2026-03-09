@@ -152,7 +152,7 @@ const RSSIntelligenceDashboard: React.FC = () => {
       {/* Header */}
       <div className="dashboard-header">
         <div>
-          <h1 style={{ color: COLORS.primary.main }}>Threat Intelligence Feed</h1>
+          <h1 style={{ color: COLORS.text }}>Threat Intelligence Feed</h1>
           <p style={{ color: COLORS.textSecondary }}>
             Real-time vulnerability intelligence from {stats.total_feeds} RSS sources
           </p>
@@ -162,8 +162,9 @@ const RSSIntelligenceDashboard: React.FC = () => {
           disabled={scanning}
           className="scan-button"
           style={{
-            backgroundColor: COLORS.primary.main,
-            color: COLORS.text
+            backgroundColor: COLORS.secondary.main,
+            color: COLORS.textInverse,
+            border: `1px solid ${COLORS.border}`,
           }}
         >
           {scanning ? 'Scanning...' : 'Scan Now'}

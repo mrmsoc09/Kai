@@ -1,5 +1,30 @@
-# Worker image containing CLI tooling for recon/vuln scans
-FROM debian:12-slim
+# Stage 1: Build/Install Go tools
+FROM golang:1.24-bookworm AS go-builder
+
+# Install build dependencies
+# libpcap-dev is required for naabu
+RUN apt-get update && apt-get install -y git ca-certificates libpcap-dev curl
+
+# Install ProjectDiscovery Suite
+RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+RUN go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest
+RUN go install github.com/projectdiscovery/httpx/cmd/httpx@latest
+RUN go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+RUN go install github.com/projectdiscovery/katana/cmd/katana@latest
+RUN go install github.com/projectdiscovery/chaos-client/cmd/chaos@latest
+RUN go install github.com/projectdiscovery/uncover/cmd/uncover@latest
+RUN go install github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+RUN go install github.com/projectdiscovery/tlsx/cmd/tlsx@latest
+RUN go install github.com/ffuf/ffuf/v2@latest
+
+# TruffleHog installation
+RUN curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /go/bin
+
+# Amass v4
+RUN go install github.com/owasp-amass/amass/v4/...@latest
+
+# Stage 2: Final Worker Image
+FROM python:3.12-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -7,45 +32,50 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ca-certificates curl wget git jq python3 python3-pip python3-venv \
       libssl-dev libffi-dev build-essential \
-      # exiftool dependency
       libimage-exiftool-perl \
-      # ffuf deps
-      libpcap0.8 && \
+      libpcap0.8 \
+      whois nmap dnsutils bsdmainutils && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /usr/share/wordlists
 
-# Install Go tools (ProjectDiscovery suite + trufflehog, theHarvester)
-RUN apt-get update && apt-get install -y --no-install-recommends golang && rm -rf /var/lib/apt/lists/*
+# Copy Go binaries from builder
+COPY --from=go-builder /go/bin/* /usr/local/bin/
 
-ENV GOPATH=/root/go
-ENV PATH="/root/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/go/bin:$PATH"
+# Install theHarvester from Source
+# theHarvester uses pyproject.toml (no requirements.txt since v4.x)
+RUN git clone https://github.com/laramies/theHarvester.git /opt/theHarvester && \
+    cd /opt/theHarvester && \
+    pip install . --break-system-packages
 
-# ProjectDiscovery tools
-RUN go install github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest && \
-    go install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest && \
-    go install github.com/projectdiscovery/httpx/cmd/httpx@latest && \
-    go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest && \
-    go install github.com/projectdiscovery/katana/cmd/katana@latest && \
-    go install github.com/projectdiscovery/chaos-client/cmd/chaos@latest && \
-    go install github.com/projectdiscovery/uncover/cmd/uncover@latest
-
-# ffuf
-RUN go install github.com/ffuf/ffuf/v2@latest
-
-# Amass
-RUN go install github.com/owasp-amass/amass/v4/...@latest
-
-# trufflehog
-RUN go install github.com/trufflesecurity/trufflehog/v3@latest
-
-# theHarvester (pip)
-RUN pip install --no-cache-dir theHarvester==4.5.0
-
-# Python libs for adapters
-RUN pip install --no-cache-dir httpx==0.28.1
+# Install Celery + all deps required by the worker task (core backend imports)
+# httpx pinned to match backend; heavy ML stack (llama-index, chromadb) excluded
+RUN pip install --no-cache-dir \
+    celery>=5.4 \
+    redis>=5.0.2 \
+    httpx==0.28.1 \
+    fastapi>=0.115 \
+    pydantic>=2.8 \
+    pydantic-settings>=2.3 \
+    PyYAML>=6.0.2 \
+    python-dotenv>=1.0.1 \
+    SQLAlchemy>=2.0.36 \
+    asyncpg>=0.29 \
+    psycopg2-binary>=2.9.11 \
+    aiohttp>=3.9 \
+    requests>=2.32.5 \
+    cryptography>=42.0 \
+    python-jose[cryptography]>=3.3.1 \
+    passlib[bcrypt]>=1.7.4 \
+    orjson>=3.10 \
+    anthropic>=0.31 \
+    openai>=1.33 \
+    google-generativeai>=0.5.4 \
+    hvac>=2.1.0 \
+    networkx>=3.3 \
+    --break-system-packages
 
 WORKDIR /app
 COPY . /app
 
-# Default command: start Celery worker (queue name tools)
-CMD ["bash", "-lc", "cd /app && celery -A apps.backend.src.worker.celery_app worker -Q tools -l info"]
+# Default command: start Celery worker
+CMD ["bash", "-lc", "cd /app && celery -A apps.backend.src.worker.celery_app worker -Q tools,intrusive -l info"]

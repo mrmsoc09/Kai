@@ -1,0 +1,64 @@
+# Build artifacts
+node_modules/
+dist/
+build/
+.next/
+out/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Docker
+.docker/
+
+# Compiled / binary
+*.so
+*.dylib
+*.dll
+*.egg
+*.egg-info/
+*.whl
+
+# Logs (load specific files only when needed)
+logs/
+*.log
+
+# Database files
+*.sqlite
+*.db
+
+# Large data / artifacts (reference by path, not bulk load)
+artifacts/
+screenshots/
+evidence/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets (never load)
+.env
+.env.*
+secrets/
+certs/
+*.pem
+*.key
+*.crt

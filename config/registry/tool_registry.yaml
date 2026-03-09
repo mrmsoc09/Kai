@@ -1,0 +1,13 @@
+tools:
+  - id: amass
+    adapter: amass_adapter
+    capabilities: [recon]
+    opsec: medium
+  - id: httpx
+    adapter: httpx_adapter
+    capabilities: [recon, validation]
+    opsec: low
+  - id: nuclei
+    adapter: nuclei_adapter
+    capabilities: [validation]
+    opsec: medium

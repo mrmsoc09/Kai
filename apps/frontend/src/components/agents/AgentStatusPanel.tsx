@@ -8,7 +8,7 @@ import type { AgentNode } from './hooks/useAgentStatus';
 
 export const AgentStatusPanel: React.FC<{ agents: AgentNode[] }> = ({ agents }) => {
   return (
-    <div style={{ width: '300px', backgroundColor: COLORS.neutral.white, borderRadius: UI.borderRadius.large, padding: UI.spacing.lg, border: `1px solid ${COLORS.neutral.gray_200}`, overflowY: 'auto' }}>
+    <div style={{ width: '300px', backgroundColor: COLORS.surface, borderRadius: UI.borderRadius.large, padding: UI.spacing.lg, border: `1px solid ${COLORS.neutral.gray_200}`, overflowY: 'auto' }}>
       <h3 style={{ margin: 0, marginBottom: UI.spacing.md }}>Active Agents ({agents.length})</h3>
       {agents.length === 0 ? (
         <div style={{ textAlign: 'center', color: COLORS.neutral.gray_500, padding: UI.spacing.lg }}>

@@ -1,7 +1,7 @@
 version: '3.8'
 
 # K1 Local Development Environment
-# Start with: docker-compose -f docker-compose.dev.yml up -d
+# Start with: ./k1 start
 
 services:
   # PostgreSQL Database
@@ -21,6 +21,21 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - k1_network
+    restart: unless-stopped
+
+  # HashiCorp Vault for Secure Secret Management
+  vault:
+    image: vault:1.13.3
+    container_name: k1_vault
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root
+      VAULT_DEV_LISTEN_ADDRESS: "0.0.0.0:8200"
+    cap_add:
+      - IPC_LOCK
     networks:
       - k1_network
     restart: unless-stopped
@@ -49,26 +64,14 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     container_name: k1_backend
+    env_file: .env
     environment:
       DEBUG_MODE: "true"
       ENVIRONMENT: development
-      K1_DEV_TOKEN: k1-dev-token-docker
-      DATABASE_URL: postgresql://k1:k1password@postgres:5432/k1
-      REDIS_URL: redis://redis:6379/0
       PYTHONUNBUFFERED: 1
       PYTHONPATH: /app
-      LLM_PROVIDER: anthropic
-      K1_PATCH_LLM_MODEL: claude-opus-4-5
-      K1_STARTUP_VALIDATE_SECRETS: "false"
-      K1_SECRET_BACKEND: env
-      CORS_ALLOWED_ORIGINS: "http://localhost:8081,http://localhost:3000,http://127.0.0.1:8081"
-      CORS_ALLOW_CREDENTIALS: "true"
-      K1_RATELIMIT_BACKEND: memory
-      LOG_LEVEL: DEBUG
-      FEATURE_PATCH_ENGINE: "true"
-      FEATURE_AUTO_VALIDATION: "true"
-      OSINT_ENABLED: "true"
-      EXTERNAL_QUERIES_ENABLED: "false"
+      VAULT_URL: http://vault:8200
+      VAULT_TOKEN: root
     ports:
       - "8080:8080"
     volumes:
@@ -79,6 +82,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      vault:
+        condition: service_started
     command: >
       sh -c "
         python3 -m uvicorn apps.backend.src.main:app --host 0.0.0.0 --port 8080 --reload
@@ -87,19 +92,24 @@ services:
       - k1_network
     restart: unless-stopped
 
+  # Celery Worker for Tool Execution (OSINT / Vulnerability Scanning)
   worker:
     build:
       context: .
       dockerfile: Dockerfile.worker
     container_name: k1_worker
+    env_file: .env
     environment:
-      REDIS_URL: redis://redis:6379/0
-      SHODAN_API_KEY: ${SHODAN_API_KEY:-}
+      PYTHONPATH: /app
+      VAULT_URL: http://vault:8200
+      VAULT_TOKEN: root
       # Align PATH for Go-installed binaries inside the worker
       PATH: "/root/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/go/bin"
     depends_on:
       redis:
         condition: service_healthy
+      vault:
+        condition: service_started
     volumes:
       - .:/app
       - ./artifacts:/app/artifacts
@@ -111,13 +121,13 @@ services:
         celery -A apps.backend.src.worker.celery_app.celery_app worker -Q tools,intrusive --loglevel=info
       "
 
-  # React Frontend
+  # React Frontend (Kaison Composer UI)
   frontend:
-    image: node:18-alpine
+    image: node:22-alpine
     container_name: k1_frontend
     working_dir: /app
     environment:
-      VITE_API_BASE_URL: http://localhost:8080
+      VITE_API_BASE: http://localhost:8080
     ports:
       - "8081:5173"
     volumes:
@@ -134,7 +144,7 @@ services:
       - k1_network
     restart: unless-stopped
 
-  # Mailhog for Email Testing (optional)
+  # Mailhog for Email Testing
   mailhog:
     image: mailhog/mailhog:latest
     container_name: k1_mailhog
