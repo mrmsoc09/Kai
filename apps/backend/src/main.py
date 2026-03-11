@@ -204,6 +204,25 @@ app.add_middleware(CORSMiddleware, **cors_config)
 if os.getenv("DEBUG_MODE", "false").lower() == "true":
     print_cors_config()
 
+
+def _probe_worker_subsystem() -> dict:
+    try:
+        from apps.backend.src.worker.celery_app import celery_app
+
+        inspector = celery_app.control.inspect(timeout=1)
+        ping = inspector.ping() or {}
+        queue_info = inspector.active_queues() or {}
+        return {
+            "ok": bool(ping),
+            "status": "up" if ping else "down",
+            "worker_count": len(ping),
+            "workers": sorted(ping.keys()),
+            "queues": sorted(queue_info.keys()) if isinstance(queue_info, dict) else [],
+        }
+    except Exception as exc:
+        return {"ok": False, "status": "down", "error": str(exc)}
+
+
 # Health
 @app.get("/health")
 async def health(request: Request) -> dict:
@@ -216,6 +235,7 @@ async def health(request: Request) -> dict:
             "intelligence": bool(getattr(svc, "intelligence_ready", False)),
             "rag": bool(getattr(svc, "rag_ready", False)),
         },
+        "worker": _probe_worker_subsystem(),
     }
 
 
@@ -229,15 +249,30 @@ async def healthz(request: Request):
     redis_ok = redis_status == "not_configured" or bool(dependencies["redis"].get("ok"))
     neo4j_status = dependencies["neo4j"].get("status")
     neo4j_ok = neo4j_status == "not_configured" or bool(dependencies["neo4j"].get("ok"))
+    worker = _probe_worker_subsystem()
+    worker_required = _env_bool("K1_REQUIRE_WORKER", False)
+    worker_ok = bool(worker.get("ok")) or not worker_required
 
-    overall_ok = postgres_ok and redis_ok and neo4j_ok
+    overall_ok = postgres_ok and redis_ok and neo4j_ok and worker_ok
     payload = {
         "status": "ok" if overall_ok else "degraded",
         "dependencies": dependencies,
+        "worker": worker,
+        "worker_required": worker_required,
     }
     if overall_ok:
         return payload
     return JSONResponse(status_code=503, content=payload)
+
+
+@app.get("/livez")
+async def livez() -> dict:
+    return {"status": "ok"}
+
+
+@app.get("/readyz")
+async def readyz(request: Request):
+    return await healthz(request)
 
 # Register routers (logical groups)
 # Public/low-priv status endpoints first

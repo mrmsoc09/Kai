@@ -55,6 +55,8 @@ def run_tool_task(
     import time
 
     task_id = getattr(self.request, "id", "")
+    retry_attempt = int(getattr(self.request, "retries", 0) or 0)
+    max_retries = int(getattr(self, "max_retries", 0) or 0)
     if task_id:
         mark_worker_execution_running_sync(
             worker_task_id=task_id,
@@ -69,6 +71,16 @@ def run_tool_task(
     ) -> None:
         if not task_id:
             return
+        payload = dict(payload)
+        payload.setdefault(
+            "worker_diagnostics",
+            {
+                "worker_task_id": task_id,
+                "retry_attempt": retry_attempt,
+                "max_retries": max_retries,
+                "tool_id": tool_id,
+            },
+        )
         ingest_worker_result_sync(
             worker_task_id=task_id,
             tool_status=status,
@@ -88,13 +100,20 @@ def run_tool_task(
         manager.resolve_mappings(registry.get_all_schemas().keys())
     tool = registry.get(tool_id)
     if not tool:
-        result_payload = {"status": "failed", "error": f"tool not found: {tool_id}"}
+        result_payload = {
+            "status": "failed",
+            "error": f"tool not found: {tool_id}",
+            "retry_attempt": retry_attempt,
+            "max_retries": max_retries,
+        }
         _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
         return result_payload
     if not manager.is_adapter_enabled(tool_id):
         result_payload = {
             "status": "failed",
             "error": f"tool disabled by toolpack policy: {tool_id}",
+            "retry_attempt": retry_attempt,
+            "max_retries": max_retries,
         }
         _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
         return result_payload
@@ -134,6 +153,8 @@ def run_tool_task(
         result_payload = {
             "status": "failed",
             "error": f"authorization gate blocked execution: {exc}",
+            "retry_attempt": retry_attempt,
+            "max_retries": max_retries,
         }
         _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
         return result_payload
@@ -161,6 +182,8 @@ def run_tool_task(
             "status": "failed",
             "error": f"opsec policy blocked execution: {exc}",
             "opsec_method": opsec_method,
+            "retry_attempt": retry_attempt,
+            "max_retries": max_retries,
         }
         _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
         return result_payload
@@ -180,12 +203,16 @@ def run_tool_task(
         elapsed = (time.time() - start) * 1000
         result.execution_time_ms = result.execution_time_ms or elapsed
         result_dict = result.to_dict()
+        result_dict.setdefault("retry_attempt", retry_attempt)
+        result_dict.setdefault("max_retries", max_retries)
     except Exception as exc:
         result_dict = {
             "status": "failed",
             "error": str(exc),
             "tool_id": tool_id,
             "opsec_method": opsec_method,
+            "retry_attempt": retry_attempt,
+            "max_retries": max_retries,
         }
         _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_dict, error=str(exc))
         raise

@@ -50,12 +50,56 @@ class ApprovalGateService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def _latest_gate_for_scope(self, payload: ApprovalGateCreate) -> ApprovalGate | None:
+        try:
+            stmt = (
+                select(ApprovalGate)
+                .where(ApprovalGate.campaign_id == payload.campaign_id)
+                .order_by(ApprovalGate.created_at.desc())
+                .limit(1)
+            )
+            if payload.phase_job_id is not None:
+                stmt = stmt.where(ApprovalGate.phase_job_id == payload.phase_job_id)
+            elif payload.branch_id is not None:
+                stmt = stmt.where(
+                    ApprovalGate.branch_id == payload.branch_id,
+                    ApprovalGate.gate_reason == payload.gate_reason,
+                )
+            else:
+                stmt = stmt.where(
+                    ApprovalGate.gate_reason == payload.gate_reason,
+                    ApprovalGate.requested_by == payload.requested_by,
+                )
+            result = await self.db.execute(stmt)
+            return result.scalar_one_or_none()
+        except Exception:
+            return None
+
     async def create_gate(
         self,
         payload: ApprovalGateCreate,
         *,
         actor: str | None = None,
     ) -> ApprovalGate:
+        existing = await self._latest_gate_for_scope(payload)
+        if existing is not None:
+            await record_transition_event(
+                self.db,
+                event_type="approval_gate.reused",
+                actor=actor or payload.requested_by,
+                message="Existing approval gate reused instead of creating duplicate",
+                campaign_id=existing.campaign_id,
+                branch_id=existing.branch_id,
+                phase_job_id=existing.phase_job_id,
+                approval_gate_id=existing.id,
+                intention_id=existing.intention_id,
+                action="create_approval_gate",
+                outcome="reused_existing",
+                dedupe_key=f"{existing.id}:reuse",
+                payload={"status": existing.status.value, "reason": existing.gate_reason},
+            )
+            return existing
+
         record = ApprovalGate(
             campaign_id=payload.campaign_id,
             branch_id=payload.branch_id,
@@ -82,6 +126,8 @@ class ApprovalGateService:
             phase_job_id=record.phase_job_id,
             approval_gate_id=record.id,
             intention_id=record.intention_id,
+            action="create_approval_gate",
+            outcome="created",
             payload={
                 "status": record.status.value,
                 "reason": record.gate_reason,
@@ -117,8 +163,41 @@ class ApprovalGateService:
     ) -> ApprovalGate:
         previous = gate.status
         if previous == decision.status:
+            await record_transition_event(
+                self.db,
+                event_type="approval_gate.decision.duplicate",
+                actor=actor or decision.decided_by,
+                message="Duplicate approval decision ignored",
+                campaign_id=gate.campaign_id,
+                branch_id=gate.branch_id,
+                phase_job_id=gate.phase_job_id,
+                approval_gate_id=gate.id,
+                intention_id=intention_id or gate.intention_id,
+                action="decide_approval_gate",
+                outcome="ignored_duplicate",
+                dedupe_key=f"{gate.id}:decision:{decision.status.value}",
+                payload={"status": decision.status.value},
+            )
             return gate
-        validate_approval_transition(gate.status, decision.status)
+        try:
+            validate_approval_transition(gate.status, decision.status)
+        except ValueError as exc:
+            await record_transition_event(
+                self.db,
+                event_type="approval_gate.decision.conflict",
+                actor=actor or decision.decided_by,
+                message=str(exc),
+                campaign_id=gate.campaign_id,
+                branch_id=gate.branch_id,
+                phase_job_id=gate.phase_job_id,
+                approval_gate_id=gate.id,
+                intention_id=intention_id or gate.intention_id,
+                action="decide_approval_gate",
+                outcome="conflict",
+                dedupe_key=f"{gate.id}:decision-conflict:{decision.status.value}",
+                payload={"from": gate.status.value, "to": decision.status.value},
+            )
+            raise
         gate.status = decision.status
         gate.decided_by = decision.decided_by
         gate.decided_at = _utcnow()
@@ -135,6 +214,8 @@ class ApprovalGateService:
             phase_job_id=gate.phase_job_id,
             approval_gate_id=gate.id,
             intention_id=intention_id or gate.intention_id,
+            action="decide_approval_gate",
+            outcome="applied",
             payload={"from": previous.value, "to": decision.status.value},
         )
         return gate
@@ -149,8 +230,40 @@ class ApprovalGateService:
     ) -> ApprovalGate:
         previous = gate.status
         if previous == ApprovalGateStatusEnum.CANCELED:
+            await record_transition_event(
+                self.db,
+                event_type="approval_gate.decision.duplicate",
+                actor=actor,
+                message="Cancel request ignored; gate already canceled",
+                campaign_id=gate.campaign_id,
+                branch_id=gate.branch_id,
+                phase_job_id=gate.phase_job_id,
+                approval_gate_id=gate.id,
+                intention_id=intention_id or gate.intention_id,
+                action="cancel_approval_gate",
+                outcome="ignored_duplicate",
+                dedupe_key=f"{gate.id}:cancel-already-canceled",
+            )
             return gate
-        validate_approval_transition(gate.status, ApprovalGateStatusEnum.CANCELED)
+        try:
+            validate_approval_transition(gate.status, ApprovalGateStatusEnum.CANCELED)
+        except ValueError as exc:
+            await record_transition_event(
+                self.db,
+                event_type="approval_gate.decision.conflict",
+                actor=actor,
+                message=str(exc),
+                campaign_id=gate.campaign_id,
+                branch_id=gate.branch_id,
+                phase_job_id=gate.phase_job_id,
+                approval_gate_id=gate.id,
+                intention_id=intention_id or gate.intention_id,
+                action="cancel_approval_gate",
+                outcome="conflict",
+                dedupe_key=f"{gate.id}:cancel-conflict",
+                payload={"from": gate.status.value, "to": ApprovalGateStatusEnum.CANCELED.value},
+            )
+            raise
         gate.status = ApprovalGateStatusEnum.CANCELED
         gate.canceled_at = _utcnow()
         gate.canceled_by = actor
@@ -166,6 +279,8 @@ class ApprovalGateService:
             phase_job_id=gate.phase_job_id,
             approval_gate_id=gate.id,
             intention_id=intention_id or gate.intention_id,
+            action="cancel_approval_gate",
+            outcome="applied",
             payload={"from": previous.value, "to": ApprovalGateStatusEnum.CANCELED.value},
         )
         return gate
@@ -179,8 +294,40 @@ class ApprovalGateService:
     ) -> ApprovalGate:
         previous = gate.status
         if previous == ApprovalGateStatusEnum.EXPIRED:
+            await record_transition_event(
+                self.db,
+                event_type="approval_gate.decision.duplicate",
+                actor=actor,
+                message="Expire request ignored; gate already expired",
+                campaign_id=gate.campaign_id,
+                branch_id=gate.branch_id,
+                phase_job_id=gate.phase_job_id,
+                approval_gate_id=gate.id,
+                intention_id=intention_id or gate.intention_id,
+                action="expire_approval_gate",
+                outcome="ignored_duplicate",
+                dedupe_key=f"{gate.id}:expire-already-expired",
+            )
             return gate
-        validate_approval_transition(gate.status, ApprovalGateStatusEnum.EXPIRED)
+        try:
+            validate_approval_transition(gate.status, ApprovalGateStatusEnum.EXPIRED)
+        except ValueError as exc:
+            await record_transition_event(
+                self.db,
+                event_type="approval_gate.decision.conflict",
+                actor=actor,
+                message=str(exc),
+                campaign_id=gate.campaign_id,
+                branch_id=gate.branch_id,
+                phase_job_id=gate.phase_job_id,
+                approval_gate_id=gate.id,
+                intention_id=intention_id or gate.intention_id,
+                action="expire_approval_gate",
+                outcome="conflict",
+                dedupe_key=f"{gate.id}:expire-conflict",
+                payload={"from": gate.status.value, "to": ApprovalGateStatusEnum.EXPIRED.value},
+            )
+            raise
         gate.status = ApprovalGateStatusEnum.EXPIRED
         gate.decided_at = _utcnow()
         await self.db.flush()
@@ -194,6 +341,8 @@ class ApprovalGateService:
             phase_job_id=gate.phase_job_id,
             approval_gate_id=gate.id,
             intention_id=intention_id or gate.intention_id,
+            action="expire_approval_gate",
+            outcome="applied",
             payload={"from": previous.value, "to": ApprovalGateStatusEnum.EXPIRED.value},
         )
         return gate

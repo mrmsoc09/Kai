@@ -284,6 +284,9 @@ class SubmissionPackageService:
             branch_id=draft.branch_id,
             finding_id=finding.id,
             intention_id=intention_id,
+            draft_id=draft.id,
+            action="prepare_submission_package",
+            outcome="prepared",
             payload={
                 "submission_draft_id": str(draft.id),
                 "status": draft.status,

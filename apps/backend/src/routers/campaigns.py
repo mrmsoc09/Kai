@@ -4,6 +4,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.approval_gate_service import ApprovalGateService
@@ -13,9 +14,12 @@ from ..core.execution_result_service import ExecutionResultIngestionService
 from ..core.finding_correlation_service import FindingCorrelationService
 from ..core.finding_review_service import FindingReviewService
 from ..core.hil_db import get_db
+from ..core.metrics_service import MetricsService
 from ..core.review_queue_service import ReviewQueueService
 from ..core.submission_package_service import SubmissionPackageService
+from ..models.campaign import ApprovalGate, Artifact, AuditEvent, Observation, SubmissionDraft, ToolExecution
 from ..models.enums import ApprovalGateStatusEnum
+from ..models.hil import Evidence, Finding
 from ..schemas.campaigns import (
     ApprovalGateDecision,
     CampaignApprovalDecisionRequest,
@@ -31,6 +35,7 @@ from ..schemas.campaigns import (
 router = APIRouter()
 campaign_router = APIRouter(prefix="/api/v1/campaigns", tags=["campaigns"])
 findings_router = APIRouter(prefix="/api/v1/findings", tags=["findings"])
+diagnostics_router = APIRouter(prefix="/api/v1/diagnostics", tags=["diagnostics"])
 
 
 class FindingReviewRequest(BaseModel):
@@ -85,6 +90,15 @@ def _schedule_payload(summary) -> CampaignScheduleSummary:
         created_approval_gates=summary.created_approval_gates,
         dispatched_tool_executions=summary.dispatched_tool_executions,
     )
+
+
+def _status_counts(items, *, attr: str = "status") -> dict[str, int]:
+    counts: dict[str, int] = {}
+    for item in items:
+        value = getattr(item, attr, None)
+        key = value.value if hasattr(value, "value") else str(value)
+        counts[key] = counts.get(key, 0) + 1
+    return counts
 
 
 @campaign_router.post("/start", response_model=CampaignStartResponse)
@@ -200,9 +214,7 @@ async def decide_campaign_approval_gate(
         raise HTTPException(status_code=404, detail=f"Approval gate not found: {gate_id}")
 
     try:
-        if body.status == gate.status:
-            decided = gate
-        elif body.status == ApprovalGateStatusEnum.CANCELED:
+        if body.status == ApprovalGateStatusEnum.CANCELED:
             decided = await approvals.cancel_gate(
                 gate,
                 actor=body.decided_by,
@@ -321,5 +333,203 @@ async def prepare_submission(
     }
 
 
+@diagnostics_router.get("/summary")
+async def diagnostics_summary(db: AsyncSession = Depends(get_db)):
+    metrics = MetricsService(db)
+    return await metrics.summary_counts()
+
+
+@campaign_router.get("/{campaign_id}/diagnostics")
+async def campaign_diagnostics(campaign_id: UUID, db: AsyncSession = Depends(get_db)):
+    service = CampaignStartService(db)
+    campaign = await service.repo.get_campaign(campaign_id)
+    if campaign is None:
+        raise HTTPException(status_code=404, detail="Campaign not found")
+
+    branches = await service.repo.list_branches(campaign_id)
+    phase_jobs = await service.repo.list_phase_jobs(campaign_id)
+
+    tool_exec_result = await db.execute(
+        select(ToolExecution)
+        .where(ToolExecution.campaign_id == campaign_id)
+        .order_by(ToolExecution.created_at.asc())
+    )
+    tool_executions = list(tool_exec_result.scalars().all())
+
+    gates_result = await db.execute(
+        select(ApprovalGate)
+        .where(ApprovalGate.campaign_id == campaign_id)
+        .order_by(ApprovalGate.created_at.asc())
+    )
+    approval_gates = list(gates_result.scalars().all())
+
+    artifact_result = await db.execute(
+        select(func.count(Artifact.id)).where(Artifact.campaign_id == campaign_id)
+    )
+    observation_result = await db.execute(
+        select(func.count(Observation.id)).where(Observation.campaign_id == campaign_id)
+    )
+    drafts_result = await db.execute(
+        select(SubmissionDraft)
+        .where(SubmissionDraft.campaign_id == campaign_id)
+        .order_by(SubmissionDraft.created_at.asc())
+    )
+    drafts = list(drafts_result.scalars().all())
+    audit_result = await db.execute(
+        select(AuditEvent)
+        .where(AuditEvent.campaign_id == campaign_id)
+        .order_by(AuditEvent.happened_at.desc())
+        .limit(50)
+    )
+    audit_events = list(audit_result.scalars().all())
+
+    return {
+        "campaign": {
+            "id": str(campaign.id),
+            "status": campaign.status.value,
+            "created_at": campaign.created_at.isoformat() if campaign.created_at else None,
+            "updated_at": campaign.updated_at.isoformat() if campaign.updated_at else None,
+            "blocked_reason": campaign.blocked_reason,
+            "last_error": campaign.last_error,
+        },
+        "counts": {
+            "branches": len(branches),
+            "phase_jobs": len(phase_jobs),
+            "tool_executions": len(tool_executions),
+            "approval_gates": len(approval_gates),
+            "artifacts": int(artifact_result.scalar() or 0),
+            "observations": int(observation_result.scalar() or 0),
+            "submission_drafts": len(drafts),
+        },
+        "status_breakdown": {
+            "branches": _status_counts(branches),
+            "phase_jobs": _status_counts(phase_jobs),
+            "tool_executions": _status_counts(tool_executions),
+            "approval_gates": _status_counts(approval_gates),
+            "submission_drafts": _status_counts(drafts),
+        },
+        "phase_links": [
+            {
+                "phase_job_id": str(job.id),
+                "phase_name": job.phase_name,
+                "phase_status": job.status.value,
+                "worker_task_id": job.worker_task_id,
+                "depends_on_job_id": str(job.depends_on_job_id) if job.depends_on_job_id else None,
+            }
+            for job in phase_jobs
+        ],
+        "recent_audit_events": [
+            {
+                "id": str(event.id),
+                "event_type": event.event_type,
+                "actor": event.actor,
+                "happened_at": event.happened_at.isoformat() if event.happened_at else None,
+                "phase_job_id": str(event.phase_job_id) if event.phase_job_id else None,
+                "tool_execution_id": str(event.tool_execution_id) if event.tool_execution_id else None,
+                "approval_gate_id": str(event.approval_gate_id) if event.approval_gate_id else None,
+                "message": event.message,
+                "payload": event.event_payload_json,
+            }
+            for event in audit_events
+        ],
+    }
+
+
+@findings_router.get("/{finding_id}/diagnostics")
+async def finding_diagnostics(finding_id: UUID, db: AsyncSession = Depends(get_db)):
+    finding_result = await db.execute(
+        select(Finding).where(Finding.id == finding_id, Finding.is_deleted.is_(False))
+    )
+    finding = finding_result.scalar_one_or_none()
+    if finding is None:
+        raise HTTPException(status_code=404, detail="Finding not found")
+
+    evidence_result = await db.execute(
+        select(Evidence)
+        .where(Evidence.finding_id == finding.id, Evidence.is_deleted.is_(False))
+        .order_by(Evidence.created_at.asc())
+    )
+    evidences = list(evidence_result.scalars().all())
+    observation_result = await db.execute(
+        select(Observation)
+        .where(Observation.finding_id == finding.id)
+        .order_by(Observation.created_at.asc())
+    )
+    observations = list(observation_result.scalars().all())
+    artifact_result = await db.execute(
+        select(Artifact)
+        .where(Artifact.finding_id == finding.id)
+        .order_by(Artifact.created_at.asc())
+    )
+    artifacts = list(artifact_result.scalars().all())
+    draft_result = await db.execute(
+        select(SubmissionDraft)
+        .where(SubmissionDraft.finding_id == finding.id)
+        .order_by(SubmissionDraft.created_at.asc())
+    )
+    drafts = list(draft_result.scalars().all())
+    audit_result = await db.execute(
+        select(AuditEvent)
+        .where(AuditEvent.finding_id == finding.id)
+        .order_by(AuditEvent.happened_at.desc())
+        .limit(50)
+    )
+    audit_events = list(audit_result.scalars().all())
+
+    return {
+        "finding": {
+            "id": str(finding.id),
+            "program": finding.program,
+            "asset": finding.asset,
+            "title": finding.title,
+            "status": finding.status.value,
+            "severity": finding.severity.value if finding.severity else None,
+            "scope_json": finding.scope_json,
+        },
+        "counts": {
+            "evidence": len(evidences),
+            "observations": len(observations),
+            "artifacts": len(artifacts),
+            "submission_drafts": len(drafts),
+            "audit_events": len(audit_events),
+        },
+        "submission_drafts": [
+            {
+                "id": str(draft.id),
+                "campaign_id": str(draft.campaign_id),
+                "branch_id": str(draft.branch_id) if draft.branch_id else None,
+                "status": draft.status,
+                "prepared_by": draft.prepared_by,
+                "approved_by": draft.approved_by,
+                "approved_at": draft.approved_at.isoformat() if draft.approved_at else None,
+            }
+            for draft in drafts
+        ],
+        "recent_observations": [
+            {
+                "id": str(obs.id),
+                "category": obs.category,
+                "title": obs.title,
+                "summary": obs.summary,
+                "tool_execution_id": str(obs.tool_execution_id) if obs.tool_execution_id else None,
+                "phase_job_id": str(obs.phase_job_id) if obs.phase_job_id else None,
+            }
+            for obs in observations[-10:]
+        ],
+        "recent_audit_events": [
+            {
+                "id": str(event.id),
+                "event_type": event.event_type,
+                "actor": event.actor,
+                "happened_at": event.happened_at.isoformat() if event.happened_at else None,
+                "message": event.message,
+                "payload": event.event_payload_json,
+            }
+            for event in audit_events
+        ],
+    }
+
+
 router.include_router(campaign_router)
 router.include_router(findings_router)
+router.include_router(diagnostics_router)

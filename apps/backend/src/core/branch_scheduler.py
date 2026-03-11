@@ -309,6 +309,39 @@ class BranchScheduler:
                 continue
 
             intention_id = _phase_intention_id(phase_job, branch)
+
+            # Re-entry guard: avoid duplicate dispatch when phase is already active.
+            if phase_job.status == PhaseJobStatusEnum.RUNNING:
+                summary.queued_jobs += 1
+                continue
+            if phase_job.status == PhaseJobStatusEnum.QUEUED:
+                if phase_job.id in active_exec_by_phase:
+                    summary.queued_jobs += 1
+                    continue
+                if phase_job.worker_task_id:
+                    await record_transition_event(
+                        self.db,
+                        event_type="phase_job.dispatch.skipped",
+                        actor=actor,
+                        message=(
+                            "Phase is queued with worker_task_id but no active tool execution; "
+                            "scheduler skipped duplicate dispatch"
+                        ),
+                        campaign_id=campaign.id,
+                        branch_id=branch.id,
+                        phase_job_id=phase_job.id,
+                        intention_id=intention_id,
+                        action="schedule_phase",
+                        outcome="skipped_stale_queued",
+                        dedupe_key=f"{phase_job.id}:queued-stale:{phase_job.worker_task_id}",
+                        payload={
+                            "phase_status": phase_job.status.value,
+                            "worker_task_id": phase_job.worker_task_id,
+                        },
+                    )
+                    summary.queued_jobs += 1
+                    continue
+
             if branch.depends_on_branch_id:
                 dep_branch = branch_by_id.get(branch.depends_on_branch_id)
                 if dep_branch is None or dep_branch.status != BranchStatusEnum.COMPLETED:
