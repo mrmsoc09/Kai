@@ -26,6 +26,13 @@ DRAFT_STATUS_READY_FOR_SUBMISSION = "READY_FOR_SUBMISSION"
 DRAFT_STATUS_NEEDS_REVIEW = "NEEDS_REVIEW"
 DRAFT_STATUS_CLOSED = "CLOSED"
 DRAFT_STATUS_SUPPRESSED_DUPLICATE = "SUPPRESSED_DUPLICATE"
+FINALIZED_FINDING_STATUSES = {
+    FindingStatusEnum.HIL_APPROVED,
+    FindingStatusEnum.REJECTED,
+    FindingStatusEnum.DUPLICATE,
+    FindingStatusEnum.SUBMITTED,
+    FindingStatusEnum.RESOLVED,
+}
 
 
 def _utcnow() -> datetime:
@@ -86,16 +93,6 @@ class FindingReviewService:
                 "Finding has no campaign context. A SubmissionDraft or scope_json.campaign_id is required."
             )
         return campaign_id
-
-    @staticmethod
-    def _initial_review_state(finding_status: FindingStatusEnum) -> None:
-        if finding_status in {
-            FindingStatusEnum.REJECTED,
-            FindingStatusEnum.DUPLICATE,
-            FindingStatusEnum.SUBMITTED,
-            FindingStatusEnum.RESOLVED,
-        }:
-            raise ValueError(f"Finding is already terminal: {finding_status.value}")
 
     @staticmethod
     def _action_mapping(action: str) -> tuple[FindingStatusEnum, str]:
@@ -184,7 +181,64 @@ class FindingReviewService:
             (finding.scope_json or {}).get("branch_id") if isinstance(finding.scope_json, dict) else None
         )
 
-        self._initial_review_state(finding.status)
+        target_finding_status, target_draft_status = self._action_mapping(normalized_action)
+        if (
+            draft is not None
+            and finding.status == target_finding_status
+            and draft.status == target_draft_status
+        ):
+            review_timestamp = _utcnow()
+            await record_transition_event(
+                self.db,
+                event_type="finding.review.duplicate_ignored",
+                actor=reviewer_id,
+                message="Duplicate review action ignored",
+                campaign_id=campaign_id,
+                branch_id=branch_id,
+                finding_id=finding.id,
+                intention_id=intention_id,
+                action="review_finding",
+                outcome="ignored_duplicate",
+                dedupe_key=(
+                    f"{finding.id}:review:{normalized_action}:{reviewer_id}:"
+                    f"{target_finding_status.value}:{target_draft_status}"
+                ),
+                payload={"action": normalized_action},
+            )
+            return FindingReviewResult(
+                finding_id=finding.id,
+                finding_status=finding.status,
+                draft_id=draft.id,
+                draft_status=draft.status,
+                campaign_id=campaign_id,
+                review_timestamp=review_timestamp,
+            )
+        if finding.status in FINALIZED_FINDING_STATUSES and finding.status != target_finding_status:
+            await record_transition_event(
+                self.db,
+                event_type="finding.review.conflict",
+                actor=reviewer_id,
+                message=(
+                    f"Review action {normalized_action} rejected; finding already finalized as "
+                    f"{finding.status.value}"
+                ),
+                campaign_id=campaign_id,
+                branch_id=branch_id,
+                finding_id=finding.id,
+                intention_id=intention_id,
+                action="review_finding",
+                outcome="conflict",
+                dedupe_key=f"{finding.id}:review-conflict:{normalized_action}:{finding.status.value}",
+                payload={
+                    "current_status": finding.status.value,
+                    "requested_action": normalized_action,
+                },
+            )
+            raise ValueError(
+                f"Finding review already finalized as {finding.status.value}; "
+                f"cannot apply action {normalized_action}"
+            )
+
         review_timestamp = _utcnow()
 
         if finding.status == FindingStatusEnum.NEW:
@@ -198,13 +252,13 @@ class FindingReviewService:
                 branch_id=branch_id,
                 finding_id=finding.id,
                 intention_id=intention_id,
+                action="review_finding",
+                outcome="started",
                 payload={
                     "reviewer_id": reviewer_id,
                     "review_timestamp": review_timestamp.isoformat(),
                 },
             )
-
-        target_finding_status, target_draft_status = self._action_mapping(normalized_action)
 
         if draft is None:
             draft = SubmissionDraft(
@@ -249,6 +303,9 @@ class FindingReviewService:
             branch_id=branch_id,
             finding_id=finding.id,
             intention_id=intention_id,
+            draft_id=draft.id,
+            action="review_finding",
+            outcome="applied",
             payload={
                 "action": normalized_action,
                 "reviewer_id": reviewer_id,

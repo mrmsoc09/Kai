@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import asyncio
+import hashlib
+import json
 from dataclasses import asdict
 from typing import Any
 from uuid import UUID
@@ -8,11 +10,18 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models.campaign import ApprovalGate, CampaignRun, ExecutionBranch, PhaseJob, ToolExecution
+from ..models.campaign import (
+    ApprovalGate,
+    Artifact,
+    AuditEvent,
+    CampaignRun,
+    ExecutionBranch,
+    Observation,
+    PhaseJob,
+    ToolExecution,
+)
 from ..models.enums import (
-    ApprovalGateStatusEnum,
     BranchStatusEnum,
-    CampaignStatusEnum,
     PhaseJobStatusEnum,
     ToolExecutionStatusEnum,
 )
@@ -181,6 +190,150 @@ class ExecutionResultIngestionService:
         result = await BranchScheduler(self.db).schedule_campaign(campaign_id, actor=actor)
         return CampaignScheduleSummary(**asdict(result))
 
+    @staticmethod
+    def _normalized_ingest_payload(payload: ExecutionResultIngestRequest) -> dict[str, Any]:
+        normalized_artifacts = [
+            {
+                "artifact_type": item.artifact_type.value if item.artifact_type else None,
+                "uri": item.uri,
+                "content_hash": item.content_hash,
+                "mime_type": item.mime_type,
+                "size_bytes": item.size_bytes,
+                "description": item.description,
+                "details_json": item.details_json,
+            }
+            for item in payload.artifacts
+        ]
+        normalized_observations = [
+            {
+                "observation_type": item.observation_type.value if item.observation_type else None,
+                "category": item.category,
+                "title": item.title,
+                "summary": item.summary,
+                "confidence": item.confidence,
+                "normalized_ref": item.normalized_ref,
+                "payload_json": item.payload_json,
+            }
+            for item in payload.observations
+        ]
+        return {
+            "tool_status": payload.tool_status.value,
+            "exit_code": payload.exit_code,
+            "error_message": payload.error_message,
+            "canceled_by": payload.canceled_by,
+            "approval_reason": payload.approval_reason,
+            "stdout_ref": payload.stdout_ref,
+            "stderr_ref": payload.stderr_ref,
+            "stdout_summary": payload.stdout_summary,
+            "stderr_summary": payload.stderr_summary,
+            "result_payload_json": payload.result_payload_json,
+            "artifacts": normalized_artifacts,
+            "observations": normalized_observations,
+        }
+
+    def _ingestion_fingerprint(self, payload: ExecutionResultIngestRequest) -> str:
+        normalized = self._normalized_ingest_payload(payload)
+        serialized = json.dumps(normalized, sort_keys=True, default=str)
+        return hashlib.sha256(serialized.encode("utf-8")).hexdigest()
+
+    async def _load_execution_side_effects(
+        self,
+        execution_id: UUID,
+    ) -> tuple[list[Artifact], list[Observation]]:
+        try:
+            artifacts_result = await self.db.execute(
+                select(Artifact)
+                .where(Artifact.tool_execution_id == execution_id)
+                .order_by(Artifact.created_at.asc())
+            )
+            observations_result = await self.db.execute(
+                select(Observation)
+                .where(Observation.tool_execution_id == execution_id)
+                .order_by(Observation.created_at.asc())
+            )
+            return (
+                list(artifacts_result.scalars().all()),
+                list(observations_result.scalars().all()),
+            )
+        except Exception:
+            return ([], [])
+
+    async def _find_ingested_event(
+        self,
+        *,
+        execution_id: UUID,
+        ingestion_fingerprint: str,
+    ) -> AuditEvent | None:
+        try:
+            result = await self.db.execute(
+                select(AuditEvent)
+                .where(
+                    AuditEvent.tool_execution_id == execution_id,
+                    AuditEvent.event_type == "phase_job.result.ingested",
+                )
+                .order_by(AuditEvent.created_at.desc())
+                .limit(50)
+            )
+            for event in result.scalars().all():
+                payload = event.event_payload_json if isinstance(event.event_payload_json, dict) else {}
+                if payload.get("ingestion_fingerprint") == ingestion_fingerprint:
+                    return event
+        except Exception:
+            return None
+        return None
+
+    async def _latest_ingested_event(self, execution_id: UUID) -> AuditEvent | None:
+        try:
+            result = await self.db.execute(
+                select(AuditEvent)
+                .where(
+                    AuditEvent.tool_execution_id == execution_id,
+                    AuditEvent.event_type == "phase_job.result.ingested",
+                )
+                .order_by(AuditEvent.created_at.desc())
+                .limit(1)
+            )
+            return result.scalar_one_or_none()
+        except Exception:
+            return None
+
+    async def _build_response(
+        self,
+        *,
+        campaign: CampaignRun,
+        branch: ExecutionBranch | None,
+        phase_job: PhaseJob | None,
+        execution: ToolExecution,
+        scheduler_summary: CampaignScheduleSummary | None = None,
+        artifact_ids: list[UUID] | None = None,
+        observation_ids: list[UUID] | None = None,
+    ) -> ExecutionResultIngestResponse:
+        refreshed_campaign = await self.campaigns.repo.get_campaign(campaign.id) or campaign
+        refreshed_branch = (
+            await self.campaigns.repo.get_branch(branch.id)
+            if branch is not None
+            else None
+        )
+        refreshed_phase = (
+            await self.campaigns.repo.get_phase_job(phase_job.id)
+            if phase_job is not None
+            else None
+        )
+        refreshed_execution = await self.tool_exec.get_execution(execution.id) or execution
+        return ExecutionResultIngestResponse(
+            campaign_id=refreshed_campaign.id,
+            branch_id=refreshed_branch.id if refreshed_branch else None,
+            phase_job_id=refreshed_phase.id if refreshed_phase else None,
+            execution_id=refreshed_execution.id,
+            tool_status=refreshed_execution.status,
+            phase_status=refreshed_phase.status if refreshed_phase else None,
+            branch_status=refreshed_branch.status if refreshed_branch else None,
+            campaign_status=refreshed_campaign.status,
+            artifact_ids=artifact_ids or [],
+            observation_ids=observation_ids or [],
+            scheduler=scheduler_summary,
+        )
+
     async def ingest_result(
         self,
         payload: ExecutionResultIngestRequest,
@@ -211,6 +364,125 @@ class ExecutionResultIngestionService:
             phase_job, branch
         )
         placeholder = (execution.adapter_name or "").startswith("placeholder")
+        ingestion_fingerprint = self._ingestion_fingerprint(payload)
+
+        existing_ingested_event = await self._find_ingested_event(
+            execution_id=execution.id,
+            ingestion_fingerprint=ingestion_fingerprint,
+        )
+        if existing_ingested_event is not None:
+            side_effect_artifacts, side_effect_observations = await self._load_execution_side_effects(
+                execution.id
+            )
+            scheduler_summary: CampaignScheduleSummary | None = None
+            if payload.trigger_scheduler:
+                scheduler_summary = await self._scheduler_summary(
+                    campaign.id,
+                    actor=f"{resolved_actor}.scheduler",
+                )
+            await record_transition_event(
+                self.db,
+                event_type="phase_job.result.replay_ignored",
+                actor=resolved_actor,
+                message="Duplicate execution result replay ignored",
+                campaign_id=campaign.id,
+                branch_id=branch.id if branch else None,
+                phase_job_id=phase_job.id if phase_job else None,
+                tool_execution_id=execution.id,
+                intention_id=intention_id,
+                action="replay_ingestion",
+                outcome="ignored_duplicate",
+                dedupe_key=f"{execution.id}:replay:{ingestion_fingerprint}",
+                payload={"ingestion_fingerprint": ingestion_fingerprint},
+            )
+            return await self._build_response(
+                campaign=campaign,
+                branch=branch,
+                phase_job=phase_job,
+                execution=execution,
+                scheduler_summary=scheduler_summary,
+                artifact_ids=[artifact.id for artifact in side_effect_artifacts],
+                observation_ids=[observation.id for observation in side_effect_observations],
+            )
+
+        if execution.status in TERMINAL_TOOL_STATUSES:
+            phase_summary = (
+                phase_job.output_summary_json
+                if phase_job is not None and isinstance(phase_job.output_summary_json, dict)
+                else {}
+            )
+            summary_fingerprint = phase_summary.get("ingestion_fingerprint")
+            if payload.tool_status == execution.status and summary_fingerprint == ingestion_fingerprint:
+                side_effect_artifacts, side_effect_observations = await self._load_execution_side_effects(
+                    execution.id
+                )
+                scheduler_summary: CampaignScheduleSummary | None = None
+                if payload.trigger_scheduler:
+                    scheduler_summary = await self._scheduler_summary(
+                        campaign.id,
+                        actor=f"{resolved_actor}.scheduler",
+                    )
+                await record_transition_event(
+                    self.db,
+                    event_type="phase_job.result.replay_ignored",
+                    actor=resolved_actor,
+                    message="Duplicate terminal result replay ignored",
+                    campaign_id=campaign.id,
+                    branch_id=branch.id if branch else None,
+                    phase_job_id=phase_job.id if phase_job else None,
+                    tool_execution_id=execution.id,
+                    intention_id=intention_id,
+                    action="replay_ingestion",
+                    outcome="ignored_duplicate",
+                    dedupe_key=f"{execution.id}:terminal-replay:{ingestion_fingerprint}",
+                    payload={"ingestion_fingerprint": ingestion_fingerprint},
+                )
+                return await self._build_response(
+                    campaign=campaign,
+                    branch=branch,
+                    phase_job=phase_job,
+                    execution=execution,
+                    scheduler_summary=scheduler_summary,
+                    artifact_ids=[artifact.id for artifact in side_effect_artifacts],
+                    observation_ids=[observation.id for observation in side_effect_observations],
+                )
+
+            latest_ingested = await self._latest_ingested_event(execution.id)
+            latest_payload = (
+                latest_ingested.event_payload_json
+                if latest_ingested is not None and isinstance(latest_ingested.event_payload_json, dict)
+                else {}
+            )
+            previous_fingerprint = latest_payload.get("ingestion_fingerprint")
+            conflict_reason = (
+                f"terminal status mismatch: existing={execution.status.value}, replay={payload.tool_status.value}"
+                if payload.tool_status != execution.status
+                else "terminal result replay payload differs from recorded execution result"
+            )
+            await record_transition_event(
+                self.db,
+                event_type="phase_job.result.replay_conflict",
+                actor=resolved_actor,
+                message="Conflicting replay attempted for terminal tool execution",
+                campaign_id=campaign.id,
+                branch_id=branch.id if branch else None,
+                phase_job_id=phase_job.id if phase_job else None,
+                tool_execution_id=execution.id,
+                intention_id=intention_id,
+                action="replay_ingestion",
+                outcome="conflict",
+                dedupe_key=f"{execution.id}:conflict:{payload.tool_status.value}:{ingestion_fingerprint}",
+                payload={
+                    "conflict_reason": conflict_reason,
+                    "existing_status": execution.status.value,
+                    "replay_status": payload.tool_status.value,
+                    "existing_ingestion_fingerprint": previous_fingerprint,
+                    "replay_ingestion_fingerprint": ingestion_fingerprint,
+                },
+            )
+            raise ValueError(
+                "Conflicting replay for terminal execution; existing result already finalized"
+            )
 
         await self.tool_exec.record_output_refs(
             execution,
@@ -249,15 +521,26 @@ class ExecutionResultIngestionService:
                     actor=resolved_actor,
                     intention_id=intention_id,
                 )
-            return ExecutionResultIngestResponse(
+            await record_transition_event(
+                self.db,
+                event_type="phase_job.result.running",
+                actor=resolved_actor,
+                message="Worker reported execution running",
                 campaign_id=campaign.id,
                 branch_id=branch.id if branch else None,
                 phase_job_id=phase_job.id if phase_job else None,
-                execution_id=execution.id,
-                tool_status=execution.status,
-                phase_status=phase_job.status if phase_job else None,
-                branch_status=branch.status if branch else None,
-                campaign_status=campaign.status,
+                tool_execution_id=execution.id,
+                intention_id=intention_id,
+                action="execution_running",
+                outcome="accepted",
+                dedupe_key=f"{execution.id}:running:{ingestion_fingerprint}",
+                payload={"ingestion_fingerprint": ingestion_fingerprint},
+            )
+            return await self._build_response(
+                campaign=campaign,
+                branch=branch,
+                phase_job=phase_job,
+                execution=execution,
             )
 
         if payload.tool_status not in TERMINAL_TOOL_STATUSES and payload.tool_status != ToolExecutionStatusEnum.WAITING_APPROVAL:
@@ -344,6 +627,7 @@ class ExecutionResultIngestionService:
                     "tool_status": payload.tool_status.value,
                     "result_payload_json": payload.result_payload_json,
                     "placeholder": placeholder,
+                    "ingestion_fingerprint": ingestion_fingerprint,
                 }
                 if payload.error_message:
                     phase_job.error_message = payload.error_message
@@ -359,6 +643,7 @@ class ExecutionResultIngestionService:
             stderr_ref=payload.stderr_ref,
             actor=resolved_actor,
             placeholder=placeholder,
+            ingestion_fingerprint=ingestion_fingerprint,
         )
         primary_artifact = created_artifacts[0] if created_artifacts else None
         created_observations = await self.observations.create_result_observations(
@@ -372,10 +657,13 @@ class ExecutionResultIngestionService:
             error_message=payload.error_message,
             placeholder=placeholder,
             actor=resolved_actor,
+            ingestion_fingerprint=ingestion_fingerprint,
         )
         correlator = FindingCorrelationService(self.db)
         correlation_outcomes = []
         for observation in created_observations:
+            if observation.finding_id is not None:
+                continue
             correlation_outcomes.append(
                 await correlator.process_observation(
                     observation,
@@ -393,12 +681,16 @@ class ExecutionResultIngestionService:
             phase_job_id=phase_job.id if phase_job else None,
             tool_execution_id=execution.id,
             intention_id=intention_id,
+            action="ingest_execution_result",
+            outcome="accepted",
+            dedupe_key=f"{execution.id}:ingested:{ingestion_fingerprint}",
             payload={
                 "tool_status": payload.tool_status.value,
                 "artifact_count": len(created_artifacts),
                 "observation_count": len(created_observations),
                 "correlated_observations": len(correlation_outcomes),
                 "placeholder": placeholder,
+                "ingestion_fingerprint": ingestion_fingerprint,
             },
         )
 
@@ -409,31 +701,14 @@ class ExecutionResultIngestionService:
                 actor=f"{resolved_actor}.scheduler",
             )
 
-        refreshed_campaign = await self.campaigns.repo.get_campaign(campaign.id) or campaign
-        refreshed_branch = (
-            await self.campaigns.repo.get_branch(branch.id)
-            if branch is not None
-            else None
-        )
-        refreshed_phase = (
-            await self.campaigns.repo.get_phase_job(phase_job.id)
-            if phase_job is not None
-            else None
-        )
-        refreshed_execution = await self.tool_exec.get_execution(execution.id) or execution
-
-        return ExecutionResultIngestResponse(
-            campaign_id=refreshed_campaign.id,
-            branch_id=refreshed_branch.id if refreshed_branch else None,
-            phase_job_id=refreshed_phase.id if refreshed_phase else None,
-            execution_id=refreshed_execution.id,
-            tool_status=refreshed_execution.status,
-            phase_status=refreshed_phase.status if refreshed_phase else None,
-            branch_status=refreshed_branch.status if refreshed_branch else None,
-            campaign_status=refreshed_campaign.status,
+        return await self._build_response(
+            campaign=campaign,
+            branch=branch,
+            phase_job=phase_job,
+            execution=execution,
+            scheduler_summary=scheduler_summary,
             artifact_ids=[artifact.id for artifact in created_artifacts],
             observation_ids=[observation.id for observation in created_observations],
-            scheduler=scheduler_summary,
         )
 
 
