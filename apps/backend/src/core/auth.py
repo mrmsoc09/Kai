@@ -7,10 +7,17 @@ from uuid import uuid4
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 from pydantic import BaseModel, Field
 
 from .token_blocklist import is_revoked
+
+try:
+    from jose import JWTError, jwt  # type: ignore
+except ModuleNotFoundError:  # pragma: no cover - environment/bootstrap safeguard
+    class JWTError(Exception):
+        """Fallback JWT error when python-jose is unavailable."""
+
+    jwt = None  # type: ignore[assignment]
 
 security = HTTPBearer(auto_error=True)
 
@@ -35,6 +42,11 @@ JWT_ACCESS_EXP_MIN_ENV = "K1_ACCESS_TOKEN_EXPIRY_MINUTES"
 
 class AuthConfigError(RuntimeError):
     pass
+
+
+def _require_jose() -> None:
+    if jwt is None:
+        raise AuthConfigError("jwt_library_not_installed")
 
 
 def _is_non_production() -> bool:
@@ -84,6 +96,7 @@ def _normalize_roles(roles: List[str]) -> List[str]:
 
 
 def create_access_token(subject: str, roles: List[str], expires_delta: timedelta | None = None) -> str:
+    _require_jose()
     now = datetime.now(timezone.utc)
     exp_delta = expires_delta or timedelta(minutes=_access_expiry_minutes())
     normalized_roles = _normalize_roles(roles)
@@ -115,6 +128,7 @@ def issue_dev_access_token(bootstrap_token: str) -> str:
 
 def decode_access_token(token: str) -> User:
     try:
+        _require_jose()
         payload = jwt.decode(token, _jwt_secret(), algorithms=[_jwt_algorithm()])
     except AuthConfigError:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="auth_not_configured")
@@ -145,6 +159,10 @@ def extract_jti_and_exp(token: str) -> tuple[Optional[str], int]:
     Decode a token WITHOUT blocklist/expiry enforcement (for use in logout).
     Returns (jti, exp). Does not raise on expired tokens.
     """
+    try:
+        _require_jose()
+    except AuthConfigError:
+        return None, 0
     try:
         payload = jwt.decode(
             token,
