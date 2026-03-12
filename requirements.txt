@@ -1,4 +1,8 @@
-# Python compatibility: tested on Python >=3.9 (temp venv check on 3.11)
+# Python compatibility: actively tested on Python 3.11.
+# This file includes runtime dependencies plus minimum test tooling (`pytest`)
+# so a basic contributor workflow works with:
+#   pip install -r requirements.txt
+#   pytest
 # Core Web Framework
 fastapi>=0.115,<1.0
 uvicorn[standard]>=0.30,<1.0
@@ -94,5 +98,5 @@ isort>=5.13,<6.0
 # Optional: For enhanced functionality
 plotly>=5.18,<6.0  # For visualization (optional)
 hvac==2.1.0
-pypdf==4.0.1
-python-multipart==0.0.9
+pypdf==6.8.0
+python-multipart==0.0.22
