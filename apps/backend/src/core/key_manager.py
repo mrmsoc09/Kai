@@ -1,21 +1,61 @@
-import os
 import csv
 import io
 import logging
+import os
 import re
 from typing import Dict, List, Optional
 import hvac
 from fastapi import UploadFile, HTTPException
 import pypdf
+from .secret_manager import EnvSecretProvider, get_secret_manager
 
 logger = logging.getLogger(__name__)
 
 class KeyManager:
-    def __init__(self):
+    def __init__(self, vault_token: Optional[str] = None):
         self.vault_url = os.getenv("VAULT_URL", "http://k1_vault:8200")
-        self.vault_token = os.getenv("VAULT_TOKEN", "root")
+        self.vault_token = self._resolve_vault_token(vault_token)
         self.client = hvac.Client(url=self.vault_url, token=self.vault_token)
         self.mount_point = "secret"
+
+    def _is_non_production(self) -> bool:
+        return os.getenv("ENVIRONMENT", "development").strip().lower() != "production"
+
+    def _allow_dev_root_fallback(self) -> bool:
+        if not self._is_non_production():
+            return False
+        if os.getenv("K1_TEST_MODE", "").strip().lower() in {"1", "true", "yes", "on"}:
+            return True
+        return os.getenv("K1_ALLOW_DEV_VAULT_ROOT", "").strip().lower() in {"1", "true", "yes", "on"}
+
+    def _resolve_vault_token(self, explicit_token: Optional[str]) -> str:
+        if explicit_token and explicit_token.strip():
+            return explicit_token.strip()
+
+        env_token = EnvSecretProvider().get_secret("VAULT_TOKEN")
+        if env_token:
+            return env_token
+
+        secret_token: Optional[str] = None
+        try:
+            secret_token = get_secret_manager().get_optional("VAULT_TOKEN")
+        except Exception as exc:
+            logger.warning("Secret manager lookup for VAULT_TOKEN failed: %s", exc)
+
+        if secret_token and secret_token.strip():
+            return secret_token.strip()
+
+        if self._allow_dev_root_fallback():
+            logger.warning(
+                "Using explicit non-production Vault token fallback ('root'). "
+                "Set VAULT_TOKEN or disable K1_TEST_MODE/K1_ALLOW_DEV_VAULT_ROOT."
+            )
+            return "root"
+
+        raise RuntimeError(
+            "VAULT_TOKEN is not configured. Provide an explicit token, set VAULT_TOKEN in the environment, "
+            "or configure secret-manager retrieval."
+        )
 
     def is_authenticated(self) -> bool:
         return self.client.is_authenticated()
