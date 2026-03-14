@@ -18,12 +18,32 @@ from ..core.auth import (
 )
 from ..core.bug_bounty_hunting_service import BugBountyHuntingService
 from ..core.hil_db import get_db
+from ..core.phase7_prediction_service import Phase7PredictionService
+from ..core.phase9_alert_case_service import Phase9AlertCaseService
+from ..core.phase10_retrospective_service import Phase10RetrospectiveService
+from ..core.phase10_5_agent_framework_service import Phase10_5AgentFrameworkService
 from ..core.recon_inference_service import ReconInferenceService
 from ..schemas.bug_bounty_hunt import (
     AdaptiveScheduleActionRead,
+    AgentEvaluateRequest,
+    AgentEvaluationRead,
+    AgentExecutionRead,
+    AgentRegistryRead,
+    AgentRegistrySyncResponse,
+    AgentRunRequest,
+    AlertActionRequest,
+    AlertCaseCreateRequest,
+    AlertSyncRequest,
+    AlertSyncResponse,
+    AnalystCaseRead,
     AnalystQueueItemRead,
     AnalystBriefingResponse,
+    CaseAssignRequest,
+    CaseCreateRequest,
+    CaseNoteRequest,
+    CaseUpdateRequest,
     CandidateQueueUpdateRequest,
+    NotificationAlertRead,
     GenerateReportDraftRequest,
     GenerateReportDraftResponse,
     HuntScheduleCreateRequest,
@@ -32,6 +52,13 @@ from ..schemas.bug_bounty_hunt import (
     MonitoredTargetRead,
     MonitoredTargetUpdateRequest,
     OpportunityInferenceRead,
+    OpportunitySelectionRead,
+    Phase7AnalystSupportResponse,
+    Phase7RunRequest,
+    Phase7RunResponse,
+    RetrospectiveRunRequest,
+    RetrospectiveRunResponse,
+    RetrospectiveSummaryResponse,
     ProgramOpportunityImportRequest,
     ProgramOpportunityRead,
     ReadinessCheckResponse,
@@ -40,6 +67,15 @@ from ..schemas.bug_bounty_hunt import (
     SchedulerStatusResponse,
     SignalIntelligenceRead,
     SwarmReasoningRead,
+    TargetYieldScoreRead,
+    WorkflowPerformanceRead,
+    TargetPerformanceRead,
+    RecommendationOutcomeRead,
+    AlertOutcomeRead,
+    DuplicateRiskRead,
+    EvidenceCompletenessRead,
+    VulnerabilityPredictionRead,
+    WorkflowRecommendationRead,
     WorkflowDeltaRead,
     InferenceRunRequest,
     InferenceRunResponse,
@@ -368,6 +404,303 @@ async def analyst_briefing(
     )
 
 
+@router.post("/phase7/run", response_model=Phase7RunResponse)
+async def run_phase7_prediction(
+    body: Phase7RunRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    return await Phase7PredictionService(db).run_prediction_cycle(
+        program_id=body.program_id,
+        actor=body.actor,
+        apply_adaptive=body.apply_adaptive,
+    )
+
+
+@router.get("/phase7/predictions", response_model=list[VulnerabilityPredictionRead])
+async def list_phase7_predictions(
+    program_id: UUID | None = Query(default=None),
+    scope_target_id: UUID | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase7PredictionService(db).list_predictions(
+        program_id=program_id,
+        scope_target_id=scope_target_id,
+        limit=limit,
+    )
+
+
+@router.get("/phase7/opportunity-rankings", response_model=list[OpportunitySelectionRead])
+async def list_phase7_opportunity_rankings(
+    program_id: UUID | None = Query(default=None),
+    subject_type: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase7PredictionService(db).list_opportunity_rankings(
+        program_id=program_id,
+        subject_type=subject_type,
+        limit=limit,
+    )
+
+
+@router.get("/phase7/target-yields", response_model=list[TargetYieldScoreRead])
+async def list_phase7_target_yields(
+    program_id: UUID | None = Query(default=None),
+    scope_target_id: UUID | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase7PredictionService(db).list_target_yields(
+        program_id=program_id,
+        scope_target_id=scope_target_id,
+        limit=limit,
+    )
+
+
+@router.get("/phase7/duplicate-risk", response_model=list[DuplicateRiskRead])
+async def list_phase7_duplicate_risk(
+    program_id: UUID | None = Query(default=None),
+    risk_band: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase7PredictionService(db).list_duplicate_risk(
+        program_id=program_id,
+        risk_band=risk_band,
+        limit=limit,
+    )
+
+
+@router.get(
+    "/phase7/evidence-completeness",
+    response_model=list[EvidenceCompletenessRead],
+)
+async def list_phase7_evidence_completeness(
+    program_id: UUID | None = Query(default=None),
+    readiness_state: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase7PredictionService(db).list_evidence_completeness(
+        program_id=program_id,
+        readiness_state=readiness_state,
+        limit=limit,
+    )
+
+
+@router.get("/phase7/recommendations", response_model=list[WorkflowRecommendationRead])
+async def list_phase7_recommendations(
+    program_id: UUID | None = Query(default=None),
+    recommendation_status: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase7PredictionService(db).list_recommendations(
+        program_id=program_id,
+        recommendation_status=recommendation_status,
+        limit=limit,
+    )
+
+
+@router.get("/phase7/analyst-support", response_model=Phase7AnalystSupportResponse)
+async def phase7_analyst_support(
+    program_id: UUID | None = Query(default=None),
+    limit: int = Query(default=20, ge=1, le=200),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase7PredictionService(db).analyst_decision_support(
+        program_id=program_id,
+        limit=limit,
+    )
+
+
+@router.post("/retrospective/run", response_model=RetrospectiveRunResponse)
+async def run_phase10_retrospective(
+    body: RetrospectiveRunRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    return await Phase10RetrospectiveService(db).run_retrospective(
+        actor=body.actor,
+        program_id=body.program_id,
+        window_days=body.window_days,
+    )
+
+
+@router.get("/retrospective/summary", response_model=RetrospectiveSummaryResponse)
+async def phase10_retrospective_summary(
+    program_id: UUID | None = Query(default=None),
+    window_days: int = Query(default=30, ge=1, le=365),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase10RetrospectiveService(db).summary(
+        program_id=program_id,
+        window_days=window_days,
+    )
+
+
+@router.get("/retrospective/workflows", response_model=list[WorkflowPerformanceRead])
+async def list_phase10_workflow_performance(
+    program_id: UUID | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase10RetrospectiveService(db).list_workflow_performance(
+        program_id=program_id,
+        limit=limit,
+    )
+
+
+@router.get("/retrospective/targets", response_model=list[TargetPerformanceRead])
+async def list_phase10_target_performance(
+    program_id: UUID | None = Query(default=None),
+    scope_target_id: UUID | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase10RetrospectiveService(db).list_target_performance(
+        program_id=program_id,
+        scope_target_id=scope_target_id,
+        limit=limit,
+    )
+
+
+@router.get(
+    "/retrospective/recommendations",
+    response_model=list[RecommendationOutcomeRead],
+)
+async def list_phase10_recommendation_outcomes(
+    program_id: UUID | None = Query(default=None),
+    outcome_status: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase10RetrospectiveService(db).list_recommendation_outcomes(
+        program_id=program_id,
+        outcome_status=outcome_status,
+        limit=limit,
+    )
+
+
+@router.get("/retrospective/alerts", response_model=list[AlertOutcomeRead])
+async def list_phase10_alert_outcomes(
+    program_id: UUID | None = Query(default=None),
+    outcome_status: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase10RetrospectiveService(db).list_alert_outcomes(
+        program_id=program_id,
+        outcome_status=outcome_status,
+        limit=limit,
+    )
+
+
+@router.post("/agents/sync", response_model=AgentRegistrySyncResponse)
+async def sync_phase10_5_agent_registry(
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    return await Phase10_5AgentFrameworkService(db).sync_registry(
+        actor="operator.phase10_5.registry.sync"
+    )
+
+
+@router.get("/agents", response_model=list[AgentRegistryRead])
+async def list_phase10_5_agents(
+    enabled_only: bool = Query(default=False),
+    category: str | None = Query(default=None),
+    limit: int = Query(default=200, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase10_5AgentFrameworkService(db).list_agents(
+        enabled_only=enabled_only,
+        category=category,
+        limit=limit,
+    )
+
+
+@router.get("/agents/executions", response_model=list[AgentExecutionRead])
+async def list_phase10_5_agent_executions(
+    program_id: UUID | None = Query(default=None),
+    agent_id: str | None = Query(default=None),
+    execution_status: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase10_5AgentFrameworkService(db).list_executions(
+        program_id=program_id,
+        agent_id=agent_id,
+        execution_status=execution_status,
+        limit=limit,
+    )
+
+
+@router.get("/agents/evaluations", response_model=list[AgentEvaluationRead])
+async def list_phase10_5_agent_evaluations(
+    agent_id: str | None = Query(default=None),
+    status: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase10_5AgentFrameworkService(db).list_evaluations(
+        agent_id=agent_id,
+        status=status,
+        limit=limit,
+    )
+
+
+@router.get("/agents/{agent_id}", response_model=AgentRegistryRead)
+async def get_phase10_5_agent(agent_id: str, db: AsyncSession = Depends(get_db)):
+    agent = await Phase10_5AgentFrameworkService(db).get_agent(agent_id)
+    if agent is None:
+        raise HTTPException(status_code=404, detail="Agent not found")
+    return agent
+
+
+@router.post("/agents/{agent_id}/run", response_model=AgentExecutionRead)
+async def run_phase10_5_agent(
+    agent_id: str,
+    body: AgentRunRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        result = await Phase10_5AgentFrameworkService(db).run_agent(
+            agent_id=agent_id,
+            actor=body.actor,
+            input_payload=body.input_payload,
+            program_id=body.program_id,
+            scope_target_id=body.scope_target_id,
+            workflow_run_id=body.workflow_run_id,
+            analyst_case_id=body.analyst_case_id,
+            analyst_queue_item_id=body.analyst_queue_item_id,
+            persist_record=True,
+        )
+        return result
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
+@router.post("/agents/{agent_id}/evaluate", response_model=AgentEvaluationRead)
+async def evaluate_phase10_5_agent(
+    agent_id: str,
+    body: AgentEvaluateRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        return await Phase10_5AgentFrameworkService(db).evaluate_agent(
+            agent_id=agent_id,
+            actor=body.actor,
+            benchmark_name=body.benchmark_name,
+        )
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
 @router.get("/deltas", response_model=list[WorkflowDeltaRead])
 async def list_deltas(
     program_id: UUID | None = Query(default=None),
@@ -406,6 +739,217 @@ async def update_candidate(
     svc = BugBountyHuntingService(db)
     try:
         return await svc.update_candidate_queue_item(queue_item_id, body)
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
+@router.post("/alerts/sync", response_model=AlertSyncResponse)
+async def sync_alerts(
+    body: AlertSyncRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    return await Phase9AlertCaseService(db).sync_alerts(
+        actor=body.actor,
+        program_id=body.program_id,
+        cooldown_minutes=body.cooldown_minutes,
+    )
+
+
+@router.get("/alerts", response_model=list[NotificationAlertRead])
+async def list_alerts(
+    program_id: UUID | None = Query(default=None),
+    status: str | None = Query(default=None),
+    severity: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase9AlertCaseService(db).list_alerts(
+        program_id=program_id,
+        status=status,
+        severity=severity,
+        limit=limit,
+    )
+
+
+@router.get("/alerts/summary")
+async def alerts_summary(
+    program_id: UUID | None = Query(default=None),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase9AlertCaseService(db).get_alert_case_summary(program_id=program_id)
+
+
+@router.get("/alerts/{alert_id}", response_model=NotificationAlertRead)
+async def get_alert(
+    alert_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    alert = await Phase9AlertCaseService(db).get_alert(alert_id)
+    if alert is None:
+        raise HTTPException(status_code=404, detail="Alert not found")
+    return alert
+
+
+@router.post("/alerts/{alert_id}/acknowledge", response_model=NotificationAlertRead)
+async def acknowledge_alert(
+    alert_id: UUID,
+    body: AlertActionRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        return await Phase9AlertCaseService(db).acknowledge_alert(
+            alert_id,
+            actor=body.actor,
+            note=body.note,
+        )
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
+@router.post("/alerts/{alert_id}/resolve", response_model=NotificationAlertRead)
+async def resolve_alert(
+    alert_id: UUID,
+    body: AlertActionRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        return await Phase9AlertCaseService(db).resolve_alert(
+            alert_id,
+            actor=body.actor,
+            note=body.note,
+        )
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
+@router.post("/alerts/{alert_id}/case", response_model=AnalystCaseRead)
+async def create_case_from_alert(
+    alert_id: UUID,
+    body: AlertCaseCreateRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        return await Phase9AlertCaseService(db).create_case_from_alert(
+            alert_id,
+            actor=body.actor,
+            owner=body.owner,
+        )
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
+@router.get("/cases", response_model=list[AnalystCaseRead])
+async def list_cases(
+    program_id: UUID | None = Query(default=None),
+    status: str | None = Query(default=None),
+    priority: str | None = Query(default=None),
+    owner: str | None = Query(default=None),
+    limit: int = Query(default=500, ge=1, le=2000),
+    db: AsyncSession = Depends(get_db),
+):
+    return await Phase9AlertCaseService(db).list_cases(
+        program_id=program_id,
+        status=status,
+        priority=priority,
+        owner=owner,
+        limit=limit,
+    )
+
+
+@router.post("/cases", response_model=AnalystCaseRead)
+async def create_case(
+    body: CaseCreateRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        return await Phase9AlertCaseService(db).create_case(
+            program_id=body.program_id,
+            scope_target_id=body.scope_target_id,
+            workflow_run_id=body.workflow_run_id,
+            alert_id=body.alert_id,
+            analyst_queue_item_id=body.analyst_queue_item_id,
+            prediction_record_id=body.prediction_record_id,
+            recommendation_record_id=body.recommendation_record_id,
+            submission_draft_id=body.submission_draft_id,
+            title=body.title,
+            summary=body.summary,
+            reasoning_summary=body.reasoning_summary,
+            priority=body.priority,
+            owner=body.owner,
+            evidence_refs=body.evidence_refs_json,
+            actor=body.actor,
+        )
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
+@router.get("/cases/{case_id}", response_model=AnalystCaseRead)
+async def get_case(
+    case_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    case = await Phase9AlertCaseService(db).get_case(case_id)
+    if case is None:
+        raise HTTPException(status_code=404, detail="Case not found")
+    return case
+
+
+@router.patch("/cases/{case_id}", response_model=AnalystCaseRead)
+async def update_case(
+    case_id: UUID,
+    body: CaseUpdateRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        return await Phase9AlertCaseService(db).update_case(
+            case_id,
+            actor=body.actor,
+            status=body.status,
+            priority=body.priority,
+            summary=body.summary,
+            reasoning_summary=body.reasoning_summary,
+            closure_reason=body.closure_reason,
+        )
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
+@router.post("/cases/{case_id}/assign", response_model=AnalystCaseRead)
+async def assign_case(
+    case_id: UUID,
+    body: CaseAssignRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        return await Phase9AlertCaseService(db).assign_case(
+            case_id,
+            owner=body.owner,
+            actor=body.actor,
+        )
+    except ValueError as exc:
+        raise _value_error_to_http(exc) from exc
+
+
+@router.post("/cases/{case_id}/notes", response_model=AnalystCaseRead)
+async def add_case_note(
+    case_id: UUID,
+    body: CaseNoteRequest,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    try:
+        return await Phase9AlertCaseService(db).add_case_note(
+            case_id,
+            note=body.note,
+            actor=body.actor,
+        )
     except ValueError as exc:
         raise _value_error_to_http(exc) from exc
 

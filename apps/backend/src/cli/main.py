@@ -45,7 +45,7 @@ __version__ = "1.0.0"
 
 @click.group()
 @click.version_option(version=__version__, prog_name="kai-cli")
-@click.option("--api-url", envvar="K1_API_URL", default="http://localhost:8000", help="K1 API URL")
+@click.option("--api-url", envvar="K1_API_URL", default="http://localhost:8080", help="K1 API URL")
 @click.option("--verbose", "-v", is_flag=True, help="Enable verbose output")
 @click.option("--quiet", "-q", is_flag=True, help="Suppress non-essential output")
 @click.pass_context
@@ -75,7 +75,7 @@ def cli(ctx: click.Context, api_url: str, verbose: bool, quiet: bool):
 
     \b
     Environment Variables:
-      K1_API_URL   API server URL (default: http://localhost:8000)
+      K1_API_URL   API server URL (default: http://localhost:8080)
 
     For more information, visit: https://github.com/kaison/k1
     """
@@ -106,7 +106,7 @@ def status():
 
     try:
         import httpx
-        client = httpx.Client(base_url="http://localhost:8000", timeout=10.0)
+        client = httpx.Client(base_url="http://localhost:8080", timeout=10.0)
 
         # Check API health
         try:

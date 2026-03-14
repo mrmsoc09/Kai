@@ -14,6 +14,7 @@ The implementation extends existing canonical components:
 No parallel workflow engine or separate persistence subsystem was introduced.
 
 Phase 6 adds deterministic inference/intelligence records and adaptive scheduling actions on the same canonical foundation.
+Phase 7 adds deterministic prediction/opportunity-selection/yield/recommendation records on top of the same canonical entities.
 
 ## Data Model Additions
 
@@ -42,6 +43,11 @@ New canonical tables:
 - `next_scheduled_run_at`
 
 Migration: `0006_bug_bounty_continuous_hunting.py`
+
+Inference and prediction migrations:
+
+- `0007_phase6_recon_inference_engine.py`
+- `0008_phase7_prediction_selection_engine.py`
 
 ## Program Opportunity Ingestion
 
@@ -163,6 +169,39 @@ Canonical scheduler status exposes:
 - ready vs blocked readiness decisions over the last 24h
 
 This summary is available via API and CLI for operator monitoring without introducing a parallel scheduler.
+
+## Phase 7 Opportunity Selection Layer
+
+Phase 7 adds deterministic analyst/automation decision support:
+
+- target/program yield scoring (`target_yield_score_records`)
+- duplicate-risk scoring (`duplicate_risk_records`)
+- evidence completeness scoring (`evidence_completeness_records`)
+- vulnerability prediction outputs (`vulnerability_prediction_records`)
+- ranked opportunities (`opportunity_selection_records`)
+- next-best-workflow records (`workflow_recommendation_records`)
+
+These records are exposed through `/api/v1/bug-bounty/phase7/*` and `kai-cli bug-bounty phase7-*` commands.
+Optional adaptive effort control writes canonical `AdaptiveScheduleActionRecord` rows with `action_type=phase7_effort_control`.
+
+## Phase 9 + Phase 10 Operational Learning Layer
+
+Phase 9 adds canonical alert and case workflow records:
+
+- `notification_alert_records`
+- `analyst_case_records`
+
+Phase 10 adds canonical retrospective feedback and outcome records:
+
+- `feedback_signal_records`
+- `decision_outcome_records`
+- `workflow_performance_records`
+- `target_performance_records`
+- `recommendation_outcome_records`
+- `alert_outcome_records`
+
+Retrospective outputs are exposed through `/api/v1/bug-bounty/retrospective/*` and `kai-cli bug-bounty phase10-*` commands.
+Phase 7 prediction scoring consumes deterministic retrospective modifiers from these canonical Phase 10 records to tune opportunity/yield/duplicate/evidence weighting while preserving explainability and auditability.
 
 ## Safety Defaults
 

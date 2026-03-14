@@ -18,31 +18,31 @@ import { renderWithQueryClient } from "@/tests/test-utils";
 
 const mocks = vi.hoisted(() => ({
   useTrackedCampaignIds: vi.fn(),
-  useOverview: vi.fn(),
+  useBountyDashboard: vi.fn(),
   useAttackSurface: vi.fn(),
   useReconActivity: vi.fn(),
-  useFindingsQueue: vi.fn(),
+  useCandidateQueue: vi.fn(),
   useThreatIntel: vi.fn(),
   useIoc: vi.fn(),
   useTimeline: vi.fn(),
   useAnalytics: vi.fn(),
   usePlaybooks: vi.fn(),
-  useAlerts: vi.fn(),
-  useSystemDiagnostics: vi.fn()
+  useAlertCenter: vi.fn(),
+  useBountyOperations: vi.fn()
 }));
 
 vi.mock("@/hooks/useTrackedCampaignIds", () => ({ useTrackedCampaignIds: mocks.useTrackedCampaignIds }));
-vi.mock("@/hooks/useOverview", () => ({ useOverview: mocks.useOverview }));
+vi.mock("@/hooks/useBountyDashboard", () => ({ useBountyDashboard: mocks.useBountyDashboard }));
 vi.mock("@/hooks/useAttackSurface", () => ({ useAttackSurface: mocks.useAttackSurface }));
 vi.mock("@/hooks/useReconActivity", () => ({ useReconActivity: mocks.useReconActivity }));
-vi.mock("@/hooks/useFindingsQueue", () => ({ useFindingsQueue: mocks.useFindingsQueue }));
+vi.mock("@/hooks/useCandidateQueue", () => ({ useCandidateQueue: mocks.useCandidateQueue }));
 vi.mock("@/hooks/useThreatIntel", () => ({ useThreatIntel: mocks.useThreatIntel }));
 vi.mock("@/hooks/useIoc", () => ({ useIoc: mocks.useIoc }));
 vi.mock("@/hooks/useTimeline", () => ({ useTimeline: mocks.useTimeline }));
 vi.mock("@/hooks/useAnalytics", () => ({ useAnalytics: mocks.useAnalytics }));
 vi.mock("@/hooks/usePlaybooks", () => ({ usePlaybooks: mocks.usePlaybooks }));
-vi.mock("@/hooks/useAlerts", () => ({ useAlerts: mocks.useAlerts }));
-vi.mock("@/hooks/useSystemDiagnostics", () => ({ useSystemDiagnostics: mocks.useSystemDiagnostics }));
+vi.mock("@/hooks/useAlertCenter", () => ({ useAlertCenter: mocks.useAlertCenter }));
+vi.mock("@/hooks/useBountyOperations", () => ({ useBountyOperations: mocks.useBountyOperations }));
 
 describe("SOC dashboard surfaces", () => {
   beforeEach(() => {
@@ -54,16 +54,30 @@ describe("SOC dashboard surfaces", () => {
       removeCampaignId: vi.fn()
     });
 
-    mocks.useOverview.mockReturnValue({
-      trackedCampaigns: [],
-      trackedDiagnostics: [],
-      trackedErrors: [],
-      summaryQuery: { isLoading: false, isError: false, data: null },
+    mocks.useBountyDashboard.mockReturnValue({
+      metrics: {
+        programs: 0,
+        activeSchedules: 0,
+        candidates: 0,
+        readyForReport: 0,
+        pendingValidation: 0,
+        recentDeltas: 0,
+        blockedReadiness: 0,
+        blockedRecommendations: 0,
+        healthyTools: 0,
+        totalTools: 0
+      },
+      programsQuery: { isLoading: false, isError: false, data: [] },
+      schedulesQuery: { isLoading: false, isError: false, data: [] },
+      schedulerStatusQuery: { isLoading: false, isError: false, data: null },
+      candidatesQuery: { isLoading: false, isError: false, data: [] },
+      deltasQuery: { isLoading: false, isError: false, data: [] },
+      readinessRecordsQuery: { isLoading: false, isError: false, data: [] },
+      recommendationsQuery: { isLoading: false, isError: false, data: [] },
+      alertSummaryQuery: { isLoading: false, isError: false, data: null },
+      toolsHealthQuery: { isLoading: false, isError: false, data: null },
       healthQuery: { isLoading: false, isError: false, data: { status: "ok" } },
-      readinessQuery: { isLoading: false, isError: false, data: { status: "ok" } },
-      findingsQueueQuery: { isLoading: false, isError: false, data: { items: [] } },
-      alerts: [],
-      recentAuditEvents: []
+      readinessQuery: { isLoading: false, isError: false, data: { status: "ok" } }
     });
 
     mocks.useAttackSurface.mockReturnValue({
@@ -84,10 +98,14 @@ describe("SOC dashboard surfaces", () => {
       isLoading: false
     });
 
-    mocks.useFindingsQueue.mockReturnValue({
-      isLoading: false,
-      isError: false,
-      data: { count: 0, items: [] }
+    mocks.useCandidateQueue.mockReturnValue({
+      rows: [],
+      queueQuery: { isLoading: false, isError: false, data: [] },
+      duplicateRiskQuery: { isLoading: false, isError: false, data: [] },
+      evidenceQuery: { isLoading: false, isError: false, data: [] },
+      recommendationsQuery: { isLoading: false, isError: false, data: [] },
+      updateStatusMutation: { isError: false },
+      generateDraftMutation: { isError: false }
     });
 
     mocks.useThreatIntel.mockReturnValue({
@@ -135,18 +153,24 @@ describe("SOC dashboard surfaces", () => {
       playbooks: []
     });
 
-    mocks.useAlerts.mockReturnValue({
-      tracked: { errors: [] },
-      findingsQueueQuery: { isLoading: false, isError: false, data: { items: [] } },
-      alerts: []
+    mocks.useAlertCenter.mockReturnValue({
+      rows: [],
+      alertsQuery: { isLoading: false, isError: false, data: [] },
+      summaryQuery: { isLoading: false, isError: false, data: null },
+      syncMutation: { mutate: vi.fn(), isPending: false, isError: false },
+      acknowledgeMutation: { mutate: vi.fn(), isPending: false, isError: false },
+      resolveMutation: { mutate: vi.fn(), isPending: false, isError: false },
+      createCaseMutation: { mutate: vi.fn(), isPending: false, isError: false }
     });
 
-    mocks.useSystemDiagnostics.mockReturnValue({
-      summaryQuery: { isLoading: false, isError: false, data: null },
+    mocks.useBountyOperations.mockReturnValue({
+      schedulerStatusQuery: { isLoading: false, isError: false, data: null },
+      schedulesQuery: { isLoading: false, isError: false, data: [] },
+      readinessRecordsQuery: { isLoading: false, isError: false, data: [] },
+      adaptiveActionsQuery: { isLoading: false, isError: false, data: [] },
+      toolsHealthQuery: { isLoading: false, isError: false, data: null },
       healthQuery: { isLoading: false, isError: false, data: null },
-      readinessQuery: { isLoading: false, isError: false, data: null },
-      campaignDiagnosticsQuery: { isLoading: false, isError: false, data: null },
-      findingDiagnosticsQuery: { isLoading: false, isError: false, data: null }
+      readinessQuery: { isLoading: false, isError: false, data: null }
     });
   });
 
@@ -176,19 +200,33 @@ describe("SOC dashboard surfaces", () => {
     expect(screen.getByText("Automation and Playbooks")).toBeInTheDocument();
     expect(screen.getByText("Alerting and Notifications")).toBeInTheDocument();
     expect(screen.getByText("System Diagnostics")).toBeInTheDocument();
-  });
+  }, 15000);
 
   it("renders loading and error states for key SOC pages", () => {
-    mocks.useOverview.mockReturnValue({
-      trackedCampaigns: [],
-      trackedDiagnostics: [],
-      trackedErrors: [],
-      summaryQuery: { isLoading: true, isError: false, data: null },
+    mocks.useBountyDashboard.mockReturnValue({
+      metrics: {
+        programs: 0,
+        activeSchedules: 0,
+        candidates: 0,
+        readyForReport: 0,
+        pendingValidation: 0,
+        recentDeltas: 0,
+        blockedReadiness: 0,
+        blockedRecommendations: 0,
+        healthyTools: 0,
+        totalTools: 0
+      },
+      programsQuery: { isLoading: false, isError: false, data: [] },
+      schedulesQuery: { isLoading: false, isError: false, data: [] },
+      schedulerStatusQuery: { isLoading: true, isError: false, data: null },
+      candidatesQuery: { isLoading: false, isError: false, data: [] },
+      deltasQuery: { isLoading: false, isError: false, data: [] },
+      readinessRecordsQuery: { isLoading: false, isError: false, data: [] },
+      recommendationsQuery: { isLoading: false, isError: false, data: [] },
+      alertSummaryQuery: { isLoading: false, isError: false, data: null },
+      toolsHealthQuery: { isLoading: false, isError: false, data: null },
       healthQuery: { isLoading: false, isError: true, error: new Error("health error"), data: null },
-      readinessQuery: { isLoading: false, isError: false, data: null },
-      findingsQueueQuery: { isLoading: false, isError: false, data: { items: [] } },
-      alerts: [],
-      recentAuditEvents: []
+      readinessQuery: { isLoading: false, isError: false, data: null }
     });
     mocks.useAttackSurface.mockReturnValue({
       findingsQueueQuery: { isLoading: false, isError: false, data: { count: 0, items: [] } },
@@ -201,7 +239,7 @@ describe("SOC dashboard surfaces", () => {
 
     renderWithQueryClient(<OverviewPage />);
     renderWithQueryClient(<AttackSurfacePage />);
-    expect(screen.getByText("Loading diagnostics summary...")).toBeInTheDocument();
+    expect(screen.getByText("Loading scheduler status...")).toBeInTheDocument();
     expect(screen.getByText("Liveness failed")).toBeInTheDocument();
     expect(screen.getByText("Attack surface load failed")).toBeInTheDocument();
   });

@@ -2,59 +2,93 @@
 
 import { useState } from "react";
 
-import { useSystemDiagnostics } from "@/hooks/useSystemDiagnostics";
+import { useBountyOperations } from "@/hooks/useBountyOperations";
 
-import { SystemDiagnosticsPanel } from "@/components/soc/SystemDiagnosticsPanel";
-import { CampaignDiagnosticsLookup } from "@/components/diagnostics/CampaignDiagnosticsLookup";
-import { FindingDiagnosticsLookup } from "@/components/diagnostics/FindingDiagnosticsLookup";
+import { OperationsHealthPanel } from "@/components/bugbounty/OperationsHealthPanel";
+import { ProgramFilterCard } from "@/components/bugbounty/ProgramFilterCard";
+import { EmptyState } from "@/components/data-display/EmptyState";
+import { JsonViewer } from "@/components/data-display/JsonViewer";
 import { ErrorState } from "@/components/data-display/ErrorState";
 import { LoadingState } from "@/components/data-display/LoadingState";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function SystemPage() {
-  const [campaignId, setCampaignId] = useState("");
-  const [findingId, setFindingId] = useState("");
-  const data = useSystemDiagnostics({ campaignId, findingId });
+  const [programId, setProgramId] = useState("");
+  const data = useBountyOperations(programId.trim() || undefined);
 
   return (
     <div className="operator-grid">
       <PageHeader
         title="System Diagnostics"
-        description="Canonical system operations view for health/readiness, metrics, and campaign/finding diagnostics lookup."
+        description="Scheduler, readiness, adaptive action, and tool-health operations view for bug bounty monitoring."
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Diagnostics Lookups</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2 md:grid-cols-2">
-          <CampaignDiagnosticsLookup campaignId={campaignId} onChange={setCampaignId} />
-          <FindingDiagnosticsLookup findingId={findingId} onChange={setFindingId} />
-        </CardContent>
-      </Card>
+      <ProgramFilterCard value={programId} onChange={setProgramId} />
 
-      {data.summaryQuery.isLoading || data.healthQuery.isLoading || data.readinessQuery.isLoading ? (
+      {data.schedulerStatusQuery.isLoading ||
+      data.schedulesQuery.isLoading ||
+      data.readinessRecordsQuery.isLoading ||
+      data.adaptiveActionsQuery.isLoading ||
+      data.toolsHealthQuery.isLoading ||
+      data.healthQuery.isLoading ||
+      data.readinessQuery.isLoading ? (
         <LoadingState label="Loading system diagnostics..." />
       ) : null}
 
-      {data.summaryQuery.isError ? <ErrorState error={data.summaryQuery.error} title="Summary failed" /> : null}
+      {data.schedulerStatusQuery.isError ? (
+        <ErrorState error={data.schedulerStatusQuery.error} title="Scheduler summary failed" />
+      ) : null}
+      {data.schedulesQuery.isError ? <ErrorState error={data.schedulesQuery.error} title="Schedule list failed" /> : null}
+      {data.readinessRecordsQuery.isError ? (
+        <ErrorState error={data.readinessRecordsQuery.error} title="Readiness records failed" />
+      ) : null}
+      {data.adaptiveActionsQuery.isError ? (
+        <ErrorState error={data.adaptiveActionsQuery.error} title="Adaptive actions failed" />
+      ) : null}
+      {data.toolsHealthQuery.isError ? (
+        <ErrorState error={data.toolsHealthQuery.error} title="Tool health failed" />
+      ) : null}
       {data.healthQuery.isError ? <ErrorState error={data.healthQuery.error} title="Liveness failed" /> : null}
       {data.readinessQuery.isError ? <ErrorState error={data.readinessQuery.error} title="Readiness failed" /> : null}
-      {data.campaignDiagnosticsQuery.isError ? (
-        <ErrorState error={data.campaignDiagnosticsQuery.error} title="Campaign diagnostics failed" />
-      ) : null}
-      {data.findingDiagnosticsQuery.isError ? (
-        <ErrorState error={data.findingDiagnosticsQuery.error} title="Finding diagnostics failed" />
-      ) : null}
 
-      <SystemDiagnosticsPanel
-        summary={data.summaryQuery.data}
-        health={data.healthQuery.data}
-        readiness={data.readinessQuery.data}
-        campaignDiagnostics={data.campaignDiagnosticsQuery.data ?? null}
-        findingDiagnostics={data.findingDiagnosticsQuery.data ?? null}
+      <OperationsHealthPanel
+        schedulerStatus={data.schedulerStatusQuery.data}
+        toolsHealth={data.toolsHealthQuery.data}
       />
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Readiness Records</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(data.readinessRecordsQuery.data?.length ?? 0) > 0 ? (
+              <JsonViewer value={(data.readinessRecordsQuery.data ?? []).slice(0, 20)} />
+            ) : (
+              <EmptyState
+                title="No readiness records"
+                description="No readiness evaluations are available for the selected program filter."
+              />
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Adaptive Actions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {(data.adaptiveActionsQuery.data?.length ?? 0) > 0 ? (
+              <JsonViewer value={(data.adaptiveActionsQuery.data ?? []).slice(0, 20)} />
+            ) : (
+              <EmptyState
+                title="No adaptive actions"
+                description="No adaptive scheduling actions have been recorded for this filter."
+              />
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

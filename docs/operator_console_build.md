@@ -1,173 +1,181 @@
-# Operator Console Build
+# Operator Console Build (Phase 8 + Phase 9)
 
-## Frontend App Location
+## App Location
 
 - `apps/frontend-operator/`
 
-The operator console is implemented as a separate Next.js app and consumes canonical backend APIs under `/api/v1`.
+The operator cockpit is a standalone Next.js app that consumes canonical backend contracts under `/api/v1`.
 
-## Stack Used
+## Stack
 
 - Next.js (App Router)
 - React + TypeScript
 - Tailwind CSS
-- shadcn-style UI primitives (`components/ui/*`)
-- TanStack Query for server-state
+- shadcn-style primitives in `components/ui/*`
+- TanStack Query for server state
 
-## What Existed Before SOC Extension
+## Canonical Extension Approach
 
-Initial operator console surfaces already implemented:
+Phase 8 extends the existing console without replacing it:
 
-- `/campaigns`
-- `/campaigns/[campaignId]`
-- `/findings`
-- `/findings/[findingId]`
-- `/approvals`
-- `/exports`
-- `/diagnostics`
+- Existing routes for campaign/finding/approval/export remain available.
+- New analyst cockpit surfaces are added on top of canonical bug bounty + Phase 6/7 APIs.
+- No parallel frontend state system or duplicate API runtime was introduced.
 
-These remain intact and are still the canonical control workflows for campaign start/schedule, finding review, approvals, and export staging.
+## New Analyst Cockpit Routes
 
-## SOC Extension Added In This Pass
+- `/overview` (bug bounty dashboard home)
+- `/programs`
+- `/targets`
+- `/opportunities`
+- `/triage` (candidate-finding queue)
+- `/predictions`
+- `/agents`
+- `/retrospective`
+- `/briefing`
+- `/alerts` (canonical Phase 9 alerts)
+- `/cases` (case queue)
+- `/cases/[caseId]` (case detail workspace)
+- `/system` (operations/health)
 
-New SOC-OPS routes added:
+Legacy SOC and campaign routes remain in place for compatibility.
 
-- `/overview`
-- `/attack-surface`
-- `/recon`
-- `/triage`
-- `/evidence`
-- `/threat-intel`
-- `/ioc`
-- `/timeline`
-- `/analytics`
-- `/playbooks`
-- `/alerts`
-- `/system`
+## Frontend Architecture Additions
 
-Sidebar navigation now groups routes into:
+### API Layer
 
-- Core Operations
-- SOC Intelligence
+Added:
 
-## Component Architecture
+- `lib/api/bug-bounty.ts`
 
-Existing folders preserved:
+Provides typed access to:
 
-- `components/ui/`
-- `components/layout/`
-- `components/status/`
-- `components/data-display/`
-- `components/campaigns/`
-- `components/phases/`
-- `components/findings/`
-- `components/approvals/`
-- `components/exports/`
-- `components/diagnostics/`
-- `components/forms/`
+- program list
+- monitored targets
+- schedules + scheduler status
+- readiness records
+- delta records
+- candidate queue + candidate update + report draft generation
+- Phase 6 signals/opportunity/adaptive/briefing
+- Phase 7 predictions/rankings/yields/duplicate/evidence/recommendations/support
+- tool health dashboard
 
-New SOC folder added:
+### Type Layer
 
-- `components/soc/`
+Added:
 
-SOC reusable components added include:
+- `lib/types/bug-bounty.ts`
 
-- `OverviewSummaryCards`
-- `AttackSurfaceTable`
-- `ReconActivityTable`
-- `FindingsTriagePanel`
-- `EvidenceRepositoryTable`
-- `ThreatIntelPanel`
-- `IocTable`
-- `InvestigationTimeline`
-- `AnalyticsCards`
-- `AnalyticsCharts`
-- `PlaybookCatalog`
-- `AlertsTable`
-- `SystemDiagnosticsPanel`
-- `TrackedCampaignSelector`
-- `BackendSupportPending`
+Exports canonical frontend contracts for all bug bounty and Phase 6/7 payloads.
 
-## API / Hook Architecture
+### Hooks
 
-Typed API modules now include:
+Added:
 
-- `lib/api/client.ts`
-- `lib/api/campaigns.ts`
-- `lib/api/findings.ts`
-- `lib/api/approvals.ts`
-- `lib/api/exports.ts`
-- `lib/api/diagnostics.ts`
-- `lib/api/soc.ts` (SOC read-only aggregator over canonical endpoints)
+- `hooks/useBountyDashboard.ts`
+- `hooks/useBountyPrograms.ts`
+- `hooks/useMonitoredTargets.ts`
+- `hooks/useOpportunityRankings.ts`
+- `hooks/useCandidateQueue.ts`
+- `hooks/usePredictionSignals.ts`
+- `hooks/useAgentFramework.ts`
+- `hooks/useAnalystBriefing.ts`
+- `hooks/useRetrospective.ts`
+- `hooks/useBountyOperations.ts`
+- `hooks/useAlertCenter.ts`
+- `hooks/useCaseQueue.ts`
+- `hooks/useCaseDetail.ts`
 
-Types include:
+### Reusable Components
 
-- `lib/types/api.ts`
-- `lib/types/campaigns.ts`
-- `lib/types/findings.ts`
-- `lib/types/diagnostics.ts`
-- `lib/types/soc.ts`
+Added:
 
-SOC hooks added:
+- `components/status/ScoreBadge.tsx`
+- `components/bugbounty/ProgramTable.tsx`
+- `components/bugbounty/MonitoredTargetTable.tsx`
+- `components/bugbounty/OpportunityRankingTable.tsx`
+- `components/bugbounty/CandidateQueueTable.tsx`
+- `components/bugbounty/PredictionTable.tsx`
+- `components/bugbounty/AgentRegistryTable.tsx`
+- `components/bugbounty/AgentExecutionTable.tsx`
+- `components/bugbounty/AgentEvaluationTable.tsx`
+- `components/bugbounty/AnalystBriefingPanel.tsx`
+- `components/bugbounty/OperationsHealthPanel.tsx`
+- `components/bugbounty/ReasoningSummaryPanel.tsx`
+- `components/bugbounty/EvidenceLinkPanel.tsx`
+- `components/bugbounty/AlertTable.tsx`
+- `components/bugbounty/CaseQueueTable.tsx`
+- `components/bugbounty/CaseDetailPanel.tsx`
 
-- `hooks/useTrackedCampaignIds.ts`
-- `hooks/useTrackedCampaignData.ts`
-- `hooks/useOverview.ts`
-- `hooks/useAttackSurface.ts`
-- `hooks/useReconActivity.ts`
-- `hooks/useTimeline.ts`
-- `hooks/useAnalytics.ts`
-- `hooks/useAlerts.ts`
-- `hooks/useSystemDiagnostics.ts`
-- `hooks/useThreatIntel.ts`
-- `hooks/useIoc.ts`
-- `hooks/usePlaybooks.ts`
+## Backend Contracts Consumed
 
-## Theme Semantics (Dark-First)
+Primary routes used by new cockpit surfaces:
 
-Base palette:
+- `/api/v1/bug-bounty/programs`
+- `/api/v1/bug-bounty/programs/{program_id}/targets`
+- `/api/v1/bug-bounty/schedules`
+- `/api/v1/bug-bounty/schedules/status`
+- `/api/v1/bug-bounty/readiness-records`
+- `/api/v1/bug-bounty/deltas`
+- `/api/v1/bug-bounty/candidates`
+- `/api/v1/bug-bounty/candidates/{queue_item_id}` (PATCH)
+- `/api/v1/bug-bounty/candidates/{queue_item_id}/report-draft`
+- `/api/v1/bug-bounty/signals`
+- `/api/v1/bug-bounty/opportunity-scores`
+- `/api/v1/bug-bounty/adaptive-actions`
+- `/api/v1/bug-bounty/analyst-briefing`
+- `/api/v1/bug-bounty/phase7/*`
+- `/api/v1/bug-bounty/agents*`
+- `/api/v1/bug-bounty/retrospective/*`
+- `/api/v1/bug-bounty/alerts/sync`
+- `/api/v1/bug-bounty/alerts`
+- `/api/v1/bug-bounty/alerts/summary`
+- `/api/v1/bug-bounty/alerts/{alert_id}`
+- `/api/v1/bug-bounty/alerts/{alert_id}/acknowledge`
+- `/api/v1/bug-bounty/alerts/{alert_id}/resolve`
+- `/api/v1/bug-bounty/alerts/{alert_id}/case`
+- `/api/v1/bug-bounty/cases`
+- `/api/v1/bug-bounty/cases/{case_id}`
+- `/api/v1/bug-bounty/cases/{case_id}/assign`
+- `/api/v1/bug-bounty/cases/{case_id}/notes`
+- `/api/v1/tools/health`
+- `/health`
+- `/readyz`
 
-- Background: `#0B0F14`
-- Panel: `#121821`
-- Elevated: `#1A2330`
-- Border: `#263241`
-- Text: `#E6EDF3`
-- Muted Text: `#9BA7B4`
+## Theme and Semantics
 
-Accent semantics:
+Dark-first palette and semantic color system remain unchanged:
 
-- Blue `#3B82F6`: running/active
-- Purple `#8B5CF6`: findings/evidence
-- Indigo `#6366F1`: observations/intelligence
-- Orange `#F59E0B`: review/approval action required
-- Red-Orange `#F97316`: blocked/escalation
-- Red `#EF4444`: failed/rejected/danger
-- Green `#22C55E`: approved/ready/success
+- blue: active/running
+- orange: review/action required
+- red-orange/red: blocked/failed/rejected
+- purple: findings/evidence context
+- indigo: intelligence/correlation context
+- green: ready/success/report-ready
 
-Status rendering remains centralized in:
+All key states use both text + badge color.
 
-- `components/status/StatusBadge.tsx`
-- `lib/utils/status.ts`
+## Local Development
 
-## Backend Dependencies and Data Sources
+From `apps/frontend-operator/`:
 
-This SOC pass did not add new backend mutation features.
-It consumes existing canonical endpoints:
+1. `npm install`
+2. `npm run dev`
 
-- campaign start/status/schedule/diagnostics/correlation
-- approval decision
-- findings review queue and finding diagnostics
-- review/submission prep/export preview and staging
-- diagnostics summary, liveness, readiness
+Optional API base override:
 
-SOC pages intentionally derive read-only intelligence views from canonical diagnostics and review queue data where dedicated backend inventory/intel APIs do not yet exist.
+- `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080`
+
+## Validation Commands
+
+From `apps/frontend-operator/`:
+
+- `npm run typecheck`
+- `npm test`
+- `npm run build`
 
 ## Deferred / Honest Gaps
 
-- No dedicated campaign list endpoint; many SOC views still rely on tracked campaign IDs.
-- No canonical artifact/evidence global listing endpoint yet; evidence repository is currently aggregate-derived.
-- No external threat-intel feed integration in this pass.
-- No IOC-specific backend table/API; IOC view is deterministic regex extraction from canonical text payloads.
-- No direct playbook-execution API from the frontend in this pass.
-- No external provider submission integration; export remains preview/staging only.
-- No SSE/WebSocket streaming yet; TanStack Query refetch/invalidation remains the state sync mechanism.
+- No external platform report submission from frontend (staging/prep only).
+- Case-level bulk actions are not implemented yet (single-case actions only).
+- Some legacy SOC pages remain campaign-derived and are retained for backward compatibility.

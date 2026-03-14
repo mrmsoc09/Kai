@@ -7,7 +7,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Kai Operator Console",
-  description: "Operator control plane for campaign execution, review, approvals, and diagnostics."
+  description:
+    "Operator control plane for bug bounty programs, monitored targets, inference-driven triage, approvals, and diagnostics."
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

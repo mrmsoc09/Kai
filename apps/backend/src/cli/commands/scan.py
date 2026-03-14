@@ -31,7 +31,7 @@ def get_api_client():
     """Get the K1 API client."""
     try:
         import httpx
-        return httpx.Client(base_url="http://localhost:8000", timeout=300.0)
+        return httpx.Client(base_url="http://localhost:8080", timeout=300.0)
     except ImportError:
         return None
 
@@ -274,7 +274,7 @@ async def _run_parallel_scans(target: str, tools: List[str], templates: Optional
     async def run_scan(tool: str):
         try:
             import httpx
-            async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=timeout) as client:
+            async with httpx.AsyncClient(base_url="http://localhost:8080", timeout=timeout) as client:
                 if tool == "nuclei":
                     payload = {"target": target, "severity": severity, "timeout": timeout}
                     if templates:

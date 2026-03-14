@@ -28,7 +28,7 @@ Kai provides a persisted execution model for campaign-based work:
 - API/control plane: FastAPI (`apps/backend/src/main.py`)
 - Persistence: PostgreSQL + SQLAlchemy models + Alembic migrations
 - Worker execution: Celery (`apps/backend/src/worker/`)
-- Frontend: React (`apps/frontend/`)
+- Frontend (canonical operator cockpit): Next.js (`apps/frontend-operator/`)
 - Canonical docs:
   - [`docs/architecture.md`](docs/architecture.md)
   - [`docs/backend_system.md`](docs/backend_system.md)
@@ -45,9 +45,10 @@ Kai provides a persisted execution model for campaign-based work:
 ```text
 apps/
   backend/
-    src/            # FastAPI app, core services, models, routers, worker integration
-    alembic/        # DB migrations
-  frontend/         # React operator UI
+    src/              # FastAPI app, core services, models, routers, worker integration
+    alembic/          # DB migrations
+  frontend-operator/  # Canonical Next.js analyst/operator console
+  frontend/           # Legacy frontend surface (compatibility)
 tests/              # pytest suites
 docs/               # canonical documentation set
 scripts/            # policy and maintenance checks
@@ -64,20 +65,32 @@ python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements-dev.txt
 ```
 
-2. Set required environment variables (minimum):
+2. Create env file (MVP quickstart):
+
+```bash
+cp .env.mvp.example .env
+```
+
+3. Set required environment variables (minimum):
 
 - `DATABASE_URL`
 - `REDIS_URL`
 - `K1_DEV_TOKEN`
 - `JWT_SECRET_KEY`
 
-3. Start backend API:
+4. Apply database migrations:
+
+```bash
+alembic upgrade head
+```
+
+5. Start backend API:
 
 ```bash
 python3 -m uvicorn apps.backend.src.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
-4. Start worker (separate shell):
+6. Start worker (separate shell):
 
 ```bash
 celery -A apps.backend.src.worker.celery_app.celery_app worker -Q tools,intrusive --loglevel=info
@@ -88,6 +101,20 @@ Optional local stack:
 ```bash
 docker-compose -f docker-compose.dev.yml up -d
 ```
+
+Frontend operator (separate shell):
+
+```bash
+cd apps/frontend-operator
+npm install
+npm run dev
+```
+
+Canonical MVP walkthrough:
+
+- [`docs/mvp_quickstart.md`](docs/mvp_quickstart.md)
+- `bash scripts/frontend_smoke.sh`
+- `bash scripts/mvp_demo_flow.sh`
 
 ## Testing
 

@@ -164,6 +164,6 @@ Workflow start requests default to `safe_mode=true`. In safe mode:
 
 Pattern formats: exact hostname, `*.example.com` (subdomain wildcard), `/regex/` (regex).
 
-**Default config ships with an empty allowlist and `strict_allowlist: false`**, meaning all targets are allowed except those on the denylist. For production, populate `allowlist` and set `strict_allowlist: true`.
+**Default config ships with an empty allowlist and `strict_allowlist: true`**, meaning deny-by-default until explicit scope entries are configured. For local exploratory testing only, operators may set `strict_allowlist: false`.
 
 Scope enforcement for template workflows: `apps/backend/src/core/scope_guardrails.py`

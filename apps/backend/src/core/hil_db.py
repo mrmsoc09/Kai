@@ -2,10 +2,33 @@ from __future__ import annotations
 
 import asyncio
 import os
+import sqlite3 as _sqlite3
+from datetime import datetime, timezone
 from typing import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import AsyncAdaptedQueuePool, NullPool
+
+
+def _register_sqlite_timestamp_converter() -> None:
+    """Register a TIMESTAMP type converter for sqlite3 that returns UTC-aware datetimes.
+
+    SQLite stores timestamps as plain ISO-8601 strings with no timezone data.
+    When ``detect_types=PARSE_DECLTYPES`` is active, sqlite3 routes each cell
+    through the registered converter for its declared column type.  Without this
+    converter, TIMESTAMP columns come back as naive datetime objects, causing
+    ``TypeError: can't compare offset-naive and offset-aware datetimes`` when
+    service code compares DB-sourced values against ``datetime.now(timezone.utc)``.
+
+    This is a no-op (idempotent) registration — calling it multiple times is safe.
+    """
+
+    def _parse_ts(raw: bytes) -> datetime:
+        text = raw.decode("utf-8") if isinstance(raw, (bytes, bytearray)) else raw
+        dt = datetime.fromisoformat(text)
+        return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+
+    _sqlite3.register_converter("TIMESTAMP", _parse_ts)
 
 
 DEFAULT_TEST_DATABASE_URL = "sqlite+aiosqlite:///./.pytest_hil.db"
@@ -84,6 +107,17 @@ def get_async_engine() -> AsyncEngine:
                 )
             _async_engine = create_async_engine(db_url, **engine_kwargs)
             _engine_loop_id = current_loop_id
+            if db_url.startswith("sqlite+aiosqlite://"):
+                # Register PostgreSQL-specific functions that appear in CHECK constraints
+                # so that Base.metadata.create_all() works against a SQLite test database.
+                # btrim(text) strips leading/trailing whitespace (≡ str.strip).
+                # btrim(text, chars) strips specific chars from both ends.
+                from sqlalchemy import event as _sa_event  # local import avoids top-level cycle
+
+                @_sa_event.listens_for(_async_engine.sync_engine, "connect")
+                def _register_sqlite_pg_compat(dbapi_conn, _conn_record):  # type: ignore[misc]
+                    dbapi_conn.create_function("btrim", 1, str.strip)
+                    dbapi_conn.create_function("btrim", 2, lambda s, chars="": s.strip(chars))
         except ModuleNotFoundError as exc:
             raise RuntimeError(
                 f"Database driver module missing: {exc.name}. "

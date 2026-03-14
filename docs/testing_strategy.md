@@ -34,6 +34,7 @@ Representative files:
 - `tests/test_tool_registry_catalog.py`
 - `tests/test_tool_adapters_bugbounty.py`
 - `tests/test_bugbounty_workflow_engine.py`
+- `tests/test_mvp_e2e_integration.py` (canonical MVP API chain: auth -> program/target -> schedule trigger -> alerts/case -> report draft)
 
 ## 2. Route and policy checks
 
@@ -56,6 +57,7 @@ python3 -m pytest -q tests/test_campaign*
 python3 -m pytest -q tests/test_reports*
 python3 -m pytest -q tests/test_hil*
 python3 -m pytest -q tests/test_tool_registry_catalog.py tests/test_tool_adapters_bugbounty.py tests/test_bugbounty_workflow_engine.py
+python3 -m pytest -q tests/test_mvp_e2e_integration.py
 ```
 
 Secret gate:

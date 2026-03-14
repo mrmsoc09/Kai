@@ -14,6 +14,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install --upgrade pip
 python3 -m pip install -r requirements-dev.txt
+cp .env.mvp.example .env
 ```
 
 ## Environment
@@ -49,12 +50,40 @@ celery -A apps.backend.src.worker.celery_app.celery_app worker -Q tools,intrusiv
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
+### Frontend Operator Console
+
+```bash
+cd apps/frontend-operator
+npm install
+npm run dev
+```
+
 ## Database
 
 - SQLAlchemy async session factory: `apps/backend/src/core/hil_db.py`
 - Migrations: `apps/backend/alembic/`
 
 Apply migrations with Alembic before running integration flows against a real database.
+
+```bash
+alembic upgrade head
+```
+
+## Development Auth Bootstrap
+
+Most canonical API routes require bearer auth. For local/test mode:
+
+```bash
+curl -sS -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"token\":\"$K1_DEV_TOKEN\"}"
+```
+
+Use returned `access_token` as:
+
+- `Authorization: Bearer <token>` for CLI/API calls, or
+- `NEXT_PUBLIC_API_BEARER_TOKEN=<token>` for frontend, or
+- set `NEXT_PUBLIC_K1_DEV_BOOTSTRAP_TOKEN` to auto-bootstrap a browser token in dev.
 
 ## Testing
 
