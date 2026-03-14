@@ -1,16 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
-import { useOverview } from "@/hooks/useOverview";
-import { useTrackedCampaignIds } from "@/hooks/useTrackedCampaignIds";
+import { useBountyDashboard } from "@/hooks/useBountyDashboard";
 
-import { AlertsTable } from "@/components/soc/AlertsTable";
+import { ProgramFilterCard } from "@/components/bugbounty/ProgramFilterCard";
 import { OverviewSummaryCards } from "@/components/soc/OverviewSummaryCards";
-import { TrackedCampaignSelector } from "@/components/soc/TrackedCampaignSelector";
-import { DiagnosticsSummaryCards } from "@/components/diagnostics/DiagnosticsSummaryCards";
+import { OperationsHealthPanel } from "@/components/bugbounty/OperationsHealthPanel";
+import { ReasoningSummaryPanel } from "@/components/bugbounty/ReasoningSummaryPanel";
+import { CandidateQueueTable } from "@/components/bugbounty/CandidateQueueTable";
 import { HealthPanel } from "@/components/diagnostics/HealthPanel";
-import { AuditEventList } from "@/components/data-display/AuditEventList";
 import { EmptyState } from "@/components/data-display/EmptyState";
 import { ErrorState } from "@/components/data-display/ErrorState";
 import { LoadingState } from "@/components/data-display/LoadingState";
@@ -18,67 +17,58 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function OverviewPage() {
-  const tracked = useTrackedCampaignIds();
-  const data = useOverview(tracked.trackedCampaignIds);
+  const [programIdFilter, setProgramIdFilter] = useState("");
+  const data = useBountyDashboard(programIdFilter.trim() || undefined);
 
   const summaryMetrics = useMemo(() => {
-    const activeCampaigns = data.trackedCampaigns.filter((item) =>
-      ["RUNNING", "READY"].includes(item.campaign.status)
-    ).length;
-    const findingsAwaitingReview = (data.findingsQueueQuery.data?.items ?? []).filter((item) =>
-      ["NEEDS_REVIEW", "READY_FOR_REVIEW"].includes(item.readiness_status.toUpperCase())
-    ).length;
-    const pendingApprovals = data.trackedDiagnostics.reduce(
-      (sum, item) => sum + (item.status_breakdown.approval_gates?.PENDING ?? 0),
-      0
-    );
-    const exportWarnings = data.alerts.filter((alert) => alert.category === "EXPORT").length;
-    const runningTools = data.trackedDiagnostics.reduce(
-      (sum, item) => sum + (item.status_breakdown.tool_executions?.RUNNING ?? 0),
-      0
-    );
+    const metrics = data.metrics;
     return [
       {
-        title: "Active Campaigns",
-        value: activeCampaigns,
-        status: activeCampaigns > 0 ? "RUNNING" : "READY",
-        helper: `${data.trackedCampaigns.length} tracked`
+        title: "Active Programs",
+        value: metrics.programs,
+        status: metrics.programs > 0 ? "RUNNING" : "READY"
       },
       {
-        title: "Findings Awaiting Review",
-        value: findingsAwaitingReview,
-        status: findingsAwaitingReview > 0 ? "NEEDS_REVIEW" : "COMPLETED"
+        title: "Active Schedules",
+        value: metrics.activeSchedules,
+        status: metrics.activeSchedules > 0 ? "RUNNING" : "READY"
       },
       {
-        title: "Pending Approvals",
-        value: pendingApprovals,
-        status: pendingApprovals > 0 ? "WAITING_APPROVAL" : "COMPLETED"
+        title: "Candidate Findings",
+        value: metrics.candidates,
+        status: metrics.candidates > 0 ? "NEEDS_REVIEW" : "COMPLETED"
       },
       {
-        title: "Export Validation Warnings",
-        value: exportWarnings,
-        status: exportWarnings > 0 ? "BLOCKED" : "READY_FOR_SUBMISSION"
+        title: "Ready For Report",
+        value: metrics.readyForReport,
+        status: metrics.readyForReport > 0 ? "READY_FOR_SUBMISSION" : "READY"
       },
       {
-        title: "Running Tool Executions",
-        value: runningTools,
-        status: runningTools > 0 ? "RUNNING" : "READY"
+        title: "Readiness Blocks (Recent)",
+        value: metrics.blockedReadiness,
+        status: metrics.blockedReadiness > 0 ? "BLOCKED" : "COMPLETED"
+      },
+      {
+        title: "Unresolved Alerts",
+        value: metrics.unresolvedAlerts,
+        status: metrics.unresolvedAlerts > 0 ? "NEEDS_REVIEW" : "COMPLETED"
+      },
+      {
+        title: "Open Cases",
+        value: metrics.openCases,
+        status: metrics.openCases > 0 ? "WAITING_APPROVAL" : "COMPLETED"
       }
     ];
-  }, [data.alerts, data.findingsQueueQuery.data?.items, data.trackedCampaigns, data.trackedDiagnostics]);
+  }, [data.metrics]);
 
   return (
     <div className="operator-grid">
       <PageHeader
         title="Global Security Overview"
-        description="Operator command surface for campaign activity, review pressure, approvals, exports, and health."
+        description="Analyst cockpit overview of programs, monitored schedules, candidate pressure, and operational health."
       />
 
-      <TrackedCampaignSelector
-        trackedCampaignIds={tracked.trackedCampaignIds}
-        onAdd={tracked.addCampaignId}
-        onRemove={tracked.removeCampaignId}
-      />
+      <ProgramFilterCard value={programIdFilter} onChange={setProgramIdFilter} />
 
       <OverviewSummaryCards metrics={summaryMetrics} />
 
@@ -96,49 +86,72 @@ export default function OverviewPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Canonical Metrics Snapshot</CardTitle>
+          <CardTitle>Scheduler Snapshot</CardTitle>
         </CardHeader>
         <CardContent>
-          {data.summaryQuery.isLoading ? <LoadingState label="Loading diagnostics summary..." /> : null}
-          {data.summaryQuery.isError ? <ErrorState error={data.summaryQuery.error} title="Summary failed" /> : null}
-          {data.summaryQuery.data ? <DiagnosticsSummaryCards summary={data.summaryQuery.data} /> : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Alerts and Warnings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <AlertsTable alerts={data.alerts} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Recent Activity</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {data.recentAuditEvents.length > 0 ? (
-            <AuditEventList events={data.recentAuditEvents} />
-          ) : (
-            <EmptyState
-              title="No recent audit events"
-              description="Track campaigns to populate activity visibility in overview."
+          {data.schedulerStatusQuery.isLoading ? <LoadingState label="Loading scheduler status..." /> : null}
+          {data.schedulerStatusQuery.isError ? (
+            <ErrorState error={data.schedulerStatusQuery.error} title="Scheduler status failed" />
+          ) : null}
+          {data.schedulerStatusQuery.data ? (
+            <OperationsHealthPanel
+              schedulerStatus={data.schedulerStatusQuery.data}
+              toolsHealth={data.toolsHealthQuery.data}
             />
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Candidate Queue (Top)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {data.candidatesQuery.isLoading ? <LoadingState label="Loading candidates..." /> : null}
+          {data.candidatesQuery.isError ? (
+            <ErrorState error={data.candidatesQuery.error} title="Candidate queue failed" />
+          ) : null}
+          {data.candidatesQuery.data ? (
+            <CandidateQueueTable rows={data.candidatesQuery.data.slice(0, 10)} showActions={false} />
+          ) : (
+            <EmptyState title="No candidates" description="No candidate findings are available." />
           )}
         </CardContent>
       </Card>
 
-      {data.trackedErrors.length > 0 ? (
+      <ReasoningSummaryPanel
+        title="Recommendation Reasoning Summaries"
+        summaries={(data.recommendationsQuery.data ?? []).slice(0, 8).map((row) => row.reasoning_summary)}
+      />
+
+      {data.toolsHealthQuery.isError ? (
+        <ErrorState error={data.toolsHealthQuery.error} title="Tool health failed" />
+      ) : null}
+      {data.readinessRecordsQuery.isError ? (
+        <ErrorState error={data.readinessRecordsQuery.error} title="Readiness records failed" />
+      ) : null}
+      {data.schedulesQuery.isError ? (
+        <ErrorState error={data.schedulesQuery.error} title="Schedule list failed" />
+      ) : null}
+      {data.deltasQuery.isError ? (
+        <ErrorState error={data.deltasQuery.error} title="Delta list failed" />
+      ) : null}
+      {data.programsQuery.isError ? (
+        <ErrorState error={data.programsQuery.error} title="Program list failed" />
+      ) : null}
+      {data.recommendationsQuery.isError ? (
+        <ErrorState error={data.recommendationsQuery.error} title="Recommendations failed" />
+      ) : null}
+      {data.alertSummaryQuery.isError ? (
+        <ErrorState error={data.alertSummaryQuery.error} title="Alert/case summary failed" />
+      ) : null}
+
+      {(data.schedulesQuery.data?.length ?? 0) === 0 && !data.schedulesQuery.isLoading ? (
         <div className="space-y-2">
-          {data.trackedErrors.map((entry) => (
-            <ErrorState
-              key={`${entry.scope}:${entry.campaignId}`}
-              error={entry.error}
-              title={`${entry.scope} load failed (${entry.campaignId})`}
-            />
-          ))}
+          <EmptyState
+            title="No schedules configured"
+            description="Create bug bounty schedules to populate recurring execution telemetry."
+          />
         </div>
       ) : null}
     </div>

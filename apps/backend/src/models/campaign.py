@@ -14,7 +14,6 @@ from sqlalchemy import (
     Integer,
     JSON,
     Text,
-    TIMESTAMP,
     UniqueConstraint,
     func,
 )
@@ -32,7 +31,7 @@ from .enums import (
     RiskPolicyClassEnum,
     ToolExecutionStatusEnum,
 )
-from .mixins import TimestampMixin
+from .mixins import TimestampMixin, UTCAwareDatetime
 
 
 class Program(Base, TimestampMixin):
@@ -96,10 +95,10 @@ class ScopeTarget(Base, TimestampMixin):
     monitoring_source = Column(Text, nullable=True)
     monitoring_notes = Column(Text, nullable=True)
     safe_mode_required = Column(Boolean, nullable=False, server_default="true")
-    last_checked_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    last_success_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    last_failure_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    next_scheduled_run_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    last_checked_at = Column(UTCAwareDatetime, nullable=True)
+    last_success_at = Column(UTCAwareDatetime, nullable=True)
+    last_failure_at = Column(UTCAwareDatetime, nullable=True)
+    next_scheduled_run_at = Column(UTCAwareDatetime, nullable=True)
 
     program = relationship("Program", back_populates="scope_targets")
     campaign_runs = relationship("CampaignRun", back_populates="primary_scope_target")
@@ -149,11 +148,11 @@ class CampaignRun(Base, TimestampMixin):
         nullable=False,
         server_default=CampaignStatusEnum.CREATED.value,
     )
-    queued_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    started_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    paused_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    ended_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    canceled_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    queued_at = Column(UTCAwareDatetime, nullable=True)
+    started_at = Column(UTCAwareDatetime, nullable=True)
+    paused_at = Column(UTCAwareDatetime, nullable=True)
+    ended_at = Column(UTCAwareDatetime, nullable=True)
+    canceled_at = Column(UTCAwareDatetime, nullable=True)
     canceled_by = Column(Text, nullable=True)
     blocked_reason = Column(Text, nullable=True)
     retry_count = Column(Integer, nullable=False, default=0, server_default="0")
@@ -229,10 +228,10 @@ class ExecutionBranch(Base, TimestampMixin):
         nullable=True,
     )
     approval_required = Column(Boolean, nullable=False, default=False, server_default="false")
-    queued_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    started_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    ended_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    canceled_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    queued_at = Column(UTCAwareDatetime, nullable=True)
+    started_at = Column(UTCAwareDatetime, nullable=True)
+    ended_at = Column(UTCAwareDatetime, nullable=True)
+    canceled_at = Column(UTCAwareDatetime, nullable=True)
     canceled_by = Column(Text, nullable=True)
     blocked_reason = Column(Text, nullable=True)
     retry_count = Column(Integer, nullable=False, default=0, server_default="0")
@@ -323,10 +322,10 @@ class PhaseJob(Base, TimestampMixin):
         nullable=True,
     )
     approval_required = Column(Boolean, nullable=False, default=False, server_default="false")
-    queued_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    started_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    ended_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    canceled_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    queued_at = Column(UTCAwareDatetime, nullable=True)
+    started_at = Column(UTCAwareDatetime, nullable=True)
+    ended_at = Column(UTCAwareDatetime, nullable=True)
+    canceled_at = Column(UTCAwareDatetime, nullable=True)
     canceled_by = Column(Text, nullable=True)
     blocked_reason = Column(Text, nullable=True)
     worker_task_id = Column(Text, nullable=True)
@@ -435,14 +434,14 @@ class ApprovalGate(Base, TimestampMixin):
     )
     requested_by = Column(Text, nullable=False)
     requested_at = Column(
-        TIMESTAMP(timezone=True),
+        UTCAwareDatetime,
         nullable=False,
         server_default=func.now(),
     )
     decided_by = Column(Text, nullable=True)
-    decided_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    expires_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    canceled_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    decided_at = Column(UTCAwareDatetime, nullable=True)
+    expires_at = Column(UTCAwareDatetime, nullable=True)
+    canceled_at = Column(UTCAwareDatetime, nullable=True)
     canceled_by = Column(Text, nullable=True)
     operator_notes = Column(Text, nullable=True)
     decision_payload_json = Column(JSON, nullable=False, server_default="{}")
@@ -530,10 +529,10 @@ class ToolExecution(Base, TimestampMixin):
         ),
         nullable=True,
     )
-    queued_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    started_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    ended_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    canceled_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    queued_at = Column(UTCAwareDatetime, nullable=True)
+    started_at = Column(UTCAwareDatetime, nullable=True)
+    ended_at = Column(UTCAwareDatetime, nullable=True)
+    canceled_at = Column(UTCAwareDatetime, nullable=True)
     canceled_by = Column(Text, nullable=True)
     worker_task_id = Column(Text, nullable=True)
     retry_count = Column(Integer, nullable=False, default=0, server_default="0")
@@ -790,8 +789,8 @@ class SubmissionDraft(Base, TimestampMixin):
     content_hash = Column(Text, nullable=True)
     prepared_by = Column(Text, nullable=True)
     approved_by = Column(Text, nullable=True)
-    approved_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    submitted_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    approved_at = Column(UTCAwareDatetime, nullable=True)
+    submitted_at = Column(UTCAwareDatetime, nullable=True)
     external_submission_id = Column(Text, nullable=True)
     details_json = Column(JSON, nullable=False, server_default="{}")
 
@@ -863,7 +862,7 @@ class AuditEvent(Base, TimestampMixin):
     )
     risk_posture_changed = Column(Boolean, nullable=False, default=False, server_default="false")
     happened_at = Column(
-        TIMESTAMP(timezone=True),
+        UTCAwareDatetime,
         nullable=False,
         server_default=func.now(),
     )

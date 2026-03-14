@@ -13,7 +13,6 @@ from sqlalchemy import (
     Integer,
     JSON,
     Text,
-    TIMESTAMP,
     UniqueConstraint,
     func,
 )
@@ -22,7 +21,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 from .enums import CorrelationActionEnum, StageRunStatusEnum, WorkflowRunStatusEnum
-from .mixins import TimestampMixin
+from .mixins import TimestampMixin, UTCAwareDatetime
 
 
 class WorkflowRun(Base, TimestampMixin):
@@ -64,8 +63,8 @@ class WorkflowRun(Base, TimestampMixin):
     plan_artifact_path = Column(Text, nullable=True)
     summary_artifact_path = Column(Text, nullable=True)
     duration_ms = Column(Float, nullable=True)
-    started_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    ended_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    started_at = Column(UTCAwareDatetime, nullable=True)
+    ended_at = Column(UTCAwareDatetime, nullable=True)
 
     campaign_run = relationship("CampaignRun", back_populates="workflow_runs")
     stage_runs = relationship(
@@ -129,8 +128,8 @@ class StageRun(Base, TimestampMixin):
     )
     failure_reason = Column(Text, nullable=True)
     duration_ms = Column(Float, nullable=True)
-    started_at = Column(TIMESTAMP(timezone=True), nullable=True)
-    ended_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    started_at = Column(UTCAwareDatetime, nullable=True)
+    ended_at = Column(UTCAwareDatetime, nullable=True)
 
     workflow_run = relationship("WorkflowRun", back_populates="stage_runs")
     phase_jobs = relationship(
@@ -241,7 +240,7 @@ class CorrelationRecord(Base, TimestampMixin):
         nullable=True,
     )
     correlated_at = Column(
-        TIMESTAMP(timezone=True),
+        UTCAwareDatetime,
         nullable=False,
         server_default=func.now(),
     )

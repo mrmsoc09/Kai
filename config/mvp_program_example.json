@@ -1,0 +1,31 @@
+{
+  "source": "manual",
+  "platform": "hackerone",
+  "name": "Kai MVP Demo Program",
+  "program_key": "kai-mvp-demo",
+  "program_url": "https://example.com/policy",
+  "status": "ACTIVE",
+  "require_safe_mode": true,
+  "allowed_asset_types": ["domain"],
+  "testing_restrictions": ["No destructive testing", "No denial-of-service"],
+  "in_scope_assets": [
+    {
+      "target": "app.example.com",
+      "target_type": "domain",
+      "monitoring_enabled": true,
+      "safe_mode_required": true,
+      "priority_tier": 2,
+      "notes": "MVP seed target"
+    }
+  ],
+  "out_of_scope_assets": [
+    {
+      "target": "admin.example.com",
+      "target_type": "domain",
+      "monitoring_enabled": false,
+      "safe_mode_required": true,
+      "priority_tier": 5,
+      "notes": "Explicitly excluded in seed payload"
+    }
+  ]
+}

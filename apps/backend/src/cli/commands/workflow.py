@@ -33,7 +33,7 @@ def get_api_client():
     """Get the K1 API client."""
     try:
         import httpx
-        return httpx.Client(base_url="http://localhost:8000", timeout=300.0)
+        return httpx.Client(base_url="http://localhost:8080", timeout=300.0)
     except ImportError:
         return None
 

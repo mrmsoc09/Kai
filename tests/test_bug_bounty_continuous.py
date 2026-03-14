@@ -541,3 +541,592 @@ def test_bug_bounty_phase6_inference_routes(client, monkeypatch):
         assert briefing_response.json()["adaptive_actions"][0]["action_status"] == "APPLIED"
     finally:
         app.dependency_overrides.pop(get_db, None)
+
+
+def test_bug_bounty_phase7_prediction_routes(client, monkeypatch):
+    now = datetime.now(timezone.utc)
+    prediction_id = uuid4()
+    target_id = uuid4()
+    program_id = uuid4()
+
+    prediction = SimpleNamespace(
+        id=prediction_id,
+        program_id=program_id,
+        scope_target_id=target_id,
+        workflow_run_id=uuid4(),
+        analyst_queue_item_id=uuid4(),
+        predicted_vulnerability_type="sql_injection_candidate",
+        confidence_score=0.82,
+        novelty_score=0.74,
+        duplicate_risk_score=0.21,
+        reportability_score=0.79,
+        evidence_completeness_score=0.84,
+        opportunity_score=86.5,
+        recommended_next_workflow="workflow_quick_vuln_sweep",
+        recommended_follow_up_action="route_to_manual_validation",
+        reasoning_summary="deterministic-phase7",
+        supporting_signal_ids_json=[],
+        details_json={},
+        predicted_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    ranking = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        scope_target_id=target_id,
+        workflow_run_id=prediction.workflow_run_id,
+        analyst_queue_item_id=prediction.analyst_queue_item_id,
+        subject_type="CANDIDATE",
+        subject_key=str(prediction.analyst_queue_item_id),
+        selection_score=73.1,
+        priority_rank=3,
+        confidence_score=0.82,
+        duplicate_risk_score=0.21,
+        evidence_completeness_score=0.84,
+        reasoning_summary="deterministic-ranking",
+        details_json={},
+        scored_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    yield_record = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        scope_target_id=target_id,
+        workflow_run_id=prediction.workflow_run_id,
+        signal_density_score=0.5,
+        novelty_score=0.6,
+        coverage_quality_score=0.5,
+        candidate_quality_score=0.8,
+        duplicate_penalty_score=0.2,
+        confidence_score=0.7,
+        yield_score=68.0,
+        details_json={},
+        scored_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    duplicate = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        scope_target_id=target_id,
+        workflow_run_id=prediction.workflow_run_id,
+        analyst_queue_item_id=prediction.analyst_queue_item_id,
+        candidate_key="api.example.com:sql_injection_candidate",
+        duplicate_risk_score=0.21,
+        risk_band="LOW",
+        reasoning_summary="low duplicate risk",
+        supporting_signal_ids_json=[],
+        details_json={},
+        assessed_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    completeness = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        scope_target_id=target_id,
+        workflow_run_id=prediction.workflow_run_id,
+        analyst_queue_item_id=prediction.analyst_queue_item_id,
+        candidate_key="api.example.com:sql_injection_candidate",
+        evidence_completeness_score=0.84,
+        readiness_state="READY_FOR_REPORT",
+        missing_fields_json=[],
+        reasoning_summary="evidence complete",
+        details_json={},
+        assessed_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    recommendation = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        scope_target_id=target_id,
+        workflow_run_id=prediction.workflow_run_id,
+        analyst_queue_item_id=prediction.analyst_queue_item_id,
+        prediction_record_id=prediction.id,
+        selection_record_id=ranking.id,
+        target_yield_score_id=yield_record.id,
+        recommended_workflow="workflow_quick_vuln_sweep",
+        recommended_action="route_to_manual_validation",
+        action_priority=1,
+        recommendation_status="PROPOSED",
+        reasoning_summary="phase7 recommendation",
+        supporting_record_ids_json=[],
+        details_json={},
+        recommended_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+
+    class _FakePhase7Service:
+        def __init__(self, _db):
+            pass
+
+        async def run_prediction_cycle(self, *, program_id, actor, apply_adaptive):
+            assert actor
+            _ = (program_id, apply_adaptive)
+            return {
+                "predictions_created": 1,
+                "rankings_created": 2,
+                "recommendations_created": 2,
+                "yield_scores_created": 1,
+                "duplicate_records_created": 1,
+                "evidence_records_created": 1,
+                "adaptive_actions_applied": 1,
+            }
+
+        async def list_predictions(self, *, program_id, scope_target_id, limit):
+            _ = (program_id, scope_target_id, limit)
+            return [prediction]
+
+        async def list_opportunity_rankings(self, *, program_id, subject_type, limit):
+            _ = (program_id, subject_type, limit)
+            return [ranking]
+
+        async def list_target_yields(self, *, program_id, scope_target_id, limit):
+            _ = (program_id, scope_target_id, limit)
+            return [yield_record]
+
+        async def list_duplicate_risk(self, *, program_id, risk_band, limit):
+            _ = (program_id, risk_band, limit)
+            return [duplicate]
+
+        async def list_evidence_completeness(self, *, program_id, readiness_state, limit):
+            _ = (program_id, readiness_state, limit)
+            return [completeness]
+
+        async def list_recommendations(self, *, program_id, recommendation_status, limit):
+            _ = (program_id, recommendation_status, limit)
+            return [recommendation]
+
+        async def analyst_decision_support(self, *, program_id, limit):
+            _ = (program_id, limit)
+            return {
+                "generated_at": now.isoformat(),
+                "top_predictions": [{"prediction_id": str(prediction.id)}],
+                "top_target_yields": [{"yield_record_id": str(yield_record.id)}],
+                "top_recommendations": [{"recommendation_id": str(recommendation.id)}],
+            }
+
+    async def _override_db():
+        yield object()
+
+    monkeypatch.setattr(bug_bounty_router, "Phase7PredictionService", _FakePhase7Service)
+    app.dependency_overrides[get_db] = _override_db
+    try:
+        run_response = client.post("/api/v1/bug-bounty/phase7/run", json={})
+        assert run_response.status_code == 200
+        assert run_response.json()["predictions_created"] == 1
+
+        predictions_response = client.get("/api/v1/bug-bounty/phase7/predictions")
+        assert predictions_response.status_code == 200
+        assert predictions_response.json()[0]["predicted_vulnerability_type"] == "sql_injection_candidate"
+
+        rankings_response = client.get("/api/v1/bug-bounty/phase7/opportunity-rankings")
+        assert rankings_response.status_code == 200
+        assert rankings_response.json()[0]["subject_type"] == "CANDIDATE"
+
+        yields_response = client.get("/api/v1/bug-bounty/phase7/target-yields")
+        assert yields_response.status_code == 200
+        assert yields_response.json()[0]["yield_score"] == 68.0
+
+        duplicate_response = client.get("/api/v1/bug-bounty/phase7/duplicate-risk")
+        assert duplicate_response.status_code == 200
+        assert duplicate_response.json()[0]["risk_band"] == "LOW"
+
+        completeness_response = client.get("/api/v1/bug-bounty/phase7/evidence-completeness")
+        assert completeness_response.status_code == 200
+        assert completeness_response.json()[0]["readiness_state"] == "READY_FOR_REPORT"
+
+        recommendation_response = client.get("/api/v1/bug-bounty/phase7/recommendations")
+        assert recommendation_response.status_code == 200
+        assert recommendation_response.json()[0]["recommended_action"] == "route_to_manual_validation"
+
+        support_response = client.get("/api/v1/bug-bounty/phase7/analyst-support")
+        assert support_response.status_code == 200
+        assert support_response.json()["top_predictions"][0]["prediction_id"] == str(prediction.id)
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+def test_bug_bounty_phase9_alert_case_routes(client, monkeypatch):
+    now = datetime.now(timezone.utc)
+    program_id = uuid4()
+    target_id = uuid4()
+    alert_id = uuid4()
+    case_id = uuid4()
+
+    alert = SimpleNamespace(
+        id=alert_id,
+        program_id=program_id,
+        scope_target_id=target_id,
+        workflow_run_id=uuid4(),
+        analyst_queue_item_id=uuid4(),
+        prediction_record_id=uuid4(),
+        recommendation_record_id=uuid4(),
+        submission_draft_id=None,
+        alert_type="LIKELY_REPORTABLE_FINDING",
+        severity="HIGH",
+        urgency="HIGH",
+        alert_fingerprint="candidate:reportable:1",
+        summary="Likely reportable candidate on app.example.com",
+        reasoning_summary="reportability=0.93 confidence=0.88",
+        supporting_signal_ids_json=[],
+        supporting_record_ids_json=["queue-1"],
+        status="OPEN",
+        occurrence_count=1,
+        first_seen_at=now,
+        last_seen_at=now,
+        acknowledged_at=None,
+        acknowledged_by=None,
+        resolved_at=None,
+        resolved_by=None,
+        details_json={},
+        created_at=now,
+        updated_at=now,
+    )
+    case = SimpleNamespace(
+        id=case_id,
+        program_id=program_id,
+        scope_target_id=target_id,
+        workflow_run_id=uuid4(),
+        alert_id=alert_id,
+        analyst_queue_item_id=uuid4(),
+        prediction_record_id=uuid4(),
+        recommendation_record_id=uuid4(),
+        submission_draft_id=None,
+        title="[HIGH] likely reportable finding",
+        summary="Triage this candidate quickly",
+        reasoning_summary="signal density elevated",
+        priority="HIGH",
+        status="new",
+        owner=None,
+        last_actor="test.operator",
+        assigned_at=None,
+        last_transition_at=now,
+        closed_at=None,
+        closure_reason=None,
+        evidence_refs_json=[],
+        triage_notes_json=[],
+        details_json={},
+        created_at=now,
+        updated_at=now,
+    )
+
+    class _FakePhase9Service:
+        def __init__(self, _db):
+            pass
+
+        async def sync_alerts(self, *, actor, program_id=None, cooldown_minutes=120):
+            _ = (actor, program_id, cooldown_minutes)
+            return {
+                "scanned_sources": 5,
+                "created_alerts": 2,
+                "updated_alerts": 1,
+                "suppressed_alerts": 0,
+            }
+
+        async def list_alerts(self, *, program_id=None, status=None, severity=None, limit=500):
+            _ = (program_id, status, severity, limit)
+            return [alert]
+
+        async def get_alert_case_summary(self, *, program_id=None):
+            _ = program_id
+            return {
+                "unresolved_alert_count": 3,
+                "high_severity_alert_count": 2,
+                "open_case_count": 4,
+                "ready_for_report_case_count": 1,
+                "stale_unowned_case_count": 1,
+            }
+
+        async def get_alert(self, _alert_id):
+            return alert
+
+        async def acknowledge_alert(self, _alert_id, *, actor, note=None):
+            _ = (actor, note)
+            alert.status = "ACKNOWLEDGED"
+            alert.acknowledged_at = now
+            alert.acknowledged_by = actor
+            return alert
+
+        async def resolve_alert(self, _alert_id, *, actor, note=None):
+            _ = (actor, note)
+            alert.status = "RESOLVED"
+            alert.resolved_at = now
+            alert.resolved_by = actor
+            return alert
+
+        async def create_case_from_alert(self, _alert_id, *, actor, owner=None):
+            _ = (actor, owner)
+            case.owner = owner
+            return case
+
+        async def list_cases(self, *, program_id=None, status=None, priority=None, owner=None, limit=500):
+            _ = (program_id, status, priority, owner, limit)
+            return [case]
+
+        async def get_case(self, _case_id):
+            return case
+
+        async def create_case(self, **kwargs):
+            _ = kwargs
+            return case
+
+        async def update_case(self, _case_id, **kwargs):
+            if kwargs.get("status"):
+                case.status = kwargs["status"]
+            if kwargs.get("priority"):
+                case.priority = kwargs["priority"]
+            return case
+
+        async def assign_case(self, _case_id, *, owner, actor):
+            _ = actor
+            case.owner = owner
+            return case
+
+        async def add_case_note(self, _case_id, *, note, actor):
+            case.triage_notes_json = [{"note": note, "actor": actor, "at": now.isoformat()}]
+            return case
+
+    async def _override_db():
+        yield object()
+
+    monkeypatch.setattr(bug_bounty_router, "Phase9AlertCaseService", _FakePhase9Service)
+    app.dependency_overrides[get_db] = _override_db
+    try:
+        sync_response = client.post("/api/v1/bug-bounty/alerts/sync", json={})
+        assert sync_response.status_code == 200
+        assert sync_response.json()["created_alerts"] == 2
+
+        list_alerts_response = client.get("/api/v1/bug-bounty/alerts")
+        assert list_alerts_response.status_code == 200
+        assert list_alerts_response.json()[0]["alert_type"] == "LIKELY_REPORTABLE_FINDING"
+
+        summary_response = client.get("/api/v1/bug-bounty/alerts/summary")
+        assert summary_response.status_code == 200
+        assert summary_response.json()["open_case_count"] == 4
+
+        alert_detail = client.get(f"/api/v1/bug-bounty/alerts/{alert_id}")
+        assert alert_detail.status_code == 200
+        assert alert_detail.json()["id"] == str(alert_id)
+
+        ack_response = client.post(
+            f"/api/v1/bug-bounty/alerts/{alert_id}/acknowledge",
+            json={"actor": "test.operator"},
+        )
+        assert ack_response.status_code == 200
+        assert ack_response.json()["status"] == "ACKNOWLEDGED"
+
+        resolve_response = client.post(
+            f"/api/v1/bug-bounty/alerts/{alert_id}/resolve",
+            json={"actor": "test.operator"},
+        )
+        assert resolve_response.status_code == 200
+        assert resolve_response.json()["status"] == "RESOLVED"
+
+        case_from_alert = client.post(
+            f"/api/v1/bug-bounty/alerts/{alert_id}/case",
+            json={"actor": "test.operator", "owner": "analyst-1"},
+        )
+        assert case_from_alert.status_code == 200
+        assert case_from_alert.json()["owner"] == "analyst-1"
+
+        list_cases_response = client.get("/api/v1/bug-bounty/cases")
+        assert list_cases_response.status_code == 200
+        assert list_cases_response.json()[0]["title"] == "[HIGH] likely reportable finding"
+
+        case_detail = client.get(f"/api/v1/bug-bounty/cases/{case_id}")
+        assert case_detail.status_code == 200
+        assert case_detail.json()["id"] == str(case_id)
+
+        create_case_response = client.post(
+            "/api/v1/bug-bounty/cases",
+            json={
+                "program_id": str(program_id),
+                "title": "manual case",
+                "summary": "manual summary",
+            },
+        )
+        assert create_case_response.status_code == 200
+        assert create_case_response.json()["id"] == str(case_id)
+
+        update_case_response = client.patch(
+            f"/api/v1/bug-bounty/cases/{case_id}",
+            json={"status": "triaging"},
+        )
+        assert update_case_response.status_code == 200
+        assert update_case_response.json()["status"] == "triaging"
+
+        assign_case_response = client.post(
+            f"/api/v1/bug-bounty/cases/{case_id}/assign",
+            json={"owner": "analyst-2"},
+        )
+        assert assign_case_response.status_code == 200
+        assert assign_case_response.json()["owner"] == "analyst-2"
+
+        note_response = client.post(
+            f"/api/v1/bug-bounty/cases/{case_id}/notes",
+            json={"note": "triage note"},
+        )
+        assert note_response.status_code == 200
+        assert note_response.json()["triage_notes_json"][0]["note"] == "triage note"
+    finally:
+        app.dependency_overrides.pop(get_db, None)
+
+
+def test_bug_bounty_phase10_retrospective_routes(client, monkeypatch):
+    now = datetime.now(timezone.utc)
+    program_id = uuid4()
+    target_id = uuid4()
+
+    workflow_row = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        workflow_template="workflow_quick_vuln_sweep",
+        window_start=now,
+        window_end=now,
+        signals_generated=10,
+        candidates_produced=5,
+        cases_created=3,
+        reportable_outcomes=2,
+        duplicate_outcomes=0,
+        dismissed_outcomes=1,
+        workflow_signal_value=74.0,
+        workflow_reportability_rate=0.66,
+        workflow_noise_rate=0.33,
+        details_json={},
+        computed_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    target_row = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        scope_target_id=target_id,
+        window_start=now,
+        window_end=now,
+        signal_count=10,
+        candidate_count=5,
+        case_count=3,
+        reportable_count=2,
+        duplicate_count=0,
+        dismissed_count=1,
+        target_signal_rate=0.2,
+        target_duplicate_rate=0.0,
+        target_reportability_rate=0.66,
+        target_yield_score=78.0,
+        details_json={},
+        computed_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    recommendation_row = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        recommendation_record_id=uuid4(),
+        scope_target_id=target_id,
+        workflow_run_id=uuid4(),
+        analyst_case_id=uuid4(),
+        outcome_status="SUCCEEDED",
+        success_score=1.0,
+        reasoning_summary="used and successful",
+        details_json={},
+        decided_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+    alert_row = SimpleNamespace(
+        id=uuid4(),
+        program_id=program_id,
+        alert_id=uuid4(),
+        scope_target_id=target_id,
+        analyst_case_id=uuid4(),
+        outcome_status="RESOLVED_ACTIONABLE",
+        acknowledgement_latency_seconds=120,
+        led_to_case=True,
+        led_to_reportable=True,
+        reasoning_summary="actionable signal",
+        details_json={},
+        evaluated_at=now,
+        created_at=now,
+        updated_at=now,
+    )
+
+    class _FakePhase10Service:
+        def __init__(self, _db):
+            pass
+
+        async def run_retrospective(self, *, actor, program_id, window_days):
+            assert actor
+            _ = (program_id, window_days)
+            return {
+                "feedback_signals_recorded": 4,
+                "decision_outcomes_recorded": 3,
+                "workflow_performance_records_created": 1,
+                "target_performance_records_created": 1,
+                "recommendation_outcomes_recorded": 1,
+                "alert_outcomes_recorded": 1,
+            }
+
+        async def summary(self, *, program_id, window_days):
+            _ = (program_id, window_days)
+            return {
+                "generated_at": now.isoformat(),
+                "window_days": 30,
+                "top_programs": [{"program_id": str(program_id), "avg_target_yield_score": 78.0}],
+                "top_targets": [{"scope_target_id": str(target_id), "target_yield_score": 78.0}],
+                "workflow_value_leaders": [{"workflow_template": "workflow_quick_vuln_sweep"}],
+                "alert_noise_summary": {"noise_rate": 0.1},
+                "recommendation_success_summary": {"weighted_success_rate": 0.9},
+            }
+
+        async def list_workflow_performance(self, *, program_id, limit):
+            _ = (program_id, limit)
+            return [workflow_row]
+
+        async def list_target_performance(self, *, program_id, scope_target_id, limit):
+            _ = (program_id, scope_target_id, limit)
+            return [target_row]
+
+        async def list_recommendation_outcomes(self, *, program_id, outcome_status, limit):
+            _ = (program_id, outcome_status, limit)
+            return [recommendation_row]
+
+        async def list_alert_outcomes(self, *, program_id, outcome_status, limit):
+            _ = (program_id, outcome_status, limit)
+            return [alert_row]
+
+    async def _override_db():
+        yield object()
+
+    monkeypatch.setattr(bug_bounty_router, "Phase10RetrospectiveService", _FakePhase10Service)
+    app.dependency_overrides[get_db] = _override_db
+    try:
+        run_response = client.post("/api/v1/bug-bounty/retrospective/run", json={})
+        assert run_response.status_code == 200
+        assert run_response.json()["feedback_signals_recorded"] == 4
+
+        summary_response = client.get("/api/v1/bug-bounty/retrospective/summary")
+        assert summary_response.status_code == 200
+        assert summary_response.json()["window_days"] == 30
+
+        workflows_response = client.get("/api/v1/bug-bounty/retrospective/workflows")
+        assert workflows_response.status_code == 200
+        assert workflows_response.json()[0]["workflow_template"] == "workflow_quick_vuln_sweep"
+
+        targets_response = client.get("/api/v1/bug-bounty/retrospective/targets")
+        assert targets_response.status_code == 200
+        assert targets_response.json()[0]["target_yield_score"] == 78.0
+
+        recommendations_response = client.get("/api/v1/bug-bounty/retrospective/recommendations")
+        assert recommendations_response.status_code == 200
+        assert recommendations_response.json()[0]["outcome_status"] == "SUCCEEDED"
+
+        alerts_response = client.get("/api/v1/bug-bounty/retrospective/alerts")
+        assert alerts_response.status_code == 200
+        assert alerts_response.json()[0]["outcome_status"] == "RESOLVED_ACTIONABLE"
+    finally:
+        app.dependency_overrides.pop(get_db, None)

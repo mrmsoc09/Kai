@@ -27,14 +27,15 @@ pip install -r requirements-dev.txt  # test tooling
 ## 4. Configure environment
 
 ```bash
-cp .env.example .env
+cp .env.mvp.example .env
 ```
 
 Set at least:
 
 - `DATABASE_URL` — e.g. `postgresql+asyncpg://k1:k1pass@localhost:5432/k1`
 - `REDIS_URL` — e.g. `redis://localhost:6379/0`
-- `K1_JWT_SECRET` — any long random string for signing JWT tokens
+- `K1_DEV_TOKEN` — local development login token for `/auth/login`
+- `JWT_SECRET_KEY` / `K1_JWT_SECRET` — any long random string for signing JWT tokens
 - optional API keys (`SHODAN_API_KEY`, `CENSYS_API_ID`, `CENSYS_API_SECRET`)
 
 ## 5. Verify tool installation
@@ -53,16 +54,43 @@ Verification report is written to:
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
-## 7. Run backend tests
+## 7. Apply database migrations
+
+```bash
+alembic upgrade head
+```
+
+## 8. Development auth bootstrap (required for protected APIs)
+
+```bash
+curl -sS -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"token\":\"$K1_DEV_TOKEN\"}"
+```
+
+Use returned `access_token` as bearer token for CLI/API and optionally set:
+
+- `NEXT_PUBLIC_API_BEARER_TOKEN=<access_token>` or
+- `NEXT_PUBLIC_K1_DEV_BOOTSTRAP_TOKEN=<K1_DEV_TOKEN>`
+
+## 9. Run backend tests
 
 ```bash
 python3 -m pytest -q
 ```
 
-## 8. Run workflow smoke test
+## 10. Run workflow smoke test
 
 ```bash
 bash scripts/smoke_test_workflow.sh example.com workflow_recon_surface_map
+```
+
+## 11. Start frontend operator console
+
+```bash
+cd apps/frontend-operator
+npm install
+npm run dev
 ```
 
 ---
@@ -100,9 +128,9 @@ Install all runtime dependencies, not just dev tooling:
 pip install -r requirements.txt -r requirements-dev.txt
 ```
 
-### Scope guardrails blocking all targets
+### Scope guardrails blocking targets
 
-The default `config/scope_guardrails.yaml` ships with an empty allowlist and `strict_allowlist: false`, which allows all targets except those on the denylist (localhost, *.internal). To restrict to specific programs, populate the `allowlist`:
+The default `config/scope_guardrails.yaml` ships with `strict_allowlist: true`, so targets not matching the allowlist are blocked. Populate `allowlist` with authorized scope entries:
 
 ```yaml
 allowlist:

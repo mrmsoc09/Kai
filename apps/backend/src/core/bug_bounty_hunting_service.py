@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .audit_events import record_transition_event
 from .bugbounty_workflow_engine import WORKFLOW_TEMPLATES
 from .helpers import workflow_output_root
+from .phase9_alert_case_service import Phase9AlertCaseService
 from .secret_manager import get_secret_manager
 from .scope_guardrails import ScopePolicy, evaluate_target_scope
 from .tool_health_service import build_dashboard
@@ -172,6 +173,9 @@ class BugBountyHuntingService:
                 "out_of_scope_assets": len(payload.out_of_scope_assets),
             },
         )
+        # Refresh to load server-side values (e.g. updated_at set via onupdate)
+        # that are marked expired after the config_json UPDATE flush.
+        await self.db.refresh(program)
         return program
 
     @staticmethod
@@ -822,6 +826,11 @@ class BugBountyHuntingService:
         if workflow_run_id is not None:
             await self._persist_run_deltas(schedule, workflow_run_id)
             await self._persist_candidate_queue(schedule, workflow_run_id)
+            await Phase9AlertCaseService(self.db).sync_alerts(
+                actor="scheduler.phase9.alerts",
+                program_id=schedule.program_id,
+                cooldown_minutes=120,
+            )
 
         await record_transition_event(
             self.db,
@@ -1122,6 +1131,11 @@ class BugBountyHuntingService:
             details["analyst_notes"] = notes_list
         queue_item.details_json = details
         await self.db.flush()
+        await Phase9AlertCaseService(self.db).sync_alerts(
+            actor=payload.actor,
+            program_id=queue_item.program_id,
+            cooldown_minutes=120,
+        )
         await record_transition_event(
             self.db,
             event_type="bugbounty.candidate.updated",
@@ -1458,6 +1472,11 @@ class BugBountyHuntingService:
         queue_item.status = "ready_for_report"
         queue_item.last_transition_at = _utcnow()
         await self.db.flush()
+        await Phase9AlertCaseService(self.db).sync_alerts(
+            actor=actor,
+            program_id=queue_item.program_id,
+            cooldown_minutes=120,
+        )
 
         await record_transition_event(
             self.db,

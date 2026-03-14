@@ -11,7 +11,6 @@ from sqlalchemy import (
     JSON,
     LargeBinary,
     Text,
-    TIMESTAMP,
     Float,
     UniqueConstraint,
 )
@@ -20,7 +19,7 @@ from sqlalchemy.orm import relationship
 
 from .base import Base
 from .enums import FindingStatusEnum, HILApprovalStatusEnum, SeverityEnum
-from .mixins import SoftDeleteMixin, TimestampMixin
+from .mixins import SoftDeleteMixin, TimestampMixin, UTCAwareDatetime
 
 
 class Finding(Base, TimestampMixin, SoftDeleteMixin):
@@ -92,7 +91,7 @@ class HILApproval(Base, TimestampMixin, SoftDeleteMixin):
         nullable=False,
     )
     approved_by = Column(Text, nullable=False, server_default="pending")
-    approved_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    approved_at = Column(UTCAwareDatetime, nullable=True)
     status = Column(
         SAEnum(
             HILApprovalStatusEnum,

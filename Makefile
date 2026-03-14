@@ -1,13 +1,16 @@
 PYTHON ?= python3
 PIP ?= $(PYTHON) -m pip
 
-.PHONY: install test verify-tools workflow-templates health-check smoke-workflow run-workflow-local
+.PHONY: install test migrate verify-tools workflow-templates health-check smoke-workflow run-workflow-local seed-mvp
 
 install:
 	$(PIP) install -r requirements.txt
 
 test:
 	$(PYTHON) -m pytest -q
+
+migrate:
+	alembic upgrade head
 
 verify-tools:
 	$(PYTHON) scripts/verify_tool_registry_install.py
@@ -27,3 +30,6 @@ smoke-workflow:
 
 run-workflow-local:
 	$(PYTHON) scripts/run_workflow_local.py --template workflow_recon_surface_map --target example.com --safe-mode
+
+seed-mvp:
+	$(PYTHON) scripts/seed_mvp_demo.py --apply --trigger-run

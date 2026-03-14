@@ -21,4 +21,8 @@ wait_http http://localhost:9000 TheHive 300 || true
 wait_http http://localhost:8080/healthz Backend 180 || true
 wait_http http://localhost:8081 Frontend 180 || true
 
-echo "Stack up complete. Run k1/scripts/smoke_e2e.sh next."
+echo "Stack up complete."
+echo "Canonical MVP checks:"
+echo "  1) bash scripts/frontend_smoke.sh"
+echo "  2) bash scripts/mvp_demo_flow.sh"
+echo "Legacy script (compatibility only): k1/scripts/smoke_e2e.sh"

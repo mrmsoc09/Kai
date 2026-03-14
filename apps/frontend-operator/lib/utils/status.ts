@@ -21,7 +21,12 @@ export const STATUS_STYLE_MAP: Record<string, string> = {
   IN_REVIEW: `${base} border-review/40 bg-review/15 text-review`,
   DUPLICATE: `${base} border-finding/40 bg-finding/15 text-finding`,
   RESOLVED: `${base} border-success/40 bg-success/15 text-success`,
+  ACKNOWLEDGED: `${base} border-review/40 bg-review/15 text-review`,
+  TRIAGING: `${base} border-review/40 bg-review/15 text-review`,
+  OPEN: `${base} border-danger/40 bg-danger/15 text-danger`,
+  SUPPRESSED: `${base} border-finding/40 bg-finding/15 text-finding`,
   SUBMITTED: `${base} border-success/40 bg-success/15 text-success`,
+  IMMEDIATE: `${base} border-danger/40 bg-danger/15 text-danger`,
   QUEUED: `${base} border-active/30 bg-active/10 text-active`,
   SKIPPED: `${base} border-slate-600 bg-slate-500/10 text-slate-300`,
   PENDING: `${base} border-review/30 bg-review/10 text-review`

@@ -87,8 +87,8 @@ Summary counters include:
 ### API usage
 
 ```bash
-curl "http://localhost:8000/api/v1/tools/health"
-curl "http://localhost:8000/api/v1/tools/health?run_smoke_tests=true&write_report=true"
+curl "http://localhost:8080/api/v1/tools/health"
+curl "http://localhost:8080/api/v1/tools/health?run_smoke_tests=true&write_report=true"
 ```
 
 When `write_report=true`, Kai writes:
