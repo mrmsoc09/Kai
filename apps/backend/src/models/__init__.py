@@ -1,4 +1,14 @@
 from .base import Base
+from .bug_bounty import (
+    AdaptiveScheduleActionRecord,
+    AnalystQueueItem,
+    HuntReadinessRecord,
+    HuntScheduleJob,
+    OpportunityInferenceRecord,
+    SignalIntelligenceRecord,
+    SwarmReasoningRecord,
+    WorkflowDeltaRecord,
+)
 from .campaign import (
     ApprovalGate,
     Artifact,
@@ -18,6 +28,7 @@ from .enums import (
     ArtifactTypeEnum,
     BranchStatusEnum,
     CampaignStatusEnum,
+    CorrelationActionEnum,
     ExecutionStatusEnum,
     FindingStatusEnum,
     HILApprovalStatusEnum,
@@ -27,12 +38,15 @@ from .enums import (
     PhaseJobStatusEnum,
     RiskPolicyClassEnum,
     SeverityEnum,
+    StageRunStatusEnum,
     ToolExecutionStatusEnum,
+    WorkflowRunStatusEnum,
 )
 from .execution import ExecutionContextRecord
 from .hil import AuditMerkleRoot, Evidence, Finding, HILApproval, Report
 from .hil_extra import ProgramScope
 from .intention import IntentionRecord
+from .workflow import CorrelationRecord, StageRun, WorkflowFinding, WorkflowRun
 
 __all__ = [
     "Base",
@@ -50,6 +64,17 @@ __all__ = [
     "IntentionSourceEnum",
     "IntentionTypeEnum",
     "RiskPolicyClassEnum",
+    "WorkflowRunStatusEnum",
+    "StageRunStatusEnum",
+    "CorrelationActionEnum",
+    "HuntScheduleJob",
+    "HuntReadinessRecord",
+    "WorkflowDeltaRecord",
+    "AnalystQueueItem",
+    "SignalIntelligenceRecord",
+    "OpportunityInferenceRecord",
+    "SwarmReasoningRecord",
+    "AdaptiveScheduleActionRecord",
     "Finding",
     "Evidence",
     "HILApproval",
@@ -70,4 +95,8 @@ __all__ = [
     "SubmissionDraft",
     "AuditEvent",
     "IntentionRecord",
+    "WorkflowRun",
+    "StageRun",
+    "WorkflowFinding",
+    "CorrelationRecord",
 ]

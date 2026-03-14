@@ -13,7 +13,6 @@ from ..models.enums import FindingStatusEnum
 from ..models.hil import Finding
 from .audit_events import record_transition_event
 
-
 REVIEW_ACTIONS = {
     "APPROVE",
     "REJECT",
@@ -177,8 +176,14 @@ class FindingReviewService:
 
         draft = await self._latest_draft(finding.id)
         campaign_id = self._resolve_campaign_id(finding, draft)
-        branch_id = draft.branch_id if draft is not None else _maybe_uuid(
-            (finding.scope_json or {}).get("branch_id") if isinstance(finding.scope_json, dict) else None
+        branch_id = (
+            draft.branch_id
+            if draft is not None
+            else _maybe_uuid(
+                (finding.scope_json or {}).get("branch_id")
+                if isinstance(finding.scope_json, dict)
+                else None
+            )
         )
 
         target_finding_status, target_draft_status = self._action_mapping(normalized_action)
@@ -313,9 +318,9 @@ class FindingReviewService:
                 "review_timestamp": review_timestamp.isoformat(),
                 "finding_status": finding.status.value,
                 "draft_status": draft.status,
-                "duplicate_of_finding_id": str(duplicate_of_finding_id)
-                if duplicate_of_finding_id
-                else None,
+                "duplicate_of_finding_id": (
+                    str(duplicate_of_finding_id) if duplicate_of_finding_id else None
+                ),
             },
         )
 

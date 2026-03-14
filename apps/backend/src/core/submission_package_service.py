@@ -75,7 +75,9 @@ class SubmissionPackageService:
         )
         return list(result.scalars().all())
 
-    async def _artifact_rows(self, finding_id: UUID, observations: list[Observation]) -> list[Artifact]:
+    async def _artifact_rows(
+        self, finding_id: UUID, observations: list[Observation]
+    ) -> list[Artifact]:
         artifacts: dict[UUID, Artifact] = {}
 
         finding_result = await self.db.execute(
@@ -110,16 +112,24 @@ class SubmissionPackageService:
         return {
             "campaign_id": str(draft.campaign_id),
             "branch_id": str(draft.branch_id) if draft.branch_id else None,
-            "phase_job_id": str(scope_json.get("phase_job_id"))
-            if scope_json.get("phase_job_id")
-            else str(first_observation.phase_job_id)
-            if first_observation and first_observation.phase_job_id
-            else None,
-            "tool_execution_id": str(scope_json.get("tool_execution_id"))
-            if scope_json.get("tool_execution_id")
-            else str(first_observation.tool_execution_id)
-            if first_observation and first_observation.tool_execution_id
-            else None,
+            "phase_job_id": (
+                str(scope_json.get("phase_job_id"))
+                if scope_json.get("phase_job_id")
+                else (
+                    str(first_observation.phase_job_id)
+                    if first_observation and first_observation.phase_job_id
+                    else None
+                )
+            ),
+            "tool_execution_id": (
+                str(scope_json.get("tool_execution_id"))
+                if scope_json.get("tool_execution_id")
+                else (
+                    str(first_observation.tool_execution_id)
+                    if first_observation and first_observation.tool_execution_id
+                    else None
+                )
+            ),
         }
 
     async def _get_or_create_draft(
@@ -203,9 +213,7 @@ class SubmissionPackageService:
                     "uri": evidence.uri,
                     "sha256_hex": evidence.sha256.hex(),
                     "synthetic": bool(
-                        evidence.meta.get("synthetic")
-                        if isinstance(evidence.meta, dict)
-                        else False
+                        evidence.meta.get("synthetic") if isinstance(evidence.meta, dict) else False
                     ),
                     "meta": evidence.meta,
                 }
@@ -215,7 +223,9 @@ class SubmissionPackageService:
                 {
                     "id": str(artifact.id),
                     "uri": artifact.uri,
-                    "artifact_type": artifact.artifact_type.value if artifact.artifact_type else None,
+                    "artifact_type": (
+                        artifact.artifact_type.value if artifact.artifact_type else None
+                    ),
                     "mime_type": artifact.mime_type,
                     "content_hash": artifact.content_hash,
                     "size_bytes": artifact.size_bytes,
@@ -230,9 +240,9 @@ class SubmissionPackageService:
                             )
                         )
                     ),
-                    "tool_execution_id": str(artifact.tool_execution_id)
-                    if artifact.tool_execution_id
-                    else None,
+                    "tool_execution_id": (
+                        str(artifact.tool_execution_id) if artifact.tool_execution_id else None
+                    ),
                     "phase_job_id": str(artifact.phase_job_id) if artifact.phase_job_id else None,
                 }
                 for artifact in artifacts
@@ -240,9 +250,9 @@ class SubmissionPackageService:
             "observations": [
                 {
                     "id": str(observation.id),
-                    "type": observation.observation_type.value
-                    if observation.observation_type
-                    else None,
+                    "type": (
+                        observation.observation_type.value if observation.observation_type else None
+                    ),
                     "category": observation.category,
                     "title": observation.title,
                     "summary": observation.summary,
@@ -253,10 +263,7 @@ class SubmissionPackageService:
             "reproduction_notes": [
                 observation.summary
                 for observation in observations
-                if (
-                    (observation.category or "").upper() == "VALIDATION"
-                    and observation.summary
-                )
+                if ((observation.category or "").upper() == "VALIDATION" and observation.summary)
             ],
             "prepared_by": prepared_by,
             "prepared_at": _utcnow().isoformat(),

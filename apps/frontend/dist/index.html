@@ -1,1 +1,23 @@
-<!doctype html><html><head><meta charset="utf-8"><title>K1 Display Hub</title></head><body><div id="root">K1 Display Hub</div></body></html>
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>K1 — Command UI</title>
+    <link id="app-favicon" rel="icon" href="/favicon.svg" />
+    <script>
+      window.addEventListener('error', function(e) {
+        document.body.innerHTML = '<div style="padding:2rem;font-family:monospace;font-size:14px;color:#f97316;background:#0a0c10;min-height:100vh"><strong style="color:#ff4444">CRASH:</strong> ' + (e.message || 'unknown') + '<br><br><span style="color:#888">' + (e.filename || '') + ':' + (e.lineno || '') + '</span></div>';
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        document.body.innerHTML = '<div style="padding:2rem;font-family:monospace;font-size:14px;color:#f97316;background:#0a0c10;min-height:100vh"><strong style="color:#ff4444">UNHANDLED REJECTION:</strong> ' + (e.reason?.message || String(e.reason) || 'unknown') + '</div>';
+      });
+    </script>
+    <script type="module" crossorigin src="/assets/index-DM5uEsls.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-ijTjzIgK.css">
+  </head>
+  <body class="lasers" style="background:#0b0c0d;color:#8faf9b;">
+    <div id="root"></div>
+  </body>
+</html>

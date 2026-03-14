@@ -1,0 +1,20 @@
+name: workflow_quick_vuln_sweep
+description: Fast vulnerability signal sweep over discovered web services.
+stages:
+  - stage: passive_recon
+    tool: subfinder
+  - stage: live_host_validation
+    tool: httpx
+  - stage: live_host_validation
+    tool: naabu
+  - stage: vuln_scan
+    tool: nuclei
+  - stage: vuln_scan
+    tool: nikto
+  - stage: vuln_scan
+    tool: dalfox
+    approval_required: true
+  - stage: prioritization_and_correlation
+    tool: k1_correlation
+  - stage: report_prep
+    tool: k1_priority_ranking

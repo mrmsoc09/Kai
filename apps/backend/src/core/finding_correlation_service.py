@@ -7,13 +7,21 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models.campaign import Artifact, CampaignRun, Observation, PhaseJob, Program, ScopeTarget, ToolExecution
-from ..models.enums import ObservationTypeEnum, SeverityEnum
+from ..models.campaign import (
+    Artifact,
+    CampaignRun,
+    Observation,
+    PhaseJob,
+    Program,
+    ScopeTarget,
+    ToolExecution,
+)
+from ..models.enums import CorrelationActionEnum, ObservationTypeEnum, SeverityEnum
 from ..models.hil import Finding
 from .audit_events import record_transition_event
+from .correlation_record_service import CorrelationRecordService
 from .evidence_service import EvidenceService
 from .submission_draft_service import SubmissionDraftService
-
 
 CONTEXT_ONLY_CATEGORIES = {"DISCOVERY", "SIGNAL", "CONTEXT"}
 FINDING_ELIGIBLE_CATEGORIES = {"VALIDATION", "DECISION"}
@@ -36,6 +44,7 @@ class FindingCorrelationService:
         self.db = db
         self.evidence = EvidenceService(db)
         self.drafts = SubmissionDraftService(db)
+        self.correlation_records = CorrelationRecordService(db)
 
     @staticmethod
     def _normalize_text(value: str | None) -> str:
@@ -81,7 +90,9 @@ class FindingCorrelationService:
     async def _phase_job(self, observation: Observation) -> PhaseJob | None:
         if observation.phase_job_id is None:
             return None
-        result = await self.db.execute(select(PhaseJob).where(PhaseJob.id == observation.phase_job_id))
+        result = await self.db.execute(
+            select(PhaseJob).where(PhaseJob.id == observation.phase_job_id)
+        )
         return result.scalar_one_or_none()
 
     async def _target_identifier(
@@ -171,7 +182,9 @@ class FindingCorrelationService:
         for finding in result.scalars().all():
             scope_json = finding.scope_json if isinstance(finding.scope_json, dict) else {}
             same_campaign = str(scope_json.get("campaign_id")) == str(campaign_id)
-            candidate_title = str(scope_json.get("normalized_title") or self._normalize_text(finding.title))
+            candidate_title = str(
+                scope_json.get("normalized_title") or self._normalize_text(finding.title)
+            )
             same_title = candidate_title == normalized_title
             same_category = str(scope_json.get("normalized_category")) == normalized_category
             same_target = str(scope_json.get("target_identifier")) == target_identifier
@@ -207,9 +220,9 @@ class FindingCorrelationService:
                 "campaign_id": str(campaign.id),
                 "branch_id": str(observation.branch_id) if observation.branch_id else None,
                 "phase_job_id": str(observation.phase_job_id) if observation.phase_job_id else None,
-                "tool_execution_id": str(observation.tool_execution_id)
-                if observation.tool_execution_id
-                else None,
+                "tool_execution_id": (
+                    str(observation.tool_execution_id) if observation.tool_execution_id else None
+                ),
                 "source_observation_id": str(observation.id),
                 "normalized_title": normalized_title,
                 "normalized_category": normalized_category,
@@ -394,14 +407,30 @@ class FindingCorrelationService:
             duplicate_detected=duplicate and not already_linked,
         )
 
+        if created_new:
+            cr_action = CorrelationActionEnum.CREATED
+            dup_ref = None
+        elif already_linked:
+            cr_action = CorrelationActionEnum.ALREADY_LINKED
+            dup_ref = None
+        elif duplicate:
+            cr_action = CorrelationActionEnum.DEDUPLICATED
+            dup_ref = finding.id
+        else:
+            cr_action = CorrelationActionEnum.ATTACHED
+            dup_ref = None
+        await self.correlation_records.create_record(
+            finding_id=finding.id,
+            observation_id=observation.id,
+            campaign_id=observation.campaign_id,
+            action=cr_action,
+            duplicate_of_finding_id=dup_ref,
+        )
+
         return CorrelationResult(
             observation_id=observation.id,
             action=(
-                "CREATED"
-                if created_new
-                else "ALREADY_LINKED"
-                if already_linked
-                else "ATTACHED"
+                "CREATED" if created_new else "ALREADY_LINKED" if already_linked else "ATTACHED"
             ),
             finding_id=finding.id,
             evidence_created=evidence_created,

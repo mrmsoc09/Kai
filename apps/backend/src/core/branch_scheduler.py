@@ -23,7 +23,6 @@ from .audit_events import record_transition_event
 from .campaign_service import CampaignService
 from .tool_execution_service import ToolExecutionService
 
-
 ACTIVE_TOOL_EXECUTION_STATUSES = {
     ToolExecutionStatusEnum.CREATED,
     ToolExecutionStatusEnum.QUEUED,
@@ -71,7 +70,9 @@ def _maybe_uuid(raw: Any) -> UUID | None:
 
 def _phase_intention_id(phase_job: PhaseJob, branch: ExecutionBranch | None) -> UUID | None:
     payload = phase_job.input_payload_json if isinstance(phase_job.input_payload_json, dict) else {}
-    branch_payload = branch.branch_config_json if branch and isinstance(branch.branch_config_json, dict) else {}
+    branch_payload = (
+        branch.branch_config_json if branch and isinstance(branch.branch_config_json, dict) else {}
+    )
     return _maybe_uuid(
         payload.get("intention_id")
         or payload.get("seed_intention_id")
@@ -121,7 +122,9 @@ class PhaseDispatchAdapter:
         if existing is not None:
             return existing, False
 
-        payload = phase_job.input_payload_json if isinstance(phase_job.input_payload_json, dict) else {}
+        payload = (
+            phase_job.input_payload_json if isinstance(phase_job.input_payload_json, dict) else {}
+        )
         dispatch = payload.get("dispatch") if isinstance(payload.get("dispatch"), dict) else {}
 
         tool_id = dispatch.get("tool_id")
@@ -377,7 +380,9 @@ class BranchScheduler:
                     continue
 
             approval_required = bool(
-                phase_job.approval_required or branch.approval_required or campaign.approval_required
+                phase_job.approval_required
+                or branch.approval_required
+                or campaign.approval_required
             )
             if approval_required:
                 gate = gate_by_phase.get(phase_job.id)
@@ -393,9 +398,11 @@ class BranchScheduler:
                                 f"'{phase_job.phase_name}'"
                             ),
                             requested_by=actor,
-                            policy_basis=phase_job.policy_class.value
-                            if phase_job.policy_class
-                            else campaign.policy_basis,
+                            policy_basis=(
+                                phase_job.policy_class.value
+                                if phase_job.policy_class
+                                else campaign.policy_basis
+                            ),
                         ),
                         actor=actor,
                     )
@@ -624,9 +631,7 @@ class BranchScheduler:
         all_phases_success = bool(phase_jobs) and all(
             status in BRANCH_SUCCESS_PHASE_STATUSES for status in phase_statuses
         )
-        any_phase_failed = any(
-            status in BRANCH_FAILURE_PHASE_STATUSES for status in phase_statuses
-        )
+        any_phase_failed = any(status in BRANCH_FAILURE_PHASE_STATUSES for status in phase_statuses)
 
         if all_branches_completed and (all_phases_success or not phase_jobs):
             await self.campaigns.transition_campaign_status(

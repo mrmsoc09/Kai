@@ -1,0 +1,43 @@
+{
+  "phase_name": "live_host_validation__httpx",
+  "tool_id": "httpx_probe",
+  "params": {
+    "target": "example.com",
+    "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0"
+  },
+  "result": {
+    "tool_id": "httpx_probe",
+    "status": "failed",
+    "output": {
+      "target": "example.com",
+      "records": [],
+      "raw": "",
+      "evidence": {
+        "evidence_id": "ev-955e56a3-f35e-4687-b0cb-d7550d85ecdd",
+        "type": "http",
+        "tool": "httpx_probe",
+        "target": "example.com",
+        "timestamp": "2026-03-12T04:23:37.298355Z",
+        "structured_data": {
+          "target": "example.com",
+          "records": []
+        },
+        "confidence_score": 0.2,
+        "artifacts": [
+          {
+            "artifact_path": "/home/k1-admin/Kai/artifacts/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/httpx_probe/ev-955e56a3-f35e-4687-b0cb-d7550d85ecdd.json",
+            "sha256": "83a5c7ed1cdf602a1957cc1529d4bc8432f3e562c68359929665898aabb5eca0",
+            "mime_type": "application/json",
+            "description": "httpx probe results"
+          }
+        ],
+        "scope_status": "validated"
+      }
+    },
+    "error": "Usage: httpx [OPTIONS] URL\n\nError: No such option: -u",
+    "execution_time_ms": 1045.83740234375,
+    "tokens_used": null,
+    "metadata": {},
+    "execution_id": "httpx_probe"
+  }
+}

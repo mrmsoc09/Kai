@@ -3,13 +3,27 @@ Key Management API Router
 Exposes key import, rotation, and verification endpoints
 """
 
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 from datetime import datetime, timedelta
 import asyncio
+import logging
 
-router = APIRouter(prefix="/api/keys", tags=["key-management"])
+from apps.backend.src.core.auth import ROLE_ADMIN, User, require_roles
+
+logger = logging.getLogger(__name__)
+
+
+def _require_admin_with_audit(user: User = Depends(require_roles(ROLE_ADMIN))) -> User:
+    logger.info("key_management.access actor=%s", user.id)
+    return user
+
+router = APIRouter(
+    prefix="/api/keys",
+    tags=["key-management"],
+    dependencies=[Depends(_require_admin_with_audit)],
+)
 
 # Module-level cache for systems
 _key_management = None

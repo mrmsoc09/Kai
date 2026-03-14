@@ -24,7 +24,8 @@ def list_intrusive_tools():
     initialize_default_tools()
     reg = get_registry()
     items = []
-    for tid, tool in reg.list().items():
+    for tool in reg.list_all():
+        tid = tool.id
         if get_tool_tier(tid) == ToolRiskTier.TIER_2_INTRUSIVE:
             items.append({"id": tid, "name": tool.name, "description": tool.description})
     return {"tools": items}
@@ -50,4 +51,3 @@ def approve_tool_run(payload: ApprovalRequest):
         "approver": payload.approver,
         "note": payload.note,
     }
-

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Kai Tool Registry",
+  "type": "object",
+  "required": ["version", "tools"],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "tools": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "category",
+          "execution_mode",
+          "install_verification_cmd",
+          "input_schema",
+          "output_schema",
+          "timeout_seconds",
+          "retry_policy",
+          "safety_classification",
+          "enabled_by_default"
+        ],
+        "properties": {
+          "name": {"type": "string"},
+          "category": {"type": "string"},
+          "execution_mode": {"type": "string"},
+          "binary_path": {"type": ["string", "null"]},
+          "container_image": {"type": ["string", "null"]},
+          "install_verification_cmd": {
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1
+          },
+          "input_schema": {"type": "object"},
+          "output_schema": {"type": "object"},
+          "timeout_seconds": {"type": "integer", "minimum": 1},
+          "retry_policy": {
+            "type": "object",
+            "required": ["max_attempts", "backoff_seconds"],
+            "properties": {
+              "max_attempts": {"type": "integer", "minimum": 1},
+              "backoff_seconds": {"type": "number", "minimum": 0}
+            }
+          },
+          "safety_classification": {"type": "string"},
+          "tags": {"type": "array", "items": {"type": "string"}},
+          "dependencies": {"type": "array", "items": {"type": "string"}},
+          "api_keys_required": {"type": "array", "items": {"type": "string"}},
+          "enabled_by_default": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

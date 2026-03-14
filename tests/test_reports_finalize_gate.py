@@ -4,11 +4,12 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault('K1_DEV_TOKEN', 'devtoken')
 from apps.backend.src.main import app  # noqa: E402
 
-from fastapi.testclient import TestClient
+from tests.asgi_test_client import ASGITestClient
 
-client = TestClient(app)
+client = ASGITestClient(app)
 AUTH = {"Authorization": f"Bearer {os.environ['K1_DEV_TOKEN']}"}
-REC_ROOT = REPO_ROOT / 'artifacts' / 'recordings'
+ARTIFACT_ROOT = Path(os.environ.get("K1_ARTIFACTS_ROOT", str(REPO_ROOT / 'artifacts')))
+REC_ROOT = ARTIFACT_ROOT / 'recordings'
 RUN_ID = 'pytest-run-001'
 RUN_DIR = REC_ROOT / RUN_ID
 
@@ -18,8 +19,9 @@ def test_finalize_requires_mitigation_plan_and_recording(tmp_path):
         for f in RUN_DIR.iterdir():
             f.unlink()
     RUN_DIR.mkdir(parents=True, exist_ok=True)
-    rec_path = f"artifacts/recordings/{RUN_ID}/seg_0000.mp4"
-    (RUN_DIR / 'seg_0000.mp4').write_bytes(b'ftypmp42')
+    rec_file = RUN_DIR / 'seg_0000.mp4'
+    rec_path = str(rec_file)
+    rec_file.write_bytes(b'ftypmp42')
     mitig = "Immediate patch deployment scheduled"
     resp = client.post(f"/reports/render", json={"run_id": RUN_ID, "format_id": "google_vrp", "finding": {"title": "Test"}}, headers=AUTH)
     assert resp.status_code in (200, 201)

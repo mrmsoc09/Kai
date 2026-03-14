@@ -1,8 +1,11 @@
 """Celery application for running tool adapters off the API thread."""
 from __future__ import annotations
 
+import logging
 import os
 from celery import Celery
+
+logger = logging.getLogger(__name__)
 
 
 CELERY_BROKER_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
@@ -118,18 +121,53 @@ def run_tool_task(
         _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
         return result_payload
 
-    # Retrieve credentials from Vault when a vault_path is present in params
+    # Retrieve credentials from Vault when a vault_path is present in params.
+    # For tools that declare api_keys_required, a Vault failure is fatal.
     vault_path = params.get("vault_path") or params.get("_vault_path")
     if vault_path:
         try:
             from apps.backend.src.core.hil_vault_client import VaultClient
+            from apps.backend.src.core.tool_registry_catalog import get_catalog_entry as _get_cat
+
             vc = VaultClient()
             creds = vc.read_secret(vault_path)
             if creds:
-                # Inject credentials into params for the tool to consume
                 params = {**params, "_credentials": creds}
-        except Exception:
-            pass  # Vault unavailable — continue without credentials
+            else:
+                # No credentials returned — check if this tool requires them.
+                cat = _get_cat(tool_id)
+                if cat and cat.api_keys_required:
+                    err = f"Vault returned no credentials for required path '{vault_path}' (tool={tool_id})"
+                    logger.error(err)
+                    result_payload = {"status": "failed", "error": err}
+                    _ingest(
+                        status=ToolExecutionStatusEnum.FAILED,
+                        payload=result_payload,
+                        error=err,
+                    )
+                    return result_payload
+                logger.warning(
+                    "Vault returned no credentials for vault_path=%r (tool=%s); proceeding without.",
+                    vault_path, tool_id,
+                )
+        except Exception as exc:
+            cat = None
+            try:
+                from apps.backend.src.core.tool_registry_catalog import get_catalog_entry as _get_cat
+                cat = _get_cat(tool_id)
+            except Exception:
+                pass
+            if cat and cat.api_keys_required:
+                err = f"Vault unavailable and tool '{tool_id}' requires credentials: {exc}"
+                logger.error(err)
+                result_payload = {"status": "failed", "error": err}
+                _ingest(
+                    status=ToolExecutionStatusEnum.FAILED,
+                    payload=result_payload,
+                    error=err,
+                )
+                return result_payload
+            logger.warning("Vault unavailable for tool=%s; proceeding without credentials: %s", tool_id, exc)
 
     try:
         enforce_authorization_gates(
@@ -199,12 +237,28 @@ def run_tool_task(
                 "status": "running",
             },
         )
-        result = tool.execute(**params)
+        allowed_param_names = {param.name for param in getattr(tool, "parameters", [])}
+        if allowed_param_names:
+            filtered_params = {k: v for k, v in params.items() if k in allowed_param_names}
+            dropped_params = sorted(set(params.keys()) - set(filtered_params.keys()))
+        else:
+            filtered_params = dict(params)
+            dropped_params = []
+
+        # Preserve run correlation metadata when wrappers accept a metadata-like field.
+        if "run_id" in allowed_param_names and "run_id" not in filtered_params:
+            filtered_params["run_id"] = params.get("run_id") or workflow_id or task_id
+
+        result = tool.execute(**filtered_params)
         elapsed = (time.time() - start) * 1000
         result.execution_time_ms = result.execution_time_ms or elapsed
         result_dict = result.to_dict()
         result_dict.setdefault("retry_attempt", retry_attempt)
         result_dict.setdefault("max_retries", max_retries)
+        if dropped_params:
+            result_dict.setdefault("metadata", {})
+            if isinstance(result_dict["metadata"], dict):
+                result_dict["metadata"]["dropped_unmapped_params"] = dropped_params
     except Exception as exc:
         result_dict = {
             "status": "failed",
@@ -252,7 +306,9 @@ def run_tool_task(
         from pathlib import Path
         import json
 
-        metrics_dir = Path(__file__).resolve().parents[3] / "artifacts" / "telemetry"
+        env_artifacts = os.getenv("K1_ARTIFACTS_ROOT")
+        artifacts_root = Path(env_artifacts) if env_artifacts else (Path(__file__).resolve().parents[3] / "artifacts")
+        metrics_dir = artifacts_root / "telemetry"
         metrics_dir.mkdir(parents=True, exist_ok=True)
         record = {
             "tool_id": tool_id,

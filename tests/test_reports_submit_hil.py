@@ -3,10 +3,11 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault('K1_DEV_TOKEN', 'devtoken')
 from apps.backend.src.main import app  # noqa: E402
-from fastapi.testclient import TestClient
-client = TestClient(app)
+from tests.asgi_test_client import ASGITestClient
+client = ASGITestClient(app)
 AUTH = {"Authorization": f"Bearer {os.environ['K1_DEV_TOKEN']}"}
-REC_ROOT = REPO_ROOT / 'artifacts' / 'recordings'
+ARTIFACT_ROOT = Path(os.environ.get("K1_ARTIFACTS_ROOT", str(REPO_ROOT / 'artifacts')))
+REC_ROOT = ARTIFACT_ROOT / 'recordings'
 RUN_ID = 'submit-run-001'
 
 def setup_recording():
@@ -16,7 +17,7 @@ def setup_recording():
 
 def test_submit_hil_persists_artifacts(tmp_path):
     setup_recording()
-    dummy_rec = f"artifacts/recordings/{RUN_ID}/seg_0000.mp4"
+    dummy_rec = str(REC_ROOT / RUN_ID / 'seg_0000.mp4')
     mitigation = "Revoke exposed credentials and rotate keys."
     resp = client.post(f"/reports/validate", json={"run_id": RUN_ID, "format_id": "google_vrp", "finding": {"title": "Test"}}, headers=AUTH)
     assert resp.status_code in (200, 201)

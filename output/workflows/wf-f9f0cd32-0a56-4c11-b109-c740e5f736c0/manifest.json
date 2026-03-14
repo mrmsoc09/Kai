@@ -1,0 +1,457 @@
+{
+  "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+  "workflow_template": "workflow_recon_surface_map",
+  "target": "example.com",
+  "safe_mode": true,
+  "dry_run": false,
+  "status": "COMPLETED_WITH_FAILURES",
+  "created_at": "2026-03-12T04:23:36.041460+00:00",
+  "updated_at": "2026-03-12T04:23:37.364066+00:00",
+  "stages": {
+    "passive_recon": {
+      "stage": "passive_recon",
+      "status": "PARTIAL_FAILED",
+      "tool_count": 5,
+      "success_count": 0,
+      "failed_count": 5,
+      "executions": [
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:passive_recon:subfinder",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "passive_recon",
+          "tool_name": "subfinder",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:36.226981+00:00",
+          "ended_at": "2026-03-12 04:23:36.227948+00:00",
+          "duration_ms": 0.967,
+          "exit_code": null,
+          "error": "Missing required parameters: {'domain'}",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/passive_recon/subfinder.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "passive_recon__subfinder",
+            "depends_on_phase_name": null,
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        },
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:passive_recon:assetfinder",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "passive_recon",
+          "tool_name": "assetfinder",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:36.228961+00:00",
+          "ended_at": "2026-03-12 04:23:36.232198+00:00",
+          "duration_ms": 3.2369999999999997,
+          "exit_code": null,
+          "error": "binary 'assetfinder' not found in PATH",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/passive_recon/assetfinder.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "passive_recon__assetfinder",
+            "depends_on_phase_name": null,
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        },
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:passive_recon:amass_enum",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "passive_recon",
+          "tool_name": "amass_enum",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:36.233020+00:00",
+          "ended_at": "2026-03-12 04:23:36.234674+00:00",
+          "duration_ms": 1.6540000000000001,
+          "exit_code": null,
+          "error": "Missing required parameters: {'domain'}",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/passive_recon/amass_enum.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "passive_recon__amass",
+            "depends_on_phase_name": null,
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        },
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:passive_recon:gau",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "passive_recon",
+          "tool_name": "gau",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:36.236513+00:00",
+          "ended_at": "2026-03-12 04:23:36.237213+00:00",
+          "duration_ms": 0.7,
+          "exit_code": null,
+          "error": "Missing required parameters: {'domain'}",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/passive_recon/gau.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "passive_recon__gau",
+            "depends_on_phase_name": null,
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        },
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:passive_recon:waybackurls",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "passive_recon",
+          "tool_name": "waybackurls",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:36.238443+00:00",
+          "ended_at": "2026-03-12 04:23:36.239514+00:00",
+          "duration_ms": 1.071,
+          "exit_code": null,
+          "error": "binary 'waybackurls' not found in PATH",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/passive_recon/waybackurls.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "passive_recon__waybackurls",
+            "depends_on_phase_name": null,
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        }
+      ],
+      "completed_at": "2026-03-12T04:23:36.240258+00:00"
+    },
+    "active_recon": {
+      "stage": "active_recon",
+      "status": "PARTIAL_FAILED",
+      "tool_count": 1,
+      "success_count": 0,
+      "failed_count": 1,
+      "executions": [
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:active_recon:dnsx",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "active_recon",
+          "tool_name": "dnsx",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:36.244127+00:00",
+          "ended_at": "2026-03-12 04:23:36.247950+00:00",
+          "duration_ms": 3.823,
+          "exit_code": null,
+          "error": "binary 'dnsx' not found in PATH",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/active_recon/dnsx.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "active_recon__dnsx",
+            "depends_on_phase_name": "passive_recon__waybackurls",
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        }
+      ],
+      "completed_at": "2026-03-12T04:23:36.249988+00:00"
+    },
+    "live_host_validation": {
+      "stage": "live_host_validation",
+      "status": "PARTIAL_FAILED",
+      "tool_count": 2,
+      "success_count": 0,
+      "failed_count": 2,
+      "executions": [
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:live_host_validation:httpx_probe",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "live_host_validation",
+          "tool_name": "httpx_probe",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:36.252400+00:00",
+          "ended_at": "2026-03-12 04:23:37.315611+00:00",
+          "duration_ms": 1063.211,
+          "exit_code": null,
+          "error": "Usage: httpx [OPTIONS] URL\n\nError: No such option: -u",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/live_host_validation/httpx_probe.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "live_host_validation__httpx",
+            "depends_on_phase_name": "active_recon__dnsx",
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        },
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:live_host_validation:naabu",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "live_host_validation",
+          "tool_name": "naabu",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:37.316866+00:00",
+          "ended_at": "2026-03-12 04:23:37.321588+00:00",
+          "duration_ms": 4.7219999999999995,
+          "exit_code": null,
+          "error": "Missing required parameters: {'host'}",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/live_host_validation/naabu.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "live_host_validation__naabu",
+            "depends_on_phase_name": "active_recon__dnsx",
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        }
+      ],
+      "completed_at": "2026-03-12T04:23:37.323752+00:00"
+    },
+    "tech_fingerprint": {
+      "stage": "tech_fingerprint",
+      "status": "PARTIAL_FAILED",
+      "tool_count": 1,
+      "success_count": 0,
+      "failed_count": 1,
+      "executions": [
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:tech_fingerprint:tlsx",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "tech_fingerprint",
+          "tool_name": "tlsx",
+          "status": "FAILED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:37.328201+00:00",
+          "ended_at": "2026-03-12 04:23:37.329639+00:00",
+          "duration_ms": 1.438,
+          "exit_code": null,
+          "error": "binary 'tlsx' not found in PATH",
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/tech_fingerprint/tlsx.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "tech_fingerprint__tlsx",
+            "depends_on_phase_name": "live_host_validation__naabu",
+            "approval_required": false,
+            "result_status": "failed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        }
+      ],
+      "completed_at": "2026-03-12T04:23:37.331388+00:00"
+    },
+    "prioritization_and_correlation": {
+      "stage": "prioritization_and_correlation",
+      "status": "COMPLETED",
+      "tool_count": 1,
+      "success_count": 1,
+      "failed_count": 0,
+      "executions": [
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:prioritization_and_correlation:k1_correlation",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "prioritization_and_correlation",
+          "tool_name": "k1_correlation",
+          "status": "COMPLETED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:37.335259+00:00",
+          "ended_at": "2026-03-12 04:23:37.337340+00:00",
+          "duration_ms": 2.081,
+          "exit_code": null,
+          "error": null,
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/prioritization_and_correlation/k1_correlation.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "prioritization_and_correlation__k1_correlation",
+            "depends_on_phase_name": "tech_fingerprint__tlsx",
+            "approval_required": false,
+            "result_status": "completed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        }
+      ],
+      "completed_at": "2026-03-12T04:23:37.338235+00:00"
+    },
+    "report_prep": {
+      "stage": "report_prep",
+      "status": "COMPLETED",
+      "tool_count": 1,
+      "success_count": 1,
+      "failed_count": 0,
+      "executions": [
+        {
+          "execution_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0:report_prep:k1_priority_ranking",
+          "run_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0",
+          "stage_name": "report_prep",
+          "tool_name": "k1_priority_ranking",
+          "status": "COMPLETED",
+          "target": "example.com",
+          "started_at": "2026-03-12 04:23:37.345372+00:00",
+          "ended_at": "2026-03-12 04:23:37.346329+00:00",
+          "duration_ms": 0.957,
+          "exit_code": null,
+          "error": null,
+          "raw_artifact_path": "/home/k1-admin/Kai/output/raw/wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0/report_prep/k1_priority_ranking.json",
+          "normalized_artifact_path": null,
+          "metadata": {
+            "phase_name": "report_prep__k1_priority_ranking",
+            "depends_on_phase_name": "prioritization_and_correlation__k1_correlation",
+            "approval_required": false,
+            "result_status": "completed",
+            "normalized_counts": {
+              "discovered_assets": 0,
+              "dns_records": 0,
+              "live_services": 0,
+              "web_applications": 0,
+              "url_records": 0,
+              "endpoint_records": 0,
+              "parameter_records": 0,
+              "technology_fingerprints": 0,
+              "secret_findings": 0,
+              "vuln_candidates": 0
+            }
+          }
+        }
+      ],
+      "completed_at": "2026-03-12T04:23:37.347128+00:00"
+    }
+  },
+  "workflow_metadata": {
+    "workflow_template": "workflow_recon_surface_map",
+    "workflow_description": "Map domain attack surface through passive and low-noise active recon.",
+    "target": "example.com",
+    "safe_mode": true,
+    "dry_run": false,
+    "steps_total": 11,
+    "steps_enabled": 11,
+    "stage_order": [
+      "passive_recon",
+      "active_recon",
+      "live_host_validation",
+      "web_crawling",
+      "endpoint_discovery",
+      "parameter_discovery",
+      "vuln_scan",
+      "secret_scan",
+      "tech_fingerprint",
+      "prioritization_and_correlation",
+      "report_prep"
+    ]
+  }
+}

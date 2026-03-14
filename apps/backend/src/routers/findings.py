@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from ..core.run_store import load_run, save_run_record
-from ..core.auth import require_roles, ROLE_OPERATOR
+from ..core.auth import ROLE_ANALYST, ROLE_OPERATOR, get_current_user, require_roles
 
 # Phase 4: Detection module imports
 try:
@@ -43,7 +43,11 @@ from pathlib import Path
 from pydantic import BaseModel
 from ..core.run_store import append_finding
 
-router = APIRouter(prefix="/findings", tags=["findings"])
+router = APIRouter(
+    prefix="/findings",
+    tags=["findings"],
+    dependencies=[Depends(get_current_user)],
+)
 
 # Initialize Phase 4 components
 _deduplicator = None
@@ -131,7 +135,10 @@ class ToolResultIngest(BaseModel):
     severity: str | None = None
 
 @router.post('/set_status')
-def set_status(payload: Dict[str, Any]) -> Dict[str, Any]:
+def set_status(
+    payload: Dict[str, Any],
+    _=Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST))
+) -> Dict[str, Any]:
     run_id = payload.get('run_id')
     status = (payload.get('status') or '').upper()
     finding_id = payload.get('finding_id') or 'run'
@@ -180,7 +187,10 @@ def set_status(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @router.post("/ingest/tool-result")
-def ingest_tool_result(payload: ToolResultIngest):
+def ingest_tool_result(
+    payload: ToolResultIngest,
+    _=Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST))
+):
     """
     Convert a tool result into a Finding entry and persist to run store.
     """

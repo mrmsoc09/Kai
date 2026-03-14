@@ -1,0 +1,23 @@
+{
+  "phase_name": "passive_recon__amass",
+  "tool_id": "amass_enum",
+  "params": {
+    "domain": "example.com"
+  },
+  "result": {
+    "tool_id": "amass_enum",
+    "status": "failed",
+    "output": {
+      "domain": "example.com",
+      "passive": true,
+      "raw": "",
+      "stderr": "binary 'amass' not found in PATH",
+      "subdomains": []
+    },
+    "error": "binary 'amass' not found in PATH",
+    "execution_time_ms": 0.7100105285644531,
+    "tokens_used": null,
+    "metadata": {},
+    "execution_id": "amass_enum"
+  }
+}

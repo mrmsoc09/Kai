@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from uuid import uuid4
 from unittest.mock import AsyncMock
+from uuid import uuid4
 
 import pytest
 
@@ -12,7 +12,13 @@ from apps.backend.src.core.submission_draft_service import (
     DRAFT_STATUS_READY_FOR_REVIEW,
     SubmissionDraftService,
 )
-from apps.backend.src.models.campaign import Artifact, AuditEvent, CampaignRun, Observation, SubmissionDraft
+from apps.backend.src.models.campaign import (
+    Artifact,
+    AuditEvent,
+    CampaignRun,
+    Observation,
+    SubmissionDraft,
+)
 from apps.backend.src.models.enums import ArtifactTypeEnum, ObservationTypeEnum, SeverityEnum
 from apps.backend.src.models.hil import Evidence, Finding
 
@@ -229,7 +235,9 @@ async def test_placeholder_artifact_marked_synthetic(monkeypatch: pytest.MonkeyP
 
 
 @pytest.mark.asyncio
-async def test_submission_draft_ready_for_review_when_evidence_and_validation(monkeypatch: pytest.MonkeyPatch):
+async def test_submission_draft_ready_for_review_when_evidence_and_validation(
+    monkeypatch: pytest.MonkeyPatch,
+):
     db = FakeDB()
     service = SubmissionDraftService(db)  # type: ignore[arg-type]
     finding = Finding(
@@ -250,7 +258,9 @@ async def test_submission_draft_ready_for_review_when_evidence_and_validation(mo
         meta={},
     )
 
-    monkeypatch.setattr(service.evidence, "list_finding_evidence", AsyncMock(return_value=[evidence]))
+    monkeypatch.setattr(
+        service.evidence, "list_finding_evidence", AsyncMock(return_value=[evidence])
+    )
     monkeypatch.setattr(service, "_has_validation_observation", AsyncMock(return_value=True))
     monkeypatch.setattr(service, "_latest_draft", AsyncMock(return_value=None))
 

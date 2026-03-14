@@ -6,8 +6,8 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
 from .kai_security_guardrails import get_guardrail_engine
-from .scope import is_in_scope
-from .scope_resolver import is_in_scope_for_workflow
+from .scope_guardrails import evaluate_target_scope, load_scope_policy
+from .scope_resolver import is_in_scope_for_workflow, is_in_scope_for_workflow_async
 from .toolpacks import get_toolpack_manager
 
 
@@ -55,9 +55,11 @@ def scope_validator(
         return False
     if not (method or "").strip():
         return False
-    # Use workflow-aware resolver first (accepts targets in any active workflow scope)
-    # then fall back to static policy
-    return is_in_scope_for_workflow(normalized_target, workflow_id=workflow_id)
+    if workflow_id:
+        return is_in_scope_for_workflow(normalized_target, workflow_id=workflow_id)
+    policy = load_scope_policy()
+    decision = evaluate_target_scope(normalized_target, policy)
+    return decision.allowed
 
 
 def authorization_certificate_check(
@@ -120,13 +122,24 @@ def build_authorization_context(
     method: Optional[str] = None,
 ) -> AuthorizationGateContext:
     target = _extract_target(params) or ""
+    guardrails = get_guardrail_engine()
+    # Identity/scope context must be explicit at call boundary, not inferred from
+    # caller-controlled params payload fields.
+    resolved_certificate_id = (certificate_id or "").strip()
+    cert = guardrails.authorized_certificates.get(resolved_certificate_id)
+    cert_program_id = ""
+    if cert is not None:
+        cert_program_id = str((cert.metadata or {}).get("program_id") or "").strip()
+    resolved_program_id = (program_id or cert_program_id or "").strip()
+    if cert_program_id and resolved_program_id and resolved_program_id != cert_program_id:
+        raise AuthorizationGateError("program_id does not match certificate metadata")
     return AuthorizationGateContext(
         tool_id=tool_id,
         target=target,
-        program_id=(program_id or params.get("program_id") or "").strip(),
+        program_id=resolved_program_id,
         method=_resolve_method(tool_id, method or params.get("method")),
-        user_id=(user_id or params.get("user_id") or "").strip(),
-        certificate_id=(certificate_id or params.get("certificate_id") or "").strip(),
+        user_id=(user_id or "").strip(),
+        certificate_id=resolved_certificate_id,
     )
 
 
@@ -141,7 +154,8 @@ def enforce_authorization_gates(
     method: Optional[str] = None,
 ) -> AuthorizationGateContext:
     # Tests can disable strict gate checks when exercising unrelated flows.
-    if _env_bool("K1_TEST_MODE", False) and _env_bool("K1_RELAX_AUTH_GATES_FOR_TESTS", True):
+    # K1_RELAX_AUTH_GATES_FOR_TESTS must be explicitly set to "true" — it does not default on.
+    if _env_bool("K1_TEST_MODE", False) and _env_bool("K1_RELAX_AUTH_GATES_FOR_TESTS", False):
         return build_authorization_context(
             tool_id,
             params,
@@ -167,6 +181,67 @@ def enforce_authorization_gates(
         raise AuthorizationGateError("missing target for scope validation")
     # Pass workflow_id to scope_validator so it can match against workflow scope_domains
     if not scope_validator(ctx.target, ctx.program_id, ctx.method, workflow_id=_workflow_id):
+        raise AuthorizationGateError("scope_validator failed")
+    if not authorization_certificate_check(ctx.user_id, ctx.certificate_id, ctx.target, ctx.method):
+        raise AuthorizationGateError("authorization_certificate_check failed")
+    return ctx
+
+
+async def scope_validator_async(
+    target: str,
+    program_id: str,
+    method: str,
+    workflow_id: Optional[str] = None,
+) -> bool:
+    normalized_target = _normalize_target(target)
+    if not normalized_target:
+        return False
+    if not (program_id or "").strip():
+        return False
+    if not (method or "").strip():
+        return False
+    if workflow_id:
+        return await is_in_scope_for_workflow_async(normalized_target, workflow_id=workflow_id)
+    policy = load_scope_policy()
+    decision = evaluate_target_scope(normalized_target, policy)
+    return decision.allowed
+
+
+async def enforce_authorization_gates_async(
+    tool_id: str,
+    params: Dict[str, Any],
+    *,
+    user_id: Optional[str] = None,
+    program_id: Optional[str] = None,
+    certificate_id: Optional[str] = None,
+    workflow_id: Optional[str] = None,
+    method: Optional[str] = None,
+) -> AuthorizationGateContext:
+    # Tests can disable strict gate checks when exercising unrelated flows.
+    # K1_RELAX_AUTH_GATES_FOR_TESTS must be explicitly set to "true" — it does not default on.
+    if _env_bool("K1_TEST_MODE", False) and _env_bool("K1_RELAX_AUTH_GATES_FOR_TESTS", False):
+        return build_authorization_context(
+            tool_id,
+            params,
+            user_id=user_id,
+            program_id=program_id or "test-program",
+            certificate_id=certificate_id or "test-certificate",
+            method=method or "tool_execution",
+        )
+
+    _workflow_id = workflow_id or params.get("workflow_id") or None
+    ctx = build_authorization_context(
+        tool_id,
+        params,
+        user_id=user_id,
+        program_id=program_id,
+        certificate_id=certificate_id,
+        workflow_id=_workflow_id,
+        method=method,
+    )
+    if not ctx.target:
+        raise AuthorizationGateError("missing target for scope validation")
+    if not await scope_validator_async(ctx.target, ctx.program_id, ctx.method, workflow_id=_workflow_id):
         raise AuthorizationGateError("scope_validator failed")
     if not authorization_certificate_check(ctx.user_id, ctx.certificate_id, ctx.target, ctx.method):
         raise AuthorizationGateError("authorization_certificate_check failed")

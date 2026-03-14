@@ -1,0 +1,43 @@
+{
+  "phase_name": "passive_recon__gau",
+  "tool_id": "gau",
+  "params": {
+    "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3",
+    "domain": "example.com"
+  },
+  "result": {
+    "tool_id": "gau",
+    "status": "failed",
+    "output": {
+      "domain": "example.com",
+      "urls": [],
+      "evidence": {
+        "evidence_id": "ev-ffe8c647-f196-4ef0-ba9e-080efea037ce",
+        "type": "crawl",
+        "tool": "gau",
+        "target": "example.com",
+        "timestamp": "2026-03-12T04:25:52.073421Z",
+        "structured_data": {
+          "domain": "example.com",
+          "url_count": 0,
+          "urls": []
+        },
+        "confidence_score": 0.25,
+        "artifacts": [
+          {
+            "artifact_path": "/home/k1-admin/Kai/artifacts/wf-9421cffd-9b31-4bed-805e-c0145f26dfe3/gau/ev-ffe8c647-f196-4ef0-ba9e-080efea037ce.json",
+            "sha256": "d37a1bae8ec491249cd51a44055e973620a15b1621fc42065a3138861e2445dc",
+            "mime_type": "application/json",
+            "description": "gau historical URLs"
+          }
+        ],
+        "scope_status": "validated"
+      }
+    },
+    "error": "binary 'gau' not found in PATH",
+    "execution_time_ms": 0.5679130554199219,
+    "tokens_used": null,
+    "metadata": {},
+    "execution_id": "gau"
+  }
+}

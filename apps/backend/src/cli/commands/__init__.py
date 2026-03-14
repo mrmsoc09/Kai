@@ -4,12 +4,7 @@ CLI Commands for Kaison K1.
 Each module provides a Click command group.
 """
 
-from .hunt import hunt
-from .scan import scan
-from .agent import agent
-from .workflow import workflow
-from .findings import findings
-from .orchestrator import orchestrator
+from importlib import import_module
 
 __all__ = [
     "hunt",
@@ -18,4 +13,13 @@ __all__ = [
     "workflow",
     "findings",
     "orchestrator",
+    "tools",
+    "bug_bounty",
 ]
+
+
+def __getattr__(name: str):
+    if name not in __all__:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module = import_module(f"{__name__}.{name}")
+    return getattr(module, name)

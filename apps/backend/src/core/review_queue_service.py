@@ -9,7 +9,6 @@ from ..models.campaign import Observation, SubmissionDraft
 from ..models.enums import FindingStatusEnum
 from ..models.hil import Evidence, Finding
 
-
 REVIEWABLE_DRAFT_STATUSES = {"NEEDS_REVIEW", "READY_FOR_REVIEW"}
 NON_REVIEWABLE_FINDING_STATUSES = {
     FindingStatusEnum.REJECTED,

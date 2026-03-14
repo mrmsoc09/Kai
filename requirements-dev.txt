@@ -1,9 +1,11 @@
-pytest>=8.2,<9.0
-pytest-cov>=6.0,<8.0
-ruff>=0.4.9,<1.0
-black>=24.4.2,<25.0
-isort>=5.13.2,<6.0
-mypy>=1.10.0,<2.0
-types-PyYAML>=6.0.12
-httpx>=0.28,<1.0
-pre-commit>=3.8,<4.0
+-r requirements.txt
+
+# Pinned developer tooling for reproducible local/CI behavior.
+pytest==8.4.2
+pytest-cov==7.0.0
+ruff==0.15.5
+black==24.10.0
+isort==5.13.2
+mypy==1.19.1
+types-PyYAML==6.0.12.20250915
+pre-commit==3.8.0

@@ -1,16 +1,28 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from uuid import UUID, uuid4
 from unittest.mock import AsyncMock
+from uuid import UUID, uuid4
 
 import pytest
 
 from apps.backend.src.core.approval_gate_service import ApprovalGateService
 from apps.backend.src.core.branch_scheduler import BranchScheduler, SchedulerResult
 from apps.backend.src.core.execution_result_service import ExecutionResultIngestionService
-from apps.backend.src.core.finding_correlation_service import CorrelationResult, FindingCorrelationService
-from apps.backend.src.models.campaign import ApprovalGate, Artifact, AuditEvent, CampaignRun, ExecutionBranch, Observation, PhaseJob, ToolExecution
+from apps.backend.src.core.finding_correlation_service import (
+    CorrelationResult,
+    FindingCorrelationService,
+)
+from apps.backend.src.models.campaign import (
+    ApprovalGate,
+    Artifact,
+    AuditEvent,
+    CampaignRun,
+    ExecutionBranch,
+    Observation,
+    PhaseJob,
+    ToolExecution,
+)
 from apps.backend.src.models.enums import (
     ApprovalGateStatusEnum,
     BranchStatusEnum,
@@ -19,7 +31,10 @@ from apps.backend.src.models.enums import (
     ToolExecutionStatusEnum,
 )
 from apps.backend.src.routers.campaigns import decide_campaign_approval_gate
-from apps.backend.src.schemas.campaigns import CampaignApprovalDecisionRequest, ExecutionResultIngestRequest
+from apps.backend.src.schemas.campaigns import (
+    CampaignApprovalDecisionRequest,
+    ExecutionResultIngestRequest,
+)
 
 
 class FakeDB:
@@ -155,7 +170,9 @@ async def test_ingest_failed_execution_updates_phase_failure_and_error(
     monkeypatch: pytest.MonkeyPatch,
 ):
     db = FakeDB()
-    campaign, branch, phase, execution, _ = _seed_execution_graph(adapter_name="celery.run_tool_task")
+    campaign, branch, phase, execution, _ = _seed_execution_graph(
+        adapter_name="celery.run_tool_task"
+    )
     svc = ExecutionResultIngestionService(db)  # type: ignore[arg-type]
 
     monkeypatch.setattr(svc, "_resolve_execution", AsyncMock(return_value=execution))
@@ -262,13 +279,17 @@ def _wire_scheduler(
 ) -> None:
     monkeypatch.setattr(scheduler.campaigns.repo, "get_campaign", AsyncMock(return_value=campaign))
     monkeypatch.setattr(scheduler.campaigns.repo, "list_branches", AsyncMock(return_value=branches))
-    monkeypatch.setattr(scheduler.campaigns.repo, "list_phase_jobs", AsyncMock(return_value=phase_jobs))
+    monkeypatch.setattr(
+        scheduler.campaigns.repo, "list_phase_jobs", AsyncMock(return_value=phase_jobs)
+    )
     monkeypatch.setattr(scheduler, "_latest_phase_gate_map", AsyncMock(return_value={}))
     monkeypatch.setattr(scheduler, "_active_phase_execution_map", AsyncMock(return_value={}))
     monkeypatch.setattr(
         scheduler.dispatcher,
         "dispatch_phase_job",
-        AsyncMock(side_effect=AssertionError("No dispatch expected for terminal-state reconciliation")),
+        AsyncMock(
+            side_effect=AssertionError("No dispatch expected for terminal-state reconciliation")
+        ),
     )
 
 

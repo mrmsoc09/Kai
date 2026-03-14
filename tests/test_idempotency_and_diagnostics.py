@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
 from types import SimpleNamespace
-from uuid import UUID, uuid4
 from unittest.mock import AsyncMock
+from uuid import UUID, uuid4
 
 import pytest
 
@@ -11,9 +12,13 @@ import apps.backend.src.routers.campaigns as campaigns_router
 from apps.backend.src.core.approval_gate_service import ApprovalGateService
 from apps.backend.src.core.branch_scheduler import BranchScheduler, SchedulerResult
 from apps.backend.src.core.execution_result_service import ExecutionResultIngestionService
-from apps.backend.src.core.finding_correlation_service import CorrelationResult, FindingCorrelationService
+from apps.backend.src.core.finding_correlation_service import (
+    CorrelationResult,
+    FindingCorrelationService,
+)
 from apps.backend.src.core.finding_review_service import FindingReviewService
 from apps.backend.src.core.metrics_service import MetricsService
+from apps.backend.src.core.submission_export_service import SubmissionExportResult
 from apps.backend.src.models.campaign import (
     ApprovalGate,
     Artifact,
@@ -162,7 +167,10 @@ async def test_replayed_ingestion_does_not_duplicate_artifacts_or_observations(
         for item in db.added:
             if not isinstance(item, AuditEvent):
                 continue
-            if item.tool_execution_id != execution_id or item.event_type != "phase_job.result.ingested":
+            if (
+                item.tool_execution_id != execution_id
+                or item.event_type != "phase_job.result.ingested"
+            ):
                 continue
             payload = item.event_payload_json if isinstance(item.event_payload_json, dict) else {}
             if payload.get("ingestion_fingerprint") == ingestion_fingerprint:
@@ -208,6 +216,94 @@ async def test_replayed_ingestion_does_not_duplicate_artifacts_or_observations(
 
 
 @pytest.mark.asyncio
+async def test_replayed_ingestion_does_not_duplicate_findings(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    db = FakeDB()
+    campaign, branch, phase, execution = _seed_execution_graph()
+    svc = ExecutionResultIngestionService(db)  # type: ignore[arg-type]
+
+    monkeypatch.setattr(svc, "_resolve_execution", AsyncMock(return_value=execution))
+    monkeypatch.setattr(svc.campaigns.repo, "get_campaign", AsyncMock(return_value=campaign))
+    monkeypatch.setattr(svc.campaigns.repo, "get_branch", AsyncMock(return_value=branch))
+    monkeypatch.setattr(svc.campaigns.repo, "get_phase_job", AsyncMock(return_value=phase))
+
+    correlation_calls: list[UUID] = []
+
+    async def correlate_once(
+        observation: Observation, *, actor: str | None = None
+    ) -> CorrelationResult:
+        finding = Finding(
+            id=uuid4(),
+            program="Replay Program",
+            asset="api.replay.test",
+            title="Replay finding",
+            description="Created only on first ingestion",
+            severity=SeverityEnum.LOW,
+            status=FindingStatusEnum.NEW,
+            scope_json={"campaign_id": str(campaign.id), "actor": actor},
+        )
+        db.add(finding)
+        observation.finding_id = finding.id
+        correlation_calls.append(observation.id)
+        return CorrelationResult(
+            observation_id=observation.id,
+            action="CREATED",
+            finding_id=finding.id,
+            evidence_created=0,
+            draft_created=False,
+            duplicate=False,
+        )
+
+    monkeypatch.setattr(
+        FindingCorrelationService, "process_observation", AsyncMock(side_effect=correlate_once)
+    )
+
+    async def find_ingested_event(*, execution_id: UUID, ingestion_fingerprint: str):
+        for item in db.added:
+            if not isinstance(item, AuditEvent):
+                continue
+            if (
+                item.tool_execution_id != execution_id
+                or item.event_type != "phase_job.result.ingested"
+            ):
+                continue
+            payload = item.event_payload_json if isinstance(item.event_payload_json, dict) else {}
+            if payload.get("ingestion_fingerprint") == ingestion_fingerprint:
+                return item
+        return None
+
+    async def load_side_effects(execution_id: UUID):
+        artifacts = [
+            item
+            for item in db.added
+            if isinstance(item, Artifact) and item.tool_execution_id == execution_id
+        ]
+        observations = [
+            item
+            for item in db.added
+            if isinstance(item, Observation) and item.tool_execution_id == execution_id
+        ]
+        return artifacts, observations
+
+    monkeypatch.setattr(svc, "_find_ingested_event", find_ingested_event)
+    monkeypatch.setattr(svc, "_load_execution_side_effects", load_side_effects)
+
+    request = ExecutionResultIngestRequest(
+        worker_task_id=execution.worker_task_id,
+        tool_status=ToolExecutionStatusEnum.COMPLETED,
+        result_payload_json={"status": "completed", "assets": ["replay.test"]},
+        trigger_scheduler=False,
+    )
+    await svc.ingest_result(request, actor="worker.test")
+    await svc.ingest_result(request, actor="worker.test")
+
+    created_findings = [obj for obj in db.added if isinstance(obj, Finding)]
+    assert len(created_findings) == 1
+    assert len(correlation_calls) == 1
+
+
+@pytest.mark.asyncio
 async def test_terminal_replay_conflict_is_deterministic(monkeypatch: pytest.MonkeyPatch):
     db = FakeDB()
     campaign, branch, phase, execution = _seed_execution_graph()
@@ -227,7 +323,10 @@ async def test_terminal_replay_conflict_is_deterministic(monkeypatch: pytest.Mon
         for item in db.added:
             if not isinstance(item, AuditEvent):
                 continue
-            if item.tool_execution_id != execution_id or item.event_type != "phase_job.result.ingested":
+            if (
+                item.tool_execution_id != execution_id
+                or item.event_type != "phase_job.result.ingested"
+            ):
                 continue
             payload = item.event_payload_json if isinstance(item.event_payload_json, dict) else {}
             if payload.get("ingestion_fingerprint") == ingestion_fingerprint:
@@ -287,7 +386,9 @@ def _wire_scheduler(
 ) -> None:
     monkeypatch.setattr(scheduler.campaigns.repo, "get_campaign", AsyncMock(return_value=campaign))
     monkeypatch.setattr(scheduler.campaigns.repo, "list_branches", AsyncMock(return_value=branches))
-    monkeypatch.setattr(scheduler.campaigns.repo, "list_phase_jobs", AsyncMock(return_value=phase_jobs))
+    monkeypatch.setattr(
+        scheduler.campaigns.repo, "list_phase_jobs", AsyncMock(return_value=phase_jobs)
+    )
     monkeypatch.setattr(
         scheduler,
         "_latest_phase_gate_map",
@@ -370,7 +471,8 @@ async def test_repeated_scheduler_runs_avoid_duplicate_dispatch_and_gate_creatio
     assert first.created_approval_gates == 1
     assert second.created_approval_gates == 0
     assert scheduler.approvals.create_gate.await_count == 1
-    assert scheduler.dispatcher.dispatch_phase_job.await_count == 1
+    # A pending gate remains the controlling state signal; scheduler must not dispatch.
+    assert scheduler.dispatcher.dispatch_phase_job.await_count == 0
 
 
 @pytest.mark.asyncio
@@ -441,6 +543,105 @@ async def test_repeated_approval_decision_is_handled_safely():
         isinstance(obj, AuditEvent) and obj.event_type == "approval_gate.decision.duplicate"
         for obj in db.added
     )
+
+
+@pytest.mark.asyncio
+async def test_approval_after_rejection_is_rejected_with_conflict_audit():
+    db = FakeDB()
+    service = ApprovalGateService(db)  # type: ignore[arg-type]
+    gate = ApprovalGate(
+        id=uuid4(),
+        campaign_id=uuid4(),
+        gate_reason="Conflict test",
+        requested_by="operator@example.com",
+        status=ApprovalGateStatusEnum.PENDING,
+    )
+    reject = ApprovalGateDecision(
+        status=ApprovalGateStatusEnum.REJECTED,
+        decided_by="operator@example.com",
+    )
+    approve = ApprovalGateDecision(
+        status=ApprovalGateStatusEnum.APPROVED,
+        decided_by="operator@example.com",
+    )
+
+    await service.decide_gate(gate, reject, actor="operator@example.com")
+    with pytest.raises(ValueError):
+        await service.decide_gate(gate, approve, actor="operator@example.com")
+
+    assert gate.status == ApprovalGateStatusEnum.REJECTED
+    assert any(
+        isinstance(obj, AuditEvent) and obj.event_type == "approval_gate.decision.conflict"
+        for obj in db.added
+    )
+
+
+@pytest.mark.asyncio
+async def test_approval_after_completion_is_rejected_with_conflict_audit():
+    db = FakeDB()
+    service = ApprovalGateService(db)  # type: ignore[arg-type]
+    gate = ApprovalGate(
+        id=uuid4(),
+        campaign_id=uuid4(),
+        gate_reason="Completion conflict test",
+        requested_by="operator@example.com",
+        status=ApprovalGateStatusEnum.PENDING,
+    )
+    approve = ApprovalGateDecision(
+        status=ApprovalGateStatusEnum.APPROVED,
+        decided_by="operator@example.com",
+    )
+    reject = ApprovalGateDecision(
+        status=ApprovalGateStatusEnum.REJECTED,
+        decided_by="operator@example.com",
+    )
+
+    await service.decide_gate(gate, approve, actor="operator@example.com")
+    with pytest.raises(ValueError):
+        await service.decide_gate(gate, reject, actor="operator@example.com")
+
+    assert gate.status == ApprovalGateStatusEnum.APPROVED
+    assert any(
+        isinstance(obj, AuditEvent) and obj.event_type == "approval_gate.decision.conflict"
+        for obj in db.added
+    )
+
+
+@pytest.mark.asyncio
+async def test_export_endpoint_returns_422_for_not_ready_payload_without_state_corruption(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    finding_id = uuid4()
+    draft_id = uuid4()
+    not_ready = SubmissionExportResult(
+        provider="hackerone",
+        finding_id=finding_id,
+        submission_draft_id=draft_id,
+        ready=False,
+        state="not_ready",
+        missing_fields=["finding.status:HIL_APPROVED", "finding.evidence"],
+        warnings=["no_artifacts_linked"],
+        payload={"provider": "hackerone", "title": "Incomplete"},
+        stored=True,
+    )
+    fake_service = SimpleNamespace(
+        export_payload=AsyncMock(return_value=not_ready),
+    )
+    monkeypatch.setattr(campaigns_router, "SubmissionExportService", lambda _db: fake_service)
+
+    response = await campaigns_router.export_finding_submission_payload(
+        finding_id=finding_id,
+        provider="hackerone",
+        body=None,
+        db=FakeDB(),  # type: ignore[arg-type]
+    )
+
+    assert response.status_code == 422
+    payload = json.loads(response.body.decode("utf-8"))
+    assert payload["ready"] is False
+    assert payload["state"] == "not_ready"
+    assert payload["provider"] == "hackerone"
+    assert payload["submission_draft_id"] == str(draft_id)
 
 
 @pytest.mark.asyncio

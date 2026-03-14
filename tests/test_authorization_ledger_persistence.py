@@ -14,6 +14,7 @@ from apps.backend.src.core.kai_security_guardrails import (
 def test_authorization_ledger_persists_certificates(monkeypatch, tmp_path: Path):
     ledger = tmp_path / "auth_ledger.json"
     monkeypatch.setenv("K1_AUTH_LEDGER_PATH", str(ledger))
+    monkeypatch.setenv("K1_ALLOW_UNSIGNED_CERTIFICATES", "true")
 
     engine = GuardRailEngine()
     cert = AuthorizationCertificate(

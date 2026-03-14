@@ -1,0 +1,44 @@
+{
+  "phase_name": "active_recon__dnsx",
+  "tool_id": "dnsx",
+  "params": {
+    "target": "example.com",
+    "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3"
+  },
+  "result": {
+    "tool_id": "dnsx",
+    "status": "failed",
+    "output": {
+      "target": "example.com",
+      "record_type": "a",
+      "records": [],
+      "evidence": {
+        "evidence_id": "ev-ad0a2fb1-31e1-4413-8874-80fedb1988c4",
+        "type": "dns",
+        "tool": "dnsx",
+        "target": "example.com",
+        "timestamp": "2026-03-12T04:25:52.091884Z",
+        "structured_data": {
+          "target": "example.com",
+          "record_type": "a",
+          "records": []
+        },
+        "confidence_score": 0.2,
+        "artifacts": [
+          {
+            "artifact_path": "/home/k1-admin/Kai/artifacts/wf-9421cffd-9b31-4bed-805e-c0145f26dfe3/dnsx/ev-ad0a2fb1-31e1-4413-8874-80fedb1988c4.json",
+            "sha256": "6ee1ac81cff707191c890e0987a2767a82f6797dc7e795605409c3ab650f45f7",
+            "mime_type": "application/json",
+            "description": "dnsx resolution results"
+          }
+        ],
+        "scope_status": "validated"
+      }
+    },
+    "error": "binary 'dnsx' not found in PATH",
+    "execution_time_ms": 0.6742477416992188,
+    "tokens_used": null,
+    "metadata": {},
+    "execution_id": "dnsx"
+  }
+}

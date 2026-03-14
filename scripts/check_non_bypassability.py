@@ -33,7 +33,7 @@ def main() -> int:
     # Every critical execution path must include mandatory gate enforcement.
     for rel in REQUIRED_GATE_FILES:
         text = _read(rel)
-        if "enforce_authorization_gates(" not in text:
+        if "enforce_authorization_gates(" not in text and "enforce_authorization_gates_async(" not in text:
             violations.append(f"{rel}:missing enforce_authorization_gates()")
         if "scope_validator" not in _read(Path("apps/backend/src/core/authorization_gate.py")):
             violations.append("apps/backend/src/core/authorization_gate.py:missing scope_validator()")

@@ -1,0 +1,12 @@
+[
+  {
+    "tool": "subfinder",
+    "enabled_by_default": true,
+    "ok": true,
+    "verify_cmd": [
+      "subfinder",
+      "-version"
+    ],
+    "output": "ok"
+  }
+]

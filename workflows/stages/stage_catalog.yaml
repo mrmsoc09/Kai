@@ -1,0 +1,12 @@
+stages:
+  - passive_recon
+  - active_recon
+  - live_host_validation
+  - web_crawling
+  - endpoint_discovery
+  - parameter_discovery
+  - vuln_scan
+  - secret_scan
+  - tech_fingerprint
+  - prioritization_and_correlation
+  - report_prep
