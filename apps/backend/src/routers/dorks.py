@@ -1,14 +1,17 @@
 
 from pathlib import Path as _P
 import json as _json, time as _time
+import os
 ROOT = _P(__file__).resolve().parents[4]
-DORK_RUNS = ROOT / 'artifacts' / 'dork_runs'
+ENV_ARTIFACTS = os.getenv("K1_ARTIFACTS_ROOT")
+ARTIFACTS_ROOT = _P(ENV_ARTIFACTS) if ENV_ARTIFACTS else (ROOT / 'artifacts')
+DORK_RUNS = ARTIFACTS_ROOT / 'dork_runs'
 DORK_RUNS.mkdir(parents=True, exist_ok=True)
 from ..core.scope import require_scope_accept
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from typing import Dict, Any, List
-import os, yaml, json
+import yaml, json
 from datetime import datetime, timezone
 from ..core.run_store import write_run_record
 from ..core.trace import append_decision_trace, write_reasoning_summary, policy_gate_info

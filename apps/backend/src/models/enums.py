@@ -138,3 +138,28 @@ class RiskPolicyClassEnum(str, Enum):
     RESTRICTED = "RESTRICTED"
     OUT_OF_SCOPE = "OUT_OF_SCOPE"
     POLICY_EXCEPTION = "POLICY_EXCEPTION"
+
+
+class WorkflowRunStatusEnum(str, Enum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELED = "CANCELED"
+
+
+class StageRunStatusEnum(str, Enum):
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    BLOCKED = "BLOCKED"
+
+
+class CorrelationActionEnum(str, Enum):
+    CREATED = "CREATED"
+    ATTACHED = "ATTACHED"
+    ALREADY_LINKED = "ALREADY_LINKED"
+    DEDUPLICATED = "DEDUPLICATED"
+    CONTEXT_ONLY = "CONTEXT_ONLY"
+    UNSUPPORTED = "UNSUPPORTED"

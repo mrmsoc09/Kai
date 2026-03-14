@@ -1,0 +1,21 @@
+# Scope guardrails configuration.
+#
+# safe_mode_default: true  — blocks intrusive/manual_only tools by default.
+# strict_allowlist: true   — deny by default when allowlist is empty.
+#                            Set to false only for tightly controlled local/test scenarios.
+#
+# Safe default is deny-by-default until explicit in-scope assets are configured.
+
+allowlist: []
+
+denylist:
+  - "*.internal"
+  - "localhost"
+  - "127.0.0.1"
+  - "::1"
+  - "0.0.0.0"
+
+cidr_allowlist: []
+
+safe_mode_default: true
+strict_allowlist: true

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from tests.asgi_test_client import ASGITestClient
 
 from apps.backend.src.core.orchestration_graph import HuntPhase, OrchestrationGraph
 from apps.backend.src.routers import orchestration
@@ -21,7 +21,7 @@ def test_orchestration_graph_transition_path():
 def test_router_rejects_non_defensive_action_type():
     app = FastAPI()
     app.include_router(orchestration.router)
-    client = TestClient(app)
+    client = ASGITestClient(app)
 
     create = client.post(
         "/api/orchestration/sessions",

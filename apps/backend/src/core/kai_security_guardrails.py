@@ -7,7 +7,7 @@ import logging
 import json
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from enum import Enum
 import hashlib
 import os
@@ -104,7 +104,7 @@ class ScanAuditLog:
     error_message: Optional[str] = None
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for logging"""
@@ -390,9 +390,10 @@ class GuardRailEngine:
             return True
 
         # Support wildcards like *.example.com
+        # Use dot-boundary check to prevent *.example.com matching evilexample.com.
         if authorized_target.startswith("*."):
             domain_part = authorized_target[2:]  # Remove "*."
-            if requested_target.endswith(domain_part):
+            if requested_target == domain_part or requested_target.endswith("." + domain_part):
                 return True
 
         return False
@@ -405,11 +406,14 @@ class GuardRailEngine:
         """Validate cryptographic signature of certificate"""
         logger.debug(f"Validating certificate: {cert.certificate_id}")
         if not cert.signature:
-            return _env_bool("K1_ALLOW_UNSIGNED_CERTIFICATES", True)
+            # Default to False — unsigned certificates are rejected unless
+            # K1_ALLOW_UNSIGNED_CERTIFICATES=true is explicitly set.
+            return _env_bool("K1_ALLOW_UNSIGNED_CERTIFICATES", False)
 
         signing_key = (os.getenv("K1_AUTH_CERT_SIGNING_KEY") or "").strip()
         if not signing_key:
-            return _env_bool("K1_ALLOW_UNSIGNED_CERTIFICATES", True)
+            # No signing key configured — cannot verify. Reject by default.
+            return _env_bool("K1_ALLOW_UNSIGNED_CERTIFICATES", False)
 
         canonical = "|".join(
             [

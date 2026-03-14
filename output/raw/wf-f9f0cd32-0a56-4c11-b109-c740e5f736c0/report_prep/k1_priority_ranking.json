@@ -1,0 +1,25 @@
+{
+  "phase_name": "report_prep__k1_priority_ranking",
+  "tool_id": "k1_priority_ranking",
+  "params": {
+    "target": "example.com",
+    "signals": []
+  },
+  "result": {
+    "tool_id": "k1_priority_ranking",
+    "status": "completed",
+    "output": {
+      "target": "example.com",
+      "priority_score": 20,
+      "priority_bucket": "low",
+      "signal_count": 0,
+      "priority_queue": [],
+      "method": "deterministic_rule_v1"
+    },
+    "error": null,
+    "execution_time_ms": 0.0,
+    "tokens_used": null,
+    "metadata": {},
+    "execution_id": "k1_priority_ranking"
+  }
+}

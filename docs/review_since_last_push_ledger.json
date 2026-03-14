@@ -1,0 +1,143 @@
+{
+  "review_date": "2026-03-13",
+  "baseline": {
+    "ref": "origin/main",
+    "commit": "968cad6a076b89d731abfb49218379ddbb92aee6"
+  },
+  "scope": {
+    "tracked_changed_files": 171,
+    "untracked_new_files": 362
+  },
+  "test_validation": [
+    {
+      "command": ".venv/bin/python -m pytest -q",
+      "result": "291 passed, 1 skipped"
+    },
+    {
+      "command": "cd /tmp && /home/k1-admin/Kai/.venv/bin/pytest -q /home/k1-admin/Kai/tests/test_bug_bounty_continuous.py",
+      "result": "passed",
+      "notes": "1 passed, 4 deselected"
+    },
+    {
+      "command": ".venv/bin/python -m pytest -q tests/test_scope_guardrails.py tests/test_scope_resolver.py tests/test_authorization_gate_sync_scope.py tests/test_bug_bounty_dispatch_safety.py tests/test_bug_bounty_continuous.py tests/test_api_security_and_routing.py",
+      "result": "37 passed"
+    }
+  ],
+  "findings": [
+    {
+      "id": "RSP-001",
+      "severity": "critical",
+      "priority": "P1",
+      "category": "security",
+      "file_path": "config/scope_guardrails.yaml",
+      "line_reference": "23",
+      "title": "Default scope policy allows arbitrary targets when allowlist is empty",
+      "current_behavior": "strict_allowlist=false with empty allowlist yields policy_default_allow",
+      "risk_if_unchanged": "Out-of-scope scanning can be authorized by default on fresh setup",
+      "recommended_change": "Set strict_allowlist=true by default or ship restrictive allowlist bootstrap",
+      "fix_timing": "Fix Immediately",
+      "breaking_change": false,
+      "status": "resolved",
+      "resolution_notes": "Set default strict_allowlist=true in repository scope guardrails config to enforce deny-by-default posture.",
+      "files_changed": [
+        "config/scope_guardrails.yaml",
+        "tests/test_scope_guardrails.py"
+      ],
+      "tests_updated": [
+        "tests/test_scope_guardrails.py::test_repo_default_scope_policy_is_deny_by_default"
+      ]
+    },
+    {
+      "id": "RSP-002",
+      "severity": "critical",
+      "priority": "P1",
+      "category": "tests/bootstrap",
+      "file_path": "tests/conftest.py",
+      "line_reference": "8",
+      "title": "Conftest import order can break pytest collection outside repo cwd",
+      "current_behavior": "tests.asgi_test_client import runs before sys.path bootstrap",
+      "risk_if_unchanged": "Test collection fails in common invocation contexts, blocking CI/dev reliability",
+      "recommended_change": "Reorder path bootstrap before tests import or avoid absolute tests package import",
+      "fix_timing": "Fix Immediately",
+      "breaking_change": false,
+      "status": "resolved",
+      "resolution_notes": "Moved repository path bootstrap before tests package import in conftest; verified pytest collection from non-repo cwd.",
+      "files_changed": [
+        "tests/conftest.py"
+      ],
+      "tests_updated": []
+    },
+    {
+      "id": "RSP-003",
+      "severity": "high",
+      "priority": "P2",
+      "category": "correctness/security",
+      "file_path": "apps/backend/src/core/authorization_gate.py",
+      "line_reference": "45-61",
+      "title": "Synchronous scope validation ignores workflow-aware context",
+      "current_behavior": "workflow_id is discarded in scope_validator() and static policy is always used",
+      "risk_if_unchanged": "Scope decisions diverge between sync and async paths for workflow-scoped executions",
+      "recommended_change": "Restore workflow-aware resolution in sync path, consistent with async behavior",
+      "fix_timing": "Fix Before Real-World Use",
+      "breaking_change": false,
+      "status": "resolved",
+      "resolution_notes": "Restored workflow-aware sync scope validation by delegating to canonical scope_resolver when workflow_id is supplied.",
+      "files_changed": [
+        "apps/backend/src/core/authorization_gate.py",
+        "tests/test_authorization_gate_sync_scope.py"
+      ],
+      "tests_updated": [
+        "tests/test_authorization_gate_sync_scope.py::test_scope_validator_sync_uses_workflow_scope"
+      ]
+    },
+    {
+      "id": "RSP-004",
+      "severity": "high",
+      "priority": "P2",
+      "category": "correctness/ops",
+      "file_path": "apps/backend/src/core/bug_bounty_hunting_service.py",
+      "line_reference": "941-1000",
+      "title": "Dispatch-due path can enqueue duplicate schedule runs",
+      "current_behavior": "No reservation/idempotency marker prevents repeated dispatch of same due schedule",
+      "risk_if_unchanged": "Duplicate worker tasks, inflated load, repeated scans, noisy state transitions",
+      "recommended_change": "Add atomic dispatch reservation and idempotent dispatch key semantics",
+      "fix_timing": "Fix Before Real-World Use",
+      "breaking_change": false,
+      "status": "resolved",
+      "resolution_notes": "Added schedule reservation behavior before enqueue (next_scheduled_run_at advance) so repeated dispatch-due calls do not immediately duplicate dispatch.",
+      "files_changed": [
+        "apps/backend/src/core/bug_bounty_hunting_service.py",
+        "tests/test_bug_bounty_dispatch_safety.py"
+      ],
+      "tests_updated": [
+        "tests/test_bug_bounty_dispatch_safety.py::test_dispatch_due_schedules_reserves_next_run_to_prevent_duplicate_dispatch"
+      ]
+    },
+    {
+      "id": "RSP-005",
+      "severity": "medium",
+      "priority": "P3",
+      "category": "ops/reliability",
+      "file_path": "apps/backend/src/core/bug_bounty_hunting_service.py",
+      "line_reference": "970-989",
+      "title": "Dispatch-due lacks explicit broker failure handling",
+      "current_behavior": "Celery enqueue exceptions are not converted into structured dispatch failure records",
+      "risk_if_unchanged": "Partial dispatch with opaque 500s and weak operator diagnostics",
+      "recommended_change": "Handle per-schedule enqueue failures and persist dispatch diagnostics",
+      "fix_timing": "Refactor Later",
+      "breaking_change": false,
+      "status": "resolved",
+      "resolution_notes": "Wrapped worker enqueue path with per-schedule exception handling and persisted dispatch failure status/reason in schedule and response payload.",
+      "files_changed": [
+        "apps/backend/src/core/bug_bounty_hunting_service.py"
+      ],
+      "tests_updated": [
+        "tests/test_bug_bounty_dispatch_safety.py"
+      ]
+    }
+  ],
+  "push_recommendation": {
+    "status": "ready_to_push",
+    "reason": "Critical and high-priority release blockers have been resolved and validated with full pytest plus targeted regression coverage."
+  }
+}

@@ -1,126 +1,133 @@
 """
-Workflow-Aware Scope Resolver
+Canonical Scope Resolver
 
-Supplements the static policies.yaml scope list with dynamic scope derived
-from active hunt workflows.  When a workflow exists for the target being
-scanned, its scope_domains list is treated as the authoritative allow-list,
-bypassing the need to manually maintain policies.yaml for every program.
-
-Priority order:
-  1. Explicit deny in policies.yaml (always respected)
-  2. Match in active workflow scope_domains  <- new dynamic path
-  3. Match in static allowed_scopes from policies.yaml
-
-This resolves the critical gap where only *.adobe.com was ever accepted by
-the scope gate, blocking all tool execution for every other program.
+Legacy compatibility wrapper that now delegates to scope_guardrails so
+tool authorization and workflow planning share one policy authority.
 """
 
 from __future__ import annotations
 
-import re
+import asyncio
 from typing import Optional
+from uuid import UUID
+
+from sqlalchemy import select
+
+from ..models.campaign import CampaignRun, ScopeTarget
+from ..models.workflow import WorkflowRun
+from .hil_db import get_async_session_maker
+from .scope_guardrails import ScopePolicy, evaluate_target_scope, load_scope_policy
 
 
-def _host_matches_pattern(host: str, pattern: str) -> bool:
-    """Return True if host matches a scope_domains entry.
+def _coerce_uuid(value: str | UUID) -> UUID | None:
+    if isinstance(value, UUID):
+        return value
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        return UUID(text)
+    except ValueError:
+        return None
 
-    Patterns:
-      *.shopify.com  -> wildcard subdomain match
-      shopify.com    -> exact host match
-      /regex/        -> interpreted as a regex
-    """
-    pattern = pattern.strip()
-    if not pattern:
-        return False
 
-    if len(pattern) >= 2 and pattern[0] == "/" and pattern[-1] == "/":
+async def _load_workflow_scope_policy(workflow_id: str | UUID) -> ScopePolicy | None:
+    workflow_uuid = _coerce_uuid(workflow_id)
+    if workflow_uuid is None:
+        return None
+
+    session_maker = get_async_session_maker()
+    async with session_maker() as db:
+        result = await db.execute(select(WorkflowRun).where(WorkflowRun.id == workflow_uuid))
+        workflow_run = result.scalar_one_or_none()
+        if workflow_run is None:
+            return None
+
+        result = await db.execute(
+            select(CampaignRun).where(CampaignRun.id == workflow_run.campaign_run_id)
+        )
+        campaign = result.scalar_one_or_none()
+        if campaign is None:
+            return None
+
+        result = await db.execute(
+            select(ScopeTarget).where(ScopeTarget.program_id == campaign.program_id)
+        )
+        scope_targets = result.scalars().all()
+        if not scope_targets:
+            return None
+
+    base_policy = load_scope_policy()
+    allowlist = [
+        str(item.target).strip()
+        for item in scope_targets
+        if item.is_in_scope and str(item.target).strip()
+    ]
+    denylist = [
+        str(item.target).strip()
+        for item in scope_targets
+        if not item.is_in_scope and str(item.target).strip()
+    ]
+    if not allowlist and not denylist:
+        return None
+    return ScopePolicy(
+        allowlist=allowlist,
+        denylist=denylist,
+        cidr_allowlist=list(base_policy.cidr_allowlist),
+        safe_mode_default=base_policy.safe_mode_default,
+        strict_allowlist=bool(allowlist),
+    )
+
+
+async def is_in_scope_for_workflow_async(target: str, workflow_id: Optional[str] = None) -> bool:
+    policy = load_scope_policy()
+    if workflow_id:
         try:
-            return bool(re.search(pattern[1:-1], host, re.IGNORECASE))
-        except re.error:
-            return False
-
-    if "*" in pattern:
-        glob_rx = re.escape(pattern).replace(r"\*", ".*")
-        return bool(re.search(glob_rx + "$", host, re.IGNORECASE))
-
-    return host.lower() == pattern.lower()
-
-
-def _target_in_any_active_workflow(host: str, workflow_id: Optional[str] = None) -> bool:
-    """Return True if host matches any scope_domain in an active workflow."""
-    try:
-        from .workflow_store import list_workflows, get_workflow
-    except Exception:
-        return False
-
-    try:
-        if workflow_id:
-            wf = get_workflow(workflow_id)
-            workflows = [wf] if wf and not wf.is_terminal() else []
-        else:
-            workflows = [w for w in list_workflows() if not w.is_terminal()]
-
-        for wf in workflows:
-            for pattern in wf.scope_domains:
-                if _host_matches_pattern(host, pattern):
-                    return True
-    except Exception:
-        pass
-
-    return False
+            dynamic_policy = await _load_workflow_scope_policy(workflow_id)
+        except Exception:
+            dynamic_policy = None
+        if dynamic_policy is not None:
+            policy = dynamic_policy
+    decision = evaluate_target_scope(target, policy)
+    return decision.allowed
 
 
 def is_in_scope_for_workflow(target: str, workflow_id: Optional[str] = None) -> bool:
-    """
-    Check whether target is in scope via:
-      1. Global deny list from policies.yaml
-      2. Active workflow scope_domains (dynamic)
-      3. Static allowed_scopes from policies.yaml
-    """
-    from .scope import _DENY_RX, _ALLOWED_RX, _extract_host_or_text
-
-    host = _extract_host_or_text(target)
-    if not host:
-        return False
-
-    if any(rx.search(host) for rx in _DENY_RX):
-        return False
-
-    if _target_in_any_active_workflow(host, workflow_id):
-        return True
-
-    return bool(_ALLOWED_RX and any(rx.search(host) for rx in _ALLOWED_RX))
-
-
-def get_scope_context(target: str) -> dict:
-    """Return full scope context for a target — used for audit logging and
-    injecting workflow_id into tool params at dispatch time."""
-    from .scope import _DENY_RX, _ALLOWED_RX, _extract_host_or_text
-
-    host = _extract_host_or_text(target)
-
-    if any(rx.search(host) for rx in _DENY_RX):
-        return {"in_scope": False, "source": "deny_list", "workflow_id": None, "host": host}
-
+    """Compatibility helper with DB-backed workflow scope when workflow_id is provided."""
+    if not workflow_id:
+        policy = load_scope_policy()
+        decision = evaluate_target_scope(target, policy)
+        return decision.allowed
     try:
-        from .workflow_store import list_workflows
-        for wf in list_workflows():
-            if wf.is_terminal():
-                continue
-            for pattern in wf.scope_domains:
-                if _host_matches_pattern(host, pattern):
-                    return {
-                        "in_scope": True,
-                        "source": "workflow",
-                        "workflow_id": wf.id,
-                        "opportunity_id": wf.opportunity_id,
-                        "program_name": wf.program_name,
-                        "host": host,
-                    }
-    except Exception:
-        pass
+        return asyncio.run(is_in_scope_for_workflow_async(target, workflow_id=workflow_id))
+    except RuntimeError:
+        # If running inside an event loop, avoid nested loop errors and fall back
+        # to canonical baseline policy.
+        policy = load_scope_policy()
+        decision = evaluate_target_scope(target, policy)
+        return decision.allowed
 
-    if _ALLOWED_RX and any(rx.search(host) for rx in _ALLOWED_RX):
-        return {"in_scope": True, "source": "policy", "workflow_id": None, "host": host}
 
-    return {"in_scope": False, "source": "no_match", "workflow_id": None, "host": host}
+def get_scope_context(target: str, workflow_id: Optional[str] = None) -> dict:
+    """Return scope context for audit/debugging with canonical scope policy evaluation."""
+    source = "scope_guardrails"
+    policy = load_scope_policy()
+    if workflow_id:
+        try:
+            dynamic_policy = asyncio.run(_load_workflow_scope_policy(workflow_id))
+        except RuntimeError:
+            dynamic_policy = None
+        except Exception:
+            dynamic_policy = None
+        if dynamic_policy is not None:
+            policy = dynamic_policy
+            source = "workflow_db_scope"
+    decision = evaluate_target_scope(target, policy)
+    return {
+        "in_scope": decision.allowed,
+        "source": source,
+        "workflow_id": workflow_id,
+        "host": decision.normalized_host,
+        "reason": decision.reason,
+        "matched_rule": decision.matched_rule,
+    }

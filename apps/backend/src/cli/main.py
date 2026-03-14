@@ -12,6 +12,7 @@ Usage:
     kai-cli workflow list
     kai-cli findings list
     kai-cli orchestrator status
+    kai-cli bug-bounty programs
 """
 
 import click
@@ -33,6 +34,8 @@ from .commands import (
     workflow,
     findings,
     orchestrator,
+    tools,
+    bug_bounty,
 )
 
 
@@ -60,6 +63,8 @@ def cli(ctx: click.Context, api_url: str, verbose: bool, quiet: bool):
       workflow     Workflow management
       findings     Finding management
       orchestrator Orchestrator management
+      tools        Tool catalog and readiness checks
+      bug-bounty   Continuous bug bounty program scheduling and triage
 
     \b
     Examples:
@@ -90,6 +95,8 @@ cli.add_command(agent)
 cli.add_command(workflow)
 cli.add_command(findings)
 cli.add_command(orchestrator)
+cli.add_command(tools)
+cli.add_command(bug_bounty)
 
 
 @cli.command()

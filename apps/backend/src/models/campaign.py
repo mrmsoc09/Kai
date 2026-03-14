@@ -70,6 +70,8 @@ class ScopeTarget(Base, TimestampMixin):
         CheckConstraint("btrim(target_type) <> ''", name="scope_targets_target_type_not_empty"),
         Index("ix_scope_targets_program_id", "program_id"),
         Index("ix_scope_targets_is_in_scope", "is_in_scope"),
+        Index("ix_scope_targets_monitoring_enabled", "monitoring_enabled"),
+        Index("ix_scope_targets_next_scheduled_run_at", "next_scheduled_run_at"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -88,6 +90,16 @@ class ScopeTarget(Base, TimestampMixin):
     )
     normalization_key = Column(Text, nullable=True)
     details_json = Column(JSON, nullable=False, server_default="{}")
+    monitoring_enabled = Column(Boolean, nullable=False, server_default="true")
+    monitoring_priority_tier = Column(Integer, nullable=False, server_default="3")
+    monitoring_status = Column(Text, nullable=False, server_default="ACTIVE")
+    monitoring_source = Column(Text, nullable=True)
+    monitoring_notes = Column(Text, nullable=True)
+    safe_mode_required = Column(Boolean, nullable=False, server_default="true")
+    last_checked_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    last_success_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    last_failure_at = Column(TIMESTAMP(timezone=True), nullable=True)
+    next_scheduled_run_at = Column(TIMESTAMP(timezone=True), nullable=True)
 
     program = relationship("Program", back_populates="scope_targets")
     campaign_runs = relationship("CampaignRun", back_populates="primary_scope_target")
@@ -151,6 +163,9 @@ class CampaignRun(Base, TimestampMixin):
 
     program = relationship("Program", back_populates="campaign_runs")
     primary_scope_target = relationship("ScopeTarget", back_populates="campaign_runs")
+    workflow_runs = relationship(
+        "WorkflowRun", back_populates="campaign_run", cascade="all, delete-orphan"
+    )
     branches = relationship("ExecutionBranch", back_populates="campaign")
     phase_jobs = relationship("PhaseJob", back_populates="campaign")
     approval_gates = relationship("ApprovalGate", back_populates="campaign")
@@ -316,6 +331,16 @@ class PhaseJob(Base, TimestampMixin):
     blocked_reason = Column(Text, nullable=True)
     worker_task_id = Column(Text, nullable=True)
     queue_name = Column(Text, nullable=True)
+    workflow_run_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("workflow_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    stage_run_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("stage_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     retry_count = Column(Integer, nullable=False, default=0, server_default="0")
     max_retries = Column(Integer, nullable=False, default=0, server_default="0")
     input_payload_json = Column(JSON, nullable=False, server_default="{}")
@@ -324,6 +349,16 @@ class PhaseJob(Base, TimestampMixin):
 
     campaign = relationship("CampaignRun", back_populates="phase_jobs")
     branch = relationship("ExecutionBranch", back_populates="phase_jobs")
+    workflow_run = relationship(
+        "WorkflowRun",
+        back_populates="phase_jobs",
+        foreign_keys="[PhaseJob.workflow_run_id]",
+    )
+    stage_run = relationship(
+        "StageRun",
+        back_populates="phase_jobs",
+        foreign_keys="[PhaseJob.stage_run_id]",
+    )
     depends_on_job = relationship(
         "PhaseJob",
         remote_side=[id],
@@ -427,6 +462,7 @@ class ToolExecution(Base, TimestampMixin):
         Index("ix_tool_executions_campaign_id", "campaign_id"),
         Index("ix_tool_executions_branch_id", "branch_id"),
         Index("ix_tool_executions_phase_job_id", "phase_job_id"),
+        Index("ix_tool_executions_stage_run_id", "stage_run_id"),
         Index("ix_tool_executions_status", "status"),
         Index("ix_tool_executions_approval_gate_id", "approval_gate_id"),
         Index("ix_tool_executions_intention_id", "intention_id"),
@@ -448,6 +484,11 @@ class ToolExecution(Base, TimestampMixin):
         ForeignKey("phase_jobs.id", ondelete="SET NULL"),
         nullable=True,
     )
+    stage_run_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("stage_runs.id", ondelete="SET NULL"),
+        nullable=True,
+    )
     approval_gate_id = Column(
         UUID(as_uuid=True),
         ForeignKey("approval_gates.id", ondelete="SET NULL"),
@@ -460,6 +501,7 @@ class ToolExecution(Base, TimestampMixin):
     )
     tool_name = Column(Text, nullable=False)
     adapter_name = Column(Text, nullable=True)
+    execution_mode = Column(Text, nullable=True)
     status = Column(
         SAEnum(
             ToolExecutionStatusEnum,
@@ -476,7 +518,9 @@ class ToolExecution(Base, TimestampMixin):
     stderr_ref = Column(Text, nullable=True)
     stdout_summary = Column(Text, nullable=True)
     stderr_summary = Column(Text, nullable=True)
+    artifact_path = Column(Text, nullable=True)
     exit_code = Column(Integer, nullable=True)
+    duration_ms = Column(Float, nullable=True)
     policy_class = Column(
         SAEnum(
             RiskPolicyClassEnum,
@@ -499,6 +543,7 @@ class ToolExecution(Base, TimestampMixin):
     campaign = relationship("CampaignRun", back_populates="tool_executions")
     branch = relationship("ExecutionBranch", back_populates="tool_executions")
     phase_job = relationship("PhaseJob", back_populates="tool_executions")
+    stage_run = relationship("StageRun", back_populates="tool_executions")
     approval_gate = relationship("ApprovalGate", back_populates="tool_executions")
     intention = relationship("IntentionRecord", back_populates="tool_executions")
     artifacts = relationship("Artifact", back_populates="tool_execution")

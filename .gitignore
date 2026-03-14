@@ -1,19 +1,28 @@
 # Core artifacts and logs
 artifacts/
+.pytest_artifacts/
 var/
 *.log
 *.pem
 *.lock
+coverage.xml
+.coverage
+htmlcov/
 
 # Python
 __pycache__/
 *.pyc
 .venv
 venv
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
 
 # Node
 node_modules/
 apps/frontend/node_modules/
+apps/frontend-operator/.next/
+apps/frontend-operator/tsconfig.tsbuildinfo
 *.cache
 
 # OS / editor
@@ -26,6 +35,9 @@ Thumbs.db
 *.tar.gz
 *.zip
 *.tgz
+dist/
+build/
+*.egg-info/
 
 # Backup files
 *.bak

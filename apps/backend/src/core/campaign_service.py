@@ -716,7 +716,11 @@ class CampaignStartService:
 
         phase_jobs: list[PhaseJob] = []
         previous_phase_id: UUID | None = None
+        phase_id_by_name: dict[str, UUID] = {}
         for spec in self._phase_specs(request):
+            depends_on_job_id = previous_phase_id
+            if spec.depends_on_phase_name:
+                depends_on_job_id = phase_id_by_name.get(spec.depends_on_phase_name)
             seeded_payload = {
                 "target": request.target,
                 "target_type": request.target_type,
@@ -727,7 +731,7 @@ class CampaignStartService:
                 PhaseJobCreate(
                     campaign_id=campaign.id,
                     branch_id=root_branch.id,
-                    depends_on_job_id=previous_phase_id,
+                    depends_on_job_id=depends_on_job_id,
                     phase_name=spec.phase_name,
                     phase_order=spec.phase_order,
                     approval_required=spec.approval_required,
@@ -737,6 +741,7 @@ class CampaignStartService:
             )
             phase_jobs.append(phase_job)
             previous_phase_id = phase_job.id
+            phase_id_by_name[phase_job.phase_name] = phase_job.id
             await record_transition_event(
                 self.db,
                 event_type="phase_job.seeded",

@@ -1,0 +1,25 @@
+name: workflow_recon_surface_map
+description: Map domain attack surface through passive and low-noise active recon.
+stages:
+  - stage: passive_recon
+    tool: subfinder
+  - stage: passive_recon
+    tool: assetfinder
+  - stage: passive_recon
+    tool: amass
+  - stage: passive_recon
+    tool: gau
+  - stage: passive_recon
+    tool: waybackurls
+  - stage: active_recon
+    tool: dnsx
+  - stage: live_host_validation
+    tool: httpx
+  - stage: live_host_validation
+    tool: naabu
+  - stage: tech_fingerprint
+    tool: tlsx
+  - stage: prioritization_and_correlation
+    tool: k1_correlation
+  - stage: report_prep
+    tool: k1_priority_ranking

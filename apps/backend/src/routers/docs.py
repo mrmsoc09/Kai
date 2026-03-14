@@ -26,7 +26,9 @@ async def docs_index():
 @router.get('/docs/get', response_class=PlainTextResponse)
 async def docs_get(path: str):
     file = (DOCS_DIR / path).resolve()
-    if not str(file).startswith(str(DOCS_DIR.resolve())):
+    try:
+        file.relative_to(DOCS_DIR.resolve())
+    except ValueError:
         raise HTTPException(status_code=400, detail='invalid path')
     if not file.exists() or not file.is_file():
         raise HTTPException(status_code=404, detail='not found')

@@ -1,0 +1,11 @@
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "passive_recon", "tool_id": "subfinder", "status": "FAILED", "timestamp": "2026-03-12T04:25:52.065426+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "passive_recon", "tool_id": "assetfinder", "status": "FAILED", "timestamp": "2026-03-12T04:25:52.068855+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "passive_recon", "tool_id": "amass_enum", "status": "FAILED", "timestamp": "2026-03-12T04:25:52.072263+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "passive_recon", "tool_id": "gau", "status": "FAILED", "timestamp": "2026-03-12T04:25:52.077888+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "passive_recon", "tool_id": "waybackurls", "status": "FAILED", "timestamp": "2026-03-12T04:25:52.084837+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "active_recon", "tool_id": "dnsx", "status": "FAILED", "timestamp": "2026-03-12T04:25:52.098507+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "live_host_validation", "tool_id": "httpx_probe", "status": "FAILED", "timestamp": "2026-03-12T04:25:54.261898+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "live_host_validation", "tool_id": "naabu", "status": "FAILED", "timestamp": "2026-03-12T04:25:54.276825+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "tech_fingerprint", "tool_id": "tlsx", "status": "FAILED", "timestamp": "2026-03-12T04:25:54.305959+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "prioritization_and_correlation", "tool_id": "k1_correlation", "status": "COMPLETED", "timestamp": "2026-03-12T04:25:54.334242+00:00"}
+{"event": "tool_execution", "run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "stage": "report_prep", "tool_id": "k1_priority_ranking", "status": "COMPLETED", "timestamp": "2026-03-12T04:25:54.352324+00:00"}

@@ -1,0 +1,5 @@
+{"rule_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0-deny-0", "rule_type": "deny", "pattern": "*.internal", "source": "policy"}
+{"rule_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0-deny-1", "rule_type": "deny", "pattern": "localhost", "source": "policy"}
+{"rule_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0-deny-2", "rule_type": "deny", "pattern": "127.0.0.1", "source": "policy"}
+{"rule_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0-deny-3", "rule_type": "deny", "pattern": "::1", "source": "policy"}
+{"rule_id": "wf-f9f0cd32-0a56-4c11-b109-c740e5f736c0-deny-4", "rule_type": "deny", "pattern": "0.0.0.0", "source": "policy"}

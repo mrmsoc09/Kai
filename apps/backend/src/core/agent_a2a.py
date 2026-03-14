@@ -9,7 +9,7 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Callable, Any
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 
@@ -46,8 +46,8 @@ class Agent:
     llm_model: str = "claude-3-5-sonnet-20241022"
     available_tools: List[str] = field(default_factory=list)
     autonomy_tier: int = 0
-    created_at: datetime = field(default_factory=datetime.utcnow)
-    last_activity: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_activity: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     messages_sent: int = 0
     messages_received: int = 0
 
@@ -73,7 +73,7 @@ class A2AMessage:
     content: Dict[str, Any] = field(default_factory=dict)
     correlation_id: str = ""  # Links request/response
     priority: int = 5  # 1-10, higher = more important
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: Optional[datetime] = None
 
     def to_json(self) -> str:
@@ -100,7 +100,7 @@ class A2AMessage:
             content=d.get("content", {}),
             correlation_id=d.get("correlation_id", ""),
             priority=d.get("priority", 5),
-            timestamp=datetime.fromisoformat(d.get("timestamp", datetime.utcnow().isoformat())),
+            timestamp=datetime.fromisoformat(d.get("timestamp", datetime.now(timezone.utc).isoformat())),
             expires_at=datetime.fromisoformat(d["expires_at"]) if d.get("expires_at") else None
         )
 
@@ -197,7 +197,7 @@ class AgentRegistry:
         if agent:
             agent.status = status
             agent.current_task_id = task_id
-            agent.last_activity = datetime.utcnow()
+            agent.last_activity = datetime.now(timezone.utc)
             self.redis.hset(f"agent:{agent_id}", mapping=self._agent_to_redis(agent))
 
     def list_agents(self) -> List[Dict]:
@@ -311,7 +311,7 @@ class WorkflowOrchestrator:
             "target": target,
             "scope": scope,
             "status": "pending",
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "started_at": None,
             "completed_at": None,
             "steps": [
@@ -414,7 +414,7 @@ class WorkflowOrchestrator:
         # Check if workflow complete
         if step_index == len(workflow["steps"]) - 1:
             workflow["status"] = "complete"
-            workflow["completed_at"] = datetime.utcnow().isoformat()
+            workflow["completed_at"] = datetime.now(timezone.utc).isoformat()
 
     def get_workflow(self, workflow_id: str) -> Optional[Dict]:
         return self.workflows.get(workflow_id)

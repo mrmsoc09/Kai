@@ -1,14 +1,21 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from uuid import UUID, uuid4
 from unittest.mock import AsyncMock
+from uuid import UUID, uuid4
 
 import pytest
 
 from apps.backend.src.core.branch_scheduler import BranchScheduler
 from apps.backend.src.core.campaign_service import CampaignStartService
-from apps.backend.src.models.campaign import ApprovalGate, AuditEvent, CampaignRun, ExecutionBranch, PhaseJob, ToolExecution
+from apps.backend.src.models.campaign import (
+    ApprovalGate,
+    AuditEvent,
+    CampaignRun,
+    ExecutionBranch,
+    PhaseJob,
+    ToolExecution,
+)
 from apps.backend.src.models.enums import (
     ApprovalGateStatusEnum,
     BranchStatusEnum,
@@ -55,9 +62,13 @@ def _wire_scheduler_with_seed(
 ) -> None:
     monkeypatch.setattr(scheduler.campaigns.repo, "get_campaign", AsyncMock(return_value=campaign))
     monkeypatch.setattr(scheduler.campaigns.repo, "list_branches", AsyncMock(return_value=branches))
-    monkeypatch.setattr(scheduler.campaigns.repo, "list_phase_jobs", AsyncMock(return_value=phase_jobs))
+    monkeypatch.setattr(
+        scheduler.campaigns.repo, "list_phase_jobs", AsyncMock(return_value=phase_jobs)
+    )
     monkeypatch.setattr(scheduler, "_latest_phase_gate_map", AsyncMock(return_value=gates or {}))
-    monkeypatch.setattr(scheduler, "_active_phase_execution_map", AsyncMock(return_value=active or {}))
+    monkeypatch.setattr(
+        scheduler, "_active_phase_execution_map", AsyncMock(return_value=active or {})
+    )
 
 
 @pytest.mark.asyncio
@@ -114,7 +125,9 @@ async def test_campaign_start_and_scheduler_seed_and_queue(monkeypatch: pytest.M
 
 
 @pytest.mark.asyncio
-async def test_scheduler_creates_approval_gate_for_approval_required_job(monkeypatch: pytest.MonkeyPatch):
+async def test_scheduler_creates_approval_gate_for_approval_required_job(
+    monkeypatch: pytest.MonkeyPatch,
+):
     db = FakeDB()
     starter = CampaignStartService(db)  # type: ignore[arg-type]
     request = CampaignStartRequest(
@@ -291,7 +304,9 @@ async def test_scheduler_rerun_safe_does_not_duplicate_dispatch(monkeypatch: pyt
 
 
 @pytest.mark.asyncio
-async def test_start_and_dispatch_preserve_intention_and_audit_linkage(monkeypatch: pytest.MonkeyPatch):
+async def test_start_and_dispatch_preserve_intention_and_audit_linkage(
+    monkeypatch: pytest.MonkeyPatch,
+):
     db = FakeDB()
     starter = CampaignStartService(db)  # type: ignore[arg-type]
     request = CampaignStartRequest(

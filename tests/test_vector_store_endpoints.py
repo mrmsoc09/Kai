@@ -4,9 +4,9 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault('K1_DEV_TOKEN', 'devtoken')
 from apps.backend.src.main import app  # noqa: E402
-from fastapi.testclient import TestClient
+from tests.asgi_test_client import ASGITestClient
 
-client = TestClient(app)
+client = ASGITestClient(app)
 AUTH = {"Authorization": f"Bearer {os.environ['K1_DEV_TOKEN']}"}
 
 

@@ -5,12 +5,12 @@ from email.message import EmailMessage
 REPO_ROOT = Path(__file__).resolve().parents[1]
 os.environ.setdefault('K1_DEV_TOKEN', 'devtoken')
 from apps.backend.src.main import app  # noqa: E402
-from fastapi.testclient import TestClient
+from tests.asgi_test_client import ASGITestClient
 
-client = TestClient(app)
+client = ASGITestClient(app)
 AUTH = {"Authorization": f"Bearer {os.environ['K1_DEV_TOKEN']}"}
 
-REC_ROOT = REPO_ROOT / 'artifacts'
+REC_ROOT = Path(os.environ.get("K1_ARTIFACTS_ROOT", str(REPO_ROOT / 'artifacts')))
 OUTBOX = REC_ROOT / 'submissions' / 'outbox'
 SENT = OUTBOX / 'sent'
 FOLLOWUPS = OUTBOX / 'followups'

@@ -1,0 +1,24 @@
+name: workflow_web_attack_surface
+description: Discover crawlable endpoints and content-discovery surface for web targets.
+stages:
+  - stage: passive_recon
+    tool: subfinder
+  - stage: live_host_validation
+    tool: httpx
+  - stage: web_crawling
+    tool: katana
+  - stage: web_crawling
+    tool: hakrawler
+  - stage: web_crawling
+    tool: gospider
+  - stage: endpoint_discovery
+    tool: waymore
+  - stage: parameter_discovery
+    tool: ffuf
+    approval_required: true
+  - stage: tech_fingerprint
+    tool: httpx
+  - stage: prioritization_and_correlation
+    tool: k1_correlation
+  - stage: report_prep
+    tool: k1_priority_ranking

@@ -370,11 +370,15 @@ def initialize_default_tools():
             from apps.backend.src.core.tool_adapters_validate import (
                 register_phase3_validation_tools,
             )
+            from apps.backend.src.core.tool_adapters_bugbounty import (
+                register_bugbounty_tools,
+            )
 
             register_phase1_osint_tools()
             register_phase2_recon_tools()
             register_phase2_scanner_tools()
             register_phase3_validation_tools()
+            register_bugbounty_tools()
             _DEFAULT_TOOLS_INITIALIZED = True
     except Exception as e:  # pragma: no cover - defensive
         logger.error(f"Failed to initialize default tools: {e}")

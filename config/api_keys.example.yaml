@@ -1,0 +1,11 @@
+providers:
+  shodan:
+    api_key: ""
+  censys:
+    api_id: ""
+    api_secret: ""
+  virustotal:
+    api_key: ""
+notes:
+  - "Copy relevant values into environment variables for runtime use."
+  - "Do not commit real credentials."

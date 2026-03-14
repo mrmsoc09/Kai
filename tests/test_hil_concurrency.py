@@ -2,7 +2,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
-from fastapi.testclient import TestClient
+from tests.asgi_test_client import ASGITestClient
 
 from apps.backend.src.main import app
 
@@ -14,7 +14,7 @@ pytestmark = pytest.mark.skipif(
 
 
 AUTH = {"Authorization": f"Bearer {os.getenv('K1_DEV_TOKEN', 'devtoken')}"}
-client = TestClient(app)
+client = ASGITestClient(app)
 
 
 def _create_finding():
@@ -53,4 +53,3 @@ def test_duplicate_hil_approval_returns_conflict():
 
     statuses = sorted([r.status_code for r in responses])
     assert statuses == [200, 409], f"unexpected status codes: {statuses}"
-

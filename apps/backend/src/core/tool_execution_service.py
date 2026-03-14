@@ -69,10 +69,12 @@ class ToolExecutionService:
             campaign_id=payload.campaign_id,
             branch_id=payload.branch_id,
             phase_job_id=payload.phase_job_id,
+            stage_run_id=payload.stage_run_id,
             approval_gate_id=payload.approval_gate_id,
             intention_id=payload.intention_id,
             tool_name=payload.tool_name,
             adapter_name=payload.adapter_name,
+            execution_mode=payload.execution_mode,
             input_target=payload.input_target,
             input_payload_json=payload.input_payload_json,
             policy_class=payload.policy_class,
@@ -126,9 +128,17 @@ class ToolExecutionService:
             execution.started_at = _utcnow()
         if target_status in {ToolExecutionStatusEnum.COMPLETED, ToolExecutionStatusEnum.FAILED}:
             execution.ended_at = _utcnow()
+            if execution.started_at is not None:
+                execution.duration_ms = (
+                    execution.ended_at - execution.started_at
+                ).total_seconds() * 1000
         if target_status == ToolExecutionStatusEnum.CANCELED:
             execution.canceled_at = _utcnow()
             execution.canceled_by = canceled_by
+            if execution.started_at is not None:
+                execution.duration_ms = (
+                    execution.canceled_at - execution.started_at
+                ).total_seconds() * 1000
         if exit_code is not None:
             execution.exit_code = exit_code
         if error_message is not None:

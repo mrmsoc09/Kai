@@ -1,0 +1,13 @@
+name: workflow_priority_target_ranking
+description: Produce conservative target ranking from recon observations.
+stages:
+  - stage: passive_recon
+    tool: subfinder
+  - stage: passive_recon
+    tool: assetfinder
+  - stage: live_host_validation
+    tool: httpx
+  - stage: prioritization_and_correlation
+    tool: k1_correlation
+  - stage: report_prep
+    tool: k1_priority_ranking

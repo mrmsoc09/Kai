@@ -171,5 +171,12 @@ class KeyManager:
             logger.error(f"Vault storage error: {e}")
             raise HTTPException(status_code=500, detail=f"Failed to store keys in Vault: {e}")
 
-# Global instance
-key_manager = KeyManager()
+_key_manager: KeyManager | None = None
+
+
+def get_key_manager() -> KeyManager:
+    """Lazily initialize KeyManager so missing VAULT_TOKEN doesn't break app bootstrap."""
+    global _key_manager
+    if _key_manager is None:
+        _key_manager = KeyManager()
+    return _key_manager

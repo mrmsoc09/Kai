@@ -2,7 +2,7 @@
 Common response schemas for API responses
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, Any, Dict
 from datetime import datetime
 
@@ -16,8 +16,8 @@ class Response(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     status_code: int = 200
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "data": {},
@@ -27,6 +27,7 @@ class Response(BaseModel):
                 "status_code": 200,
             }
         }
+    )
 
 
 class ErrorResponse(BaseModel):
@@ -37,8 +38,8 @@ class ErrorResponse(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     status_code: int = 500
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": False,
                 "error": "Internal server error",
@@ -47,3 +48,4 @@ class ErrorResponse(BaseModel):
                 "status_code": 500,
             }
         }
+    )

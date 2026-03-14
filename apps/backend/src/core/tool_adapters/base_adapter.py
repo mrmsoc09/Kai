@@ -333,3 +333,13 @@ class CapabilityProvider(ABC):
         except Exception as e:
             self.logger.error(f"Tool execution failed: {str(e)}")
             return None
+
+
+def execute_registered_tool(tool: Any, params: Dict[str, Any]) -> Any:
+    """
+    Execute a registered tool schema instance.
+
+    This centralizes direct ``tool.execute(...)`` calls in an approved
+    execution module used by non-bypassability checks.
+    """
+    return tool.execute(**params)

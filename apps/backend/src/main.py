@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import logging
+import importlib
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -26,6 +28,7 @@ from apps.backend.src.routers import (
     artifact_signing,
     auth,
     autonomous,
+    bug_bounty,
     campaigns,
     chains,
     comms,
@@ -82,6 +85,8 @@ from apps.backend.src.routers import platform_settings as platform_settings_rout
 
 
 services = Services()
+logger = logging.getLogger(__name__)
+_OPTIONAL_ROUTER_ERRORS: list[dict[str, str]] = []
 
 
 def _env_bool(name: str, default: bool = False) -> bool:
@@ -259,6 +264,7 @@ async def healthz(request: Request):
         "dependencies": dependencies,
         "worker": worker,
         "worker_required": worker_required,
+        "optional_router_errors": _OPTIONAL_ROUTER_ERRORS,
     }
     if overall_ok:
         return payload
@@ -337,6 +343,7 @@ app.include_router(finding_validation.router)
 app.include_router(opportunities.router)
 app.include_router(workflows.router)
 app.include_router(campaigns.router)
+app.include_router(bug_bounty.router)
 
 # Platform Settings (LLM config, runtime settings)
 app.include_router(platform_settings_router.router)
@@ -368,26 +375,33 @@ app.include_router(kai_authorized_scanning.router)
 
 # Optional: dynamic vector router (pgvector) if present
 try:
-    import importlib
     _vector_mod = importlib.import_module('apps.backend.src.routers.vector')
     app.include_router(_vector_mod.router)
-
-except Exception:
-    pass
+except Exception as exc:
+    logger.warning("optional router unavailable: %s (%s)", "apps.backend.src.routers.vector", exc)
+    _OPTIONAL_ROUTER_ERRORS.append(
+        {"module": "apps.backend.src.routers.vector", "error": str(exc)}
+    )
 
 # Optional: Agent Zero integration
 try:
     agent_zero_router = importlib.import_module('apps.backend.src.routers.agent_zero')
     app.include_router(agent_zero_router.router)
-except Exception:
-    pass
+except Exception as exc:
+    logger.warning("optional router unavailable: %s (%s)", "apps.backend.src.routers.agent_zero", exc)
+    _OPTIONAL_ROUTER_ERRORS.append(
+        {"module": "apps.backend.src.routers.agent_zero", "error": str(exc)}
+    )
 
 # Optional: Real-time WebSocket
 try:
     ws_router = importlib.import_module('apps.backend.src.routers.websocket')
     app.include_router(ws_router.router)
-except Exception:
-    pass
+except Exception as exc:
+    logger.warning("optional router unavailable: %s (%s)", "apps.backend.src.routers.websocket", exc)
+    _OPTIONAL_ROUTER_ERRORS.append(
+        {"module": "apps.backend.src.routers.websocket", "error": str(exc)}
+    )
 
 
 # ==================== INITIALIZE K1 SYSTEMS ====================

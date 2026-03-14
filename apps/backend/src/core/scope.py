@@ -3,6 +3,7 @@ from fastapi import Header, HTTPException
 from pathlib import Path
 from typing import Any, Dict, List
 import os, re
+from .scope_guardrails import evaluate_target_scope, load_scope_policy
 
 ROOT = Path(__file__).resolve().parents[4]
 CONFIG = ROOT / 'configs' / 'policies.yaml'
@@ -71,12 +72,11 @@ def _extract_host_or_text(value: str) -> str:
 
 
 def is_in_scope(value: str) -> bool:
-    v = _extract_host_or_text(value)
-    if any(rx.search(v) for rx in _DENY_RX):
-        return False
-    if not _ALLOWED_RX:
-        return False
-    return any(rx.search(v) for rx in _ALLOWED_RX)
+    # Canonical scope authority is scope_guardrails.
+    # Keep this helper as a compatibility bridge for legacy routers.
+    policy = load_scope_policy()
+    decision = evaluate_target_scope(_extract_host_or_text(value), policy)
+    return decision.allowed
 
 
 # Simple, explicit scope acceptance check dependency for execute-mode

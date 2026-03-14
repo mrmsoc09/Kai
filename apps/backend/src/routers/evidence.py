@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
@@ -9,7 +10,9 @@ from ..schemas.evidence import Evidence
 
 router = APIRouter(prefix='/evidence', tags=['evidence'])
 ROOT = Path(__file__).resolve().parents[4]
-EV_BASE = ROOT / 'artifacts' / 'evidence'
+ENV_ARTIFACTS = os.getenv("K1_ARTIFACTS_ROOT")
+ARTIFACTS_ROOT = Path(ENV_ARTIFACTS) if ENV_ARTIFACTS else (ROOT / 'artifacts')
+EV_BASE = ARTIFACTS_ROOT / 'evidence'
 EV_BASE.mkdir(parents=True, exist_ok=True)
 
 def _ev_path(eid: str) -> Path:
