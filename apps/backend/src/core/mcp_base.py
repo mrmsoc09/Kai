@@ -11,7 +11,7 @@ import json
 import asyncio
 import subprocess
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ToolType(str, Enum):
@@ -54,7 +54,7 @@ class MCPRequest:
     request_id: str
     tool_name: str
     parameters: Dict[str, Any]
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -64,7 +64,7 @@ class MCPResponse:
     success: bool
     result: Optional[Dict[str, Any]] = None
     error: Optional[str] = None
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_json(self) -> str:
         return json.dumps({
@@ -153,7 +153,7 @@ class BaseMCPServer(ABC):
 
             # Update tool stats
             tool.execution_count += 1
-            tool.last_executed = datetime.utcnow()
+            tool.last_executed = datetime.now(timezone.utc)
 
             self.stats["requests_processed"] += 1
 
@@ -290,7 +290,7 @@ class MCPServerManager:
             )
 
         request = MCPRequest(
-            request_id=f"{server_id}:{tool_name}:{datetime.utcnow().timestamp()}",
+            request_id=f"{server_id}:{tool_name}:{datetime.now(timezone.utc).timestamp()}",
             tool_name=tool_name,
             parameters=parameters
         )
@@ -300,7 +300,7 @@ class MCPServerManager:
     def get_stats(self) -> Dict[str, Any]:
         """Get statistics for all servers"""
         return {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "servers": [server.get_stats() for server in self.servers.values()],
             "total_tools": sum(len(server.tools) for server in self.servers.values()),
             "total_requests": sum(server.stats["requests_received"] for server in self.servers.values()),

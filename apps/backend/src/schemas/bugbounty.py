@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import timezone, datetime
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -10,7 +10,7 @@ class Target(BaseModel):
     target_id: str
     value: str
     target_type: str = "domain"
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class ScopeRule(BaseModel):
@@ -27,7 +27,7 @@ class WorkflowRun(BaseModel):
     status: str
     safe_mode: bool = True
     dry_run: bool = False
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ended_at: datetime | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
@@ -37,7 +37,7 @@ class StageRun(BaseModel):
     run_id: str
     stage_name: str
     status: str
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ended_at: datetime | None = None
     tool_count: int = 0
     success_count: int = 0
@@ -51,7 +51,7 @@ class ToolExecution(BaseModel):
     tool_name: str
     status: str
     target: str | None = None
-    started_at: datetime = Field(default_factory=datetime.utcnow)
+    started_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     ended_at: datetime | None = None
     duration_ms: float | None = None
     exit_code: int | None = None
@@ -158,7 +158,7 @@ class CorrelationRecord(BaseModel):
 
 class AnalystExport(BaseModel):
     run_id: str
-    generated_at: datetime = Field(default_factory=datetime.utcnow)
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     summary: dict[str, Any] = Field(default_factory=dict)
     prioritized_findings: list[dict[str, Any]] = Field(default_factory=list)
     raw_report_path: str | None = None

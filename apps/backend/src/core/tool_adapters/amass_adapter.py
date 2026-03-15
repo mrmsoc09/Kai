@@ -6,7 +6,7 @@ Subdomain enumeration and network mapping
 import asyncio
 import json
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
@@ -131,7 +131,7 @@ class AmassAdapter(BaseToolAdapter):
         Returns:
             ToolExecutionResult with subdomains
         """
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         options = options or {}
 
         # Validate target
@@ -140,7 +140,7 @@ class AmassAdapter(BaseToolAdapter):
                 tool_name=self.tool_name,
                 success=False,
                 started_at=started_at,
-                completed_at=datetime.utcnow(),
+                completed_at=datetime.now(timezone.utc),
                 duration_seconds=0,
                 error_message="Invalid target"
             )
@@ -187,7 +187,7 @@ class AmassAdapter(BaseToolAdapter):
                 timeout=timeout_seconds
             )
 
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             raw_output = stdout.decode()
@@ -214,7 +214,7 @@ class AmassAdapter(BaseToolAdapter):
             )
 
         except asyncio.TimeoutError:
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             self.logger.error(f"amass timed out after {timeout_mins} minutes")
@@ -229,7 +229,7 @@ class AmassAdapter(BaseToolAdapter):
             )
 
         except Exception as e:
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             self.logger.error(f"amass execution failed: {str(e)}")
@@ -275,7 +275,7 @@ class AmassAdapter(BaseToolAdapter):
                     "addresses": data.get("addresses", []),
                     "tag": data.get("tag", ""),
                     "sources": data.get("sources", []),
-                    "discovered_at": datetime.utcnow().isoformat()
+                    "discovered_at": datetime.now(timezone.utc).isoformat()
                 }
 
                 findings.append(finding)

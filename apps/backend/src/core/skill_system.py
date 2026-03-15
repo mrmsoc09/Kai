@@ -6,7 +6,7 @@ Advanced skill profiling, progression tracking, and mastery certification
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 
 
@@ -104,7 +104,7 @@ class SkillProfile:
             self.certification_level = ProficiencyLevel.MASTER
 
         if self.proficiency >= self.certification_level.value and not self.certified_at:
-            self.certified_at = datetime.utcnow()
+            self.certified_at = datetime.now(timezone.utc)
 
     def get_success_rate(self) -> float:
         """Get recent success rate"""
@@ -151,7 +151,7 @@ class AgentSkillSet:
     average_proficiency: float = 0.0
     specialization_score: float = 0.0  # How specialized agent is
     learning_velocity: float = 0.0  # How fast improving overall
-    updated_at: datetime = field(default_factory=datetime.utcnow)
+    updated_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def add_or_update_skill(self, skill_name: str, category: SkillCategory) -> SkillProfile:
         """Add new skill or get existing"""
@@ -189,7 +189,7 @@ class AgentSkillSet:
         learning_rates = [s.learning_rate for s in self.skills.values()]
         self.learning_velocity = sum(learning_rates) / len(learning_rates) if learning_rates else 0.0
 
-        self.updated_at = datetime.utcnow()
+        self.updated_at = datetime.now(timezone.utc)
 
     def get_proficient_skills(self, min_proficiency: float = 0.5) -> List[str]:
         """Get skills at or above proficiency threshold"""

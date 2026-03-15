@@ -17,7 +17,7 @@ jobs:
     env:
       PYTHONPATH: .
       K1_TEST_MODE: "true"
-      K1_DEV_TOKEN: "ci-token"
+      # K1_DEV_TOKEN intentionally omitted — tests must authenticate via /auth/login
 
     steps:
       - name: Checkout
@@ -42,3 +42,20 @@ jobs:
 
       - name: Run tests
         run: bash scripts/check_backend_quality.sh --tests-only
+
+  secret-scan:
+    name: Secret Scan (truffleHog)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog secret scan
+        uses: trufflesecurity/trufflehog@v3.88.1
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified

@@ -9,7 +9,7 @@ import json
 import uuid
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import asyncio
 
@@ -89,7 +89,7 @@ class AgentZeroCommand:
     scope: Dict[str, Any] = None
     parameters: Dict[str, Any] = None
     user_context: Dict[str, Any] = None
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -115,7 +115,7 @@ class K1Finding:
     confidence: float = 0.0
     evidence: List[str] = None
     mcp_server: str = ""  # Which MCP server discovered it
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     source_workflow_id: str = ""
 
     def __post_init__(self):
@@ -203,7 +203,7 @@ class AgentZeroBridge:
                     "source": "k1",
                     "plugin_id": self.plugin_id,
                     "findings": [f.to_dict() for f in findings],
-                    "timestamp": datetime.utcnow().isoformat()
+                    "timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
 
@@ -220,7 +220,7 @@ class AgentZeroBridge:
             "plugin_id": self.plugin_id,
             "mcp_servers": self.plugin_info.mcp_servers,
             "servers_online": len(self.plugin_info.mcp_servers),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
     async def coordinate_workflow(
@@ -239,7 +239,7 @@ class AgentZeroBridge:
             "target": target,
             "scope": scope,
             "initiated_by": agent_zero_user_id or "agent_zero",
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "status": "created",
             "k1_api_endpoint": f"{self.k1_api_url}/workflows/{workflow_id}",
             "websocket_url": f"ws://localhost:8000/ws/workflows/{workflow_id}"
@@ -296,7 +296,7 @@ class AgentZeroBridge:
     async def get_agent_status(self) -> Dict[str, Any]:
         """Get current status of all K1 agents"""
         return {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "k1_status": "online",
             "agents": {
                 "total": 6,

@@ -11,7 +11,7 @@ import httpx
 import asyncio
 import json
 from typing import Dict, List, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from dataclasses import dataclass, asdict
 import logging
@@ -49,7 +49,7 @@ class EPSSCache:
             score = self.memory_cache[cve_id]
             # Check if still valid
             fetched_at = datetime.fromisoformat(score.fetched_at)
-            if datetime.utcnow() - fetched_at < self.ttl:
+            if datetime.now(timezone.utc) - fetched_at < self.ttl:
                 return score
 
         # Check file cache
@@ -65,7 +65,7 @@ class EPSSCache:
 
             # Check if still valid
             fetched_at = datetime.fromisoformat(score.fetched_at)
-            if datetime.utcnow() - fetched_at < self.ttl:
+            if datetime.now(timezone.utc) - fetched_at < self.ttl:
                 self.memory_cache[cve_id] = score
                 return score
             else:
@@ -160,7 +160,7 @@ class EPSSClient:
                 epss=float(cve_data["epss"]),
                 percentile=float(cve_data["percentile"]),
                 date=cve_data["date"],
-                fetched_at=datetime.utcnow().isoformat(),
+                fetched_at=datetime.now(timezone.utc).isoformat(),
             )
 
             # Cache it
@@ -227,7 +227,7 @@ class EPSSClient:
                         epss=float(cve_data["epss"]),
                         percentile=float(cve_data["percentile"]),
                         date=cve_data["date"],
-                        fetched_at=datetime.utcnow().isoformat(),
+                        fetched_at=datetime.now(timezone.utc).isoformat(),
                     )
 
                     results[score.cve_id] = score
@@ -276,7 +276,7 @@ class EPSSClient:
                     epss=float(cve_data["epss"]),
                     percentile=float(cve_data["percentile"]),
                     date=cve_data["date"],
-                    fetched_at=datetime.utcnow().isoformat(),
+                    fetched_at=datetime.now(timezone.utc).isoformat(),
                 )
                 results.append(score)
 

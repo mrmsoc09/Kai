@@ -327,6 +327,8 @@ export default function ApprovalsDashboard() {
                           __html: DOMPurify.sanitize(selected.content.email_draft.body, {
                             ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'u', 'strong', 'em', 'a', 'ul', 'ol', 'li'],
                             ALLOWED_ATTR: ['href'],
+                            FORBID_ATTR: ['onerror', 'onload'],
+                            ALLOWED_URI_REGEXP: /^(https?|mailto):/i,
                           }),
                         }}
                       />

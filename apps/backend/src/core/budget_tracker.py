@@ -7,7 +7,7 @@ import json
 import os
 import fcntl
 from dataclasses import dataclass, field, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from enum import Enum
@@ -35,7 +35,7 @@ class BudgetDecision(str, Enum):
 @dataclass
 class BudgetAlert:
     """Budget alert notification"""
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     session_id: Optional[str] = None
     alert_type: str = "warning"  # "warning", "critical", "exhausted"
     current_spent_cents: float = 0.0
@@ -51,8 +51,8 @@ class SessionBudget:
     session_id: str
     initial_budget_cents: int = 1000  # $10 default
     spent_cents: float = 0.0
-    created_at: datetime = field(default_factory=datetime.utcnow)
-    last_updated: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    last_updated: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     transaction_count: int = 0
     alerts_sent: List[BudgetAlert] = field(default_factory=list)
 
@@ -121,7 +121,7 @@ class BudgetTransaction:
     """Individual cost transaction"""
     transaction_id: str
     session_id: str
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     task_id: str = ""
     model_id: str = ""
     cost_cents: float = 0.0
@@ -281,7 +281,7 @@ class BudgetTracker:
             old_daily_spent = daily_budget.spent_cents
 
             session_budget.spent_cents += cost_cents
-            session_budget.last_updated = datetime.utcnow()
+            session_budget.last_updated = datetime.now(timezone.utc)
             session_budget.transaction_count += 1
 
             daily_budget.spent_cents += cost_cents
@@ -337,7 +337,7 @@ class BudgetTracker:
 
     async def reset_daily_budget(self) -> tuple[bool, str]:
         """Reset daily budget (called at midnight)"""
-        today = datetime.utcnow().strftime("%Y-%m-%d")
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         if today in self.daily_budgets:
             old_daily = self.daily_budgets[today]
@@ -356,7 +356,7 @@ class BudgetTracker:
 
     async def get_budget_analytics(self) -> Dict[str, Any]:
         """Get comprehensive budget analytics"""
-        today = datetime.utcnow().strftime("%Y-%m-%d")
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         daily_budget = self._get_or_create_daily()
 
         # Calculate aggregates
@@ -421,7 +421,7 @@ class BudgetTracker:
 
     def _get_or_create_daily(self) -> DailyBudget:
         """Get or create daily budget"""
-        today = datetime.utcnow().strftime("%Y-%m-%d")
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         if today not in self.daily_budgets:
             self.daily_budgets[today] = DailyBudget(
@@ -504,7 +504,7 @@ class BudgetTracker:
                 "sessions": {sid: asdict(budget) for sid, budget in self.session_budgets.items()},
                 "daily": {date: asdict(budget) for date, budget in self.daily_budgets.items()},
                 "transactions": [asdict(txn) for txn in self.transactions[-1000:]],  # Keep last 1000
-                "last_updated": datetime.utcnow().isoformat()
+                "last_updated": datetime.now(timezone.utc).isoformat()
             }
 
             state_file = self.storage_dir / "budget_state.json"

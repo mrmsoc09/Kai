@@ -6,7 +6,7 @@ Routes tasks to optimal models based on complexity, cost, and OPSEC requirements
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
+from datetime import timezone, datetime
 import asyncio
 import json
 import subprocess
@@ -51,7 +51,7 @@ class ModelMetrics:
     code_quality: float  # 0-1, capability for code generation
     opsec_score: float  # 0-1, privacy/security score (local=1.0, cloud=0.3-0.8)
     supported_complexity: Tuple[int, int]  # Min-max complexity it handles well
-    last_checked: datetime = field(default_factory=datetime.utcnow)
+    last_checked: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -79,7 +79,7 @@ class ModelBid:
     estimated_latency_ms: float
     confidence_score: float  # 0-1, how suitable is this model?
     reasoning: str
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -91,7 +91,7 @@ class TaskAssignment:
     bid: ModelBid
     verification_model: Optional[str] = None  # Model to verify result
     verification_family: Optional[ModelFamily] = None
-    assigned_at: datetime = field(default_factory=datetime.utcnow)
+    assigned_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
     actual_cost_cents: Optional[float] = None

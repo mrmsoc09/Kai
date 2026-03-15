@@ -6,7 +6,7 @@ Exposes hunting workflow state machine and phase transitions
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 router = APIRouter(prefix="/api/orchestration", tags=["orchestration"])
@@ -379,7 +379,7 @@ async def add_finding(
             "affected_endpoint": finding.affected_endpoint,
             "cvss_score": finding.cvss_score,
             "proof_of_concept": finding.proof_of_concept,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
         await graph.add_finding(finding_dict)

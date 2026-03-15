@@ -305,7 +305,7 @@ async def format_check(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 # ========== Phase 6: Multi-Format Export & Evidence Embedding ==========
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 # Cache for generated reports (in production, use Redis)
 _report_cache: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
@@ -329,7 +329,7 @@ MAX_CACHE_ENTRIES = max(1, _env_int("K1_REPORT_CACHE_MAX_ENTRIES", 256))
 def _generate_report_id(stakeholder: str, finding_title: str) -> str:
     """Generate unique report ID."""
     import hashlib
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     title_hash = hashlib.sha256(finding_title.encode()).hexdigest()[:8]
     return f"REPORT_{stakeholder.upper()}_{timestamp}_{title_hash}"
 
@@ -340,7 +340,7 @@ def _get_from_cache(report_id: str) -> Dict[str, Any] | None:
     if report_id not in _report_cache:
         return None
 
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     if now > _cache_expiry.get(report_id, now):
         # Cache expired
         del _report_cache[report_id]
@@ -358,13 +358,13 @@ def _cache_report(report_id: str, report_data: Dict[str, Any]):
     if report_id in _report_cache:
         del _report_cache[report_id]
     _report_cache[report_id] = report_data
-    _cache_expiry[report_id] = datetime.utcnow() + timedelta(minutes=CACHE_TTL_MINUTES)
+    _cache_expiry[report_id] = datetime.now(timezone.utc) + timedelta(minutes=CACHE_TTL_MINUTES)
     _report_cache.move_to_end(report_id)
     _enforce_cache_bounds()
 
 
 def _prune_expired_cache() -> None:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     expired_ids = [rid for rid, expiry in _cache_expiry.items() if now > expiry]
     for rid in expired_ids:
         _cache_expiry.pop(rid, None)
@@ -400,7 +400,7 @@ async def generate_all_formats(payload: Dict[str, Any]) -> Dict[str, Any]:
             'formats': {
                 'markdown': {
                     'size_bytes': len(markdown_content.encode()),
-                    'generated_at': datetime.utcnow().isoformat(),
+                    'generated_at': datetime.now(timezone.utc).isoformat(),
                 }
             }
         }
@@ -411,7 +411,7 @@ async def generate_all_formats(payload: Dict[str, Any]) -> Dict[str, Any]:
             pdf_bytes = generate_pdf_from_markdown(markdown_content, stakeholder=stakeholder)
             result['formats']['pdf'] = {
                 'size_bytes': len(pdf_bytes) if isinstance(pdf_bytes, bytes) else len(pdf_bytes.encode()),
-                'generated_at': datetime.utcnow().isoformat(),
+                'generated_at': datetime.now(timezone.utc).isoformat(),
             }
         except Exception as e:
             result['formats']['pdf'] = {'error': str(e)}
@@ -480,7 +480,7 @@ async def embed_evidence(payload: Dict[str, Any]) -> Dict[str, Any]:
         else:
             raise HTTPException(400, f'Unsupported evidence type: {evidence_type}')
 
-        return {'ok': True, 'embedding': result, 'embedded_at': datetime.utcnow().isoformat()}
+        return {'ok': True, 'embedding': result, 'embedded_at': datetime.now(timezone.utc).isoformat()}
 
     except HTTPException:
         raise
@@ -494,7 +494,7 @@ async def cache_stats() -> Dict[str, Any]:
     """Get report cache statistics."""
     try:
         _prune_expired_cache()
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
         active_count = sum(1 for expiry in _cache_expiry.values() if now <= expiry)
 
         return {
@@ -504,7 +504,7 @@ async def cache_stats() -> Dict[str, Any]:
                 'active_reports': active_count,
                 'cache_ttl_minutes': CACHE_TTL_MINUTES,
                 'max_cache_entries': MAX_CACHE_ENTRIES,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
             }
         }
 
@@ -526,7 +526,7 @@ async def get_cached_report(report_id: str) -> Dict[str, Any]:
             'ok': True,
             'report_id': report_id,
             'report': report,
-            'retrieved_at': datetime.utcnow().isoformat(),
+            'retrieved_at': datetime.now(timezone.utc).isoformat(),
         }
 
     except HTTPException:
@@ -547,7 +547,7 @@ async def delete_cached_report(report_id: str) -> Dict[str, Any]:
             return {
                 'ok': True,
                 'report_id': report_id,
-                'deleted_at': datetime.utcnow().isoformat(),
+                'deleted_at': datetime.now(timezone.utc).isoformat(),
             }
 
         raise HTTPException(status_code=404, detail=f"Report {report_id} not in cache")

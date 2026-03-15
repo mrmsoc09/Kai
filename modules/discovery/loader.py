@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ProgramLoader:
@@ -144,7 +144,7 @@ class ProgramLoader:
             with open(self.validation_json, "r", encoding="utf-8") as f:
                 return json.load(f)
         except FileNotFoundError:
-            return {"validation": [], "checked_at": datetime.utcnow().isoformat()}
+            return {"validation": [], "checked_at": datetime.now(timezone.utc).isoformat()}
 
     def get_market_distribution(self) -> Dict[str, int]:
         """Get count of programs by market."""

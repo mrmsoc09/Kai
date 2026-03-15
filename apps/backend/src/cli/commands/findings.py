@@ -11,7 +11,7 @@ Usage:
 import click
 import json
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ..ui import (
@@ -166,7 +166,7 @@ def export_findings(output_format: str, output: str, status: Optional[str], seve
         if output_format == "json":
             with open(output_path, "w") as f:
                 json.dump({
-                    "exported_at": datetime.utcnow().isoformat(),
+                    "exported_at": datetime.now(timezone.utc).isoformat(),
                     "total": len(findings_list),
                     "findings": findings_list
                 }, f, indent=2, default=str)
@@ -182,7 +182,7 @@ def export_findings(output_format: str, output: str, status: Optional[str], seve
         elif output_format == "markdown":
             with open(output_path, "w") as f:
                 f.write("# Vulnerability Findings Report\n\n")
-                f.write(f"**Generated:** {datetime.utcnow().isoformat()}\n")
+                f.write(f"**Generated:** {datetime.now(timezone.utc).isoformat()}\n")
                 f.write(f"**Total Findings:** {len(findings_list)}\n\n")
                 f.write("---\n\n")
 
@@ -567,7 +567,7 @@ def _export_html(output_path: Path, findings: List[dict]):
 </head>
 <body>
     <h1>K1 Vulnerability Findings Report</h1>
-    <p class="meta">Generated: """ + datetime.utcnow().isoformat() + f"""</p>
+    <p class="meta">Generated: """ + datetime.now(timezone.utc).isoformat() + f"""</p>
     <p class="meta">Total Findings: {len(findings)}</p>
     <hr>
 """

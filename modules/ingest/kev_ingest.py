@@ -6,7 +6,7 @@ os.makedirs(ART_DIR, exist_ok=True)
 KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
 
 def _now_iso():
-    return dt.datetime.utcnow().isoformat() + "Z"
+    return dt.datetime.now(timezone.utc).isoformat() + "Z"
 
 def ingest(save_name: str = "cisa_kev.jsonl") -> str:
     out_path = os.path.join(ART_DIR, save_name)

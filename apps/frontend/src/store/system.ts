@@ -15,17 +15,21 @@ type AuthState = {
 type K1Store = {
   auth: AuthState
   system: SystemState | null
+  llmConfig: any | null
   login: (token: string, user: UserProfile) => void
   logout: () => void
   setSystem: (s: SystemState) => void
+  setLLMConfig: (config: any) => void
 }
 
 export const useStore = create<K1Store>()((set) => ({
   auth: { token: null, user: null },
   system: null,
+  llmConfig: null,
   login: (token, user) => set((s) => ({ ...s, auth: { token, user } })),
-  logout: () => set((s) => ({ ...s, auth: { token: null, user: null } })),
+  logout: () => set((s) => ({ ...s, auth: { token: null, user: null }, llmConfig: null })),
   setSystem: (s) => set(() => ({ system: s })),
+  setLLMConfig: (config) => set(() => ({ llmConfig: config })),
 }))
 
 // Backward-compat shim.

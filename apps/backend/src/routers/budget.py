@@ -6,7 +6,7 @@ Provides endpoints for budget monitoring, analytics, and emergency controls
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..core.budget_tracker import get_budget_tracker, BudgetStatus
 from ..core.cost_controller import get_cost_controller
@@ -237,7 +237,7 @@ async def reset_daily_budget():
         return {
             "success": True,
             "message": message,
-            "reset_at": datetime.utcnow().isoformat()
+            "reset_at": datetime.now(timezone.utc).isoformat()
         }
 
     except HTTPException:
@@ -269,14 +269,14 @@ async def budget_health_check():
             },
             "daily_budget_status": daily.status.value,
             "daily_utilization_percent": daily.utilization_percent,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
     except Exception as e:
         return {
             "status": "unhealthy",
             "error": str(e),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
 

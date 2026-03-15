@@ -6,7 +6,7 @@ Secret and credential scanner for git repositories and filesystems
 import asyncio
 import json
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
@@ -113,7 +113,7 @@ class TruffleHogAdapter(BaseToolAdapter):
         Returns:
             ToolExecutionResult with secrets found
         """
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         options = options or {}
 
         # Validate target
@@ -122,7 +122,7 @@ class TruffleHogAdapter(BaseToolAdapter):
                 tool_name=self.tool_name,
                 success=False,
                 started_at=started_at,
-                completed_at=datetime.utcnow(),
+                completed_at=datetime.now(timezone.utc),
                 duration_seconds=0,
                 error_message="Invalid target"
             )
@@ -194,7 +194,7 @@ class TruffleHogAdapter(BaseToolAdapter):
                 timeout=3600
             )
 
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             raw_output = stdout.decode()
@@ -235,7 +235,7 @@ class TruffleHogAdapter(BaseToolAdapter):
             )
 
         except asyncio.TimeoutError:
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             self.logger.error("trufflehog scan timed out after 60 minutes")
@@ -250,7 +250,7 @@ class TruffleHogAdapter(BaseToolAdapter):
             )
 
         except Exception as e:
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             self.logger.error(f"trufflehog execution failed: {str(e)}")
@@ -309,7 +309,7 @@ class TruffleHogAdapter(BaseToolAdapter):
                     "email": data_field.get("email", ""),
                     "timestamp": data_field.get("timestamp", ""),
                     "line": data_field.get("line", 0),
-                    "discovered_at": datetime.utcnow().isoformat(),
+                    "discovered_at": datetime.now(timezone.utc).isoformat(),
                     "target": target,
                     "severity": "critical" if verified else "high"
                 }

@@ -17,26 +17,44 @@ _redis_client = None
 _redis_unavailable = False  # circuit-breaker to avoid repeated failed connects
 
 
+def is_fail_closed() -> bool:
+    """Return True if we should fail-closed when Redis is unavailable."""
+    is_prod = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    default_val = "true" if is_prod else "false"
+    return os.getenv("K1_BLOCKLIST_FAIL_CLOSED", default_val).lower() == "true"
+
+
 def _get_redis():
     global _redis_client, _redis_unavailable
-    if _redis_unavailable:
-        return None
     if _redis_client is not None:
         return _redis_client
+    
     url = os.getenv("REDIS_URL")
     if not url:
-        _redis_unavailable = True
         return None
+        
     try:
         import redis
         client = redis.Redis.from_url(url, decode_responses=True, socket_timeout=1)
         client.ping()
         _redis_client = client
+        _redis_unavailable = False
         return _redis_client
     except Exception as exc:
-        logger.warning("token_blocklist: Redis unavailable (%s); logout will not revoke tokens", exc)
+        if not _redis_unavailable:
+            logger.error("MONITORING_ALERT: token_blocklist Redis connection failed: %s", exc)
         _redis_unavailable = True
         return None
+
+
+def get_blocklist_status() -> dict:
+    """Return status of blocklist for health checks."""
+    r = _get_redis()
+    return {
+        "available": r is not None,
+        "fail_closed": is_fail_closed(),
+        "error": _redis_unavailable
+    }
 
 
 _BLOCKLIST_PREFIX = "jti_block:"
@@ -71,9 +89,14 @@ def is_revoked(jti: Optional[str]) -> bool:
         return False
     r = _get_redis()
     if r is None:
+        if is_fail_closed():
+            logger.warning("token_blocklist: Redis unavailable and fail-closed active; blocking token jti=%s", jti)
+            return True
         return False
     try:
         return bool(r.exists(f"{_BLOCKLIST_PREFIX}{jti}"))
     except Exception as exc:
         logger.warning("token_blocklist: failed to check jti=%s: %s", jti, exc)
+        if is_fail_closed():
+            return True
         return False

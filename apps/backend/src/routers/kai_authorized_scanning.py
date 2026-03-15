@@ -3,187 +3,35 @@ Kai Authorized Scanning Router
 Ensures all vulnerability scanning is authorized, logged, and compliant
 """
 
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, HTTPException, Query, Header, Request
-from fastapi.responses import JSONResponse
+from datetime import datetime, timezone
 import logging
-from datetime import datetime, timedelta
 
-from ..core.kai_security_guardrails import (
-    get_guardrail_engine,
-    AuthorizationCertificate,
-    ScanAuthorization,
-    ScanScope,
-)
-from ..core.auth import get_current_user, require_roles, ROLE_ADMIN
-from ..schemas.common import Response
+from ..core.kai_security_guardrails import get_guardrail_engine, AuthorizationCertificate, ScanAuditLog
+from ..core.auth import get_current_user, User, require_roles, ROLE_ADMIN, ROLE_ANALYST
+from ..schemas.base import Response
+from ..models.campaign import AuditEvent
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..core.hil_db import get_db
 
 logger = logging.getLogger(__name__)
-
-router = APIRouter(
-    prefix="/api/v1/kai",
-    tags=["Kai Authorized Scanning"],
-    dependencies=[Depends(get_current_user)],  # all endpoints require auth
-)
-
-_require_admin = Depends(require_roles(ROLE_ADMIN))
-
-# Get the guardrail engine
+router = APIRouter(prefix="/kai", tags=["security-guardrails"])
 guardrails = get_guardrail_engine()
-
-
-@router.get("/health", tags=["Health"])
-async def kai_health():
-    """Health check with security stats"""
-    stats = guardrails.get_stats()
-    return Response(
-        success=True,
-        data={
-            "status": "healthy",
-            "security_stats": stats,
-        },
-    )
-
-
-# ============================================================================
-# Authorization Management
-# ============================================================================
-
-
-@router.post("/authorize", response_model=Response, dependencies=[_require_admin])
-async def register_authorization(
-    authorization_type: str = Query(...),
-    target: str = Query(...),
-    authorized_by: str = Query(...),
-    duration_days: int = Query(90),
-    scope: Optional[str] = Query("single_domain"),
-    methods: Optional[str] = Query("osint,vulnerability_scanning"),
-    metadata: Optional[Dict[str, Any]] = None,
-):
-    """
-    Register an authorization certificate for scanning
-
-    Args:
-        authorization_type: "bug_bounty_platform", "authorized_assessment", etc.
-        target: Domain, IP range, or platform ID
-        authorized_by: Name/email of who authorized this scan
-        duration_days: How long this authorization is valid (default: 90)
-        scope: "single_domain", "domain_wildcard", "ip_range", etc.
-        methods: Comma-separated methods allowed (osint, vulnerability_scanning, web_testing, etc.)
-
-    Example:
-        POST /api/v1/kai/authorize
-        ?authorization_type=bug_bounty_platform
-        &target=example.com
-        &authorized_by=admin@example.com
-        &methods=osint,vulnerability_scanning
-    """
-    try:
-        import uuid
-
-        # Parse authorization type
-        try:
-            auth_type = ScanAuthorization(authorization_type.lower())
-        except ValueError:
-            return Response(
-                success=False,
-                data={
-                    "error": f"Invalid authorization_type. Must be one of: {[e.value for e in ScanAuthorization]}"
-                },
-            )
-
-        # Parse scope
-        try:
-            scan_scope = ScanScope(scope.lower())
-        except ValueError:
-            return Response(
-                success=False,
-                data={
-                    "error": f"Invalid scope. Must be one of: {[e.value for e in ScanScope]}"
-                },
-            )
-
-        # Parse methods
-        allowed_methods = [m.strip() for m in methods.split(",") if m.strip()]
-
-        # Create certificate
-        cert = AuthorizationCertificate(
-            certificate_id=str(uuid.uuid4()),
-            authorization_type=auth_type,
-            target=target,
-            scope=scan_scope,
-            authorized_by=authorized_by,
-            issued_at=datetime.utcnow(),
-            expires_at=datetime.utcnow() + timedelta(days=duration_days),
-            allowed_methods=allowed_methods,
-            metadata=metadata or {},
-        )
-
-        # Register with guardrails
-        success = guardrails.register_authorization(cert)
-
-        if not success:
-            return Response(
-                success=False,
-                data={"error": "Failed to register authorization certificate"},
-            )
-
-        return Response(
-            success=True,
-            data={
-                "certificate_id": cert.certificate_id,
-                "authorization_type": cert.authorization_type.value,
-                "target": cert.target,
-                "expires_at": cert.expires_at.isoformat(),
-                "allowed_methods": cert.allowed_methods,
-                "message": f"✅ Authorization registered for {target}",
-            },
-        )
-
-    except Exception as e:
-        logger.error(f"Error registering authorization: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/authorizations", response_model=Response)
-async def list_authorizations():
-    """List all active authorizations"""
-    try:
-        active_certs = [
-            cert.to_dict()
-            for cert in guardrails.authorized_certificates.values()
-            if cert.is_valid()
-        ]
-
-        return Response(
-            success=True,
-            data={
-                "authorizations": active_certs,
-                "total": len(active_certs),
-            },
-        )
-
-    except Exception as e:
-        logger.error(f"Error listing authorizations: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ============================================================================
-# Authorized Scanning Operations
-# ============================================================================
-
 
 @router.post("/scan/osint", response_model=Response)
 async def start_osint_scan(
-    user_id: str = Query(...),
     target: str = Query(...),
     request: Request = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Start an authorized OSINT reconnaissance
     Requires valid authorization certificate
     """
     try:
+        user_id = current_user.id
         ip_address = request.client.host if request else None
         user_agent = request.headers.get("user-agent") if request else None
 
@@ -198,6 +46,21 @@ async def start_osint_scan(
         )
 
         if not authorized:
+            # Direct DB write for denied operation
+            db_event = AuditEvent(
+                event_type="scan_denied",
+                actor=user_id,
+                message=f"OSINT scan denied for {target}: {reason}",
+                event_payload_json={
+                    "target": target,
+                    "reason": reason,
+                    "ip": ip_address,
+                    "scan_type": "osint"
+                }
+            )
+            db.add(db_event)
+            await db.commit()
+            
             return Response(
                 success=False,
                 data={
@@ -208,7 +71,7 @@ async def start_osint_scan(
                 status_code=403,
             )
 
-        # Log the operation
+        # Log the operation in GuardRailEngine
         log_id = guardrails.log_scan_operation(
             user_id=user_id,
             certificate_id=cert.certificate_id,
@@ -219,8 +82,24 @@ async def start_osint_scan(
             ip_address=ip_address,
             user_agent=user_agent,
         )
-
-        logger.info(f"✅ OSINT scan authorized for {target} by {user_id}")
+        
+        # Direct DB write for started operation
+        db_event = AuditEvent(
+            event_type="scan_started",
+            actor=user_id,
+            message=f"OSINT scan started for {target}",
+            event_payload_json={
+                "scan_id": log_id,
+                "target": target,
+                "certificate_id": cert.certificate_id,
+                "ip": ip_address,
+                "scan_type": "osint",
+                "scan_method": "osint",
+                "status": "started"
+            }
+        )
+        db.add(db_event)
+        await db.commit()
 
         return Response(
             success=True,
@@ -240,16 +119,18 @@ async def start_osint_scan(
 
 @router.post("/scan/vulnerability", response_model=Response)
 async def start_vulnerability_scan(
-    user_id: str = Query(...),
     target: str = Query(...),
     scan_type: str = Query("comprehensive"),
     request: Request = None,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Start an authorized vulnerability scan
     Requires explicit authorization certificate
     """
     try:
+        user_id = current_user.id
         ip_address = request.client.host if request else None
         user_agent = request.headers.get("user-agent") if request else None
 
@@ -264,17 +145,21 @@ async def start_vulnerability_scan(
         )
 
         if not authorized:
-            guardrails.log_scan_operation(
-                user_id=user_id,
-                certificate_id="unauthorized",
-                target=target,
-                scan_type="vulnerability_scan",
-                scan_method="vulnerability_scanning",
-                status="denied",
-                error_message=reason,
-                ip_address=ip_address,
-                user_agent=user_agent,
+            # Direct DB write for denied operation
+            db_event = AuditEvent(
+                event_type="scan_denied",
+                actor=user_id,
+                message=f"Vulnerability scan denied for {target}: {reason}",
+                event_payload_json={
+                    "target": target,
+                    "reason": reason,
+                    "ip": ip_address,
+                    "scan_type": "vulnerability_scan"
+                }
             )
+            db.add(db_event)
+            await db.commit()
+            
             return Response(
                 success=False,
                 data={
@@ -285,7 +170,7 @@ async def start_vulnerability_scan(
                 status_code=403,
             )
 
-        # Log the operation
+        # Log the operation in GuardRailEngine
         log_id = guardrails.log_scan_operation(
             user_id=user_id,
             certificate_id=cert.certificate_id,
@@ -296,10 +181,24 @@ async def start_vulnerability_scan(
             ip_address=ip_address,
             user_agent=user_agent,
         )
-
-        logger.info(
-            f"✅ Vulnerability scan authorized for {target} by {user_id} (type: {scan_type})"
+        
+        # Direct DB write for started operation
+        db_event = AuditEvent(
+            event_type="scan_started",
+            actor=user_id,
+            message=f"Vulnerability scan started for {target}",
+            event_payload_json={
+                "scan_id": log_id,
+                "target": target,
+                "certificate_id": cert.certificate_id,
+                "ip": ip_address,
+                "scan_type": "vulnerability_scan",
+                "scan_method": "vulnerability_scanning",
+                "status": "started"
+            }
         )
+        db.add(db_event)
+        await db.commit()
 
         return Response(
             success=True,
@@ -323,22 +222,23 @@ async def start_vulnerability_scan(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============================================================================
-# Audit and Compliance
-# ============================================================================
-
-
 @router.get("/audit-logs", response_model=Response)
 async def get_audit_logs(
     user_id: Optional[str] = Query(None),
     days: int = Query(30),
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
     """
     Retrieve audit logs for compliance review
     Shows all scanning operations, authorizations, and denials
     """
     try:
-        logs = guardrails.get_audit_logs(user_id=user_id, days=days)
+        is_admin = ROLE_ADMIN in current_user.roles
+        effective_user_id = user_id if is_admin else current_user.id
+        
+        # Query from database
+        logs = await guardrails.get_audit_logs(db=db, user_id=effective_user_id, days=days)
 
         return Response(
             success=True,
@@ -346,7 +246,7 @@ async def get_audit_logs(
                 "logs": [log.to_dict() for log in logs],
                 "total": len(logs),
                 "period_days": days,
-                "filtered_by_user": user_id,
+                "filtered_by_user": effective_user_id,
             },
         )
 
@@ -355,141 +255,23 @@ async def get_audit_logs(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/security-alerts", response_model=Response)
-async def get_security_alerts():
-    """
-    Get security alerts for suspicious activities
-    - Repeated authorization failures
-    - Rapid-fire scanning attempts
-    - Potential misuse patterns
-    """
-    try:
-        suspicious_activities = guardrails.detect_suspicious_activity()
-
-        return Response(
-            success=True,
-            data={
-                "alerts": suspicious_activities,
-                "alert_count": len(suspicious_activities),
-                "severity_levels": {
-                    "high": len([a for a in suspicious_activities if a.get("severity") == "high"]),
-                    "medium": len([a for a in suspicious_activities if a.get("severity") == "medium"]),
-                    "low": len([a for a in suspicious_activities if a.get("severity") == "low"]),
-                },
-            },
-        )
-
-    except Exception as e:
-        logger.error(f"Error getting security alerts: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/compliance-report", response_model=Response)
-async def generate_compliance_report(
-    days: int = Query(30),
+@router.get("/security-stats", response_model=Response)
+async def get_security_stats(
+    current_user: User = Depends(require_roles(ROLE_ADMIN)),
+    db: AsyncSession = Depends(get_db)
 ):
     """
-    Generate a compliance report for security audits
+    Get security operations overview
+    Restricted to ROLE_ADMIN
     """
     try:
-        logs = guardrails.get_audit_logs(days=days)
-        alerts = guardrails.detect_suspicious_activity()
-        stats = guardrails.get_stats()
-
-        # Calculate statistics
-        total_scans = len(logs)
-        completed_scans = len([log for log in logs if log.status == "completed"])
-        failed_scans = len([log for log in logs if log.status == "failed"])
-        denied_scans = len([log for log in logs if log.status == "denied"])
-
-        return Response(
-            success=True,
-            data={
-                "report_period_days": days,
-                "generated_at": datetime.utcnow().isoformat(),
-                "summary": {
-                    "total_scans": total_scans,
-                    "completed_scans": completed_scans,
-                    "failed_scans": failed_scans,
-                    "denied_scans": denied_scans,
-                    "success_rate": (completed_scans / total_scans * 100) if total_scans > 0 else 0,
-                },
-                "security": {
-                    "active_authorizations": stats["active_authorizations"],
-                    "suspicious_activities_detected": len(alerts),
-                    "blocked_operations": stats["blocked_operations"],
-                },
-                "alerts": alerts,
-                "recommendations": [
-                    "Review high-severity alerts",
-                    "Ensure all scans have valid authorizations",
-                    "Monitor for unauthorized access attempts",
-                ],
-            },
-        )
-
-    except Exception as e:
-        logger.error(f"Error generating compliance report: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# ============================================================================
-# Admin Operations
-# ============================================================================
-
-
-@router.post("/admin/revoke-authorization", response_model=Response, dependencies=[_require_admin])
-async def revoke_authorization(
-    certificate_id: str = Query(...),
-    revoked_by: str = Query(...),
-    reason: str = Query(...),
-):
-    """
-    Revoke an authorization certificate
-    Admin operation only - should be protected by authentication
-    """
-    try:
-        if certificate_id not in guardrails.authorized_certificates:
-            return Response(
-                success=False,
-                data={"error": f"Certificate not found: {certificate_id}"},
-            )
-
-        # Remove the certificate
-        del guardrails.authorized_certificates[certificate_id]
-
-        logger.warning(
-            f"🚨 Authorization revoked: {certificate_id} by {revoked_by} - Reason: {reason}"
-        )
-
-        return Response(
-            success=True,
-            data={
-                "certificate_id": certificate_id,
-                "status": "revoked",
-                "revoked_by": revoked_by,
-                "reason": reason,
-            },
-        )
-
-    except Exception as e:
-        logger.error(f"Error revoking authorization: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@router.get("/admin/security-stats", response_model=Response, dependencies=[_require_admin])
-async def get_security_stats():
-    """Get comprehensive security statistics"""
-    try:
-        stats = guardrails.get_stats()
-        alerts = guardrails.detect_suspicious_activity()
+        stats = await guardrails.get_stats(db=db)
 
         return Response(
             success=True,
             data={
                 "stats": stats,
-                "alerts": alerts,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
 

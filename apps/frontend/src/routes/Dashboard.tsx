@@ -11,6 +11,10 @@ export default function Dashboard(){
   const [userKey, setUserKey] = useState('')
   const [adminKey, setAdminKey] = useState('')
   const [pulse, setPulse] = useState(false)
+  // Knowledge Delta — wired to live API data
+  // Sources: /findings/ (total findings count), /api/v1/approval/pending (HiL queue depth)
+  const [findingsCount, setFindingsCount] = useState<number|null>(null)
+  const [hilPending, setHilPending] = useState<number|null>(null)
 
   useEffect(()=>{
     setApiKeys(userKey||undefined, adminKey||undefined)
@@ -30,6 +34,23 @@ export default function Dashboard(){
     }
     probe();
     return ()=> { if(t) clearTimeout(t) }
+  }, [apiBase])
+
+  // Knowledge Delta: fetch live counts from /findings/ and /api/v1/approval/pending
+  useEffect(()=>{
+    const loadCounts = async()=>{
+      try {
+        const r = await fetch(apiBase + '/findings/?page_size=1', { credentials: 'include', cache: 'no-store' })
+        if(r.ok){ const j = await r.json(); setFindingsCount(j.total ?? j.count ?? (Array.isArray(j) ? j.length : null)) }
+      } catch { /* findings API offline */ }
+      try {
+        const r = await fetch(apiBase + '/api/v1/approval/pending', { credentials: 'include', cache: 'no-store' })
+        if(r.ok){ const j = await r.json(); setHilPending(j.count ?? (Array.isArray(j.requests) ? j.requests.length : null)) }
+      } catch { /* approval API offline */ }
+    }
+    loadCounts()
+    const id = setInterval(loadCounts, 15000)
+    return ()=> clearInterval(id)
   }, [apiBase])
 
   const chip = (label: string, ok: boolean, colorOk: 'teal'|'cyan'='teal')=> <NeonChip color={ok? colorOk:'cyan'}>{label}: {ok? 'OK':'...'}</NeonChip>
@@ -74,8 +95,14 @@ export default function Dashboard(){
           <span className='widget-title'>Knowledge Delta</span>
           <div className='row' style={{gap:8}}>
             <span className='k1-chip sev-low'>Signals: 0</span>
-            <span className='k1-chip sev-medium'>Findings: 0</span>
-            <span className='k1-chip sev-high'>HiL queued: 0</span>
+            {/* Findings count — live from /findings/ (page_size=1 to get total without bulk data) */}
+            <span className='k1-chip sev-medium'>
+              Findings: {findingsCount !== null ? findingsCount : '…'}
+            </span>
+            {/* HiL pending count — live from /api/v1/approval/pending */}
+            <span className={`k1-chip ${hilPending ? 'sev-high' : 'sev-low'}`}>
+              HiL queued: {hilPending !== null ? hilPending : '…'}
+            </span>
           </div>
         </div>
       </section>

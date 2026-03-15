@@ -20,6 +20,7 @@ from sqlalchemy.orm import relationship
 from .base import Base
 from .enums import FindingStatusEnum, HILApprovalStatusEnum, SeverityEnum
 from .mixins import SoftDeleteMixin, TimestampMixin, UTCAwareDatetime
+from .types import EncryptedText
 
 
 class Finding(Base, TimestampMixin, SoftDeleteMixin):
@@ -30,13 +31,16 @@ class Finding(Base, TimestampMixin, SoftDeleteMixin):
         CheckConstraint("btrim(title) <> ''", name="finding_title_not_empty"),
         CheckConstraint("btrim(description) <> ''", name="finding_description_not_empty"),
         Index("ix_findings_is_deleted", "is_deleted"),
+        Index("ix_findings_program_status", "program", "status"),
+        Index("ix_findings_severity", "severity"),
+        Index("ix_findings_asset", "asset"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     program = Column(Text, nullable=False)
     asset = Column(Text, nullable=False)
     title = Column(Text, nullable=False)
-    description = Column(Text, nullable=False)
+    description = Column(EncryptedText, nullable=False)
     severity = Column(
         SAEnum(SeverityEnum, name="severity_enum", native_enum=True, create_constraint=True),
         nullable=False,
@@ -46,7 +50,7 @@ class Finding(Base, TimestampMixin, SoftDeleteMixin):
         nullable=False,
         server_default=FindingStatusEnum.NEW.value,
     )
-    scope_json = Column(JSON, nullable=False, server_default="{}")
+    scope_json = Column(EncryptedText, nullable=False, server_default="{}")
     reproducibility_score = Column(Float, nullable=True)
 
     evidences = relationship("Evidence", back_populates="finding")

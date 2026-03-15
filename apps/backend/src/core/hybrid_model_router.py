@@ -11,7 +11,7 @@ Routing Rules:
 import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime
+from datetime import timezone, datetime
 from enum import Enum
 
 from .budget_tracker import BudgetTracker, BudgetDecision, get_budget_tracker
@@ -57,7 +57,7 @@ class RoutingDecision:
     fallback_reason: Optional[FallbackReason] = None
     warning_message: Optional[str] = None
     budget_status: Optional[str] = None
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass

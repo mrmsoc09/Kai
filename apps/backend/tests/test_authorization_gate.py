@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -44,8 +44,8 @@ def test_authorization_certificate_check_accepts_valid_certificate(guardrails):
         target="example.com",
         scope=ScanScope.SINGLE_DOMAIN,
         authorized_by="operator",
-        issued_at=datetime.utcnow() - timedelta(days=1),
-        expires_at=datetime.utcnow() + timedelta(days=1),
+        issued_at=datetime.now(timezone.utc) - timedelta(days=1),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
         allowed_methods=["dns_enum"],
         metadata={"user_id": "user-1"},
     )

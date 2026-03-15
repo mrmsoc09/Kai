@@ -5,7 +5,7 @@ from datetime import timezone
 from pathlib import Path
 from typing import Any, Iterable
 
-from .helpers import artifacts_root, utcnow
+from .helpers import artifacts_root
 
 
 def _logs_root() -> Path:
@@ -14,7 +14,7 @@ def _logs_root() -> Path:
 
 def _utc_ymd() -> tuple[str, str, str]:
     """Return (year, month, day) strings for the current UTC date."""
-    now = utcnow()
+    now = datetime.now(timezone.utc)
     return f"{now.year:04d}", f"{now.month:02d}", f"{now.day:02d}"
 
 
@@ -30,7 +30,7 @@ def log_decision(run_id: str, event: str, data: dict[str, Any]) -> Path:
     d = run_dir(run_id, True)
     fp = d / "decision_trace.jsonl"
     rec = {
-        "ts": utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "ts": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "event": event,
         "data": data,
     }

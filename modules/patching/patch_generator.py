@@ -1,7 +1,7 @@
 """LLM-based patch suggestion engine."""
 
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class PatchGenerator:
@@ -216,7 +216,7 @@ class PatchGenerator:
             "description": template.get("description", "Review and remediate"),
             "remediation_steps": template.get("steps", []),
             "severity": finding.get("severity", "medium"),
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Add optional fields if present in template

@@ -12,7 +12,7 @@ import click
 import asyncio
 import json
 from typing import Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..ui import (
     console,
@@ -261,7 +261,7 @@ def create_workflow(name: str, description: Optional[str], steps: str, save: Opt
         "name": name,
         "description": description or f"Custom workflow: {name}",
         "steps": steps_data,
-        "created_at": datetime.utcnow().isoformat()
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
 
     if save:

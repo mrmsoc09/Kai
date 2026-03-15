@@ -5,7 +5,7 @@ Manages the complete hunting workflow from planning through execution and verifi
 
 from typing import Dict, List, Optional, Any, Annotated, Tuple
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import json
 
@@ -96,7 +96,7 @@ class HuntingSession:
     def add_event(self, event_type: str, details: Dict[str, Any]):
         """Add event to audit trail"""
         self.events.append({
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "type": event_type,
             "details": details
         })
@@ -120,7 +120,7 @@ class OrchestrationGraph:
     def __init__(self, session_id: str, target_domain: str, mission: str):
         self.session = HuntingSession(
             session_id=session_id,
-            started_at=datetime.utcnow(),
+            started_at=datetime.now(timezone.utc),
             target_domain=target_domain,
             mission_statement=mission,
             current_phase=HuntPhase.PLANNING
@@ -195,7 +195,7 @@ class OrchestrationGraph:
         # Verify PGP signature (simplified for now)
         action.approval_status = ApprovalStatus.APPROVED
         action.pgp_signature = pgp_signature
-        action.approval_at = datetime.utcnow()
+        action.approval_at = datetime.now(timezone.utc)
 
         self.session.add_event("action_approved", {
             "action_id": action_id,

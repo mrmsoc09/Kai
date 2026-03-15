@@ -7,7 +7,7 @@ import os
 import json
 import asyncio
 from pathlib import Path
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
 from enum import Enum
@@ -126,7 +126,7 @@ class LogWatchdog:
                             signature_file=str(sig_file),
                             signer="machine-kaisonai@pm.me",
                             signature_valid=True,
-                            verified_at=datetime.utcnow().isoformat()
+                            verified_at=datetime.now(timezone.utc).isoformat()
                         )
                     else:
                         # Invalid signature - CRITICAL
@@ -136,7 +136,7 @@ class LogWatchdog:
                             operation=log_entry.operation,
                             severity=AlertSeverity.CRITICAL,
                             message=f"SIGNATURE INVALID: {log_file.name}",
-                            detected_at=datetime.utcnow().isoformat(),
+                            detected_at=datetime.now(timezone.utc).isoformat(),
                             action_required="IMMEDIATE INVESTIGATION REQUIRED"
                         )
                         new_alerts.append(alert)
@@ -151,7 +151,7 @@ class LogWatchdog:
                         operation=log_entry.operation,
                         severity=severity,
                         message=f"UNSIGNED LOG: {log_file.name}",
-                        detected_at=datetime.utcnow().isoformat(),
+                        detected_at=datetime.now(timezone.utc).isoformat(),
                         action_required=f"Generate signature for {log_file.name}"
                     )
                     new_alerts.append(alert)
@@ -162,7 +162,7 @@ class LogWatchdog:
             except Exception as e:
                 print(f"[✗] Error processing {log_file.name}: {str(e)}")
 
-        self.last_scan = datetime.utcnow()
+        self.last_scan = datetime.now(timezone.utc)
         self.alerts.extend(new_alerts)
 
         return (len(log_files), signed_count, new_alerts)
@@ -179,7 +179,7 @@ class LogWatchdog:
         content_hash = hashlib.sha256(content.encode()).hexdigest()
 
         return LogEntry(
-            timestamp=log_data.get("timestamp", datetime.utcnow().isoformat()),
+            timestamp=log_data.get("timestamp", datetime.now(timezone.utc).isoformat()),
             log_id=log_id,
             log_file=str(log_file),
             operation=log_data.get("operation", "unknown"),
@@ -216,7 +216,7 @@ class LogWatchdog:
 
     def _generate_alert_id(self) -> str:
         """Generate unique alert ID"""
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         data = f"{timestamp}{len(self.alerts)}".encode()
         return hashlib.sha256(data).hexdigest()[:12]
 

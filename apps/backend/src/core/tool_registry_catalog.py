@@ -34,6 +34,7 @@ class ToolCatalogEntry:
     dependencies: list[str]
     api_keys_required: list[str]
     enabled_by_default: bool
+    allowed_extra_args: list[str] = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -55,6 +56,7 @@ class ToolCatalogEntry:
             "dependencies": self.dependencies,
             "api_keys_required": self.api_keys_required,
             "enabled_by_default": self.enabled_by_default,
+            "allowed_extra_args": self.allowed_extra_args or [],
         }
 
 
@@ -103,6 +105,7 @@ def _load_from_payload(payload: dict[str, Any]) -> dict[str, ToolCatalogEntry]:
             dependencies=as_list_of_str(item.get("dependencies")),
             api_keys_required=as_list_of_str(item.get("api_keys_required")),
             enabled_by_default=bool(item.get("enabled_by_default", True)),
+            allowed_extra_args=as_list_of_str(item.get("allowed_extra_args")),
         )
         entries[name] = entry
     return entries

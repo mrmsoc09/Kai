@@ -9,7 +9,7 @@ import logging
 import os
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from enum import Enum
@@ -38,7 +38,7 @@ class CodeTaskResult:
     error: Optional[str] = None
     exit_code: int = 0
     execution_time_ms: float = 0.0
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -138,7 +138,7 @@ class ClaudeCodeClient:
                 error="Claude Code CLI not available"
             )
 
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         context = context or CodeContext()
         project_path = project_path or self.default_project_path
 
@@ -155,7 +155,7 @@ class ClaudeCodeClient:
             else:
                 result = await self._execute_standard(command, project_path)
 
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
             # Parse result
             task_result = self._parse_result(

@@ -1,6 +1,7 @@
 """Dispatch tool executions to Celery with rate limits and approvals."""
 from __future__ import annotations
 
+import hashlib
 from typing import Dict, Any, Optional
 from fastapi import HTTPException
 
@@ -23,6 +24,17 @@ class ToolRunner:
 
     def __init__(self, default_queue: str = "tools"):
         self.default_queue = default_queue
+
+    def _get_scope_hash(self) -> str:
+        """Get SHA-256 hash of the current scope policy file."""
+        from apps.backend.src.core.scope_guardrails import default_scope_policy_path
+        path = default_scope_policy_path()
+        if not path.exists():
+            return "none"
+        try:
+            return hashlib.sha256(path.read_bytes()).hexdigest()
+        except Exception:
+            return "error"
 
     def enqueue(
         self,
@@ -114,6 +126,7 @@ class ToolRunner:
                 "program_id": program_id or "",
                 "certificate_id": certificate_id or "",
                 "workflow_id": workflow_id or "",
+                "scope_policy_hash": self._get_scope_hash(),
             },
         )
         return async_result.id

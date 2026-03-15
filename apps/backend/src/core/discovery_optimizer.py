@@ -10,7 +10,7 @@ Target: 2x improvement in payout-worthy findings (200-300/month from 100-150/mon
 import asyncio
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ class DiscoveryOptimizer:
         Returns:
             Optimized hunt configuration
         """
-        hunt_id = f"hunt-{datetime.utcnow().strftime('%Y%m%d-%H%M%S')}"
+        hunt_id = f"hunt-{datetime.now(timezone.utc).strftime('%Y%m%d-%H%M%S')}"
 
         # Select appropriate tool chains
         selected_chains = self._select_tool_chains(target_type, intensity, time_budget)

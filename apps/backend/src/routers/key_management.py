@@ -6,7 +6,7 @@ Exposes key import, rotation, and verification endpoints
 from fastapi import APIRouter, HTTPException, UploadFile, File, Depends
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import logging
 
@@ -464,7 +464,7 @@ async def get_expiring_keys(days: int = 30):
                 "owner_type": key.owner_type.value,
                 "fingerprint": key.fingerprint,
                 "expires_at": key.expires_at.isoformat() if key.expires_at else None,
-                "days_until_expiry": (key.expires_at - datetime.utcnow()).days if key.expires_at else None
+                "days_until_expiry": (key.expires_at - datetime.now(timezone.utc)).days if key.expires_at else None
             }
             for key in expiring
         ]
@@ -494,7 +494,7 @@ async def verify_pgp_signature(request: PGPSignatureVerificationRequest):
             "valid": True,
             "message": message,
             "signer_key_id": signer_key_id,
-            "verified_at": datetime.utcnow().isoformat()
+            "verified_at": datetime.now(timezone.utc).isoformat()
         }
 
     except HTTPException:
@@ -582,7 +582,7 @@ async def get_key_management_summary():
             "keys_expiring_in_30_days": len(expiring_soon),
             "pending_rotations": pending_rotations,
             "recent_usage_count": len(key_mgmt.usage_logs[-100:]),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
     except Exception as e:

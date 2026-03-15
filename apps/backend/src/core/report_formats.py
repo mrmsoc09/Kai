@@ -1,7 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 import yaml
 from jinja2 import Template, TemplateError, TemplateNotFound
 from .evidence_contract import normalize_report_evidence
@@ -43,9 +43,9 @@ def build_template_context(finding: dict, evidence: dict, mitigation: dict, repo
         'finding': finding,
         'evidence': evidence,
         'mitigation': mitigation,
-        'report_id': report_id or 'REPORT_' + datetime.utcnow().strftime('%Y%m%d_%H%M%S'),
-        'submission_date': finding.get('submission_date', datetime.utcnow().isoformat()),
-        'report_generated_at': datetime.utcnow().isoformat(),
+        'report_id': report_id or 'REPORT_' + datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S'),
+        'submission_date': finding.get('submission_date', datetime.now(timezone.utc).isoformat()),
+        'report_generated_at': datetime.now(timezone.utc).isoformat(),
     }
 
 

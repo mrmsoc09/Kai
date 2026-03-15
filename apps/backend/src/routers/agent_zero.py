@@ -16,7 +16,7 @@ from pydantic import BaseModel
 import json
 import asyncio
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import defaultdict
 
 # Import K1 systems
@@ -65,8 +65,8 @@ class ChatSession:
     def __init__(self, session_id: str):
         self.session_id = session_id
         self.messages: List[ChatMessage] = []
-        self.created_at = datetime.utcnow()
-        self.last_activity = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(timezone.utc)
         self.pending_approvals: Dict[str, Dict] = {}
         self.context: Dict[str, Any] = {}
 
@@ -76,11 +76,11 @@ class ChatSession:
             id=str(uuid.uuid4()),
             role=role,
             content=content,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             **kwargs
         )
         self.messages.append(message)
-        self.last_activity = datetime.utcnow()
+        self.last_activity = datetime.now(timezone.utc)
         return message
 
     def get_history(self, limit: int = 50) -> List[Dict]:
@@ -144,7 +144,7 @@ class ChatConnectionManager:
         """Broadcast an event to all session connections."""
         message = {
             "type": event_type,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": data
         }
         await self.send_message(session_id, message)
@@ -291,7 +291,7 @@ async def get_mcp_registry():
         raise HTTPException(status_code=503, detail="MCP manager not available")
 
     return {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "servers": mcp_manager.get_registry(),
         "stats": mcp_manager.get_stats()
     }
@@ -464,7 +464,7 @@ async def sync_findings_to_agent_zero(findings: List[Dict]):
 async def agent_zero_health():
     """K1 health check for Agent Zero"""
     health_status = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "k1_status": "healthy",
         "systems": {}
     }
@@ -586,7 +586,7 @@ async def websocket_chat(websocket: WebSocket, session_id: Optional[str] = None)
         await websocket.send_json({
             "type": "session_started",
             "session_id": session_id,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
 
         while True:
@@ -676,7 +676,7 @@ async def _process_chat_message(
                 session.pending_approvals[approval_id] = {
                     "tool_call": tool_call,
                     "context": context,
-                    "created_at": datetime.utcnow().isoformat()
+                    "created_at": datetime.now(timezone.utc).isoformat()
                 }
 
                 await websocket.send_json({
@@ -1010,7 +1010,7 @@ async def send_chat_message(request: SendMessageRequest):
             session.pending_approvals[approval_id] = {
                 "tool_call": tool_call,
                 "context": request.context or {},
-                "created_at": datetime.utcnow().isoformat()
+                "created_at": datetime.now(timezone.utc).isoformat()
             }
 
             return {

@@ -25,12 +25,27 @@ class LoginRequest(BaseModel):
 
 
 SESSION_COOKIE_NAME = "session_id"
+AUTH_COOKIE_NAME = "k1_token"
 CSRF_COOKIE_TTL_SECONDS = 60 * 60  # align with default CSRF token expiry window
 
 
 @router.post("/login")
-def login(req: LoginRequest):
+def login(req: LoginRequest, response: Response):
     access_token = issue_dev_access_token(req.token)
+    
+    # Set JWT as HttpOnly; Secure; SameSite=Strict cookie
+    # Secure=True in production, False in dev if no HTTPS
+    secure = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    response.set_cookie(
+        key=AUTH_COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=secure,
+        samesite="strict",
+        max_age=access_expiry_minutes() * 60,
+        path="/",
+    )
+    
     return {
         "ok": True,
         "access_token": access_token,
@@ -62,21 +77,41 @@ def get_csrf_token(request: Request, response: Response):
 
 
 @router.post("/logout")
-def logout(request: Request, user: User = Depends(get_current_user)):
-    """Revoke the current access token by adding its jti to the blocklist."""
+def logout(request: Request, response: Response, user: User = Depends(get_current_user)):
+    """Revoke the current access token and clear the auth cookie."""
+    # Revoke via header or cookie
+    token = None
     auth_header = request.headers.get("Authorization", "")
-    token = auth_header.removeprefix("Bearer ").strip()
+    if auth_header.startswith("Bearer "):
+        token = auth_header.removeprefix("Bearer ").strip()
+    else:
+        token = request.cookies.get(AUTH_COOKIE_NAME)
+        
     if token:
         jti, exp = extract_jti_and_exp(token)
         if jti:
             revoke_token(jti, exp)
+            
+    response.delete_cookie(AUTH_COOKIE_NAME)
     return {"ok": True}
 
 
 @router.post("/refresh")
-def refresh(user: User = Depends(get_current_user)):
-    """Issue a new access token for the currently authenticated user."""
+def refresh(response: Response, user: User = Depends(get_current_user)):
+    """Issue a new access token and update the auth cookie."""
     new_token = create_access_token(subject=user.id, roles=user.roles)
+    
+    secure = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    response.set_cookie(
+        key=AUTH_COOKIE_NAME,
+        value=new_token,
+        httponly=True,
+        secure=secure,
+        samesite="strict",
+        max_age=access_expiry_minutes() * 60,
+        path="/",
+    )
+    
     return {
         "ok": True,
         "access_token": new_token,

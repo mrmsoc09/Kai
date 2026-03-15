@@ -154,7 +154,7 @@ class CatalogBackedCLITool(BaseTool):
             ToolParameter(
                 "extra_args",
                 "array",
-                "Additional CLI arguments (safe-list validated by caller)",
+                "Additional CLI arguments",
                 required=False,
                 default=[],
             ),
@@ -409,6 +409,27 @@ class CatalogBackedCLITool(BaseTool):
         extra_args = kwargs.get("extra_args") if isinstance(kwargs.get("extra_args"), list) else []
         retries = int(kwargs.get("retries") or self.catalog_entry.retry_policy.max_attempts)
         timeout_seconds = int(kwargs.get("timeout_seconds") or self.catalog_entry.timeout_seconds)
+
+        # Reject extra_args entirely at the API level for Tier 2 tools
+        if self.autonomy_tier == ToolAutonomyTier.TIER_2_APPROVE and extra_args:
+             return ToolResult(
+                self.id,
+                ToolStatus.FAILED,
+                {},
+                error=f"Tool '{self.catalog_name}' is Tier 2 and does not permit extra_args",
+            )
+
+        # Enforce allowlist validation on each element of extra_args
+        allowed = self.catalog_entry.allowed_extra_args or []
+        for arg in extra_args:
+            arg_str = str(arg)
+            if arg_str not in allowed:
+                 return ToolResult(
+                    self.id,
+                    ToolStatus.FAILED,
+                    {},
+                    error=f"Argument '{arg_str}' is not in the allowlist for tool '{self.catalog_name}'",
+                )
 
         binary = self._which()
         args, stdin_text = self._build_command(target, [str(arg) for arg in extra_args])

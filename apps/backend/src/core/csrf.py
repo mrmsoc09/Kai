@@ -215,7 +215,6 @@ CSRF_EXEMPT_ENDPOINTS = [
     "/auth/login",
     "/auth/logout",
     "/auth/refresh",
-    "/detection/nuclei/scan",
 ]
 
 # HTTP methods that don't need CSRF protection (idempotent)

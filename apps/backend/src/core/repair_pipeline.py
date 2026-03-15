@@ -5,7 +5,7 @@ End-to-end workflow: Discover → Analyze → Repair → Validate → Report
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from enum import Enum
 
@@ -42,7 +42,7 @@ class RepairPipelineResult:
     paid_percentage: float
     post_review_report: Dict[str, Any]
     execution_time_ms: float = 0.0
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -105,7 +105,7 @@ class VulnerabilityRepairPipeline:
             RepairPipelineResult with comprehensive results
         """
 
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         session_id = session_id or f"repair_pipeline_{target}_{int(start_time.timestamp())}"
 
         logger.info(f"Starting repair pipeline for {target}")
@@ -144,7 +144,7 @@ class VulnerabilityRepairPipeline:
                 session_id=session_id
             )
 
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
             # Calculate cost breakdown
             total_cost = self._calculate_cost(findings, analyzed, repairs)
@@ -371,7 +371,7 @@ function secure_query($user_input) {{
             repairs=repairs,
             auto_applied=auto_applied,
             budget_spent=budget.spent_cents,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.now(timezone.utc)
         )
 
         return report

@@ -30,14 +30,15 @@ services:
   vault:
     image: hashicorp/vault:1.15
     container_name: k1_vault
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: root
-      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    ports:
+      - "127.0.0.1:8200:8200"
+    volumes:
+      - ../config/vault.hcl:/vault/config/vault.hcl:ro
+      - ../scripts/vault-entrypoint.sh:/vault/scripts/entrypoint.sh:ro
+      - k1_vault_data:/vault/file:rw
+    entrypoint: ["/bin/sh", "/vault/scripts/entrypoint.sh"]
     cap_add:
       - IPC_LOCK
-    command: server -dev -dev-root-token-id=root -dev-listen-address=0.0.0.0:8200
-    ports:
-      - "8200:8200"
 
   jaeger:
     image: jaegertracing/all-in-one:1.55
@@ -96,7 +97,6 @@ services:
       THEHIVE_URL: http://thehive:9000
       THEHIVE_API_KEY: changeme
       VAULT_ADDR: http://vault:8200
-      VAULT_TOKEN: root
     depends_on:
       - postgres
       - thehive
@@ -125,3 +125,4 @@ volumes:
   k1_es_data: {}
   k1_cassandra: {}
   k1_thehive: {}
+  k1_vault_data: {}

@@ -49,8 +49,10 @@ networkx>=3.3,<4.0
 # Cryptography & Security
 python-jose[cryptography]>=3.3.1,<4.0
 passlib[bcrypt]>=1.7.4,<2.0
-cryptography>=46.0.4,<47.0
+cryptography>=46.0.5,<47.0
 orjson>=3.10,<4.0
+pgpy>=0.6.0
+python-gnupg>=0.5.0
 
 # LLM Providers (K1 Core)
 anthropic>=0.31,<1.0
@@ -91,7 +93,7 @@ neo4j==5.15.0
 pytest>=8.2,<9.0
 pytest-cov>=6.0,<8.0
 pytest-asyncio>=0.25,<1.0
-black>=24.2,<25.0
+black>=26.3.1,<27.0
 ruff>=0.4,<1.0
 mypy>=1.10,<2.0
 isort>=5.13,<6.0

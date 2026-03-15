@@ -6,7 +6,7 @@ Autonomous end-to-end workflow from BBP selection through scanning and reporting
 import logging
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from enum import Enum
 import uuid
@@ -202,7 +202,7 @@ class FullScanOrchestrator:
             program_name=program_name,
             target="",  # Will be set from program scope
             status=ScanStatus.IN_PROGRESS,
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )
 
         self.active_scans[scan_id] = scan_result
@@ -279,7 +279,7 @@ class FullScanOrchestrator:
 
             # Mark as completed
             scan_result.status = ScanStatus.COMPLETED
-            scan_result.completed_at = datetime.utcnow()
+            scan_result.completed_at = datetime.now(timezone.utc)
 
             logger.info(f"✓ Full scan {scan_id} completed")
             logger.info(f"Findings: {scan_result.total_findings} total, {scan_result.critical_findings} critical")
@@ -290,7 +290,7 @@ class FullScanOrchestrator:
         except Exception as e:
             logger.error(f"Full scan {scan_id} failed: {str(e)}")
             scan_result.status = ScanStatus.FAILED
-            scan_result.completed_at = datetime.utcnow()
+            scan_result.completed_at = datetime.now(timezone.utc)
             return scan_result
 
     async def _fetch_available_programs(self) -> List[Dict[str, Any]]:
@@ -337,7 +337,7 @@ class FullScanOrchestrator:
     ) -> PhaseResult:
         """Phase: Check authorization and scope"""
 
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         logger.info(f"[{scan_id}] Phase: Authorization Check")
 
         from .authorization_gate import scope_validator, authorization_certificate_check
@@ -355,7 +355,7 @@ class FullScanOrchestrator:
         cert_ok = authorization_certificate_check(user_id, certificate_id, target, method)
         authorized = bool(scope_ok and cert_ok)
 
-        completed_at = datetime.utcnow()
+        completed_at = datetime.now(timezone.utc)
         duration = (completed_at - started_at).total_seconds()
 
         return PhaseResult(
@@ -376,7 +376,7 @@ class FullScanOrchestrator:
     ) -> PhaseResult:
         """Phase: Reconnaissance (OSINT)"""
 
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         logger.info(f"[{scan_id}] Phase: Reconnaissance on {target}")
 
         # Execute reconnaissance using deterministic fixture output for local development.
@@ -384,7 +384,7 @@ class FullScanOrchestrator:
         # Simulate reconnaissance
         await asyncio.sleep(2)
 
-        completed_at = datetime.utcnow()
+        completed_at = datetime.now(timezone.utc)
         duration = (completed_at - started_at).total_seconds()
 
         return PhaseResult(
@@ -410,7 +410,7 @@ class FullScanOrchestrator:
     ) -> PhaseResult:
         """Phase: Vulnerability Scanning"""
 
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         logger.info(f"[{scan_id}] Phase: Vulnerability Scan on {target}")
 
         # Execute vulnerability scan using deterministic fixture output for local development.
@@ -418,7 +418,7 @@ class FullScanOrchestrator:
         # Simulate scanning
         await asyncio.sleep(3)
 
-        completed_at = datetime.utcnow()
+        completed_at = datetime.now(timezone.utc)
         duration = (completed_at - started_at).total_seconds()
 
         return PhaseResult(
@@ -446,7 +446,7 @@ class FullScanOrchestrator:
     ) -> PhaseResult:
         """Phase: Analysis and Severity Assessment"""
 
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         logger.info(f"[{scan_id}] Phase: Analysis")
 
         # Analyze findings using deterministic local heuristics.
@@ -469,7 +469,7 @@ class FullScanOrchestrator:
                 "description": f"{finding['type']} vulnerability found"
             })
 
-        completed_at = datetime.utcnow()
+        completed_at = datetime.now(timezone.utc)
         duration = (completed_at - started_at).total_seconds()
 
         # Cost: $0.30 for analysis of complex findings
@@ -495,7 +495,7 @@ class FullScanOrchestrator:
     ) -> PhaseResult:
         """Phase: Repair (generate fixes)"""
 
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         logger.info(f"[{scan_id}] Phase: Repair")
 
         # Use repair pipeline to generate fixes
@@ -512,7 +512,7 @@ class FullScanOrchestrator:
                 session_id=session_id
             )
 
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             return PhaseResult(
@@ -531,7 +531,7 @@ class FullScanOrchestrator:
 
         except Exception as e:
             logger.error(f"Repair phase failed: {str(e)}")
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             return PhaseResult(
@@ -551,7 +551,7 @@ class FullScanOrchestrator:
     ) -> PhaseResult:
         """Phase: Generate comprehensive report"""
 
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         logger.info(f"[{scan_id}] Phase: Reporting")
 
         # Generate comprehensive report
@@ -563,7 +563,7 @@ class FullScanOrchestrator:
             scan_result=scan_result
         )
 
-        completed_at = datetime.utcnow()
+        completed_at = datetime.now(timezone.utc)
         duration = (completed_at - started_at).total_seconds()
 
         return PhaseResult(
@@ -589,7 +589,7 @@ class FullScanOrchestrator:
         User must approve and manually send the email.
         """
 
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         logger.info(f"[{scan_id}] Phase: Stakeholder Communication (Draft Creation)")
 
         # Generate draft email for findings report
@@ -622,7 +622,7 @@ class FullScanOrchestrator:
             logger.info(f"[{scan_id}] Approval request created: {approval_request.approval_id}")
             logger.info(f"[{scan_id}] ⚠️  EMAIL DRAFT READY - User approval required before sending")
 
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             return PhaseResult(
@@ -643,7 +643,7 @@ class FullScanOrchestrator:
 
         except Exception as e:
             logger.error(f"[{scan_id}] Failed to create email draft: {str(e)}")
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             return PhaseResult(

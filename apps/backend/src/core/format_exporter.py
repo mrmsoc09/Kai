@@ -3,7 +3,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Dict, Any, Literal, Union
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import logging
 from .report_formats import render_report, get_format
@@ -65,7 +65,7 @@ class ReportExporter:
             if format_type not in self.SUPPORTED_FORMATS:
                 raise ValueError(f"Unsupported format: {format_type}")
 
-            report_id = report_id or f"REPORT_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+            report_id = report_id or f"REPORT_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
             if format_type == "markdown":
                 content = self._export_markdown(finding, evidence, mitigation, report_id)
@@ -90,7 +90,7 @@ class ReportExporter:
             # Track export
             self.export_history.append({
                 'format': format_type,
-                'timestamp': datetime.utcnow().isoformat(),
+                'timestamp': datetime.now(timezone.utc).isoformat(),
                 'report_id': report_id,
                 'path': str(output_path) if output_path else None,
                 'size': len(content) if isinstance(content, bytes) else len(content.encode())
@@ -123,7 +123,7 @@ class ReportExporter:
         Returns:
             Dictionary mapping format types to report content.
         """
-        report_id = report_id or f"REPORT_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
+        report_id = report_id or f"REPORT_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
         exports = {}
 
         for fmt in self.SUPPORTED_FORMATS:
@@ -212,7 +212,7 @@ class ReportExporter:
             "report_id": report_id,
             "format": self.format_id,
             "stakeholder": self.stakeholder,
-            "generated_at": datetime.utcnow().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "finding": {
                 "id": finding.get('id', 'N/A'),
                 "title": finding.get('title', 'N/A'),
@@ -244,7 +244,7 @@ class ReportExporter:
             "metadata": {
                 "format_sections": self.format_config.get('required_sections', []),
                 "export_formats": self.SUPPORTED_FORMATS,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             }
         }
 

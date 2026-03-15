@@ -5,7 +5,7 @@ NEVER sends emails automatically - only creates perfect drafts
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 
 logger = logging.getLogger(__name__)
@@ -230,7 +230,7 @@ async def generate_initial_findings_draft(
                 This report was generated via automated security testing
             </p>
             <p style="margin: 0;">
-                Timestamp: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+                Timestamp: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
             </p>
         </div>
 
@@ -288,7 +288,7 @@ async def generate_reply_draft(
     from_email = incoming_email.get("from", "stakeholder@example.com")
     original_subject = incoming_email.get("subject", "")
     original_body = incoming_email.get("body", "")
-    received_at = incoming_email.get("received_at", datetime.utcnow())
+    received_at = incoming_email.get("received_at", datetime.now(timezone.utc))
 
     # Analyze questions in email
     questions = _extract_questions(original_body)

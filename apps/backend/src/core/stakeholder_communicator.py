@@ -38,7 +38,7 @@ For new code, use:
 
 import logging
 import warnings
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
@@ -513,7 +513,7 @@ async def generate_findings_email(
                     Autonomous Security Testing & Vulnerability Management
                 </p>
                 <p style="margin: 0;">
-                    Timestamp: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}
+                    Timestamp: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}
                 </p>
             </div>
 

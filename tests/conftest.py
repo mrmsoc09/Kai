@@ -17,6 +17,9 @@ os.environ.setdefault("K1_TEST_MODE", "true")
 os.environ.setdefault("ENVIRONMENT", "test")
 os.environ.setdefault("K1_DEV_TOKEN", "devtoken")
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
+# Enable bootstrap auth for test environment — allows /auth/login with K1_DEV_TOKEN.
+# Safe because ENVIRONMENT=test, so assert_bootstrap_auth_safe() won't block it.
+os.environ.setdefault("K1_ENABLE_BOOTSTRAP_AUTH", "true")
 os.environ.setdefault("K1_ARTIFACTS_ROOT", str(REPO_ROOT / ".pytest_artifacts"))
 Path(os.environ["K1_ARTIFACTS_ROOT"]).mkdir(parents=True, exist_ok=True)
 # Ensure subprocess-based tests resolve to system python with installed test deps.
@@ -56,7 +59,15 @@ if _INLINE_THREADPOOL_FALLBACK:
 
 @pytest.fixture(scope='session')
 def auth_headers():
-    return {'Authorization': f"Bearer {os.environ['K1_DEV_TOKEN']}"}
+    from apps.backend.src.core.auth import (
+        create_access_token,
+        ROLE_ADMIN, ROLE_ANALYST, ROLE_OPERATOR, ROLE_VIEWER,
+    )
+    token = create_access_token(
+        subject="dev",
+        roles=[ROLE_ADMIN, ROLE_ANALYST, ROLE_OPERATOR, ROLE_VIEWER],
+    )
+    return {'Authorization': f"Bearer {token}"}
 
 @pytest.fixture(scope='session')
 def client(auth_headers):

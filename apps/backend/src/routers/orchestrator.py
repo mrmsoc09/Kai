@@ -194,6 +194,39 @@ async def create_permission_slip(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/scope-decisions")
+async def get_scope_decisions(limit: int = 50) -> Dict[str, Any]:
+    """Return recent scope enforcement decisions from the audit JSONL log.
+
+    Data source: output/logs/scope_decisions.jsonl (written by scope_guardrails.py)
+    Each entry contains target, allowed, reason, evaluated_at.
+    """
+    import json as _json
+    from ..core.scope_guardrails import _scope_audit_log_path
+
+    try:
+        log_path = _scope_audit_log_path()
+        if not log_path.exists():
+            return {"decisions": [], "total": 0}
+
+        lines = log_path.read_text(encoding="utf-8").strip().splitlines()
+        parsed = []
+        for line in lines:
+            try:
+                parsed.append(_json.loads(line))
+            except Exception:
+                pass
+
+        # Return the most recent `limit` entries in reverse-chronological order
+        recent = parsed[-limit:]
+        recent.reverse()
+        return {"decisions": recent, "total": len(parsed)}
+
+    except Exception as exc:
+        logger.error("scope-decisions read error: %s", exc)
+        return {"decisions": [], "total": 0, "error": str(exc)}
+
+
 @router.get("/health")
 async def orchestrator_health() -> Dict[str, Any]:
     """Health check for KaiOrchestrator middleware."""

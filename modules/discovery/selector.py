@@ -2,7 +2,7 @@
 
 from typing import List, Dict, Any, Optional
 import random
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 class TargetSelector:
@@ -62,7 +62,7 @@ class TargetSelector:
             "program_name": selected.get("program_name"),
             "score": selected.get("score"),
             "strategy": strategy,
-            "selected_at": datetime.utcnow().isoformat(),
+            "selected_at": datetime.now(timezone.utc).isoformat(),
         })
 
         return selected
@@ -152,7 +152,7 @@ class TargetSelector:
                 "program_name": result.get("program_name"),
                 "score": result.get("score"),
                 "strategy": f"batch_{strategy}",
-                "selected_at": datetime.utcnow().isoformat(),
+                "selected_at": datetime.now(timezone.utc).isoformat(),
             })
 
         return selected
@@ -167,7 +167,7 @@ class TargetSelector:
         Select programs for rotation over N days (one per day).
         Avoids repeating recently scanned targets.
         """
-        cutoff_time = datetime.utcnow() - timedelta(days=rotation_days)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(days=rotation_days)
         available = []
 
         for result in scorer_results:
@@ -240,7 +240,7 @@ class TargetSelector:
 
     def _recently_selected(self, program_id: str, hours: int = 24) -> bool:
         """Check if program was recently selected."""
-        cutoff = datetime.utcnow() - timedelta(hours=hours)
+        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
         for entry in reversed(self.selection_history):
             if entry.get("program_id") == program_id:
                 try:

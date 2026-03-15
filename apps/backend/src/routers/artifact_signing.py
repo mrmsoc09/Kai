@@ -6,7 +6,7 @@ Exposes endpoints for signing vulnerability reports and verifying signatures
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 router = APIRouter(prefix="/api/artifacts", tags=["artifact-signing"])
@@ -264,7 +264,7 @@ async def get_audit_trail(limit: int = 100):
             "success": True,
             "total_operations": len(audit),
             "recent_operations": audit[-limit:],
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
     except Exception as e:
@@ -354,7 +354,7 @@ async def get_crypto_dashboard():
                 "tamper_alerts": tamper_alerts,
                 "alert_status": "NORMAL" if tamper_alerts == 0 else "WARNING"
             },
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
     except Exception as e:

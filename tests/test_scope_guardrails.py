@@ -107,17 +107,18 @@ def test_wildcard_subdomain_pattern():
     assert target_scope_decision("example.com", policy) == (False, "allowlist_no_match")
 
 
-def test_regex_pattern_in_allowlist():
-    policy = ScopePolicy(allowlist=["/^.*\\.example\\.com$/"])
+def test_glob_pattern_in_allowlist():
+    # Task 23: regex /pattern/ syntax replaced with fnmatch glob for security
+    policy = ScopePolicy(allowlist=["*.example.com"])
     allowed, _ = target_scope_decision("api.example.com", policy)
     assert allowed is True
 
 
-def test_invalid_regex_in_allowlist_does_not_crash():
-    policy = ScopePolicy(allowlist=["/[invalid/"])
-    # Should not raise; invalid regex is treated as no-match
-    allowed, reason = target_scope_decision("api.example.com", policy)
-    assert reason == "allowlist_no_match"
+def test_glob_pattern_does_not_match_cross_boundary():
+    # *.example.com must NOT match evilexample.com (dot boundary enforcement)
+    policy = ScopePolicy(allowlist=["*.example.com"])
+    allowed, reason = target_scope_decision("evilexample.com", policy)
+    assert allowed is False
 
 
 def test_load_scope_policy_from_yaml(tmp_path):

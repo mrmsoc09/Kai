@@ -5,7 +5,7 @@ Integration for code generation, PoC creation, and vulnerability fix generation
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import timezone, datetime
 from typing import Dict, List, Optional, Any
 from enum import Enum
 
@@ -37,7 +37,7 @@ class CodexResult:
     model_used: str = "gpt-4"
     tokens_used: int = 0
     cost_cents: float = 0.0
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class CodexClient:

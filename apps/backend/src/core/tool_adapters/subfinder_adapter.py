@@ -6,7 +6,7 @@ Fast passive subdomain discovery
 import asyncio
 import json
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 
 from .base_adapter import (
@@ -65,7 +65,7 @@ class SubfinderAdapter(BaseToolAdapter):
         options: Optional[Dict[str, Any]] = None
     ) -> ToolExecutionResult:
         """Execute subfinder against target"""
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         options = options or {}
 
         cmd = ["subfinder", "-d", target, "-json", "-silent"]
@@ -85,7 +85,7 @@ class SubfinderAdapter(BaseToolAdapter):
 
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=300)
 
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             raw_output = stdout.decode()
@@ -108,7 +108,7 @@ class SubfinderAdapter(BaseToolAdapter):
             )
 
         except Exception as e:
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             return ToolExecutionResult(
                 tool_name=self.tool_name,
                 success=False,
@@ -131,7 +131,7 @@ class SubfinderAdapter(BaseToolAdapter):
                     "subdomain": data.get("host", ""),
                     "domain": target,
                     "source": data.get("source", ""),
-                    "discovered_at": datetime.utcnow().isoformat()
+                    "discovered_at": datetime.now(timezone.utc).isoformat()
                 })
             except Exception:
                 continue

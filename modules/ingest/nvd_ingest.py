@@ -10,7 +10,7 @@ os.makedirs(ART_DIR, exist_ok=True)
 NVD_API_BASE = "https://services.nvd.nist.gov/rest/json/cves/2.0"
 
 def _now_iso():
-    return dt.datetime.utcnow().isoformat() + "Z"
+    return dt.datetime.now(datetime.timezone.utc).isoformat() + "Z"
 
 def _write_jsonl(path: str, rows: Iterable[Dict[str, Any]]):
     with open(path, "w", encoding="utf-8") as f:
@@ -58,7 +58,7 @@ def ingest_recent(max_results: int = 200, save_name: str = "nvd_recent.jsonl") -
     try:
         import requests
         import datetime as dt
-        params = {"resultsPerPage": max_results, "pubStartDate": (dt.datetime.utcnow() - dt.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S.000Z")}
+        params = {"resultsPerPage": max_results, "pubStartDate": (dt.datetime.now(datetime.timezone.utc) - dt.timedelta(days=7)).strftime("%Y-%m-%dT%H:%M:%S.000Z")}
         r = requests.get(NVD_API_BASE, params=params, timeout=20)
         if r.status_code == 200:
             rows = list(_extract_cve_rows(r.json()))

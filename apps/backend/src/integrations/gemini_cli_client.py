@@ -9,7 +9,7 @@ import logging
 import os
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from enum import Enum
@@ -41,7 +41,7 @@ class GeminiResult:
     execution_time_ms: float = 0.0
     model_used: str = "gemini-2.0-flash"
     cost_cents: float = 0.0
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class GeminiCLIClient:
@@ -147,7 +147,7 @@ class GeminiCLIClient:
                 error="Gemini client not available (missing CLI or API key)"
             )
 
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         context_window = context_window or self.default_context_window
 
         try:
@@ -157,7 +157,7 @@ class GeminiCLIClient:
             else:
                 result = await self._execute_via_cli(documents, query, context_window, file_paths)
 
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
             result.execution_time_ms = execution_time
             return result

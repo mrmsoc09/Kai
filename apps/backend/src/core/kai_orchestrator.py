@@ -248,10 +248,52 @@ class SignedIntentValidator:
             # 3. Read permission slip content
             slip_content = self._read_permission_slip_content(permission_slip_path)
 
-            # 4. Parse slip metadata
-            slip_metadata = json.loads(slip_content)
+            # Implementation of real PGP cryptographic signature verification
+            try:
+                import pgpy
+                # Load admin public key from bundled path
+                pubkey_path = Path(__file__).resolve().parents[4] / "config" / "security" / "admin_pubkey.asc"
+                if not pubkey_path.exists():
+                     # Fallback to current working directory root if absolute path fails
+                     pubkey_path = Path("config/security/admin_pubkey.asc")
+                     
+                pubkey, _ = pgpy.PGPKey.from_file(str(pubkey_path))
+                
+                # Load signed message (expecting clearsigned)
+                signed_msg = pgpy.PGPMessage.from_blob(slip_content)
+                
+                # Verify signature — pgpy.verify() raises PGPError on failure
+                try:
+                    pubkey.verify(signed_msg)
+                except pgpy.errors.PGPError as pgp_exc:
+                    logger.error(f"SECURITY ALERT: Invalid PGP signature for slip at {permission_slip_path}: {pgp_exc}")
+                    raise ValueError("Invalid PGP signature") from pgp_exc
 
-            # 5. Verify slip hasn't expired
+                # Use the verified message content as JSON metadata
+                slip_metadata = json.loads(signed_msg.message)
+                
+            except ImportError:
+                # Fallback to python-gnupg if pgpy not available
+                import gnupg
+                gpg = gnupg.GPG()
+                pubkey_path = Path(__file__).resolve().parents[4] / "config" / "security" / "admin_pubkey.asc"
+                if not pubkey_path.exists():
+                     pubkey_path = Path("config/security/admin_pubkey.asc")
+                     
+                key_data = pubkey_path.read_text()
+                gpg.import_keys(key_data)
+                
+                verified = gpg.verify(slip_content)
+                if not verified:
+                    logger.error(f"SECURITY ALERT: Invalid PGP signature for slip at {permission_slip_path}")
+                    raise ValueError("Invalid PGP signature")
+                
+                slip_metadata = json.loads(verified.data.decode('utf-8'))
+            except Exception as e:
+                logger.error(f"Signature verification error: {str(e)}")
+                raise ValueError(f"Signature verification failed: {str(e)}")
+
+            # 4. Verify slip hasn't expired
             if "expires_at" in slip_metadata:
                 expires_at = datetime.fromisoformat(slip_metadata["expires_at"])
                 if expires_at < datetime.now(timezone.utc):
@@ -277,7 +319,19 @@ class SignedIntentValidator:
 
     def _construct_slip_path(self, target: str, operation_name: str) -> str:
         """Construct expected path: vault/permission_slips/target/operation.pem"""
-        return str(self.vault_path / target / f"{operation_name}.pem")
+        # Sanitize inputs to prevent path traversal
+        safe_target = re.sub(r'[^a-zA-Z0-9._\-]', '_', target)
+        safe_op = re.sub(r'[^a-zA-Z0-9._\-]', '_', operation_name)
+        
+        resolved_vault = self.vault_path.resolve()
+        final_path = (resolved_vault / safe_target / f"{safe_op}.pem").resolve()
+        
+        # Assert resolved path remains within the vault boundary
+        if not str(final_path).startswith(str(resolved_vault)):
+             logger.error(f"SECURITY ALERT: Path traversal attempt blocked: {target}/{operation_name}")
+             raise ValueError(f"Invalid path construction: resolved path {final_path} is outside boundary {resolved_vault}")
+             
+        return str(final_path)
 
     def _read_permission_slip_content(self, slip_path: str) -> str:
         """Read permission slip content"""
@@ -483,6 +537,13 @@ class SubprocessExecutionGateway:
     Supports Docker-based sandboxing for high-security environments.
     """
     
+    # Explicit allowlist of permitted tool binary names to prevent command injection
+    ALLOWED_BINARIES = {
+        "nmap", "nuclei", "subfinder", "httpx", "naabu", "dnsx", "amass", 
+        "ffuf", "sqlmap", "dalfox", "ghau", "shodan", "curl", "dig", "whois",
+        "python3", "bash", "sh"
+    }
+
     # Mapping of tool names to their expected API key environment variables
     # This allows automatic secret injection from Vault
     TOOL_SECRET_MAP = {
@@ -625,11 +686,19 @@ class SubprocessExecutionGateway:
         try:
             logger.info(f"Executing tool locally: {tool_name} with timeout {timeout_seconds}s")
 
+            # Validate binary name against allowlist before split or exec
+            command_parts = tool_command.split()
+            if not command_parts:
+                return False, {}, "Empty tool command"
+                
+            binary_name = os.path.basename(command_parts[0])
+            if binary_name not in self.ALLOWED_BINARIES:
+                logger.error(f"SECURITY ALERT: Blocked execution of unallowed binary: {binary_name}")
+                raise ValueError(f"Binary '{binary_name}' is not in the explicit allowlist")
+
             # Merge current env with secrets and proxy
             env = os.environ.copy()
             env.update(secrets)
-
-            command_parts = tool_command.split()
 
             process = await asyncio.create_subprocess_exec(
                 *command_parts,

@@ -3,20 +3,10 @@
   "_description": "Hard-coded whitelist of authorized targets for bug bounty research. Only targets in this scope can be scanned.",
   "target_domains": [
     "example.com",
-    "*.example.com",
-    "api.example.com",
-    "app.example.com"
+    "*.example.com"
   ],
-  "target_ips": [
-    "192.168.1.1",
-    "192.168.1.2",
-    "10.0.0.1"
-  ],
-  "target_cidrs": [
-    "192.168.1.0/24",
-    "10.0.0.0/8",
-    "172.16.0.0/12"
-  ],
+  "target_ips": [],
+  "target_cidrs": [],
   "allowed_methods": [
     "osint",
     "dns_enumeration",

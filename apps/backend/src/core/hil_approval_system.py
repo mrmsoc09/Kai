@@ -5,7 +5,7 @@ Manages approval gates for report submissions and email communications
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from enum import Enum
 import uuid
@@ -107,7 +107,7 @@ class HiLApprovalSystem:
             approval_id=approval_id,
             approval_type=ApprovalType.REPORT_SUBMISSION,
             status=ApprovalStatus.PENDING,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             title=f"Report Submission: {program_name}",
             description=f"Review and approve security findings report for submission to {submission_platform}",
             content={
@@ -160,7 +160,7 @@ class HiLApprovalSystem:
             approval_id=approval_id,
             approval_type=ApprovalType.EMAIL_REPLY,
             status=ApprovalStatus.PENDING,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(timezone.utc),
             title=f"Email Reply: {program_name}",
             description=f"Review draft reply to stakeholder inquiry about {incoming_email.get('subject', 'vulnerability')}",
             content={
@@ -214,7 +214,7 @@ class HiLApprovalSystem:
         # Update request
         request.status = ApprovalStatus.APPROVED
         request.approved_by = user_id
-        request.approved_at = datetime.utcnow()
+        request.approved_at = datetime.now(timezone.utc)
 
         if user_notes:
             request.user_notes = user_notes
@@ -261,7 +261,7 @@ class HiLApprovalSystem:
         # Update request
         request.status = ApprovalStatus.REJECTED
         request.approved_by = user_id
-        request.approved_at = datetime.utcnow()
+        request.approved_at = datetime.now(timezone.utc)
         request.rejection_reason = reason
 
         # Move to history
