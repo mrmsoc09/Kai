@@ -3,7 +3,7 @@
 import hashlib
 import json
 from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timezone
 from difflib import SequenceMatcher
 
 
@@ -277,7 +277,7 @@ class FindingDeduplicator:
         else:
             merged = duplicate_group[0].copy()
 
-        merged["deduplicated_at"] = datetime.utcnow().isoformat()
+        merged["deduplicated_at"] = datetime.now(timezone.utc).isoformat()
         merged["dedup_strategy"] = strategy
         return merged
 

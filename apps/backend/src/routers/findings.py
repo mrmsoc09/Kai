@@ -99,25 +99,48 @@ def _init_patching_dirs():
         PLANS_DIR.mkdir(parents=True, exist_ok=True)
         PATCHES_DIR.mkdir(parents=True, exist_ok=True)
 
+import re
+
+def _validate_plan_id(plan_id: str) -> None:
+    """Validate plan_id against strict allowlist to prevent path traversal."""
+    if not re.match(r'^[a-zA-Z0-9_-]{1,64}$', plan_id):
+        raise HTTPException(status_code=400, detail=f"Invalid plan_id format: {plan_id}")
+
 def _save_remediation_plan(plan_id: str, plan: Dict[str, Any]):
     """Persist remediation plan to disk."""
+    _validate_plan_id(plan_id)
     _init_patching_dirs()
-    plan_dir = PLANS_DIR / plan_id
+    
+    plan_dir = (PLANS_DIR / plan_id).resolve()
+    if not str(plan_dir).startswith(str(PLANS_DIR.resolve())):
+        raise HTTPException(status_code=400, detail="Invalid plan_id: path traversal detected")
+        
     plan_dir.mkdir(parents=True, exist_ok=True)
     plan_file = plan_dir / 'plan.json'
     plan_file.write_text(json.dumps(plan, indent=2))
 
 def _load_remediation_plan(plan_id: str) -> Optional[Dict[str, Any]]:
     """Load remediation plan from disk."""
-    plan_file = PLANS_DIR / plan_id / 'plan.json'
+    _validate_plan_id(plan_id)
+    
+    plan_dir = (PLANS_DIR / plan_id).resolve()
+    if not str(plan_dir).startswith(str(PLANS_DIR.resolve())):
+        raise HTTPException(status_code=400, detail="Invalid plan_id: path traversal detected")
+        
+    plan_file = plan_dir / 'plan.json'
     if plan_file.exists():
         return json.loads(plan_file.read_text())
     return None
 
 def _save_remediation_execution(plan_id: str, execution: Dict[str, Any]):
     """Save remediation phase execution record."""
+    _validate_plan_id(plan_id)
     _init_patching_dirs()
-    plan_dir = PLANS_DIR / plan_id
+    
+    plan_dir = (PLANS_DIR / plan_id).resolve()
+    if not str(plan_dir).startswith(str(PLANS_DIR.resolve())):
+        raise HTTPException(status_code=400, detail="Invalid plan_id: path traversal detected")
+        
     plan_dir.mkdir(parents=True, exist_ok=True)
     execution_file = plan_dir / 'execution.jsonl'
     with open(execution_file, 'a') as f:

@@ -6,7 +6,7 @@ Manages PGP keys, SSH keys, and other cryptographic materials
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import os
@@ -137,7 +137,7 @@ class KeyManagementSystem:
                 owner_type=KeyOwnerType.ADMIN,
                 owner_id=admin_id,
                 status=KeyStatus.ACTIVE,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
                 fingerprint=fingerprint,
                 is_primary=is_primary,
                 description=description,
@@ -203,9 +203,9 @@ class KeyManagementSystem:
                 old_key_metadata=current_metadata,
                 new_key_metadata=new_metadata,
                 status=KeyRotationStatus.COMPLETED,
-                initiated_at=datetime.utcnow(),
-                scheduled_for=datetime.utcnow(),
-                completed_at=datetime.utcnow(),
+                initiated_at=datetime.now(timezone.utc),
+                scheduled_for=datetime.now(timezone.utc),
+                completed_at=datetime.now(timezone.utc),
                 reason=reason,
                 authorized_by=authorized_by,
                 rollback_available=True,
@@ -338,7 +338,7 @@ class KeyManagementSystem:
                 owner_type=KeyOwnerType.USER,
                 owner_id=user_id,
                 status=KeyStatus.ACTIVE,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
                 fingerprint=fingerprint,
                 description=description,
                 tags=tags or [],
@@ -400,7 +400,7 @@ class KeyManagementSystem:
                 return (False, "Key not found", None)
 
             metadata = self.keys_metadata[key_id]
-            scheduled_for = scheduled_for or (datetime.utcnow() + timedelta(days=1))
+            scheduled_for = scheduled_for or (datetime.now(timezone.utc) + timedelta(days=1))
 
             rotation_id = self._generate_key_id("rotation", key_id)
             rotation_plan = KeyRotationPlan(
@@ -409,7 +409,7 @@ class KeyManagementSystem:
                 old_key_metadata=metadata,
                 new_key_metadata=None,
                 status=KeyRotationStatus.INITIATED,
-                initiated_at=datetime.utcnow(),
+                initiated_at=datetime.now(timezone.utc),
                 scheduled_for=scheduled_for,
                 reason=reason,
                 authorized_by=authorized_by,
@@ -459,7 +459,7 @@ class KeyManagementSystem:
                 owner_type=metadata.owner_type,
                 owner_id=metadata.owner_id,
                 status=KeyStatus.ACTIVE,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
                 fingerprint=fingerprint,
                 is_primary=metadata.is_primary,
                 algorithm=self._detect_key_algorithm(new_key_content)
@@ -476,7 +476,7 @@ class KeyManagementSystem:
             # Update rotation plan
             rotation_plan.new_key_metadata = new_metadata
             rotation_plan.status = KeyRotationStatus.COMPLETED
-            rotation_plan.completed_at = datetime.utcnow()
+            rotation_plan.completed_at = datetime.now(timezone.utc)
             rotation_plan.authorized_by = authorized_by
 
             # Deactivate old key
@@ -607,7 +607,7 @@ class KeyManagementSystem:
 
     def get_expiring_keys(self, days_until: int = 30) -> List[KeyMetadata]:
         """Get keys expiring within specified days"""
-        cutoff = datetime.utcnow() + timedelta(days=days_until)
+        cutoff = datetime.now(timezone.utc) + timedelta(days=days_until)
         return [
             metadata for metadata in self.keys_metadata.values()
             if metadata.expires_at and metadata.expires_at <= cutoff
@@ -624,7 +624,7 @@ class KeyManagementSystem:
 
     def _generate_key_id(self, key_type: str, owner_id: str) -> str:
         """Generate unique key ID"""
-        content = f"{key_type}:{owner_id}:{datetime.utcnow().isoformat()}"
+        content = f"{key_type}:{owner_id}:{datetime.now(timezone.utc).isoformat()}"
         hash_val = hashlib.sha256(content.encode()).hexdigest()[:16]
         return f"{key_type}_{hash_val}"
 
@@ -680,7 +680,7 @@ class KeyManagementSystem:
         """Log audit event for a key"""
         if key_id in self.keys_metadata:
             self.keys_metadata[key_id].audit_log.append({
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "operation": operation,
                 "details": details
             })
@@ -695,7 +695,7 @@ class KeyManagementSystem:
     ):
         """Log key usage"""
         self.usage_logs.append(KeyUsageLog(
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             key_id=key_id,
             operation=operation,
             success=success,

@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useStore } from '../store/system';
 
 export default function Outbox() {
   const [files, setFiles] = useState<any[]>([]);
-  const token = localStorage.getItem('token') || 'devtoken';
+  const token = useStore(state => state.auth.token);
+  const navigate = useNavigate();
+
   async function load() {
+    if (!token) { navigate('/login'); return; }
     const r = await fetch('/api/submissions/outbox', { headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok) { return; }
     const j = await r.json();
     setFiles(j.files || []);
   }
-  useEffect(() => { void load(); }, []);
+  useEffect(() => {
+    if (!token) { navigate('/login'); return; }
+    void load();
+  }, [token]);
   return (
     <div style={{ padding: 20, color: '#8FAF9B' }}>
       <h2>Outbox</h2>

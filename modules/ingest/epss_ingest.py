@@ -6,7 +6,7 @@ os.makedirs(ART_DIR, exist_ok=True)
 EPSS_URL = "https://epss.cyentia.com/epss_scores-current.csv.gz"
 
 def _now_iso():
-    return dt.datetime.utcnow().isoformat() + "Z"
+    return dt.datetime.now(timezone.utc).isoformat() + "Z"
 
 def ingest(save_name: str = "epss_current.jsonl") -> str:
     out_path = os.path.join(ART_DIR, save_name)

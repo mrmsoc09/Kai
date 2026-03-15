@@ -14,14 +14,14 @@ import os
 import shutil
 import subprocess
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .helpers import artifacts_root, utcnow, workflow_output_root
+from .helpers import artifacts_root, workflow_output_root
 from .tool_registry_catalog import ToolCatalogEntry, list_catalog_entries
 from ..models.campaign import ToolExecution
 
@@ -39,7 +39,7 @@ _ALIAS_SUFFIXES = ("_scan", "_enum", "_probe", "_quick", "_host")
 
 
 def _now() -> datetime:
-    return utcnow()
+    return datetime.now(timezone.utc)
 
 
 def _telemetry_path() -> Path:

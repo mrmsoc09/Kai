@@ -27,7 +27,17 @@ celery_app.conf.update(
 )
 
 
-@celery_app.task(name="run_tool", bind=True)
+K1_TASK_MAX_RETRIES = int(os.getenv("K1_TASK_MAX_RETRIES", "3"))
+
+
+@celery_app.task(
+    name="run_tool",
+    bind=True,
+    max_retries=K1_TASK_MAX_RETRIES,
+    retry_backoff=True,
+    retry_backoff_max=300,
+    retry_jitter=True,
+)
 def run_tool_task(
     self,
     tool_id: str,
@@ -37,6 +47,7 @@ def run_tool_task(
     program_id: str = "",
     certificate_id: str = "",
     workflow_id: str = "",
+    scope_policy_hash: str = "",
 ) -> dict:
     """Invoke a registered tool adapter by ID.
 
@@ -55,11 +66,22 @@ def run_tool_task(
     )
     from apps.backend.src.core.hook_registry import get_hook_registry
     from apps.backend.src.models.enums import ToolExecutionStatusEnum
+    from apps.backend.src.core.scope_guardrails import default_scope_policy_path
     import time
+    import hashlib
 
     task_id = getattr(self.request, "id", "")
     retry_attempt = int(getattr(self.request, "retries", 0) or 0)
     max_retries = int(getattr(self, "max_retries", 0) or 0)
+
+    # Calculate current policy hash for drift detection
+    current_hash = "none"
+    p_path = default_scope_policy_path()
+    if p_path.exists():
+        try:
+            current_hash = hashlib.sha256(p_path.read_bytes()).hexdigest()
+        except Exception:
+            current_hash = "error"
     if task_id:
         mark_worker_execution_running_sync(
             worker_task_id=task_id,
@@ -121,55 +143,48 @@ def run_tool_task(
         _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
         return result_payload
 
-    # Retrieve credentials from Vault when a vault_path is present in params.
-    # For tools that declare api_keys_required, a Vault failure is fatal.
-    vault_path = params.get("vault_path") or params.get("_vault_path")
-    if vault_path:
-        try:
-            from apps.backend.src.core.hil_vault_client import VaultClient
-            from apps.backend.src.core.tool_registry_catalog import get_catalog_entry as _get_cat
+    # Task 40: Fetch credentials from Vault at execution time using tool_id as key
+    try:
+        from apps.backend.src.core.hil_vault_client import VaultClient
+        from apps.backend.src.core.tool_registry_catalog import get_catalog_entry as _get_cat
 
-            vc = VaultClient()
-            creds = vc.read_secret(vault_path)
-            if creds:
-                params = {**params, "_credentials": creds}
-            else:
-                # No credentials returned — check if this tool requires them.
-                cat = _get_cat(tool_id)
-                if cat and cat.api_keys_required:
-                    err = f"Vault returned no credentials for required path '{vault_path}' (tool={tool_id})"
-                    logger.error(err)
-                    result_payload = {"status": "failed", "error": err}
-                    _ingest(
-                        status=ToolExecutionStatusEnum.FAILED,
-                        payload=result_payload,
-                        error=err,
-                    )
-                    return result_payload
-                logger.warning(
-                    "Vault returned no credentials for vault_path=%r (tool=%s); proceeding without.",
-                    vault_path, tool_id,
-                )
-        except Exception as exc:
-            cat = None
-            try:
-                from apps.backend.src.core.tool_registry_catalog import get_catalog_entry as _get_cat
-                cat = _get_cat(tool_id)
-            except Exception:
-                pass
+        vc = VaultClient()
+        # Primary lookup by tool_id
+        tool_secret_path = f"secret/tools/{tool_id}"
+        creds = vc.read_secret(tool_secret_path)
+        
+        # Fallback to legacy path if not found
+        if not creds:
+            vault_path = params.get("vault_path") or params.get("_vault_path")
+            if vault_path:
+                creds = vc.read_secret(vault_path)
+
+        if creds:
+            params = {**params, "_credentials": creds}
+        else:
+            cat = _get_cat(tool_id)
             if cat and cat.api_keys_required:
-                err = f"Vault unavailable and tool '{tool_id}' requires credentials: {exc}"
+                err = f"Vault returned no credentials for tool='{tool_id}'"
                 logger.error(err)
-                result_payload = {"status": "failed", "error": err}
-                _ingest(
-                    status=ToolExecutionStatusEnum.FAILED,
-                    payload=result_payload,
-                    error=err,
-                )
+                result_payload = {"status": "failed", "error": err, "retry_attempt": retry_attempt, "max_retries": max_retries}
+                _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=err)
                 return result_payload
-            logger.warning("Vault unavailable for tool=%s; proceeding without credentials: %s", tool_id, exc)
+    except Exception as exc:
+        cat = None
+        try:
+            from apps.backend.src.core.tool_registry_catalog import get_catalog_entry as _get_cat
+            cat = _get_cat(tool_id)
+        except Exception: pass
+        if cat and cat.api_keys_required:
+            err = f"Vault unavailable and tool '{tool_id}' requires credentials: {exc}"
+            logger.error(err)
+            result_payload = {"status": "failed", "error": err, "retry_attempt": retry_attempt, "max_retries": max_retries}
+            _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=err)
+            return result_payload
+        logger.warning("Vault unavailable for tool=%s; proceeding without credentials: %s", tool_id, exc)
 
     try:
+        # Re-enforce authorization gates (reads LIVE policy from disk via load_scope_policy)
         enforce_authorization_gates(
             tool_id,
             params,
@@ -179,6 +194,7 @@ def run_tool_task(
             workflow_id=workflow_id or None,
         )
     except AuthorizationGateError as exc:
+        logger.error(f"WORKER SAFETY BLOCK: Tool {tool_id} blocked at execution time: {exc}")
         hooks.run(
             "safety_gate",
             {
@@ -186,6 +202,8 @@ def run_tool_task(
                 "tool_id": tool_id,
                 "run_id": params.get("run_id"),
                 "status": "blocked",
+                "reason": str(exc),
+                "policy_drift": scope_policy_hash != current_hash
             },
         )
         result_payload = {
@@ -193,6 +211,8 @@ def run_tool_task(
             "error": f"authorization gate blocked execution: {exc}",
             "retry_attempt": retry_attempt,
             "max_retries": max_retries,
+            "blocked": True,
+            "policy_drift": scope_policy_hash != current_hash
         }
         _ingest(status=ToolExecutionStatusEnum.FAILED, payload=result_payload, error=result_payload["error"])
         return result_payload
@@ -240,10 +260,18 @@ def run_tool_task(
         allowed_param_names = {param.name for param in getattr(tool, "parameters", [])}
         if allowed_param_names:
             filtered_params = {k: v for k, v in params.items() if k in allowed_param_names}
-            dropped_params = sorted(set(params.keys()) - set(filtered_params.keys()))
         else:
-            filtered_params = dict(params)
-            dropped_params = []
+            # Fix: When allowed_param_names is empty, filtered_params must be empty
+            filtered_params = {}
+
+        # Unconditionally strip sensitive and internal keys regardless of schema
+        keys_to_strip = {"_credentials", "vault_path", "_vault_path"}
+        filtered_params = {
+            k: v for k, v in filtered_params.items() 
+            if k not in keys_to_strip and not k.startswith("_")
+        }
+        
+        dropped_params = sorted(set(params.keys()) - set(filtered_params.keys()))
 
         # Preserve run correlation metadata when wrappers accept a metadata-like field.
         if "run_id" in allowed_param_names and "run_id" not in filtered_params:
@@ -331,6 +359,18 @@ def run_tool_task(
         ingest_status = ToolExecutionStatusEnum.CANCELED
     else:
         ingest_status = ToolExecutionStatusEnum.FAILED
+        # Handle retries manually if within limits
+        if retry_attempt < max_retries:
+            logger.warning(
+                f"Task {task_id} ({tool_id}) failed, retrying ({retry_attempt + 1}/{max_retries})..."
+            )
+            raise self.retry(exc=RuntimeError(result_dict.get("error", "Tool execution failed")))
+        else:
+            logger.error(
+                f"MONITORING_ALERT: Task {task_id} ({tool_id}) exhausted all {max_retries} retries. "
+                f"Final error: {result_dict.get('error')}"
+            )
+
     _ingest(
         status=ingest_status,
         payload=result_dict,

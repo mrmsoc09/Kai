@@ -5,7 +5,7 @@ Intelligently analyzes and selects optimal BBP targets based on platform capabil
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from enum import Enum
 import asyncio
@@ -180,7 +180,7 @@ class AutonomousBBPSelector:
         result = SelectionResult(
             selected_programs=selected,
             total_analyzed=len(available_programs),
-            selection_timestamp=datetime.utcnow(),
+            selection_timestamp=datetime.now(timezone.utc),
             selection_criteria=criteria,
             budget_allocated_cents=budget_used,
             estimated_total_payout=estimated_payout,

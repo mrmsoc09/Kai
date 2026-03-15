@@ -4,7 +4,7 @@ Program and VRP related schemas
 
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
-from datetime import datetime
+from datetime import timezone, datetime
 from enum import Enum
 
 
@@ -75,8 +75,8 @@ class Program(BaseModel):
     disallowed_vulnerability_types: List[str] = []
 
     # Metadata
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    last_updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    last_updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_synced_at: Optional[datetime] = None
     success_count: int = 0
     total_payouts: float = 0.0

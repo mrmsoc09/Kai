@@ -32,6 +32,7 @@ from .enums import (
     ToolExecutionStatusEnum,
 )
 from .mixins import TimestampMixin, UTCAwareDatetime
+from .types import EncryptedText
 
 
 class Program(Base, TimestampMixin):
@@ -40,6 +41,8 @@ class Program(Base, TimestampMixin):
         UniqueConstraint("program_key", name="uq_programs_program_key"),
         CheckConstraint("btrim(name) <> ''", name="programs_name_not_empty"),
         Index("ix_programs_status", "status"),
+        Index("ix_programs_program_key", "program_key"),
+        Index("ix_programs_created_by", "created_by"),
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -693,7 +696,7 @@ class Observation(Base, TimestampMixin):
         nullable=True,
     )
     normalized_ref = Column(Text, nullable=True)
-    payload_json = Column(JSON, nullable=False, server_default="{}")
+    payload_json = Column(EncryptedText, nullable=False, server_default="{}")
 
     campaign = relationship("CampaignRun", back_populates="observations")
     branch = relationship("ExecutionBranch", back_populates="observations")
@@ -785,7 +788,7 @@ class SubmissionDraft(Base, TimestampMixin):
     )
     status = Column(Text, nullable=False, server_default="DRAFT")
     title = Column(Text, nullable=True)
-    content_uri = Column(Text, nullable=True)
+    content_uri = Column(EncryptedText, nullable=True)
     content_hash = Column(Text, nullable=True)
     prepared_by = Column(Text, nullable=True)
     approved_by = Column(Text, nullable=True)

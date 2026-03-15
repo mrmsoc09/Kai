@@ -10,7 +10,7 @@ from typing import Optional, List, Dict, Any, AsyncIterator
 from enum import Enum
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from .secret_manager import get_secret_manager, SecretManagerError
 
 # Provider Libraries (install as needed)
@@ -890,7 +890,7 @@ class LLMProviderFactory:
 
                 # Log usage
                 self._usage_log.append({
-                    "timestamp": datetime.utcnow().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                     "provider": provider_name.value,
                     "model": response.model,
                     "input_tokens": response.usage["input_tokens"],

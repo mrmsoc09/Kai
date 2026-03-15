@@ -36,6 +36,8 @@ export default function Sidebar() {
     ink: '#0B0C0D',
   }
 
+  const llmConfig = useStore((s) => s.llmConfig)
+
   useEffect(() => {
     getLLMConfig()
       .then(r => {
@@ -45,16 +47,13 @@ export default function Sidebar() {
         setLlmReady(ready)
       })
       .catch(() => {
-        try {
-          const raw = localStorage.getItem('kai_llm_config')
-          if (raw) {
-            const cfg = JSON.parse(raw)
-            setLlmModel(cfg.model || cfg.provider || '')
-            setLlmReady(!!cfg.api_key || cfg.provider === 'ollama')
-          }
-        } catch { /* ignore */ }
+        const cfg = llmConfig
+        if (cfg) {
+          setLlmModel(cfg.model || cfg.provider || '')
+          setLlmReady(!!cfg.has_api_key || !!cfg.api_key || cfg.provider === 'ollama')
+        }
       })
-  }, [])
+  }, [llmConfig])
 
   useEffect(() => {
     const refresh = () => setLogo(localStorage.getItem('k1_logo_dataurl') || '')

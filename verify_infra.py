@@ -9,7 +9,7 @@ import sys
 import subprocess
 import json
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 import gnupg
 
 # Configuration
@@ -30,7 +30,7 @@ class KaiInfraVerifier:
 
     def __init__(self):
         self.results = {
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "checks": {},
             "summary": {}
         }
@@ -439,7 +439,7 @@ class KaiInfraVerifier:
         self.print_header("PROJECT KAI INFRASTRUCTURE VERIFICATION")
         print(f"Host: {os.uname().nodename}")
         print(f"User: {os.getenv('USER', 'unknown')}")
-        print(f"Time: {datetime.utcnow().isoformat()}\n")
+        print(f"Time: {datetime.now(timezone.utc).isoformat()}\n")
 
         checks = [
             ("Directory Structure", self.check_directory_structure),

@@ -339,8 +339,8 @@ class PackageAnalyzer:
     @staticmethod
     def _current_time() -> str:
         """Get current ISO time."""
-        from datetime import datetime
-        return datetime.utcnow().isoformat()
+        from datetime import datetime, timezone
+        return datetime.now(timezone.utc).isoformat()
 
     def get_analyzer_stats(self) -> Dict[str, Any]:
         """Get statistics on analyzed packages."""

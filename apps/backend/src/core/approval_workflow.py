@@ -5,7 +5,7 @@ Integrates key management with orchestration graph for PGP-signed approvals
 
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 
@@ -32,10 +32,10 @@ class ApprovalRequest:
 
     def __post_init__(self):
         if self.created_at is None:
-            self.created_at = datetime.utcnow()
+            self.created_at = datetime.now(timezone.utc)
         if self.expires_at is None:
-            from datetime import timedelta
-            self.expires_at = datetime.utcnow() + timedelta(hours=24)
+            from datetime import timedelta, timezone
+            self.expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
         if self.metadata is None:
             self.metadata = {}
 
@@ -176,7 +176,7 @@ class HiLApprovalWorkflow:
                 decision=ApprovalDecision.APPROVED,
                 admin_id=admin_id,
                 admin_key_fingerprint=admin_fingerprint,
-                signed_at=datetime.utcnow(),
+                signed_at=datetime.now(timezone.utc),
                 pgp_signature=pgp_signature,
                 justification=justification
             )
@@ -245,7 +245,7 @@ class HiLApprovalWorkflow:
                 decision=ApprovalDecision.REJECTED,
                 admin_id=admin_id,
                 admin_key_fingerprint=admin_fingerprint,
-                signed_at=datetime.utcnow(),
+                signed_at=datetime.now(timezone.utc),
                 pgp_signature=pgp_signature,
                 justification=reason
             )
@@ -318,7 +318,7 @@ class HiLApprovalWorkflow:
                     "risk_level": req.risk_level,
                     "created_at": req.created_at.isoformat(),
                     "expires_at": req.expires_at.isoformat(),
-                    "time_pending_hours": (datetime.utcnow() - req.created_at).total_seconds() / 3600
+                    "time_pending_hours": (datetime.now(timezone.utc) - req.created_at).total_seconds() / 3600
                 })
 
         return sorted(pending, key=lambda x: x["created_at"])
@@ -347,7 +347,7 @@ class HiLApprovalWorkflow:
     def _log_audit(self, event_type: str, details: Dict[str, Any]):
         """Log audit event"""
         self.audit_log.append({
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "event_type": event_type,
             "details": details
         })

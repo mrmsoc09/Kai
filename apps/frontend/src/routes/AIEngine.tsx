@@ -7,6 +7,7 @@
  */
 import React, { useEffect, useRef, useState } from 'react'
 import { getLLMConfig, saveLLMConfig, getLLMProviders } from '../lib/api'
+import { useStore } from '../store/system'
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
@@ -167,6 +168,8 @@ function LLMConfig() {
   const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(null)
   const [hasExistingKey, setHasExistingKey] = useState(false)
   const [loading, setLoading] = useState(true)
+  const setLLMConfigStore = useStore((s) => s.setLLMConfig)
+  const llmConfigStore = useStore((s) => s.llmConfig)
 
   useEffect(() => {
     getLLMConfig()
@@ -177,19 +180,17 @@ function LLMConfig() {
         if (cfg.base_url) setBaseUrl(cfg.base_url)
         if (cfg.temperature) setTemperature(String(cfg.temperature))
         setHasExistingKey(cfg.has_api_key)
+        setLLMConfigStore(cfg)
       })
       .catch(() => {
-        // Fallback to localStorage
-        try {
-          const raw = localStorage.getItem('kai_llm_config')
-          if (raw) {
-            const cfg = JSON.parse(raw)
-            if (cfg.provider) setProvider(cfg.provider)
-            if (cfg.model) setModel(cfg.model)
-            if (cfg.base_url) setBaseUrl(cfg.base_url)
-            if (cfg.api_key) setHasExistingKey(true)
-          }
-        } catch { /* ignore */ }
+        // Fallback to Zustand memory
+        const cfg = llmConfigStore
+        if (cfg) {
+          if (cfg.provider) setProvider(cfg.provider)
+          if (cfg.model) setModel(cfg.model)
+          if (cfg.base_url) setBaseUrl(cfg.base_url)
+          if (cfg.has_api_key || cfg.api_key) setHasExistingKey(true)
+        }
       })
       .finally(() => setLoading(false))
   }, [])
@@ -210,12 +211,12 @@ function LLMConfig() {
         base_url: baseUrl,
         temperature: parseFloat(temperature) || 0.3,
       })
-      // Mirror to localStorage for offline fallback
-      localStorage.setItem('kai_llm_config', JSON.stringify({
+      // Save to Zustand memory only, never localStorage
+      setLLMConfigStore({
         provider, model: resolvedModel,
-        api_key: apiKey ? '***' : '',
         base_url: baseUrl,
-      }))
+        has_api_key: true
+      })
       if (apiKey) setHasExistingKey(true)
       setApiKey('')  // Clear from UI after save
       setStatus({ ok: true, msg: `Saved. Kaison Composer will now use ${resolvedModel}` })
@@ -433,14 +434,15 @@ function AgentChat() {
 
   // Check if LLM is configured
   const [llmConfigured, setLlmConfigured] = useState<boolean | null>(null)
+  const llmConfigStore = useStore((s) => s.llmConfig)
 
   useEffect(() => {
     getLLMConfig()
       .then(r => setLlmConfigured(r.data.has_api_key || r.data.provider === 'ollama'))
       .catch(() => {
-        const raw = localStorage.getItem('kai_llm_config')
-        if (raw) {
-          try { const c = JSON.parse(raw); setLlmConfigured(!!c.api_key || c.provider === 'ollama') } catch { setLlmConfigured(false) }
+        const c = llmConfigStore
+        if (c) {
+          setLlmConfigured(!!c.has_api_key || !!c.api_key || c.provider === 'ollama')
         } else {
           setLlmConfigured(false)
         }
@@ -714,8 +716,8 @@ function MCPTools() {
   const [form, setForm] = useState({ name: '', url: '', token: '', description: '' })
 
   useEffect(() => {
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || ''
-    fetch('/api/v1/tools', { headers: { Authorization: `Bearer ${tok}` } })
+    // Rely on session cookie for auth
+    fetch('/api/v1/tools')
       .then(r => r.json())
       .then(d => setTools(Array.isArray(d) ? d : d.tools ?? []))
       .catch(() => setTools([]))
@@ -869,8 +871,8 @@ function AgentStatus() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || ''
-    fetch('/state/config', { headers: { Authorization: `Bearer ${tok}` } })
+    // Rely on session cookie for auth
+    fetch('/state/config')
       .then(r => r.json())
       .then(setState)
       .catch(() => setState(null))

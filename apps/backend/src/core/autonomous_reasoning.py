@@ -6,7 +6,7 @@ Advanced goal decomposition, planning, and reasoning without human direction
 from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 
@@ -33,7 +33,7 @@ class AutonomousGoal:
     success_criteria: List[str] = field(default_factory=list)
     status: str = "pending"  # pending, in_progress, completed, abandoned
     progress: float = 0.0  # 0-1
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
 
 
@@ -47,7 +47,7 @@ class ReasoningTrace:
     conclusion: Optional[str] = None
     confidence: float = 0.0
     reasoning_depth: int = 0
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
     def add_step(self, step_num: int, content: str, reasoning: str, confidence: float):
         """Add a reasoning step"""
@@ -56,7 +56,7 @@ class ReasoningTrace:
             "content": content,
             "reasoning": reasoning,
             "confidence": confidence,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         })
 
     def to_dict(self) -> Dict[str, Any]:
@@ -192,7 +192,7 @@ class AutonomousReasoningEngine:
         """Perform chain-of-thought reasoning for step-by-step problem solving"""
 
         trace = ReasoningTrace(
-            trace_id=trace_id or f"trace_{datetime.utcnow().timestamp()}",
+            trace_id=trace_id or f"trace_{datetime.now(timezone.utc).timestamp()}",
             initial_problem=problem,
             strategy_used=ReasoningStrategy.CHAIN_OF_THOUGHT
         )

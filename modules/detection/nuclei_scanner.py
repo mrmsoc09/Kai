@@ -3,7 +3,7 @@
 import json
 import subprocess
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class NucleiScanner:
@@ -75,7 +75,7 @@ class NucleiScanner:
         """
         scan_record = {
             "target": target,
-            "started_at": datetime.utcnow().isoformat(),
+            "started_at": datetime.now(timezone.utc).isoformat(),
             "status": "running",
         }
 
@@ -129,7 +129,7 @@ class NucleiScanner:
             scan_record["findings"] = []
             scan_record["error"] = str(e)
 
-        scan_record["completed_at"] = datetime.utcnow().isoformat()
+        scan_record["completed_at"] = datetime.now(timezone.utc).isoformat()
         self.scan_history.append(scan_record)
 
         return scan_record
@@ -151,7 +151,7 @@ class NucleiScanner:
             "scans": [],
             "total_findings": 0,
             "findings_by_severity": {},
-            "started_at": datetime.utcnow().isoformat(),
+            "started_at": datetime.now(timezone.utc).isoformat(),
         }
 
         for target in targets:
@@ -166,7 +166,7 @@ class NucleiScanner:
                     results["findings_by_severity"].get(severity, 0) + 1
                 )
 
-        results["completed_at"] = datetime.utcnow().isoformat()
+        results["completed_at"] = datetime.now(timezone.utc).isoformat()
         return results
 
     def list_templates(self, category: Optional[str] = None) -> Dict[str, Any]:
@@ -260,7 +260,7 @@ class NucleiScanner:
                     "reference": item.get("info", {}).get("reference", []),
                     "matched_line": item.get("matched_line", ""),
                     "curl_command": item.get("curl_command", ""),
-                    "found_at": datetime.utcnow().isoformat(),
+                    "found_at": datetime.now(timezone.utc).isoformat(),
                 }
 
                 findings.append(finding)

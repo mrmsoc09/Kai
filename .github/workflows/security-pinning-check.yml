@@ -1,0 +1,32 @@
+name: '🔒 GitHub Actions Pinning Check'
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+  push:
+    branches:
+      - 'main'
+    paths:
+      - '.github/workflows/**'
+
+jobs:
+  check-pinning:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Checkout Code'
+        uses: 'actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683' # v4.2.2
+
+      - name: 'Check for floating tags'
+        run: |
+          # Find all 'uses:' references in workflows
+          # Exclude those that already use a 40-character SHA
+          FLOATING_TAGS=$(grep -r "uses: " .github/workflows/ | grep -vE "@[a-f0-9]{40}" | grep -v "uses: ./" || true)
+          
+          if [ -n "$FLOATING_TAGS" ]; then
+            echo "Error: Found floating tags in GitHub Actions references:"
+            echo "$FLOATING_TAGS"
+            echo "Please use immutable commit SHAs instead of version tags (e.g., actions/checkout@v4 -> actions/checkout@SHA)"
+            exit 1
+          fi
+          echo "All GitHub Actions are pinned to commit SHAs."

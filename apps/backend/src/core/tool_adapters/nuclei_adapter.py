@@ -6,7 +6,7 @@ Fast and customizable vulnerability scanner
 import asyncio
 import json
 import shutil
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 
@@ -129,7 +129,7 @@ class NucleiAdapter(BaseToolAdapter):
         Returns:
             ToolExecutionResult with vulnerabilities found
         """
-        started_at = datetime.utcnow()
+        started_at = datetime.now(timezone.utc)
         options = options or {}
 
         # Validate target
@@ -138,7 +138,7 @@ class NucleiAdapter(BaseToolAdapter):
                 tool_name=self.tool_name,
                 success=False,
                 started_at=started_at,
-                completed_at=datetime.utcnow(),
+                completed_at=datetime.now(timezone.utc),
                 duration_seconds=0,
                 error_message="Invalid target"
             )
@@ -195,7 +195,7 @@ class NucleiAdapter(BaseToolAdapter):
                 timeout=1800
             )
 
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             raw_output = stdout.decode()
@@ -237,7 +237,7 @@ class NucleiAdapter(BaseToolAdapter):
             )
 
         except asyncio.TimeoutError:
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             self.logger.error("nuclei scan timed out after 30 minutes")
@@ -252,7 +252,7 @@ class NucleiAdapter(BaseToolAdapter):
             )
 
         except Exception as e:
-            completed_at = datetime.utcnow()
+            completed_at = datetime.now(timezone.utc)
             duration = (completed_at - started_at).total_seconds()
 
             self.logger.error(f"nuclei execution failed: {str(e)}")
@@ -299,7 +299,7 @@ class NucleiAdapter(BaseToolAdapter):
                     "cvss_score": data.get("info", {}).get("classification", {}).get("cvss-score", 0),
                     "cve_id": data.get("info", {}).get("classification", {}).get("cve-id", []),
                     "cwe_id": data.get("info", {}).get("classification", {}).get("cwe-id", []),
-                    "discovered_at": datetime.utcnow().isoformat(),
+                    "discovered_at": datetime.now(timezone.utc).isoformat(),
                     "target": target
                 }
 

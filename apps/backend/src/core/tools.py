@@ -10,7 +10,7 @@ from typing import Any, Dict, List, Optional, Callable, Set
 from enum import Enum
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
@@ -162,7 +162,7 @@ class BaseTool(ABC):
         self.autonomy_tier = autonomy_tier
         self.parameters = parameters or []
         self.version = version
-        self.created_at = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
         self.last_used = None
         self.use_count = 0
         self.success_count = 0
@@ -211,7 +211,7 @@ class BaseTool(ABC):
     def record_execution(self, result: ToolResult):
         """Record tool execution metrics"""
         self.use_count += 1
-        self.last_used = datetime.utcnow()
+        self.last_used = datetime.now(timezone.utc)
 
         if result.status == ToolStatus.COMPLETED:
             self.success_count += 1

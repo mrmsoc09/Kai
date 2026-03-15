@@ -6,7 +6,7 @@ Autonomous training, skill development, and Human-in-the-Loop (HiL) approval
 from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 import json
 import uuid
@@ -56,7 +56,7 @@ class TrainingCurriculum:
     training_type: TrainingType
     tasks: List[TrainingTask] = field(default_factory=list)
     total_estimated_time: int = 0  # Minutes
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     created_by: str = "system"  # Who created curriculum
     description: str = ""
     prerequisites: List[str] = field(default_factory=list)
@@ -144,7 +144,7 @@ class TrainingSession:
         if self.completed_at:
             elapsed = self.completed_at - self.started_at
         else:
-            elapsed = datetime.utcnow() - self.started_at
+            elapsed = datetime.now(timezone.utc) - self.started_at
         return int(elapsed.total_seconds() / 60)
 
     def get_time_remaining(self) -> int:
@@ -245,7 +245,7 @@ class AgentTrainingSystem:
             current_proficiency=current_proficiency,
             target_proficiency=target_proficiency,
             estimated_duration=estimated_duration,
-            requested_at=datetime.utcnow(),
+            requested_at=datetime.now(timezone.utc),
             reason=reason,
             confidence_in_success=confidence,
             status=TrainingStatus.PENDING_APPROVAL
@@ -277,7 +277,7 @@ class AgentTrainingSystem:
 
         request = self.training_requests[request_id]
         request.status = TrainingStatus.APPROVED
-        request.approved_at = datetime.utcnow()
+        request.approved_at = datetime.now(timezone.utc)
         request.approved_by = approved_by
         request.approval_notes = notes
 
@@ -376,8 +376,8 @@ class AgentTrainingSystem:
             curriculum_id=curriculum_id,
             skill_name=skill_name,
             training_type=curriculum.training_type,
-            started_at=datetime.utcnow(),
-            scheduled_end=datetime.utcnow() + timedelta(minutes=curriculum.get_total_duration()),
+            started_at=datetime.now(timezone.utc),
+            scheduled_end=datetime.now(timezone.utc) + timedelta(minutes=curriculum.get_total_duration()),
             status=TrainingStatus.IN_PROGRESS
         )
 
@@ -404,7 +404,7 @@ class AgentTrainingSystem:
 
         session = self.active_sessions[session_id]
         session.tasks_completed += 1
-        session.proficiency_gains.append((datetime.utcnow().timestamp(), proficiency_gain))
+        session.proficiency_gains.append((datetime.now(timezone.utc).timestamp(), proficiency_gain))
         session.learning_curve.append(session.overall_progress + proficiency_gain)
 
         session.task_results.append({
@@ -413,7 +413,7 @@ class AgentTrainingSystem:
             "quality_score": quality_score,
             "proficiency_gain": proficiency_gain,
             "feedback": feedback,
-            "completed_at": datetime.utcnow().isoformat()
+            "completed_at": datetime.now(timezone.utc).isoformat()
         })
 
         # Update overall progress
@@ -436,7 +436,7 @@ class AgentTrainingSystem:
 
         session = self.active_sessions[session_id]
         session.status = TrainingStatus.COMPLETED
-        session.completed_at = datetime.utcnow()
+        session.completed_at = datetime.now(timezone.utc)
         session.final_proficiency = final_proficiency
         session.completion_quality = quality_score
 

@@ -178,7 +178,7 @@ def _value_error_to_http(exc: ValueError) -> HTTPException:
 async def start_campaign(
     body: CampaignStartRequest,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
 ):
     starter = CampaignStartService(db)
     scheduler = BranchScheduler(db)
@@ -189,7 +189,7 @@ async def start_campaign(
 
     schedule_summary = await scheduler.schedule_campaign(
         seeded.campaign.id,
-        actor=body.initiated_by,
+        actor=current_user.id,
     )
     refreshed_campaign = await starter.repo.get_campaign(seeded.campaign.id)
     refreshed_root_branch = await starter.repo.get_branch(seeded.root_branch.id)
@@ -608,7 +608,7 @@ async def decide_campaign_approval_gate(
     gate_id: UUID,
     body: CampaignApprovalDecisionRequest,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
 ):
     approvals = ApprovalGateService(db)
     scheduler = BranchScheduler(db)
@@ -620,7 +620,7 @@ async def decide_campaign_approval_gate(
         if body.status == ApprovalGateStatusEnum.CANCELED:
             decided = await approvals.cancel_gate(
                 gate,
-                actor=body.decided_by,
+                actor=current_user.id,
                 note=body.operator_notes,
                 intention_id=body.intention_id,
             )
@@ -629,11 +629,11 @@ async def decide_campaign_approval_gate(
                 gate,
                 ApprovalGateDecision(
                     status=body.status,
-                    decided_by=body.decided_by,
+                    decided_by=current_user.id,
                     operator_notes=body.operator_notes,
                     decision_payload_json=body.decision_payload_json,
                 ),
-                actor=body.decided_by,
+                actor=current_user.id,
                 intention_id=body.intention_id,
             )
     except ValueError as exc:
@@ -643,7 +643,7 @@ async def decide_campaign_approval_gate(
     if body.trigger_scheduler:
         schedule_summary = await scheduler.schedule_campaign(
             decided.campaign_id,
-            actor=f"{body.decided_by}.approval",
+            actor=f"{current_user.id}.approval",
         )
     return CampaignApprovalDecisionResponse(
         gate_id=decided.id,

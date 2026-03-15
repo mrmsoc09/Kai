@@ -13,7 +13,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
-from ..core.auth import get_current_user
+from ..core.auth import get_current_user, require_roles, ROLE_ADMIN
 
 router = APIRouter(prefix="/settings", tags=["platform-settings"])
 
@@ -67,7 +67,7 @@ async def get_llm_config(_user=Depends(get_current_user)) -> Dict[str, Any]:
 @router.post("/llm")
 async def save_llm_config(
     body: LLMConfigRequest,
-    user=Depends(get_current_user),
+    user=Depends(require_roles(ROLE_ADMIN)),
 ) -> Dict[str, Any]:
     """Save LLM config and set environment variables for the current process."""
     settings = _load()

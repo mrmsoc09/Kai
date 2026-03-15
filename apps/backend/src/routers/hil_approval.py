@@ -5,9 +5,10 @@ Endpoints for managing approval workflow for reports and emails
 
 import logging
 from typing import List, Optional, Dict, Any
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, Field
 
+from ..core.auth import require_roles, ROLE_ANALYST, ROLE_ADMIN, User
 from ..core.hil_approval_system import (
     HiLApprovalSystem,
     ApprovalRequest,
@@ -19,7 +20,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/api/v1/approval",
-    tags=["HiL Approval"]
+    tags=["HiL Approval"],
+    dependencies=[Depends(require_roles(ROLE_ANALYST, ROLE_ADMIN))]
 )
 
 
@@ -195,7 +197,11 @@ async def get_approval(approval_id: str):
 
 
 @router.post("/{approval_id}/approve", response_model=ApprovalRequestResponse)
-async def approve_request(approval_id: str, request: ApprovalActionRequest):
+async def approve_request(
+    approval_id: str,
+    request: ApprovalActionRequest,
+    current_user: User = Depends(require_roles(ROLE_ANALYST, ROLE_ADMIN))
+):
     """
     Approve an approval request
 
@@ -211,14 +217,14 @@ async def approve_request(approval_id: str, request: ApprovalActionRequest):
     try:
         approval = await hil_system.approve(
             approval_id=approval_id,
-            user_id=request.user_id
+            user_id=current_user.id
         )
 
         # Update notes if provided
         if request.notes:
             approval.user_notes = request.notes
 
-        logger.info(f"Approval {approval_id} approved by {request.user_id}")
+        logger.info(f"Approval {approval_id} approved by {current_user.id}")
         logger.info(f"⚠️  User must now manually send email or submit report")
 
         return _to_response(approval)
@@ -237,7 +243,11 @@ async def approve_request(approval_id: str, request: ApprovalActionRequest):
 
 
 @router.post("/{approval_id}/reject", response_model=ApprovalRequestResponse)
-async def reject_request(approval_id: str, request: RejectionRequest):
+async def reject_request(
+    approval_id: str,
+    request: RejectionRequest,
+    current_user: User = Depends(require_roles(ROLE_ANALYST, ROLE_ADMIN))
+):
     """
     Reject an approval request
 
@@ -250,11 +260,11 @@ async def reject_request(approval_id: str, request: RejectionRequest):
     try:
         approval = await hil_system.reject(
             approval_id=approval_id,
-            user_id=request.user_id,
+            user_id=current_user.id,
             reason=request.reason
         )
 
-        logger.info(f"Approval {approval_id} rejected by {request.user_id}: {request.reason}")
+        logger.info(f"Approval {approval_id} rejected by {current_user.id}: {request.reason}")
 
         return _to_response(approval)
 

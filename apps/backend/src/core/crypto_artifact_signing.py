@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import hashlib
 
@@ -272,7 +272,7 @@ class KaiCryptoSystem:
                     signature_path=sig_path,
                     signer_identity=self.machine_identity,
                     signer_fingerprint=fingerprint,
-                    signed_at=datetime.utcnow(),
+                    signed_at=datetime.now(timezone.utc),
                     algorithm="RSA",
                     artifact_hash=artifact_hash,
                     signature_valid=True
@@ -382,7 +382,7 @@ class KaiCryptoSystem:
             record = VerificationRecord(
                 artifact_path=str(artifact_path),
                 signature_path=str(signature_path),
-                verified_at=datetime.utcnow(),
+                verified_at=datetime.now(timezone.utc),
                 status=status,
                 signer_identity=signer_identity,
                 signer_fingerprint=signer_fingerprint,
@@ -459,7 +459,7 @@ class KaiCryptoSystem:
             self._audit_log = []
 
         self._audit_log.append({
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "operation": operation,
             "details": details
         })

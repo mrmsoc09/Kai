@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Dict, Any, List, Optional, Tuple
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import json
 import base64
@@ -439,7 +439,7 @@ class EvidenceEmbedder:
             "valid": True,
             "evidence_id": evidence_id,
             "evidence_type": evidence.evidence_type,
-            "verified_at": datetime.utcnow().isoformat(),
+            "verified_at": datetime.now(timezone.utc).isoformat(),
             "verification": {
                 "content_hash_stored": evidence.content_hash[:32],
                 "chain_hash_stored": evidence.chain_hash[:32] if evidence.chain_hash else None,
@@ -598,13 +598,13 @@ class EvidenceEmbedder:
             merkle_root=merkle_root,
             chain_hash=chain_hash,
             previous_hash=previous_hash,
-            embedded_at=datetime.utcnow().isoformat(),
+            embedded_at=datetime.now(timezone.utc).isoformat(),
             embedded_by="evidence_embedder"
         )
 
     def _generate_evidence_id(self, evidence_type: str, finding_id: str) -> str:
         """Generate unique evidence ID."""
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         random_suffix = hashlib.sha256(
             f"{evidence_type}{finding_id}{timestamp}".encode("utf-8")
         ).hexdigest()[:8]

@@ -19,6 +19,7 @@ from apps.backend.src.core.services import Services
 from apps.backend.src.core.tools import get_registry, initialize_default_tools
 from apps.backend.src.core.toolpacks import validate_toolpacks_or_raise
 from apps.backend.src.core.secret_manager import get_secret_manager
+from apps.backend.src.core.auth import assert_bootstrap_auth_safe, AuthConfigError
 
 # Import routers exactly once
 from apps.backend.src.routers import (
@@ -161,6 +162,10 @@ def _validate_required_secrets() -> None:
 async def lifespan(app: FastAPI):
     app.state.services = services
     test_mode = os.getenv("K1_TEST_MODE", "false").lower() == "true"
+    try:
+        assert_bootstrap_auth_safe()
+    except AuthConfigError as exc:
+        raise RuntimeError(str(exc)) from exc
     if not test_mode:
         await services.startup()
         if _env_bool("K1_STARTUP_VALIDATE_DEPENDENCIES", True):
@@ -170,6 +175,21 @@ async def lifespan(app: FastAPI):
             validate_toolpacks_or_raise(get_registry().get_all_schemas().keys())
         if _env_bool("K1_STARTUP_VALIDATE_SECRETS", True):
             _validate_required_secrets()
+        
+        # Task 41: Initialize column-level encryption key from Vault
+        try:
+            from .models.types import EncryptedText
+            from .core.hil_vault_client import VaultClient
+            vc = VaultClient()
+            master_key_data = vc.read_secret("k1/master-key")
+            if master_key_data and "key" in master_key_data:
+                EncryptedText.set_key(master_key_data["key"])
+                logger.info("Column-level encryption initialized from Vault")
+            else:
+                logger.warning("No master key found in Vault at 'secret/k1/master-key'; data will NOT be encrypted!")
+        except Exception as e:
+            logger.error(f"Failed to initialize column-level encryption: {str(e)}")
+
         await initialize_llm_providers()
     try:
         yield
@@ -228,9 +248,25 @@ def _probe_worker_subsystem() -> dict:
         return {"ok": False, "status": "down", "error": str(exc)}
 
 
+from .core.token_blocklist import get_blocklist_status
+from .core.auth import require_roles, ROLE_ADMIN
+...
 # Health
 @app.get("/health")
 async def health(request: Request) -> dict:
+    """Public health check - minimal info only."""
+    svc = getattr(request.app.state, "services", None)
+    if not svc or not getattr(svc, "started", False):
+         return {"status": "degraded"}
+    return {"status": "ok"}
+
+
+@app.get("/health/detailed")
+async def health_detailed(
+    request: Request,
+    current_user=Depends(require_roles(ROLE_ADMIN))
+) -> dict:
+    """Detailed health check - restricted to ROLE_ADMIN."""
     svc = getattr(request.app.state, "services", None)
     return {
         "status": "ok",
@@ -239,6 +275,7 @@ async def health(request: Request) -> dict:
             "neo4j": bool(getattr(svc, "neo4j_available", False)),
             "intelligence": bool(getattr(svc, "intelligence_ready", False)),
             "rag": bool(getattr(svc, "rag_ready", False)),
+            "token_blocklist": get_blocklist_status(),
         },
         "worker": _probe_worker_subsystem(),
     }
@@ -246,6 +283,7 @@ async def health(request: Request) -> dict:
 
 @app.get("/healthz")
 async def healthz(request: Request):
+    """Internal healthz check (legacy or for container probes)."""
     svc = getattr(request.app.state, "services", services)
     dependencies = await svc.probe_dependencies()
 

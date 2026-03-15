@@ -3,7 +3,7 @@
 import hashlib
 import json
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class EvidenceTracker:
@@ -37,7 +37,7 @@ class EvidenceTracker:
             "source": source,
             "finding_id": finding_id,
             "content": content,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "content_hash": self._compute_content_hash(content),
             "chain_index": len(self.evidence_chain),
         }
@@ -85,7 +85,7 @@ class EvidenceTracker:
         return {
             "valid": True,
             "evidence_id": evidence_id,
-            "verified_at": datetime.utcnow().isoformat(),
+            "verified_at": datetime.now(timezone.utc).isoformat(),
             "chain_index": evidence.get("chain_index"),
         }
 
@@ -138,7 +138,7 @@ class EvidenceTracker:
             "evidence_trail": trail,
             "chain_hashes": chain_hashes,
             "merkle_root": self._compute_merkle_root(chain_hashes) if chain_hashes else None,
-            "report_generated_at": datetime.utcnow().isoformat(),
+            "report_generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
     def compute_finding_fingerprint(
@@ -192,7 +192,7 @@ class EvidenceTracker:
 
     def _generate_evidence_id(self) -> str:
         """Generate unique evidence ID."""
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         counter = len(self.evidence_chain)
         evidence_id = f"ev_{counter}_{hashlib.sha256(timestamp.encode()).hexdigest()[:12]}"
         return evidence_id

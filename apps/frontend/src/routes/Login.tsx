@@ -20,11 +20,7 @@ export default function Login() {
     try {
       const res = await api.post('/auth/login', { token: token.trim() })
       const { access_token } = res.data
-      const meRes = await api.get('/auth/me', {
-        headers: { Authorization: `Bearer ${access_token}` },
-      })
-      localStorage.setItem('k1_token', access_token)
-      localStorage.setItem('K1_DEV_TOKEN', access_token)
+      const meRes = await api.get('/auth/me')
       login(access_token, { id: meRes.data.id, roles: meRes.data.roles ?? [] })
       navigate(from, { replace: true })
     } catch (err: any) {

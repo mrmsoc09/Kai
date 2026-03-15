@@ -35,13 +35,11 @@ export const api = axios.create({
   timeout: 30_000,
 })
 
-// Request interceptor: attach Bearer token + CSRF token
+// Request interceptor: attach CSRF token
 api.interceptors.request.use(async (cfg) => {
   cfg.headers = cfg.headers || {}
 
-  const token = useStore.getState().auth.token
-  if (token) cfg.headers['Authorization'] = `Bearer ${token}`
-
+  // Note: JWT is now handled by HttpOnly cookie; Bearer token header removed.
   const method = (cfg.method || 'get').toLowerCase()
   if (STATE_CHANGING_METHODS.has(method)) {
     const csrf = await ensureCsrfToken()

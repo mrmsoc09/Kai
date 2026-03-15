@@ -6,7 +6,7 @@ Exposes all K1 tools via REST API with autonomy tier gating
 from typing import Optional, Dict, Any, List, Callable
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 import anyio.to_thread
 from functools import partial
 from urllib.parse import urlparse
@@ -228,7 +228,7 @@ async def tools_health(
         success=True,
         data={
             "status": status,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "total_tools": registry.count(),
             **dashboard,
             "report_path": report_path,
@@ -561,7 +561,7 @@ async def approve_tool_execution(
                 "execution_id": execution_id,
                 "status": "approved_and_executed",
                 "approved_by": current_user.id,
-                "approved_at": datetime.utcnow().isoformat(),
+                "approved_at": datetime.now(timezone.utc).isoformat(),
                 "result": result.to_dict(),
             },
         )
@@ -603,7 +603,7 @@ async def reject_tool_execution(
                 "status": "rejected",
                 "rejected_by": current_user.id,
                 "reason": reason,
-                "rejected_at": datetime.utcnow().isoformat(),
+                "rejected_at": datetime.now(timezone.utc).isoformat(),
             },
         )
 
@@ -623,26 +623,21 @@ async def reject_tool_execution(
 async def orchestrate_tools(
     workflow: Dict[str, Any],
     run_id: Optional[str] = Query(None),
-    _current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
 ):
     """Execute a workflow of tools (tool chaining)"""
     registry = get_tool_registry()
 
     try:
-        # workflow format:
-        # {
-        #   "steps": [
-        #     {"tool_id": "validator", "params": {...}},
-        #     {"tool_id": "classifier", "params": {...}}
-        #   ]
-        # }
-
         steps = workflow.get("steps", [])
         results = []
 
         for i, step in enumerate(steps):
             tool_id = step.get("tool_id")
             params = step.get("params", {})
+            method = step.get("method")
+            program_id = step.get("program_id")
+            certificate_id = step.get("certificate_id")
 
             tool = registry.get(tool_id)
             if not tool:
@@ -652,6 +647,49 @@ async def orchestrate_tools(
                         "step": i,
                         "error": f"Tool not found: {tool_id}",
                     },
+                )
+
+            # Resolve authorization hints per step
+            resolved_program_id, resolved_certificate_id = _resolve_authorization_hints(
+                tool_id=tool_id,
+                params=params,
+                method=method,
+                current_user=current_user,
+                requested_program_id=program_id,
+                requested_certificate_id=certificate_id,
+            )
+
+            # Enforce authorization gates per step
+            try:
+                await enforce_authorization_gates_async(
+                    tool_id,
+                    params,
+                    user_id=current_user.id,
+                    program_id=resolved_program_id,
+                    certificate_id=resolved_certificate_id,
+                    method=method,
+                )
+            except AuthorizationGateError as exc:
+                logger.warning(f"Orchestration step {i} ({tool_id}) blocked: {exc}")
+                return Response(
+                    success=False,
+                    data={
+                        "step": i,
+                        "error": f"Authorization gate blocked execution: {exc}",
+                    },
+                    status_code=403,
+                )
+
+            # Check if Tier 2 requires approval (matching execute_tool pattern)
+            needs_approval = tool.autonomy_tier != ToolAutonomyTier.TIER_0_AUTO
+            if needs_approval:
+                 return Response(
+                    success=False,
+                    data={
+                        "step": i,
+                        "error": f"Tool {tool_id} requires manual approval and cannot be used in a TIER_0 orchestration.",
+                    },
+                    status_code=403,
                 )
 
             result = tool.execute(**params)

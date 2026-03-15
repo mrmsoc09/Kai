@@ -6,7 +6,7 @@ Comprehensive cost control and optimization strategies
 import logging
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, Any
-from datetime import datetime
+from datetime import timezone, datetime
 from enum import Enum
 
 from .budget_tracker import BudgetTracker, BudgetDecision, get_budget_tracker
@@ -33,7 +33,7 @@ class CostOptimizationResult:
     savings_percent: float
     strategy_applied: CostOptimizationStrategy
     details: str
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 @dataclass
@@ -46,7 +46,7 @@ class BudgetEnforcementResult:
     daily_budget_remaining: float
     estimated_cost: float
     suggested_action: Optional[str] = None
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class CostController:

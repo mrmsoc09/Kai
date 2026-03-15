@@ -13,9 +13,14 @@ from fastapi.responses import JSONResponse
 from typing import Dict, Any, List
 import yaml, json
 from datetime import datetime, timezone
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from ..core.run_store import write_run_record
 from ..core.trace import append_decision_trace, write_reasoning_summary, policy_gate_info
-from ..core.auth import require_roles, ROLE_OPERATOR
+from ..core.auth import require_roles, ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN, User
+from ..core.hil_db import get_db
+from ..models.campaign import ApprovalGate
+from ..models.enums import ApprovalGateStatusEnum
 
 # Library and policy paths
 BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
@@ -28,7 +33,7 @@ try:
 except Exception:
     GoogleCSE = None  # type: ignore
 
-router = APIRouter(prefix="/dorks", tags=["dorks"], dependencies=[Depends(require_roles(ROLE_OPERATOR))])
+router = APIRouter(prefix="/dorks", tags=["dorks"], dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN))])
 
 
 def _load_yaml(p: str) -> Dict[str, Any]:
@@ -98,7 +103,11 @@ def chains() -> Dict[str, Any]:
 
 
 @router.post("/run")
-def run(payload: Dict[str, Any]) -> Dict[str, Any]:
+async def run(
+    payload: Dict[str, Any],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN))
+) -> Dict[str, Any]:
     target = payload.get("target")
     if not target:
         raise HTTPException(400, "target required")
@@ -106,14 +115,24 @@ def run(payload: Dict[str, Any]) -> Dict[str, Any]:
     query = payload.get("query")
     chain = payload.get("chain")
     limit = int(payload.get("limit") or 5)
+    run_id_provided = payload.get("run_id")
 
     planned = _resolve_queries(target, query, chain)
-    run_id = f"dorks-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
+    
+    if mode == "execute" and not run_id_provided:
+         raise HTTPException(400, "run_id required for execute mode to verify approval")
+
+    run_id = run_id_provided or f"dorks-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     record = _init_run_record(run_id, target, mode, planned)
 
     # Always write a plan-mode record; never call external services in plan
     if mode != "execute":
         path = write_run_record(run_id, record)
+        
+        # In a real scenario, we might create a pending gate here.
+        # For this task, we assume the user will create it via the approvals UI/API
+        # using the run_id as part of the gate reason or metadata.
+
         append_decision_trace(run_id, {
             "run_id": run_id,
             "agent_id": "K1",
@@ -130,13 +149,26 @@ def run(payload: Dict[str, Any]) -> Dict[str, Any]:
         return {"mode": "plan", "executed": planned, "run_id": run_id, "run_record": path, "note": "Plan only; no external queries executed."}
 
     # Execute mode: enforce HiL approval and policy switch
-    hil_approved = bool(payload.get("hil_approved") is True)
     policies = {}
     try:
         policies = _load_yaml(POLICY)
     except Exception:
         pass
     external_enabled = bool(policies.get("external_queries_enabled") is True)
+
+    # Approval status must be read from the database keyed to the dork run ID
+    # We search for an approved gate for this dork run using gate_reason as a key
+    stmt = select(ApprovalGate).where(
+        ApprovalGate.gate_reason.like(f"%{run_id}%"),
+        ApprovalGate.status == ApprovalGateStatusEnum.APPROVED
+    )
+    result = await db.execute(stmt)
+    gate = result.scalars().first()
+    hil_approved = gate is not None
+
+    # Enforce that the approver identity must differ from the submitter
+    if gate and gate.decided_by == gate.requested_by:
+         raise HTTPException(403, "Self-approval is not permitted for dork execution")
 
     if not hil_approved:
         append_decision_trace(run_id, {"run_id": run_id, "agent_id": "K1", "phase": {"strategic": record["loops"]["strategic"]["step"], "tactical": record["loops"]["tactical"]["step"]}, "category": "execute", "options_considered": record["decision"]["candidates"], "chosen_option": record["decision"]["chosen"], "why_summary": "Execute requested without HiL approval", "evidence_refs": [], "policy_gate": policy_gate_info(mode, external=True), "outcome": "blocked"})
@@ -154,7 +186,11 @@ def run(payload: Dict[str, Any]) -> Dict[str, Any]:
         })
 
     # Mark approval and attempt execution via CSE client (keys required). Still persist record and audit.
-    record["approval"].update({"hil_approved": True, "approver": "human", "approved_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")})
+    record["approval"].update({
+        "hil_approved": True, 
+        "approver": gate.decided_by if gate else "human", 
+        "approved_at": gate.decided_at.isoformat() if gate and gate.decided_at else datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    })
 
     results: List[Dict[str, Any]] = []
     if GoogleCSE is None:

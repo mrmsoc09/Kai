@@ -4,7 +4,7 @@ Common response schemas for API responses
 
 from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, Any, Dict
-from datetime import datetime
+from datetime import timezone, datetime
 
 
 class Response(BaseModel):
@@ -13,7 +13,7 @@ class Response(BaseModel):
     data: Optional[Any] = None
     error: Optional[str] = None
     message: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     status_code: int = 200
 
     model_config = ConfigDict(
@@ -35,7 +35,7 @@ class ErrorResponse(BaseModel):
     success: bool = False
     error: str
     details: Optional[Dict[str, Any]] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     status_code: int = 500
 
     model_config = ConfigDict(

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { listRuns, finalize, submitHiL, packageReport, dispatchReport, listRecording } from '../api/reports';
 import { checklist, decisionTrace } from '../api/ops';
+import { useStore } from '../store/system';
 import StatusChip from '../components/StatusChip';
 import LogList from '../components/LogList';
 
@@ -12,9 +14,11 @@ export default function HiLReview() {
   const [sel, setSel] = useState<string | null>(null);
   const [chk, setChk] = useState<any | null>(null);
   const [logs, setLogs] = useState<any[]>([]);
-  const token = localStorage.getItem('token') || 'devtoken';
+  const token = useStore(state => state.auth.token);
+  const navigate = useNavigate();
 
   async function refresh() {
+    if (!token) { navigate('/login'); return; }
     const j = await listRuns(token);
     const arr: RunRow[] = await Promise.all((j.runs || []).map(async (id: string) => {
       try {
@@ -39,7 +43,10 @@ export default function HiLReview() {
     }
   }
 
-  useEffect(() => { void refresh(); }, []);
+  useEffect(() => {
+    if (!token) { navigate('/login'); return; }
+    void refresh();
+  }, [token]);
 
   async function doFlow(id: string) {
     setBusy(id);

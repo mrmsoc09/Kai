@@ -1,7 +1,7 @@
 """Remediation automation and orchestration."""
 
 from typing import Dict, Any, List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class RemediationEngine:
@@ -53,7 +53,7 @@ class RemediationEngine:
 
         plan = {
             "plan_id": plan_id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "total_findings": len(findings),
             "total_patches": len(patches),
             "phases": len(execution_plan),
@@ -96,7 +96,7 @@ class RemediationEngine:
             "plan_id": plan_id,
             "phase": phase_number,
             "patches": phase["patches"],
-            "executed_at": datetime.utcnow().isoformat(),
+            "executed_at": datetime.now(timezone.utc).isoformat(),
             "simulated": simulated,
             "status": "completed",
             "results": [],

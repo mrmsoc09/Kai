@@ -358,6 +358,7 @@ tools:
     timeout_seconds: 600
     retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
+    allowed_extra_args: ["--p", "--header", "--cookie", "--user-agent", "--delay"]
     tags: ["xss", "vuln"]
     dependencies: []
     api_keys_required: []
@@ -448,6 +449,7 @@ tools:
     timeout_seconds: 900
     retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
+    allowed_extra_args: ["--risk", "--level", "--technique", "-p", "--dbms", "--batch", "--random-agent"]
     tags: ["validation", "sqli"]
     dependencies: []
     api_keys_required: []

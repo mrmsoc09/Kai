@@ -51,3 +51,9 @@ build/
 
 .gemini/
 gha-creds-*.json
+
+# Vault
+.vault_token
+.vault_keys
+.vault_init.json
+vault_data/

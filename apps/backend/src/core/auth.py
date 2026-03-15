@@ -57,6 +57,20 @@ def _expected_token() -> Optional[str]:
     return os.getenv(DEV_TOKEN_ENV)
 
 
+def assert_bootstrap_auth_safe() -> None:
+    """
+    Call at application startup. Raises AuthConfigError if bootstrap auth is
+    enabled in a production environment — prevents accidental production backdoor.
+    """
+    bootstrap_enabled = os.getenv("K1_ENABLE_BOOTSTRAP_AUTH", "false").lower() == "true"
+    is_production = not _is_non_production()
+    if bootstrap_enabled and is_production:
+        raise AuthConfigError(
+            "K1_ENABLE_BOOTSTRAP_AUTH=true is not permitted when ENVIRONMENT=production. "
+            "Remove this flag before deploying."
+        )
+
+
 def _jwt_secret() -> str:
     secret = os.getenv(JWT_SECRET_ENV) or os.getenv(JWT_FALLBACK_SECRET_ENV)
     if not secret:
@@ -111,6 +125,9 @@ def create_access_token(subject: str, roles: List[str], expires_delta: timedelta
 
 
 def issue_dev_access_token(bootstrap_token: str) -> str:
+    bootstrap_enabled = os.getenv("K1_ENABLE_BOOTSTRAP_AUTH", "false").lower() == "true"
+    if not bootstrap_enabled:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
     expected = _expected_token()
     if not expected:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="auth_not_configured")
@@ -177,13 +194,7 @@ def extract_jti_and_exp(token: str) -> tuple[Optional[str], int]:
 
 def get_current_user(creds: HTTPAuthorizationCredentials = Depends(security)) -> User:
     token = creds.credentials or ""
-    try:
-        return decode_access_token(token)
-    except HTTPException:
-        expected = _expected_token()
-        if _is_non_production() and expected and token == expected:
-            return User(id="dev", roles=[ROLE_ADMIN, ROLE_ANALYST, ROLE_OPERATOR, ROLE_VIEWER])
-        raise
+    return decode_access_token(token)
 
 
 def require_roles(*required: str):

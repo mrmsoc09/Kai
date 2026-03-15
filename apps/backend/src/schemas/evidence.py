@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import timezone, datetime
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
@@ -35,6 +35,6 @@ class Evidence(BaseModel):
     source: Optional[str] = None
     finding_id: Optional[str] = None
     tags: list[str] = Field(default_factory=list)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     finalized: bool = False
     metadata: dict[str, Any] = Field(default_factory=dict)

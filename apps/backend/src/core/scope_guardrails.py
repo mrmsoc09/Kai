@@ -5,6 +5,7 @@ import json
 import re
 import threading
 from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -12,7 +13,7 @@ from urllib.parse import urlparse
 
 import yaml
 
-from .helpers import repo_root, utcnow, workflow_output_root
+from .helpers import repo_root, workflow_output_root
 
 _AUDIT_LOCK = threading.Lock()
 
@@ -34,7 +35,7 @@ class ScopeDecision:
     reason: str
     matched_rule: str | None = None
     safe_mode: bool | None = None
-    evaluated_at: str = field(default_factory=lambda: utcnow().isoformat())
+    evaluated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -51,9 +52,18 @@ def load_scope_policy(path: str | Path | None = None) -> ScopePolicy:
     payload = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
     if not isinstance(payload, dict):
         return ScopePolicy()
+        
+    allowlist = [str(item).strip() for item in payload.get("allowlist", []) if str(item).strip()]
+    denylist = [str(item).strip() for item in payload.get("denylist", []) if str(item).strip()]
+    
+    # Hard error on malformed/legacy patterns during config load
+    for p in allowlist + denylist:
+        if p.startswith("/") and p.endswith("/") and len(p) > 2:
+             raise ValueError(f"Regex patterns (/pattern/) are no longer supported. Use glob patterns instead: {p}")
+
     return ScopePolicy(
-        allowlist=[str(item).strip() for item in payload.get("allowlist", []) if str(item).strip()],
-        denylist=[str(item).strip() for item in payload.get("denylist", []) if str(item).strip()],
+        allowlist=allowlist,
+        denylist=denylist,
         cidr_allowlist=[
             str(item).strip() for item in payload.get("cidr_allowlist", []) if str(item).strip()
         ],
@@ -72,18 +82,17 @@ def _to_host(value: str) -> str:
     return value.split("/")[0]
 
 
+import fnmatch
+
 def _pattern_matches(host: str, pattern: str) -> bool:
     pattern = pattern.lower().strip()
     if not pattern:
         return False
-    if pattern.startswith("*."):
-        suffix = pattern[1:]
-        return host.endswith(suffix)
-    if pattern.startswith("/") and pattern.endswith("/") and len(pattern) > 2:
-        try:
-            return re.search(pattern[1:-1], host, flags=re.IGNORECASE) is not None
-        except re.error:
-            return False
+        
+    # Use fnmatch for glob-style patterns with full-match semantics
+    if "*" in pattern or "?" in pattern or "[" in pattern:
+        return fnmatch.fnmatchcase(host, pattern)
+        
     return host == pattern or host.endswith(f".{pattern}")
 
 

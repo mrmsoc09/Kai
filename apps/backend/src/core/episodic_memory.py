@@ -6,7 +6,7 @@ Tracks agent attempts to prevent loops and waste
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 
 
@@ -90,7 +90,7 @@ class EpisodicMemorySystem:
         attempt = AttackAttempt(
             attempt_id=f"attempt_{len(self.all_attempts)}",
             agent_id=agent_id,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(timezone.utc),
             target_domain=target_domain,
             endpoint=endpoint,
             vulnerability_type=vulnerability_type,
@@ -162,7 +162,7 @@ class EpisodicMemorySystem:
         # Check if technique already tried recently
         recent_attempts = [a for a in entry.attempts
                           if a.technique == technique and
-                          (datetime.utcnow() - a.timestamp).seconds < 3600]  # Last hour
+                          (datetime.now(timezone.utc) - a.timestamp).seconds < 3600]  # Last hour
 
         if recent_attempts:
             return False, f"Technique tried {len(recent_attempts)} times in last hour"

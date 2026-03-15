@@ -6,7 +6,7 @@ Endpoints for code analysis, repair, PoC generation using CLI tools
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 
 from ..integrations.claude_code_client import (
     get_claude_code_client,
@@ -522,5 +522,5 @@ async def get_tools_status():
             codex_client.available,
             gemini_client.available
         ]),
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.now(timezone.utc).isoformat()
     }

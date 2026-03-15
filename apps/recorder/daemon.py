@@ -2,7 +2,7 @@
 from __future__ import annotations
 import json, time, sys, signal, tarfile
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[2]
 REC_ROOT = ROOT / 'artifacts' / 'recordings'
@@ -16,7 +16,7 @@ LOG_DIR.mkdir(parents=True, exist_ok=True)
 RUN = True
 
 def _now():
-    return datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    return datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
 
 def _log(msg: str):
     line = f"[{_now()}] recorder: {msg}\n"

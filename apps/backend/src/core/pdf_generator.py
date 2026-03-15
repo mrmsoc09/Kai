@@ -3,7 +3,7 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, timezone
 import markdown
 from weasyprint import HTML, CSS
 from io import BytesIO
@@ -259,7 +259,7 @@ def markdown_to_html(markdown_content: str, stakeholder: str = "default") -> str
         <body>
             <div class="report-header">
                 <h1>Vulnerability Report</h1>
-                <p>Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
+                <p>Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}</p>
                 <p>Stakeholder: {stakeholder}</p>
             </div>
 
@@ -384,7 +384,7 @@ def get_pdf_metadata(pdf_bytes: bytes) -> Dict[str, Any]:
         # Placeholder: In production, would use PyPDF2 to extract metadata
         return {
             'size_bytes': len(pdf_bytes),
-            'generated_at': datetime.utcnow().isoformat(),
+            'generated_at': datetime.now(timezone.utc).isoformat(),
             'pages_estimated': max(1, len(pdf_bytes) // 5000),  # Rough estimate
         }
     except Exception as e:

@@ -6,7 +6,7 @@ Multi-agent collaboration, emergence, and self-organization
 from typing import Dict, List, Optional, Any, Callable, Set
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 import asyncio
 from collections import defaultdict
@@ -30,7 +30,7 @@ class AgentSignal:
     signal_type: str  # "discovery", "request_help", "warning", "success", "failure"
     content: Dict[str, Any]
     priority: int = 5  # 1-10
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     ttl: int = 60  # Seconds
 
 
@@ -41,7 +41,7 @@ class EmergentProperty:
     description: str
     value: float  # 0-1
     measurement_method: str
-    detected_at: datetime = field(default_factory=datetime.utcnow)
+    detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class SwarmCoordinator:
@@ -396,7 +396,7 @@ class SwarmCoordinator:
 
             self.swarm_intelligence_level = data.get("swarm_intelligence_level", 0.5)
             self.emergence_indicators.append({
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "properties": data.get("emergent_properties", []),
                 "intelligence": self.swarm_intelligence_level
             })

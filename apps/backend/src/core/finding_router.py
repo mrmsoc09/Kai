@@ -6,7 +6,7 @@ Routes findings to appropriate module based on severity and duplicate status
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 
@@ -34,7 +34,7 @@ class RoutedFinding:
 
     def __post_init__(self):
         if self.routed_at is None:
-            self.routed_at = datetime.utcnow()
+            self.routed_at = datetime.now(timezone.utc)
         if self.metadata is None:
             self.metadata = {}
 

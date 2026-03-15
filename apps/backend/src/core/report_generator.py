@@ -4,7 +4,7 @@ Generate comprehensive post-review reports for auto-applied fixes
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 
 logger = logging.getLogger(__name__)
@@ -309,7 +309,7 @@ async def generate_bbp_report(
     reports_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate report filename
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     report_filename = f"{scan_id}_{timestamp}_report.md"
     report_path = reports_dir / report_filename
 
@@ -388,7 +388,7 @@ Implement proper input validation and output encoding.
 
 ---
 
-**Report Generated:** {datetime.utcnow().isoformat()}
+**Report Generated:** {datetime.now(timezone.utc).isoformat()}
 **Platform:** Kaison K1 v7.6
 """
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import importlib
 
 import pytest
@@ -141,8 +141,8 @@ def test_tools_authorization_context_rejects_spoofed_program_id():
         target="*.example.com",
         scope=ScanScope.DOMAIN_WILDCARD,
         authorized_by="owner@example.com",
-        issued_at=datetime.utcnow() - timedelta(minutes=5),
-        expires_at=datetime.utcnow() + timedelta(days=1),
+        issued_at=datetime.now(timezone.utc) - timedelta(minutes=5),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
         allowed_methods=["tool_execution"],
         metadata={"user_id": "dev", "program_id": "program-real"},
     )

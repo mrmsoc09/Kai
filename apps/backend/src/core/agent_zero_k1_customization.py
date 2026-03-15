@@ -9,7 +9,7 @@ import uuid
 from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import asyncio
 
 
@@ -76,7 +76,7 @@ class K1VulnerabilityHunt:
     require_poc: bool = True
 
     # Timeline
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
@@ -139,7 +139,7 @@ class K1Finding:
 
     # Metadata
     discovered_by: str = "scout"  # Which agent discovered it
-    discovered_at: datetime = field(default_factory=datetime.utcnow)
+    discovered_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     mcp_server: str = ""
     hunt_id: str = ""
 
@@ -246,7 +246,7 @@ class K1AgentZeroOrchestrator:
     async def _start_reconnaissance_stage(self, hunt: K1VulnerabilityHunt):
         """Start reconnaissance stage - Scout agent discovers target details"""
         hunt.status = "in_progress"
-        hunt.started_at = datetime.utcnow()
+        hunt.started_at = datetime.now(timezone.utc)
 
         # Get Scout agent
         scouts = self.agent_registry.get_agents_by_role("scout")
@@ -554,7 +554,7 @@ class K1AgentZeroOrchestrator:
             "hunt_id": hunt.hunt_id,
             "target": hunt.target,
             "status": hunt.status,
-            "duration_seconds": (datetime.utcnow() - hunt.started_at).total_seconds() if hunt.started_at else 0,
+            "duration_seconds": (datetime.now(timezone.utc) - hunt.started_at).total_seconds() if hunt.started_at else 0,
             "current_stage": hunt.stages[hunt.current_stage] if hunt.current_stage < len(hunt.stages) else "complete",
             "statistics": {
                 "total_findings": len(hunt.findings),

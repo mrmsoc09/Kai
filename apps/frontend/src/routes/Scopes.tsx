@@ -1,6 +1,14 @@
 import React, { useEffect, useState } from 'react'
-import { getScope, upsertScope } from '../lib/api'
+import { api, getScope, upsertScope } from '../lib/api'
 import { toast } from '../store/toasts'
+
+// Scope enforcement decision log entry (from /orchestrator/scope-decisions)
+type ScopeDecisionEntry = {
+  target: string
+  allowed: boolean
+  reason: string
+  evaluated_at: string
+}
 
 type ScopeEntry = { pattern: string; note?: string }
 type ScopePolicy = {
@@ -18,6 +26,19 @@ export default function Scopes() {
   const [newPattern, setNewPattern] = useState('')
   const [newNote, setNewNote] = useState('')
   const [kind, setKind] = useState<'in_scope' | 'out_of_scope'>('in_scope')
+  // Scope enforcement audit log — from /orchestrator/scope-decisions
+  const [decisions, setDecisions] = useState<ScopeDecisionEntry[]>([])
+  const [decisionsTotal, setDecisionsTotal] = useState<number>(0)
+
+  // Load scope enforcement decisions from audit log (/orchestrator/scope-decisions)
+  useEffect(() => {
+    api.get('/orchestrator/scope-decisions', { params: { limit: 50 } })
+      .then(r => {
+        setDecisions(r.data?.decisions ?? [])
+        setDecisionsTotal(r.data?.total ?? 0)
+      })
+      .catch(() => {}) // not fatal — page works without decisions
+  }, [])
 
   const load = async () => {
     if (!program.trim()) return
@@ -122,6 +143,50 @@ export default function Scopes() {
             </button>
           </div>
         </>
+      )}
+
+      {/* Scope Enforcement Audit Log
+          Data source: /orchestrator/scope-decisions → output/logs/scope_decisions.jsonl
+          Shows recent allow/deny decisions made by the scope guardrail at runtime. */}
+      {decisions.length > 0 && (
+        <div style={{ marginTop: '2rem' }}>
+          <div style={{ color: '#6F8E7A', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.08em', marginBottom: 10 }}>
+            SCOPE ENFORCEMENT LOG ({decisions.length} recent · {decisionsTotal} total)
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {decisions.map((d, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '5px 10px',
+                  background: '#0B0C0D',
+                  border: `1px solid ${d.allowed ? '#355E3B22' : '#A12B2B22'}`,
+                  borderRadius: 4,
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}
+              >
+                <span style={{
+                  flexShrink: 0, fontSize: '0.6rem', fontWeight: 700, padding: '1px 6px', borderRadius: 3,
+                  background: d.allowed ? 'rgba(53,94,59,0.15)' : 'rgba(161,43,43,0.15)',
+                  color: d.allowed ? '#355E3B' : '#A12B2B',
+                  border: `1px solid ${d.allowed ? 'rgba(53,94,59,0.3)' : 'rgba(161,43,43,0.3)'}`,
+                }}>
+                  {d.allowed ? 'ALLOW' : 'DENY'}
+                </span>
+                <span style={{ color: '#8FAF9B', fontSize: '0.78rem', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {d.target}
+                </span>
+                <span style={{ color: '#6F8E7A', fontSize: '0.65rem', flexShrink: 0 }}>
+                  {d.reason}
+                </span>
+                <span style={{ color: '#3A4F43', fontSize: '0.6rem', flexShrink: 0 }}>
+                  {new Date(d.evaluated_at).toLocaleTimeString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from apps.backend.src.core.kai_security_guardrails import (
@@ -23,8 +23,8 @@ def test_authorization_ledger_persists_certificates(monkeypatch, tmp_path: Path)
         target="example.com",
         scope=ScanScope.SINGLE_DOMAIN,
         authorized_by="owner@example.com",
-        issued_at=datetime.utcnow() - timedelta(hours=1),
-        expires_at=datetime.utcnow() + timedelta(days=1),
+        issued_at=datetime.now(timezone.utc) - timedelta(hours=1),
+        expires_at=datetime.now(timezone.utc) + timedelta(days=1),
         allowed_methods=["dns_enum"],
         metadata={"user_id": "user-1"},
     )

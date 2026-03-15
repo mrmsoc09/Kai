@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from .helpers import artifacts_root, repo_root, utcnow
+from .helpers import artifacts_root, repo_root
 
 _CONF_DIR = repo_root() / "configs"
 _CONF_POL = _CONF_DIR / "policies.yaml"
@@ -52,7 +52,7 @@ def _redact_text(text: str) -> str:
 
 
 def _dated_log_dir() -> Path:
-    now = utcnow()
+    now = datetime.now(timezone.utc)
     d = _log_base() / f"{now.year:04d}" / f"{now.month:02d}" / f"{now.day:02d}"
     d.mkdir(parents=True, exist_ok=True)
     return d
@@ -73,7 +73,7 @@ def append_decision_trace(run_id: str, entry: dict[str, Any]) -> str:
     try:
         paths = log_paths(run_id)
         line: dict[str, Any] = {
-            "ts": utcnow().isoformat(),
+            "ts": datetime.now(timezone.utc).isoformat(),
             **{k: v for k, v in (entry or {}).items() if v is not None},
         }
         for k, v in list(line.items()):

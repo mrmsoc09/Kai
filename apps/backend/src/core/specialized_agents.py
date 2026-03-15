@@ -5,7 +5,7 @@ OSINTAgent, ReasoningAgent, RepairAgent with budget awareness
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
 from enum import Enum
 
@@ -45,7 +45,7 @@ class AgentResult:
     execution_time_ms: float = 0.0
     model_used: Optional[str] = None
     error: Optional[str] = None
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class AutonomousAgent:
@@ -142,7 +142,7 @@ class OSINTAgent(AutonomousAgent):
     ) -> AgentResult:
         """Execute OSINT/recon task using local models"""
 
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
 
         try:
             # OSINT tasks always use local models (free)
@@ -173,7 +173,7 @@ class OSINTAgent(AutonomousAgent):
             # Execute OSINT workflow (simulated for now)
             output = await self._run_osint_workflow(task, routing)
 
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
             # Cost is always $0 for OSINT (local models)
             self._update_cost_profile(0.0)
@@ -268,7 +268,7 @@ class ReasoningAgent(AutonomousAgent):
     ) -> AgentResult:
         """Execute reasoning task with budget check"""
 
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
 
         try:
             # Check budget before expensive reasoning
@@ -297,7 +297,7 @@ class ReasoningAgent(AutonomousAgent):
             # Execute reasoning workflow
             output = await self._run_reasoning_workflow(task, routing)
 
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
             # Update cost tracking
             self._update_cost_profile(routing.estimated_cost_cents)
@@ -440,7 +440,7 @@ class RepairAgent(AutonomousAgent):
     ) -> AgentResult:
         """Execute repair task"""
 
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
 
         try:
             logger.info(f"Repair Agent executing: {task.description}")
@@ -463,7 +463,7 @@ class RepairAgent(AutonomousAgent):
             # Execute repair workflow
             output = await self._run_repair_workflow(task, routing)
 
-            execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 
             # Update cost
             self._update_cost_profile(routing.estimated_cost_cents)
