@@ -1,3 +1,8 @@
+---
+name: add-new-tool-wrapper
+description: Skill for add-new-tool-wrapper
+---
+
 # add-new-tool-wrapper
 
 Purpose: add a tool integration without architectural drift.

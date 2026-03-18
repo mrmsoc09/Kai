@@ -10,7 +10,7 @@ import logging
 
 from ..core.kai_security_guardrails import get_guardrail_engine, AuthorizationCertificate, ScanAuditLog
 from ..core.auth import get_current_user, User, require_roles, ROLE_ADMIN, ROLE_ANALYST
-from ..schemas.base import Response
+from ..schemas.common import Response
 from ..models.campaign import AuditEvent
 from sqlalchemy.ext.asyncio import AsyncSession
 from ..core.hil_db import get_db

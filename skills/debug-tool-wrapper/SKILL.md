@@ -1,3 +1,8 @@
+---
+name: debug-tool-wrapper
+description: Skill for debug-tool-wrapper
+---
+
 # debug-tool-wrapper
 
 Purpose: diagnose wrapper failures quickly and deterministically.

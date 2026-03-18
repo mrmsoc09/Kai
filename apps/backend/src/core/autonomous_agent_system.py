@@ -8,11 +8,10 @@ import uuid
 from typing import Dict, List, Optional, Any, Tuple, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import asyncio
 from collections import defaultdict
 import math
-import uuid
 
 # Import skill system
 from apps.backend.src.core.skill_system import (

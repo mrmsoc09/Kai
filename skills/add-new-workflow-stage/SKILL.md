@@ -1,3 +1,8 @@
+---
+name: add-new-workflow-stage
+description: Skill for add-new-workflow-stage
+---
+
 # add-new-workflow-stage
 
 Purpose: add a workflow stage while preserving canonical stage ordering and safety semantics.
