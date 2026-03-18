@@ -1,3 +1,8 @@
+---
+name: run-smoke-tests
+description: Skill for run-smoke-tests
+---
+
 # run-smoke-tests
 
 Purpose: quickly validate repo health after tool/workflow changes.

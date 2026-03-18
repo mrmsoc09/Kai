@@ -1,3 +1,8 @@
+---
+name: debug-tool-failure
+description: Skill for debug-tool-failure
+---
+
 # debug-tool-failure
 
 Purpose: diagnose failing tool execution in worker/campaign paths.

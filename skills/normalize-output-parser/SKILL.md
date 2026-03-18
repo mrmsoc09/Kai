@@ -1,3 +1,8 @@
+---
+name: normalize-output-parser
+description: Skill for normalize-output-parser
+---
+
 # normalize-output-parser
 
 Purpose: convert heterogeneous tool outputs into Kai normalized records.

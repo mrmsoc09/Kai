@@ -4,7 +4,7 @@ import os
 import logging
 import importlib
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -191,6 +191,7 @@ async def lifespan(app: FastAPI):
             logger.error(f"Failed to initialize column-level encryption: {str(e)}")
 
         await initialize_llm_providers()
+        _initialize_praison_governor()
     try:
         yield
     finally:
@@ -797,6 +798,53 @@ async def initialize_llm_providers():
     print("\n" + "="*60)
     print("K1 SYSTEMS INITIALIZED SUCCESSFULLY")
     print("="*60 + "\n")
+
+
+def _initialize_praison_governor():
+    """Initialize PraisonAI Agent Control Plane: governor + registry + all lifecycle hooks."""
+    print("\n" + "-"*60)
+    print("INITIALIZING PRAISON AGENT CONTROL PLANE")
+    print("-"*60)
+    try:
+        from apps.backend.src.core.praison_governor import (
+            initialize_governor,
+            praison_safety_gate_hook,
+            praison_agent_spawn_hook,
+            praison_agent_handoff_hook,
+            praison_agent_memory_write_hook,
+            praison_agent_external_call_hook,
+        )
+        from apps.backend.src.core.praison_registry import initialize_agent_registry
+        from apps.backend.src.core.hook_registry import get_hook_registry
+
+        # 1. Initialize governor (sync fast-path governance)
+        governor = initialize_governor()
+        print("✓ PraisonAI Governor initialized")
+        print(f"  Band3 hard block: {governor._hil_policy.get('band3_always_block', True)}")
+        print(f"  Band2 requires campaign context: {governor._hil_policy.get('band2_requires_workflow_context', True)}")
+
+        # 2. Initialize agent registry (loads agents.yaml, validates all personas)
+        registry = initialize_agent_registry()
+        print(f"✓ PraisonAI Agent Registry initialized: {registry.agent_ids()}")
+
+        # 3. Register all governance hooks
+        hook_registry = get_hook_registry()
+        # safety_gate: governance at order=5 (BEFORE audit=50, BEFORE enforce=100)
+        hook_registry.register("safety_gate",          "praison_governance",         praison_safety_gate_hook,           order=5)
+        # Agent lifecycle: order=50 (after audit at order=10)
+        hook_registry.register("agent_spawn",          "praison_agent_spawn",        praison_agent_spawn_hook,           order=50)
+        hook_registry.register("agent_handoff",        "praison_agent_handoff",      praison_agent_handoff_hook,         order=50)
+        hook_registry.register("agent_memory_write",   "praison_agent_memory_write", praison_agent_memory_write_hook,    order=50)
+        hook_registry.register("agent_external_call",  "praison_agent_external_call",praison_agent_external_call_hook,   order=50)
+
+        print("✓ PraisonAI governance hooks registered:")
+        print("  safety_gate, agent_spawn, agent_handoff, agent_memory_write, agent_external_call")
+
+    except Exception as exc:
+        # Non-fatal: PraisonAI control plane failing must not crash startup.
+        # scope_guardrails and authorization_gate remain as hard blockers.
+        logger.error("PraisonAI Agent Control Plane initialization failed (non-fatal): %s", exc)
+        print(f"⚠ PraisonAI Agent Control Plane init failed (non-fatal): {exc}")
 
 
 async def shutdown_systems():

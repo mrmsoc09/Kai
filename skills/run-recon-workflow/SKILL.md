@@ -1,3 +1,8 @@
+---
+name: run-recon-workflow
+description: Skill for run-recon-workflow
+---
+
 # run-recon-workflow
 
 Purpose: execute a template-based recon workflow through canonical campaign orchestration.

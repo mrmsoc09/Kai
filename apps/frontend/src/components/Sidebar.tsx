@@ -25,15 +25,15 @@ export default function Sidebar() {
   const [logo, setLogo] = useState<string>(() => localStorage.getItem('k1_logo_dataurl') || '')
 
   const P = {
-    bg: '#0B0C0D',
-    panel: '#111316',
-    border: '#4E7A57',
-    text: '#8FAF9B',
-    muted: '#6F8E7A',
-    accent: '#5A2E8A',
-    green: '#355E3B',
-    orange: '#D97706',
-    ink: '#0B0C0D',
+    bg: 'var(--bg-obsidian)',
+    panel: 'var(--bg-graphite)',
+    border: 'var(--border)',
+    text: 'var(--text-primary)',
+    muted: 'var(--text-muted)',
+    accent: 'var(--accent-purple)',
+    green: 'var(--color-primary)',
+    orange: 'var(--accent-orange)',
+    ink: 'var(--bg-obsidian)',
   }
 
   const llmConfig = useStore((s) => s.llmConfig)
@@ -78,11 +78,12 @@ export default function Sidebar() {
 
   return (
     <aside style={{
-      width: 192, minWidth: 192, height: '100vh',
-      background: P.panel, borderRight: `2px solid ${P.border}`,
+      width: 220, minWidth: 220, height: '100vh',
+      background: P.panel, borderRight: `1px solid ${P.border}`,
+      backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
       display: 'flex', flexDirection: 'column',
       position: 'fixed', left: 0, top: 0, zIndex: 100,
-      fontFamily: "'JetBrains Mono','Fira Code','Courier New',monospace",
+      fontFamily: "'Inter', 'Space Grotesk', system-ui, sans-serif",
     }}>
       {/* Logo */}
       <div style={{ padding: '16px 14px 12px', borderBottom: `2px solid ${P.border}` }}>

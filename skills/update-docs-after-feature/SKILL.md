@@ -1,3 +1,8 @@
+---
+name: update-docs-after-feature
+description: Skill for update-docs-after-feature
+---
+
 # update-docs-after-feature
 
 Purpose: keep repository documentation aligned with implemented behavior.

@@ -1,3 +1,8 @@
+---
+name: validate-scope-rules
+description: Skill for validate-scope-rules
+---
+
 # validate-scope-rules
 
 Purpose: verify scope enforcement policy before executing workflows.

@@ -1,3 +1,8 @@
+---
+name: install-and-verify-tools
+description: Skill for install-and-verify-tools
+---
+
 # install-and-verify-tools
 
 Purpose: install baseline runtime dependencies and verify catalog tool availability.

@@ -1,3 +1,8 @@
+---
+name: update-workflow-docs
+description: Skill for update-workflow-docs
+---
+
 # update-workflow-docs
 
 Purpose: keep workflow docs aligned with implemented execution behavior.

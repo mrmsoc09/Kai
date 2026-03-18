@@ -1,3 +1,8 @@
+---
+name: normalize-scan-output
+description: Skill for normalize-scan-output
+---
+
 # normalize-scan-output
 
 Purpose: enforce normalized output shape for heterogeneous scanner results.

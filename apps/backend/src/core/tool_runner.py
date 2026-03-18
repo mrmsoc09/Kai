@@ -17,6 +17,7 @@ from apps.backend.src.core.authorization_gate import (
     AuthorizationGateError,
 )
 from apps.backend.src.core.hook_registry import get_hook_registry
+from apps.backend.src.core.praison_governor import PraisonGovernanceError
 
 
 class ToolRunner:
@@ -76,19 +77,51 @@ class ToolRunner:
             )
         except AuthorizationGateError as exc:
             raise HTTPException(status_code=403, detail=f"Authorization gate blocked execution: {exc}") from exc
-        hook_ctx = hooks.run(
-            "safety_gate",
-            {
-                "hook_type": "safety_gate",
-                "tool_id": tool_id,
-                "run_id": params.get("run_id"),
-                "status": "authorized",
-            },
+
+        # Compute risk tier before safety gate so PraisonAI governor can use it.
+        risk_tier = get_tool_tier(tool_id)
+
+        # Map ToolRiskTier + ToolAutonomyTier to a single 0-3 band integer
+        # that PraisonGovernor understands. Take the maximum of both signals.
+        _RISK_TIER_TO_BAND: Dict[str, int] = {
+            ToolRiskTier.TIER_0_SAFE.value: 0,
+            ToolRiskTier.TIER_1_NOTIFY.value: 1,
+            ToolRiskTier.TIER_2_INTRUSIVE.value: 2,
+        }
+        # ToolAutonomyTier values are integers 0-3; take max of both signals.
+        _risk_band = _RISK_TIER_TO_BAND.get(risk_tier.value, 0)
+        _autonomy_band = (
+            tool.autonomy_tier.value
+            if hasattr(tool.autonomy_tier, "value") and isinstance(tool.autonomy_tier.value, int)
+            else 0
         )
+        effective_band = max(_risk_band, _autonomy_band)
+
+        try:
+            hook_ctx = hooks.run(
+                "safety_gate",
+                {
+                    "hook_type": "safety_gate",
+                    "tool_id": tool_id,
+                    "run_id": params.get("run_id"),
+                    "status": "pending",
+                    # Enriched context for PraisonAI governance hook
+                    "tool_tier": effective_band,
+                    "program_id": program_id or "",
+                    "workflow_id": workflow_id or "",
+                    "user_id": user_id or "",
+                    "target": params.get("target") or params.get("domain") or params.get("host") or "",
+                    "params": params,
+                },
+            )
+        except PraisonGovernanceError as exc:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Governance gate blocked execution: {exc}",
+            ) from exc
         params = dict(params)
         params.update(hook_ctx.get("params_patch") or {})
 
-        risk_tier = get_tool_tier(tool_id)
         needs_approval = risk_tier == ToolRiskTier.TIER_2_INTRUSIVE or tool.autonomy_tier in {
             ToolAutonomyTier.TIER_2_APPROVE,
             ToolAutonomyTier.TIER_3_HARD_STOP,
