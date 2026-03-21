@@ -31,42 +31,107 @@ The platform is built on six integrated layers:
 ## 2. Installation
 
 ### Prerequisites
-*   **Linux/macOS** (Windows requires WSL2)
-*   **Python 3.11+**
-*   **Redis** (for task queue)
-*   **PostgreSQL** (optional for dev, required for prod state persistence)
 
-### Automated Setup
+| Requirement | Minimum | How to check |
+|-------------|---------|--------------|
+| Linux (Ubuntu 22.04+ recommended) | — | Windows: use WSL2 |
+| Python | 3.11+ | `python3 --version` |
+| Node.js | 18+ | `node --version` |
+| npm | 9+ | `npm --version` |
+| Docker Engine + Compose plugin | 24+ | `docker compose version` |
+| LLM API key | — | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` |
 
-We provide a script to bootstrap the environment:
+**Docker is required** to run PostgreSQL and Redis automatically. If you manage those services yourself, Docker is optional but you must ensure PostgreSQL (port 5432) and Redis (port 6379) are reachable before running `./k1-start`.
+
+`bootstrap.sh` handles the following automatically on Ubuntu/Debian:
+- System packages (curl, git, build-essential, pango/cairo libraries for weasyprint)
+- Python virtualenv and all pip dependencies
+- Node.js packages
+- External recon tools (amass, subfinder, httpx, nuclei, dnsx, naabu, gau, gitleaks, etc.)
+
+### First-time setup
 
 ```bash
-# 1. Clone the repository
+# 1. Clone
 git clone https://github.com/mrmsoc09/Kai.git
 cd Kai
 
-# 2. Run the setup script
-./scripts/setup.sh
+# 2. Bootstrap — installs everything, runs migrations, verifies tools
+./bootstrap.sh
+
+# 3. Configure API keys (REQUIRED before starting)
+nano .env
+# Set: ANTHROPIC_API_KEY or OPENAI_API_KEY
+# Set: JWT_SECRET_KEY  (replace placeholder with a random string)
+# Set: K1_DEV_TOKEN    (replace placeholder)
+
+# 4. Start
+./k1-start
 ```
 
-This script will:
-*   Create a Python virtual environment (`.env`).
-*   Install all dependencies.
-*   Create a default `.env` configuration file.
-*   Run database migrations.
-*   Create necessary artifact directories.
+Bootstrap prints a readiness summary at the end:
+```
+  ✓ Python deps installed
+  ✓ UI deps installed
+  ✓ Environment configured
+  ✓ Migrations applied
+  ✓ External tools verified
+```
+
+All lines must show `✓` before running `./k1-start`. If any show `✗`, follow the printed instructions and re-run `./bootstrap.sh`.
+
+### What bootstrap installs
+
+**System packages** (apt, Ubuntu/Debian):
+- `curl`, `git`, `build-essential`, `libssl-dev`, `libffi-dev`
+- `libpango-1.0-0`, `libpangocairo-1.0-0`, `libpangoft2-1.0-0` (weasyprint)
+- `libgdk-pixbuf-2.0-0`, `libcairo2`, `libglib2.0-0`, `shared-mime-info`
+
+**Python packages** (`.venv`):
+- FastAPI, Uvicorn, SQLAlchemy, Alembic, Celery, Redis
+- Anthropic, OpenAI, Google GenerativeAI SDKs
+- PraisonAI agents, LangChain core, LangGraph, LangSmith
+- LlamaIndex, ChromaDB, sentence-transformers (RAG/vector search)
+- weasyprint, Pillow (PDF/report generation)
+- Full list: `requirements.txt`
+
+**Node packages** (`ui/node_modules`):
+- React 18, Vite, Tailwind CSS, ReactFlow, Recharts, Zustand
+- Full list: `ui/package.json`
+
+**External tools** (auto-installed via `go install` or `apt`):
+- Subdomain: amass, subfinder, assetfinder, findomain, dnsx
+- Web: httpx, httprobe, naabu, tlsx, hakrawler, gau, waybackurls
+- Secrets: gitleaks
+- Scanning: nmap, theharvester
+- If `go` is not installed, bootstrap will attempt to install `golang-go` via apt first.
+
+**Manually install yourself** (tools that need user-supplied credentials or complex setup):
+- `nuclei` templates are downloaded on first run by the nuclei binary
+- HashiCorp Vault (port 8200) if using credential-backed tool execution
+- Neo4j (port 7687) if using intelligence graph features
 
 ### Configuration
-Edit the generated `.env` file to add your API keys:
+
+Edit `.env` after bootstrap:
 
 ```bash
 nano .env
 ```
 
-Ensure you set:
-*   `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` (for agents).
-*   `DATABASE_URL` (defaults to sqlite/postgres).
-*   `REDIS_URL` (defaults to localhost).
+Required keys to set before starting:
+
+| Key | Description |
+|-----|-------------|
+| `ANTHROPIC_API_KEY` | Or use `OPENAI_API_KEY` / `GOOGLE_API_KEY` |
+| `JWT_SECRET_KEY` | Random 32+ byte string (never reuse across deployments) |
+| `K1_DEV_TOKEN` | Local dev authentication token |
+
+Optional keys for full capability:
+- `VAULT_TOKEN` — Vault credential backing for tool execution
+- `LANGCHAIN_API_KEY` — LangSmith observability (get from smith.langchain.com)
+- `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD` — Intelligence graph
+- `SHODAN_API_KEY`, `VIRUSTOTAL_API_KEY` — External threat intel
 
 ---
 
@@ -75,18 +140,20 @@ Ensure you set:
 Start the platform services with a single command:
 
 ```bash
-./scripts/k1-start.sh
+./k1-start
 ```
 
 This starts:
 1.  **API Server:** The REST API and mission runtime (Port 8080).
 2.  **Celery Worker:** The background worker for executing tools.
+3.  **Operator UI:** Frontend workbench (Port 8081).
+4.  **PostgreSQL + Redis:** Auto-started via Docker when available.
 
 You will see output indicating the services have started.
 
 To stop the platform:
 ```bash
-./scripts/k1-stop.sh
+./k1-stop
 ```
 
 ---
@@ -156,13 +223,13 @@ All mission artifacts are stored in the `output/` directory:
 ## 7. Troubleshooting
 
 **Issue: "Virtual environment not found"**
-*   Run `./scripts/setup.sh` again.
+*   Run `./bootstrap.sh` again.
 
 **Issue: Tools failing with "Permission Denied"**
 *   Some tools (like Nmap) require root. Ensure you have sudo access or use unprivileged modes.
 
 **Issue: "Worker not found" in logs**
-*   Check `runtime/logs/worker.log`. Ensure Redis is running (`sudo systemctl start redis`).
+*   Check `runtime/logs/worker.log`. Ensure Redis is reachable (or re-run `./k1-start` to restart managed infra).
 
 **Issue: LLM Errors (401/403)**
 *   Check your `.env` file for correct API keys.

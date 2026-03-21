@@ -8,10 +8,16 @@
 
 | Requirement | Minimum | Notes |
 |-------------|---------|-------|
+| Linux (Ubuntu 22.04+) | — | Windows: WSL2 |
+| Python | 3.11+ | `python3 --version` |
+| Node.js | 18+ | `node --version` — required for operator UI |
 | Docker Engine | 24+ | Docker Desktop acceptable for local |
 | docker compose | v2 (plugin) | `docker compose` not `docker-compose` |
 | RAM | 4 GB (local) / 8 GB (prod) | Backend + worker + DB |
 | Disk | 10 GB | For artifacts, DB, images |
+| LLM API key | — | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` required |
+
+On Ubuntu/Debian, `./bootstrap.sh` installs system packages (pango/cairo for weasyprint, curl, git, build-essential) and all Python/Node dependencies automatically.
 
 ---
 
@@ -19,16 +25,20 @@
 
 ```bash
 # First time
-./bootstrap.sh       # installs deps, creates .env
-./scripts/deploy-local.sh
+./bootstrap.sh
+./k1-start
 
 # Subsequent runs
-./scripts/deploy-local.sh
-
-# Rebuild images after code changes
-./scripts/deploy-local.sh --rebuild
+./k1-start
 
 # Stop stack
+./k1-stop
+```
+
+Alternative (containerized full stack):
+
+```bash
+./scripts/deploy-local.sh
 ./scripts/deploy-local.sh --down
 ```
 

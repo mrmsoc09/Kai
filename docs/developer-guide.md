@@ -11,20 +11,32 @@ This guide explains how to add new capabilities to Kai — new agent personas, g
 ## 1. Local Setup
 
 ### Prerequisites
-- Python 3.11+
-- Node.js 18+ (frontend)
-- PostgreSQL 16 (missions and checkpoints)
-- Redis (Celery broker + cache)
-- Vault (optional, for credential-backed tools)
+
+- **Python 3.11+** — `python3 --version`
+- **Node.js 18+** and npm — `node --version`
+- **Docker Engine + Compose plugin** — for PostgreSQL and Redis — `docker compose version`
+- At least one LLM API key (`ANTHROPIC_API_KEY` or `OPENAI_API_KEY`)
+
+On Ubuntu/Debian, `bootstrap.sh` installs system packages (curl, git, pango/cairo libs, build-essential) and all Python/Node deps automatically.
 
 ### Installation
 
 ```bash
-# Automated setup
-./bootstrap.sh        # First-time
-./k1 setup            # Configuration wizard (configure_k1.py)
-./k1 start            # Build and launch all services
+git clone https://github.com/mrmsoc09/Kai.git
+cd Kai
+
+./bootstrap.sh    # installs all deps, creates .env, runs migrations, verifies tools
+nano .env         # set ANTHROPIC_API_KEY, JWT_SECRET_KEY, K1_DEV_TOKEN
+./k1-start        # start backend (8080) + celery worker + operator UI (8081)
 ```
+
+Stop services:
+
+```bash
+./k1-stop
+```
+
+Full-stack Docker orchestration (legacy) remains available via `./k1 start`.
 
 ### Manual Development Mode
 
@@ -36,7 +48,7 @@ python3 -m uvicorn apps.backend.src.main:app --host 0.0.0.0 --port 8080 --reload
 celery -A apps.backend.src.worker.celery_app worker -Q tools,intrusive -l info
 
 # Frontend
-cd apps/frontend && npm run dev
+cd ui && npm run dev
 ```
 
 ### Running Tests

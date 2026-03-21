@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -16,6 +17,8 @@ from apps.backend.src.core.helpers import workflow_output_root  # noqa: E402
 def _run_verify(command: list[str]) -> tuple[bool, str]:
     if not command:
         return False, "no verification command configured"
+    if command[0] == "python" and shutil.which("python") is None and shutil.which("python3"):
+        command = ["python3", *command[1:]]
     try:
         completed = subprocess.run(
             command,
@@ -36,9 +39,19 @@ def main() -> int:
     report: list[dict] = []
     failures = 0
     for entry in list_catalog_entries(enabled_only=False):
-        success, output = _run_verify(entry.install_verification_cmd)
+        if entry.execution_mode == "docker":
+            docker_ok = shutil.which("docker") is not None
+            success = docker_ok
+            output = (
+                f"docker available; runtime image {entry.container_image or 'not configured'}"
+                if docker_ok
+                else "docker not available"
+            )
+        else:
+            success, output = _run_verify(entry.install_verification_cmd)
         record = {
             "tool": entry.name,
+            "execution_mode": entry.execution_mode,
             "enabled_by_default": entry.enabled_by_default,
             "ok": success,
             "verify_cmd": entry.install_verification_cmd,

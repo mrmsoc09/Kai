@@ -1,79 +1,484 @@
-#!/bin/bash
-# Kai Platform Setup
+#!/usr/bin/env bash
+# Kai bootstrap entrypoint.
 # Usage: ./scripts/setup.sh
 
-set -e
+set -euo pipefail
 
-# Colors for output
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${REPO_ROOT}"
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
-NC='\033[0m' # No Color
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-echo -e "${GREEN}[+] Starting Kai Platform Setup...${NC}"
+BOOTSTRAP_MARKER="runtime/.bootstrap_ready"
 
-# 1. Check Python Version
-if ! command -v python3 &> /dev/null; then
-    echo -e "${RED}[!] Python 3 is not installed.${NC}"
-    exit 1
-fi
+PYTHON_DEPS_OK=false
+UI_DEPS_OK=false
+ENV_OK=false
+MIGRATIONS_OK=false
+TOOLS_OK=false
+DOCKER_INFRA_OK=false
 
-PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
-echo -e "${GREEN}[+] Detected Python version: $PYTHON_VERSION${NC}"
+declare -a TOOL_ERRORS=()
+declare -a MANUAL_PREREQS=()
+APT_UPDATED=0
 
-# 2. Create Virtual Environment
-if [ ! -d ".venv" ]; then
-    echo -e "${YELLOW}[*] Creating virtual environment (.venv)...${NC}"
-    python3 -m venv .venv
-else
-    echo -e "${GREEN}[+] Virtual environment exists.${NC}"
-fi
+info() { echo -e "${GREEN}[k1-bootstrap]${NC} $*"; }
+warn() { echo -e "${YELLOW}[k1-bootstrap]${NC} $*"; }
+error() { echo -e "${RED}[k1-bootstrap]${NC} $*" >&2; }
+section() { echo -e "\n${BLUE}==> $*${NC}"; }
 
-# Activate venv for subsequent commands
-source .venv/bin/activate
+has_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
 
-# 3. Install Dependencies
-echo -e "${YELLOW}[*] Installing dependencies...${NC}"
-pip install --upgrade pip
-if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
-else
-    echo -e "${RED}[!] requirements.txt not found!${NC}"
-    exit 1
-fi
+can_use_apt() {
+    has_cmd apt-get
+}
 
-if [ -f "requirements-dev.txt" ]; then
-    echo -e "${YELLOW}[*] Installing dev dependencies...${NC}"
-    pip install -r requirements-dev.txt
-fi
-
-# 4. Environment Configuration
-if [ ! -f ".env" ]; then
-    echo -e "${YELLOW}[*] .env not found. Creating from .env.example...${NC}"
-    if [ -f ".env.example" ]; then
-        cp .env.example .env
-        echo -e "${GREEN}[+] Created .env file. PLEASE EDIT IT with your credentials.${NC}"
+apt_prefix() {
+    if has_cmd sudo; then
+        echo "sudo"
+    elif [ "$(id -u)" -eq 0 ]; then
+        echo ""
     else
-        echo -e "${RED}[!] .env.example not found!${NC}"
+        echo "__NO_ROOT__"
+    fi
+}
+
+apt_install_packages() {
+    local prefix
+    prefix="$(apt_prefix)"
+    if ! can_use_apt; then
+        return 1
+    fi
+    if [[ "${prefix}" == "__NO_ROOT__" ]]; then
+        return 1
+    fi
+    if [[ ${APT_UPDATED} -eq 0 ]]; then
+        if [[ -n "${prefix}" ]]; then
+            ${prefix} apt-get update
+        else
+            apt-get update
+        fi
+        APT_UPDATED=1
+    fi
+    if [[ -n "${prefix}" ]]; then
+        ${prefix} apt-get install -y "$@"
+    else
+        apt-get install -y "$@"
+    fi
+}
+
+ensure_python_minimum() {
+    python3 - <<'PY'
+import sys
+if sys.version_info < (3, 11):
+    raise SystemExit("Python 3.11+ is required.")
+print(f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}")
+PY
+}
+
+set_env_value() {
+    local key="$1"
+    local value="$2"
+    local file="$3"
+    if grep -q "^${key}=" "${file}"; then
+        sed -i "s|^${key}=.*|${key}=${value}|" "${file}"
+    else
+        printf "\n%s=%s\n" "${key}" "${value}" >> "${file}"
+    fi
+}
+
+readiness_line() {
+    local label="$1"
+    local ok="$2"
+    if [[ "${ok}" == "true" ]]; then
+        echo -e "  ${GREEN}✓${NC} ${label}"
+    else
+        echo -e "  ${RED}✗${NC} ${label}"
+    fi
+}
+
+wait_for_port() {
+    local host="$1"
+    local port="$2"
+    local timeout="${3:-45}"
+    python3 - "$host" "$port" "$timeout" <<'PY'
+import socket
+import sys
+import time
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+timeout = int(sys.argv[3])
+deadline = time.time() + timeout
+while time.time() < deadline:
+    try:
+        with socket.create_connection((host, port), timeout=2):
+            raise SystemExit(0)
+    except OSError:
+        time.sleep(1)
+raise SystemExit(1)
+PY
+}
+
+run_verify_cmd() {
+    local verify_json="$1"
+    TOOL_VERIFY_JSON="${verify_json}" python3 - <<'PY'
+import json
+import os
+import shutil
+import subprocess
+import sys
+
+raw = os.environ.get("TOOL_VERIFY_JSON", "[]")
+try:
+    cmd = json.loads(raw)
+except json.JSONDecodeError:
+    raise SystemExit(1)
+
+if not isinstance(cmd, list) or not cmd:
+    raise SystemExit(1)
+
+if cmd[0] == "python" and shutil.which("python") is None and shutil.which("python3"):
+    cmd[0] = "python3"
+
+try:
+    completed = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+except FileNotFoundError:
+    raise SystemExit(1)
+except Exception:
+    raise SystemExit(1)
+
+raise SystemExit(0 if completed.returncode == 0 else 1)
+PY
+}
+
+ensure_go() {
+    if has_cmd go; then
+        return 0
+    fi
+    if apt_install_packages golang-go; then
+        return 0
+    fi
+    return 1
+}
+
+install_go_tool() {
+    local module="$1"
+    if ! ensure_go; then
+        return 1
+    fi
+    export GOBIN="${HOME}/.local/bin"
+    export PATH="${GOBIN}:${PATH}"
+    mkdir -p "${GOBIN}"
+    GO111MODULE=on go install "${module}"
+}
+
+install_native_tool() {
+    local tool="$1"
+    case "${tool}" in
+        amass) apt_install_packages amass ;;
+        nmap) apt_install_packages nmap ;;
+        theharvester) apt_install_packages theharvester ;;
+        searchsploit) apt_install_packages exploitdb ;;
+        findomain) apt_install_packages findomain ;;
+        assetfinder) install_go_tool github.com/tomnomnom/assetfinder@latest ;;
+        subfinder) install_go_tool github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest ;;
+        dnsx) install_go_tool github.com/projectdiscovery/dnsx/cmd/dnsx@latest ;;
+        gau) install_go_tool github.com/lc/gau/v2/cmd/gau@latest ;;
+        waybackurls) install_go_tool github.com/tomnomnom/waybackurls@latest ;;
+        httpx) install_go_tool github.com/projectdiscovery/httpx/cmd/httpx@latest ;;
+        httprobe) install_go_tool github.com/tomnomnom/httprobe@latest ;;
+        naabu) install_go_tool github.com/projectdiscovery/naabu/v2/cmd/naabu@latest ;;
+        tlsx) install_go_tool github.com/projectdiscovery/tlsx/cmd/tlsx@latest ;;
+        hakrawler) install_go_tool github.com/hakluke/hakrawler@latest ;;
+        gitleaks) install_go_tool github.com/gitleaks/gitleaks/v8@latest ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+load_enabled_tools() {
+    python3 - <<'PY'
+import json
+from pathlib import Path
+
+import yaml
+
+payload = yaml.safe_load(Path("tools/registry/tool_registry.yaml").read_text(encoding="utf-8")) or {}
+for tool in payload.get("tools", []):
+    if not isinstance(tool, dict):
+        continue
+    if not bool(tool.get("enabled_by_default", True)):
+        continue
+    record = {
+        "name": str(tool.get("name") or "").strip(),
+        "mode": str(tool.get("execution_mode") or "native").strip().lower(),
+        "verify": tool.get("install_verification_cmd") or [],
+        "image": str(tool.get("container_image") or "").strip(),
+    }
+    if record["name"]:
+        print(json.dumps(record))
+PY
+}
+
+section "System package dependencies"
+# Packages needed at the OS level for Python packages that wrap C libraries
+# (weasyprint → pango/cairo/gdk-pixbuf, cryptography → libssl/libffi, curl for
+# k1-start health checks, git for tool installs).  We attempt apt install on
+# Debian/Ubuntu; on other distros we warn with actionable instructions.
+SYSTEM_APT_PACKAGES=(
+    curl
+    git
+    build-essential
+    libssl-dev
+    libffi-dev
+    libglib2.0-0
+    libpango-1.0-0
+    libpangocairo-1.0-0
+    libpangoft2-1.0-0
+    libgdk-pixbuf-2.0-0
+    libcairo2
+    shared-mime-info
+)
+SYSTEM_MISSING=()
+for pkg_check_cmd in curl git; do
+    if ! has_cmd "${pkg_check_cmd}"; then
+        SYSTEM_MISSING+=("${pkg_check_cmd}")
+    fi
+done
+# pango is represented by the pango-view binary; otherwise check shared lib
+if ! ldconfig -p 2>/dev/null | grep -q libpango; then
+    SYSTEM_MISSING+=("libpango-1.0-0 (pango — required by weasyprint)")
+fi
+
+if [[ ${#SYSTEM_MISSING[@]} -gt 0 ]]; then
+    if can_use_apt; then
+        info "Installing system packages via apt: ${SYSTEM_APT_PACKAGES[*]}"
+        if apt_install_packages "${SYSTEM_APT_PACKAGES[@]}"; then
+            info "System packages installed."
+        else
+            warn "apt install encountered errors. Some system packages may be missing."
+            warn "If weasyprint or cryptography fail to build, run:"
+            warn "  sudo apt-get install -y ${SYSTEM_APT_PACKAGES[*]}"
+        fi
+    else
+        warn "apt not available. Missing system packages detected: ${SYSTEM_MISSING[*]}"
+        warn "Install the equivalent packages for your distro. On Debian/Ubuntu:"
+        warn "  sudo apt-get install -y ${SYSTEM_APT_PACKAGES[*]}"
+        MANUAL_PREREQS+=("System packages: ${SYSTEM_APT_PACKAGES[*]}")
     fi
 else
-    echo -e "${GREEN}[+] .env file exists.${NC}"
+    info "Required system packages appear to be present."
 fi
 
-# 5. Prepare Directories
-echo -e "${YELLOW}[*] Creating artifact directories...${NC}"
-mkdir -p output/logs output/raw output/normalized output/reports output/workflows
-mkdir -p runtime/logs runtime/metrics runtime/traces
+section "Python environment"
+if ! has_cmd python3; then
+    if can_use_apt && apt_install_packages python3 python3-venv python3-pip; then
+        info "Installed python3, python3-venv, python3-pip."
+    else
+        error "python3 is required. Install Python 3.11+ and re-run bootstrap."
+        exit 1
+    fi
+fi
 
-# 6. Database Migrations
-echo -e "${YELLOW}[*] Running database migrations...${NC}"
-# Check if alembic is installed in venv
-if command -v alembic &> /dev/null; then
-    alembic upgrade head
-    echo -e "${GREEN}[+] Migrations complete.${NC}"
+PYTHON_VERSION="$(ensure_python_minimum)"
+info "Detected Python ${PYTHON_VERSION}"
+
+if [[ ! -d ".venv" ]]; then
+    info "Creating virtual environment at .venv"
+    python3 -m venv .venv
+fi
+
+source .venv/bin/activate
+export PATH="${HOME}/.local/bin:${PATH}"
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
+if [[ -f requirements-dev.txt ]]; then
+    python -m pip install -r requirements-dev.txt
+fi
+PYTHON_DEPS_OK=true
+
+section "UI dependencies"
+if [[ -d ui ]]; then
+    if ! has_cmd npm; then
+        if can_use_apt && apt_install_packages nodejs npm; then
+            info "Installed nodejs/npm from apt."
+        else
+            error "npm is required for ui/. Install Node.js 18+ and npm, then re-run bootstrap."
+            exit 1
+        fi
+    fi
+
+    NODE_MAJOR="$(node -v 2>/dev/null | sed 's/^v//' | cut -d. -f1 || echo 0)"
+    if [[ "${NODE_MAJOR}" -lt 18 ]]; then
+        error "Node.js 18+ is required. Detected: $(node -v 2>/dev/null || echo 'unknown')"
+        error "Install Node.js 18+ (https://nodejs.org/) and re-run bootstrap."
+        exit 1
+    fi
+
+    if [[ -f ui/package-lock.json ]]; then
+        npm --prefix ui ci
+    else
+        npm --prefix ui install
+    fi
+    UI_DEPS_OK=true
 else
-    echo -e "${RED}[!] Alembic not found in path. Ensure requirements are installed.${NC}"
+    warn "ui/ directory not present; skipping UI dependency install."
+    UI_DEPS_OK=true
 fi
 
-echo -e "${GREEN}[+] Setup Complete!${NC}"
-echo -e "You can now start the platform with: ${YELLOW}./scripts/k1-start.sh${NC}"
+section "Environment + runtime directories"
+ENV_CREATED=0
+if [[ ! -f .env ]]; then
+    if [[ -f .env.example ]]; then
+        cp .env.example .env
+        ENV_CREATED=1
+        warn "Created .env from .env.example."
+    else
+        error "Missing .env and .env.example. Cannot continue."
+        exit 1
+    fi
+fi
+
+for key in DATABASE_URL REDIS_URL JWT_SECRET_KEY K1_DEV_TOKEN; do
+    if ! grep -q "^${key}=" .env; then
+        error ".env is missing required key: ${key}"
+        exit 1
+    fi
+done
+
+if [[ "${ENV_CREATED}" -eq 1 ]]; then
+    set_env_value "K1_STARTUP_VALIDATE_SECRETS" "false" .env
+    set_env_value "K1_STARTUP_VALIDATE_TOOLPACKS" "false" .env
+    warn "Set K1_STARTUP_VALIDATE_SECRETS=false for first-time local startup."
+fi
+
+mkdir -p \
+    artifacts/audit \
+    artifacts/logs \
+    artifacts/reports \
+    artifacts/telemetry \
+    artifacts/usage \
+    artifacts/workflows \
+    output/logs \
+    output/raw \
+    output/normalized \
+    output/reports \
+    output/workflows \
+    runtime/logs \
+    runtime/metrics \
+    runtime/pids \
+    runtime/traces
+ENV_OK=true
+
+section "Infrastructure + migrations"
+if has_cmd docker && docker compose version >/dev/null 2>&1; then
+    docker compose -f docker-compose.yml up -d postgres redis
+    if wait_for_port 127.0.0.1 5432 60 && wait_for_port 127.0.0.1 6379 45; then
+        DOCKER_INFRA_OK=true
+        info "PostgreSQL and Redis are reachable."
+    else
+        warn "Docker infra started but ports did not become reachable in time."
+    fi
+else
+    MANUAL_PREREQS+=("Docker Engine + compose plugin (or manually running PostgreSQL/Redis)")
+    warn "docker compose not available; assuming PostgreSQL/Redis are managed externally."
+fi
+
+if alembic upgrade head; then
+    MIGRATIONS_OK=true
+else
+    error "Database migrations failed."
+    error "Ensure PostgreSQL is running and DATABASE_URL in .env is reachable."
+    exit 1
+fi
+
+section "External tool verification"
+mapfile -t TOOL_RECORDS < <(load_enabled_tools)
+
+for record in "${TOOL_RECORDS[@]}"; do
+    name="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["name"])' "${record}")"
+    mode="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["mode"])' "${record}")"
+    verify_json="$(python3 -c 'import json,sys; print(json.dumps(json.loads(sys.argv[1])["verify"]))' "${record}")"
+    image="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["image"])' "${record}")"
+
+    if [[ "${mode}" == "docker" ]]; then
+        if has_cmd docker; then
+            info "Tool ${name}: OK (docker execution mode)"
+        else
+            TOOL_ERRORS+=("${name}: requires Docker (${image:-no image configured})")
+        fi
+        continue
+    fi
+
+    if run_verify_cmd "${verify_json}"; then
+        info "Tool ${name}: already available"
+        continue
+    fi
+
+    if [[ "${mode}" == "native" ]]; then
+        warn "Tool ${name}: missing; attempting install"
+        if install_native_tool "${name}" && run_verify_cmd "${verify_json}"; then
+            info "Tool ${name}: installed successfully"
+            continue
+        fi
+        TOOL_ERRORS+=("${name}: auto-install failed; install manually and re-run bootstrap.")
+        continue
+    fi
+
+    warn "Tool ${name}: optional mode not installed"
+done
+
+if [[ ${#TOOL_ERRORS[@]} -eq 0 ]]; then
+    TOOLS_OK=true
+fi
+
+section "Readiness summary"
+readiness_line "Python deps installed" "${PYTHON_DEPS_OK}"
+readiness_line "UI deps installed" "${UI_DEPS_OK}"
+readiness_line "Environment configured" "${ENV_OK}"
+readiness_line "Migrations applied" "${MIGRATIONS_OK}"
+readiness_line "External tools verified" "${TOOLS_OK}"
+
+if [[ "${DOCKER_INFRA_OK}" == "true" ]]; then
+    readiness_line "Docker infra healthy (postgres, redis)" "true"
+else
+    readiness_line "Docker infra healthy (postgres, redis)" "false"
+fi
+
+if [[ ${#TOOL_ERRORS[@]} -gt 0 ]]; then
+    echo -e "\n${RED}Missing required external tools:${NC}"
+    for item in "${TOOL_ERRORS[@]}"; do
+        echo "  - ${item}"
+    done
+fi
+
+if [[ ${#MANUAL_PREREQS[@]} -gt 0 ]]; then
+    echo -e "\n${YELLOW}Manual prerequisites:${NC}"
+    for item in "${MANUAL_PREREQS[@]}"; do
+        echo "  - ${item}"
+    done
+fi
+
+if [[ "${PYTHON_DEPS_OK}" == "true" && "${UI_DEPS_OK}" == "true" && "${ENV_OK}" == "true" && "${MIGRATIONS_OK}" == "true" && "${TOOLS_OK}" == "true" ]]; then
+    cat > "${BOOTSTRAP_MARKER}" <<EOF
+ready=true
+timestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+python=${PYTHON_VERSION}
+node=$(node -v 2>/dev/null || echo n/a)
+EOF
+    echo -e "\n${GREEN}Bootstrap complete.${NC}"
+    echo "Run: ./k1-start"
+    exit 0
+fi
+
+echo -e "\n${RED}Bootstrap failed.${NC} Resolve the reported items and run ./bootstrap.sh again."
+exit 1

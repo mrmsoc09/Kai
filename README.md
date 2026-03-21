@@ -8,19 +8,60 @@ Kai coordinates autonomous agents to perform security research missions under st
 
 ## Quick Start
 
+### Prerequisites
+
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Linux (Debian/Ubuntu recommended) | — | Windows via WSL2 |
+| Python | 3.11+ | `python3 --version` |
+| Node.js | 18+ | `node --version` — [nodejs.org](https://nodejs.org) |
+| Docker Engine + Compose plugin | 24+ | For PostgreSQL and Redis |
+| At least one LLM API key | — | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env` |
+
+`bootstrap.sh` installs system packages and Python/Node dependencies automatically on Ubuntu/Debian.
+External recon tools (amass, subfinder, nuclei, etc.) are auto-installed when `go` is available.
+
+### First-time setup
+
 ```bash
-./bootstrap.sh       # First-time setup
-./k1 start           # Build and launch all services
+git clone https://github.com/mrmsoc09/Kai.git
+cd Kai
+
+./bootstrap.sh   # install deps, configure env, run migrations, verify tools
+
+# Edit .env — set API keys before starting (see .env.example)
+
+./k1-start       # start backend + celery worker + operator UI
 ```
 
-Open the operator cockpit at `http://localhost:5173`.
+Open the operator UI at **http://localhost:8081**.
+API docs at **http://localhost:8080/docs**.
 
 ```bash
-./k1 stop            # Stop all services
-./k1 restart         # Stop then start
-./k1 setup           # Configuration wizard
-./k1 logs            # Tail container logs
+./k1-stop        # stop all services
 ```
+
+### What bootstrap does
+
+1. Installs system packages (`curl`, `git`, `build-essential`, pango/cairo for weasyprint)
+2. Creates Python virtualenv at `.venv` — installs `requirements.txt`
+3. Installs Node.js packages in `ui/node_modules`
+4. Creates `.env` from `.env.example` (first run) — **fill in API keys before starting**
+5. Creates artifact/runtime directories (`artifacts/`, `output/`, `runtime/`)
+6. Starts PostgreSQL + Redis via Docker Compose and runs Alembic migrations
+7. Verifies and auto-installs enabled external tools (amass, subfinder, httpx, nuclei, etc.)
+8. Prints a readiness summary — **all lines must show ✓ before running `./k1-start`**
+
+### What must be configured manually
+
+Edit `.env` after the first bootstrap run:
+- `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` — at least one LLM provider key required
+- `JWT_SECRET_KEY` — replace placeholder with a cryptographically random value
+- `K1_DEV_TOKEN` — replace placeholder
+
+See `.env.example` for the full variable reference.
+
+Legacy container orchestration remains available via `./k1 start` (Docker Compose full stack).
 
 ---
 
@@ -61,7 +102,7 @@ Kai is built on six integrated layers, each with explicit authority boundaries:
 | Service | Port | Purpose |
 |---------|------|---------|
 | backend | 8080 | FastAPI API server |
-| frontend | 5173 | Vite React operator cockpit |
+| frontend | 8081 | Vite React operator cockpit |
 | worker | — | Celery worker (tools queue) |
 | postgres | 5432 | Primary database + LangGraph checkpoints |
 | redis | 6379 | Cache + Celery broker |

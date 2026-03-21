@@ -1,38 +1,70 @@
-#!/bin/bash
-# Kai Platform Stop
+#!/usr/bin/env bash
+# Kai runtime stop.
 # Usage: ./scripts/k1-stop.sh
 
-set -e
+set -euo pipefail
 
-# Colors
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "${REPO_ROOT}"
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-echo -e "${YELLOW}[*] Stopping Kai Platform Services...${NC}"
+info() { echo -e "${GREEN}[k1-stop]${NC} $*"; }
+warn() { echo -e "${YELLOW}[k1-stop]${NC} $*"; }
+error() { echo -e "${RED}[k1-stop]${NC} $*" >&2; }
 
-# 1. Stop API Server
-if [ -f "runtime/api.pid" ]; then
-    PID=$(cat runtime/api.pid)
-    echo -e "${YELLOW}[*] Stopping API (PID: $PID)...${NC}"
-    kill $PID 2>/dev/null || echo -e "${RED}[!] Could not kill API. Check if running.${NC}"
-    rm runtime/api.pid
+stop_service() {
+    local name="$1"
+    local pid_file="$2"
+
+    if [[ ! -f "${pid_file}" ]]; then
+        info "${name}: not running (no PID file)."
+        return 0
+    fi
+
+    local pid
+    pid="$(cat "${pid_file}")"
+    if [[ -z "${pid}" ]]; then
+        rm -f "${pid_file}"
+        warn "${name}: removed empty PID file."
+        return 0
+    fi
+
+    if kill -0 "${pid}" >/dev/null 2>&1; then
+        info "Stopping ${name} (PID ${pid})..."
+        kill "${pid}" >/dev/null 2>&1 || true
+        for _ in $(seq 1 10); do
+            if ! kill -0 "${pid}" >/dev/null 2>&1; then
+                break
+            fi
+            sleep 1
+        done
+        if kill -0 "${pid}" >/dev/null 2>&1; then
+            warn "${name} did not stop gracefully; sending SIGKILL."
+            kill -9 "${pid}" >/dev/null 2>&1 || true
+        fi
+    else
+        warn "${name}: PID ${pid} is not running; cleaning stale PID file."
+    fi
+
+    rm -f "${pid_file}"
+}
+
+mkdir -p runtime/pids
+
+stop_service "Operator UI" "runtime/pids/ui.pid"
+stop_service "Celery worker" "runtime/pids/worker.pid"
+stop_service "Backend API" "runtime/pids/backend.pid"
+
+if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+    info "Stopping docker infrastructure services (postgres, redis)..."
+    docker compose -f docker-compose.yml stop postgres redis >/dev/null 2>&1 || true
 else
-    echo -e "${GREEN}[+] API PID file not found. Assuming stopped.${NC}"
+    warn "docker compose not available; skipped postgres/redis stop."
 fi
 
-# 2. Stop Celery Worker
-if [ -f "runtime/worker.pid" ]; then
-    PID=$(cat runtime/worker.pid)
-    echo -e "${YELLOW}[*] Stopping Worker (PID: $PID)...${NC}"
-    kill $PID 2>/dev/null || echo -e "${RED}[!] Could not kill Worker. Check if running.${NC}"
-    rm runtime/worker.pid
-else
-    echo -e "${GREEN}[+] Worker PID file not found. Assuming stopped.${NC}"
-fi
-
-# Optional cleanup: kill any orphaned python/celery processes if PID files were missing?
-# Probably safer not to, unless explicitly requested.
-
-echo -e "${GREEN}[+] Services Stopped.${NC}"
+echo -e "${GREEN}Kai services stopped.${NC}"
