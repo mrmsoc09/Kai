@@ -46,6 +46,7 @@ class K1GraphState(TypedDict, total=False):
 
     # -- Mission identity ---------------------------------------------------------
     mission_id: str         # unique execution ID for this mission run
+    tenant_id: str
     workflow_id: str
     program_id: str
     mission_name: str
@@ -112,8 +113,9 @@ class K1GraphState(TypedDict, total=False):
 
 
 def make_initial_state(
-    workflow_id: str,
-    program_id: str,
+    tenant_id: UUID | str | None = None,
+    workflow_id: str = "",
+    program_id: str = "",
     mission_name: str = "",
     phase: str = "governance",
     execution_mode: str = "live",
@@ -121,12 +123,20 @@ def make_initial_state(
 ) -> K1GraphState:
     """
     Build the initial state dict for a new mission graph execution.
-
     All accumulative fields start as empty lists.
     All scalar routing fields start with safe defaults.
     """
+    if not program_id and workflow_id and isinstance(tenant_id, str):
+        legacy_workflow_id = tenant_id
+        legacy_program_id = workflow_id
+        workflow_id = legacy_workflow_id
+        program_id = legacy_program_id
+        tenant_id = None
+
+    resolved_tenant = tenant_id if tenant_id is not None else uuid.uuid4()
     return K1GraphState(
         mission_id=mission_id or str(uuid.uuid4()),
+        tenant_id=str(resolved_tenant),
         workflow_id=workflow_id,
         program_id=program_id,
         mission_name=mission_name,

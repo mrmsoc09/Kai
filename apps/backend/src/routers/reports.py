@@ -1,11 +1,15 @@
 from __future__ import annotations
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from fastapi.responses import JSONResponse
 from typing import Dict, Any
 from collections import OrderedDict
+import logging
 import os
+import json
+import re
+from pydantic import BaseModel, Field
 
-from ..core.auth import require_roles, ROLE_OPERATOR
+from ..core.auth import require_roles, ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN, User, get_current_user
 from ..core.packager import build_submission_package
 from ..core.duplicates import assess_duplicate_risk, check_title_duplicate, vector_duplicate
 from ..core.vector_store import VectorStore
@@ -15,13 +19,27 @@ from ..core.finalize import finalize_report
 from ..core.evidence_contract import normalize_report_evidence
 from ..core.submission_lifecycle import transition_submission_state
 from ..core.report_validator import evaluate_report_quality_gate
+from ..core.report_engine import get_report_engine
 
 try:
     from ..core.report_formats import get_format, render_report, validate_rendered  # type: ignore
 except Exception:  # pragma: no cover
     from ..core.formats import get_format, render_report, validate_rendered  # type: ignore
 
-router = APIRouter(prefix='/reports', tags=['reports'], dependencies=[Depends(require_roles(ROLE_OPERATOR))])
+router = APIRouter(prefix='/reports', tags=['reports'], dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN))])
+logger = logging.getLogger(__name__)
+_SAFE_ATTACHMENT_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _safe_attachment_name(report_id: str, suffix: str) -> str:
+    sanitized = _SAFE_ATTACHMENT_RE.sub("_", str(report_id or "report")).strip("._")
+    if not sanitized:
+        sanitized = "report"
+    return f"{sanitized}{suffix}"
+
+
+def _tenant_filter(user: User) -> str | None:
+    return user.tenant_id or None
 
 @router.post('/render')
 async def render(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -559,5 +577,144 @@ async def delete_cached_report(report_id: str) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=f"Deletion failed: {str(e)}")
 
 
-import logging
-logger = logging.getLogger(__name__)
+class ReportGenerateRequest(BaseModel):
+    finding: Dict[str, Any] = Field(default_factory=dict)
+    exploit_chain: Dict[str, Any] | None = None
+    artifacts: list[Dict[str, Any]] = Field(default_factory=list)
+    mission_id: str | None = None
+    opportunity_id: str | None = None
+    generated_by: str | None = None
+    deduplicate: bool = True
+
+
+@router.get('')
+async def list_reports(
+    severity: str | None = Query(None),
+    min_confidence: float | None = Query(None, ge=0.0, le=1.0),
+    target: str | None = Query(None),
+    mission_id: str | None = Query(None),
+    opportunity_id: str | None = Query(None),
+    limit: int = Query(100, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    engine = get_report_engine()
+    rows = engine.list_reports(
+        tenant_id=_tenant_filter(current_user),
+        severity=severity,
+        min_confidence=min_confidence,
+        target=target,
+        mission_id=mission_id,
+        opportunity_id=opportunity_id,
+    )
+    total = len(rows)
+    page = rows[offset: offset + limit]
+    return {
+        'total': total,
+        'offset': offset,
+        'limit': limit,
+        'reports': [row.to_dict() for row in page],
+    }
+
+
+@router.get('/mission/{mission_id}')
+async def list_mission_reports(
+    mission_id: str,
+    limit: int = Query(200, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    engine = get_report_engine()
+    rows = engine.list_reports(
+        tenant_id=_tenant_filter(current_user),
+        mission_id=mission_id,
+    )
+    total = len(rows)
+    page = rows[offset: offset + limit]
+    return {
+        'mission_id': mission_id,
+        'total': total,
+        'offset': offset,
+        'limit': limit,
+        'reports': [row.to_dict() for row in page],
+    }
+
+
+@router.post('/generate')
+async def generate_report(
+    payload: ReportGenerateRequest,
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
+    if not payload.finding:
+        raise HTTPException(status_code=400, detail='finding required')
+
+    engine = get_report_engine()
+    report, deduplicated = engine.generate_and_store_report(
+        finding=payload.finding,
+        exploit_chain=payload.exploit_chain,
+        artifacts=payload.artifacts,
+        tenant_id=_tenant_filter(current_user),
+        mission_id=payload.mission_id,
+        opportunity_id=payload.opportunity_id,
+        generated_by=payload.generated_by or current_user.id,
+        deduplicate=bool(payload.deduplicate),
+    )
+
+    return {
+        'deduplicated': deduplicated,
+        'report': report.to_dict(),
+    }
+
+
+@router.get('/{report_id}/export')
+async def export_report(
+    report_id: str,
+    format: str = Query('markdown'),
+    current_user: User = Depends(get_current_user),
+) -> Response:
+    engine = get_report_engine()
+    report = engine.get_report(report_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail='report_not_found')
+    if current_user.tenant_id and report.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail='report_not_found')
+
+    export_format = (format or 'markdown').strip().lower()
+    if export_format in {'md', 'markdown'}:
+        content = report.rendered_markdown
+        if not content:
+            content = (
+                f"# {report.title}\n\n"
+                f"Severity: {report.severity}\n"
+                f"Target: {report.target}\n\n"
+                f"## Summary\n{report.summary}\n"
+            )
+        return Response(
+            content=content,
+            media_type='text/markdown; charset=utf-8',
+            headers={
+                'Content-Disposition': f'attachment; filename="{_safe_attachment_name(report.report_id, ".md")}"',
+            },
+        )
+
+    if export_format == 'json':
+        return Response(
+            content=json.dumps(report.to_dict(), indent=2, ensure_ascii=False),
+            media_type='application/json; charset=utf-8',
+            headers={
+                'Content-Disposition': f'attachment; filename="{_safe_attachment_name(report.report_id, ".json")}"',
+            },
+        )
+
+    raise HTTPException(status_code=400, detail='unsupported_export_format')
+
+
+@router.get('/{report_id}')
+async def get_report(report_id: str, current_user: User = Depends(get_current_user)) -> dict[str, Any]:
+    engine = get_report_engine()
+    report = engine.get_report(report_id)
+    if report is None:
+        raise HTTPException(status_code=404, detail='report_not_found')
+    if current_user.tenant_id and report.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail='report_not_found')
+    return report.to_dict()

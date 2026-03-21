@@ -1,147 +1,140 @@
-# Kai / K1
+# Kai (K1) Platform
 
-## Project Title
-Kai (K1) is a backend-first orchestration platform for authorized security research workflows.
+> **Governance-first autonomous mission orchestration for authorized security research.**
 
-## What Kai Is
-Kai provides a persisted execution model for campaign-based work:
+Kai coordinates autonomous agents to perform security research missions under strict governance policies. Every tool call, agent spawn, and scope decision passes through a multi-layer governance stack with human-in-the-loop approval gates, immutable delegation contracts, and defense-in-depth enforcement.
 
-- campaign and branch orchestration
-- phase scheduling with dependency handling
-- approval-gated execution paths
-- worker result ingestion
-- artifact and observation persistence
-- deterministic observation-to-finding correlation
-- human review and submission package preparation
-- provider payload preview/export staging (no auto-submission)
+---
 
-## Key Capabilities
-
-- Canonical execution entities (`CampaignRun`, `ExecutionBranch`, `PhaseJob`, `ToolExecution`, `ApprovalGate`, `Artifact`, `Observation`, `AuditEvent`, `IntentionRecord`)
-- Idempotent scheduler and ingestion behavior for replay/concurrency safety
-- Branch-local approval blocking semantics
-- Review queue and finding review actions
-- Diagnostics and health endpoints for operators
-
-## Architecture Overview
-
-- API/control plane: FastAPI (`apps/backend/src/main.py`)
-- Persistence: PostgreSQL + SQLAlchemy models + Alembic migrations
-- Worker execution: Celery (`apps/backend/src/worker/`)
-- Frontend (canonical operator cockpit): Next.js (`apps/frontend-operator/`)
-- Canonical docs:
-  - [`docs/architecture.md`](docs/architecture.md)
-  - [`docs/backend_system.md`](docs/backend_system.md)
-  - [`docs/workflow_engine.md`](docs/workflow_engine.md)
-  - [`docs/security_model.md`](docs/security_model.md)
-  - [`docs/api_reference.md`](docs/api_reference.md)
-  - [`docs/development_guide.md`](docs/development_guide.md)
-  - [`docs/frontend_readiness.md`](docs/frontend_readiness.md)
-  - [`docs/testing_strategy.md`](docs/testing_strategy.md)
-  - [`docs/release_process.md`](docs/release_process.md)
-
-## Repository Structure
-
-```text
-apps/
-  backend/
-    src/              # FastAPI app, core services, models, routers, worker integration
-    alembic/          # DB migrations
-  frontend-operator/  # Canonical Next.js analyst/operator console
-  frontend/           # Legacy frontend surface (compatibility)
-tests/              # pytest suites
-docs/               # canonical documentation set
-scripts/            # policy and maintenance checks
-```
-
-## Getting Started
-
-1. Install dependencies:
+## Quick Start
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python3 -m pip install --upgrade pip
-python3 -m pip install -r requirements-dev.txt
+./bootstrap.sh       # First-time setup
+./k1 start           # Build and launch all services
 ```
 
-2. Create env file (MVP quickstart):
+Open the operator cockpit at `http://localhost:5173`.
 
 ```bash
-cp .env.mvp.example .env
+./k1 stop            # Stop all services
+./k1 restart         # Stop then start
+./k1 setup           # Configuration wizard
+./k1 logs            # Tail container logs
 ```
 
-3. Set required environment variables (minimum):
+---
 
-- `DATABASE_URL`
-- `REDIS_URL`
-- `K1_DEV_TOKEN`
-- `JWT_SECRET_KEY`
+## Architecture
 
-4. Apply database migrations:
+Kai is built on six integrated layers, each with explicit authority boundaries:
 
-```bash
-alembic upgrade head
+```
+┌─────────────────────────────────────────────────────────┐
+│  PraisonAI Control Plane                                │
+│  Agent registry · Governance engine · Delegation        │
+│  contracts · Adaptive learning · Strategy profiles      │
+├─────────────────────────────────────────────────────────┤
+│  LangGraph Mission Runtime                              │
+│  K1GraphState · DAG execution · Checkpointing ·         │
+│  Interrupt-based approval gates · Cluster subgraphs     │
+├─────────────────────────────────────────────────────────┤
+│  LangChain Model / Tools Layer                          │
+│  K1ChatModel · K1GovernedTool · Middleware stack ·      │
+│  Structured output schemas · Reasoning engine           │
+├─────────────────────────────────────────────────────────┤
+│  DeepAgents Specialist Runtime                          │
+│  Bridge layer · Sandbox isolation · Contract-aware      │
+│  subagent delegation · Namespace-aware streaming        │
+├─────────────────────────────────────────────────────────┤
+│  LangSmith Observability                                │
+│  Trace correlation · Redaction · Evaluations ·          │
+│  A/B experiments · Dataset management                   │
+├─────────────────────────────────────────────────────────┤
+│  Simulation Safety Overlay                              │
+│  graph_only · tool_mock · replay · Fixture system ·     │
+│  Safety barriers (no mode escalation to live)           │
+└─────────────────────────────────────────────────────────┘
 ```
 
-5. Start backend API:
+### Services
 
-```bash
-python3 -m uvicorn apps.backend.src.main:app --host 0.0.0.0 --port 8080 --reload
-```
+| Service | Port | Purpose |
+|---------|------|---------|
+| backend | 8080 | FastAPI API server |
+| frontend | 5173 | Vite React operator cockpit |
+| worker | — | Celery worker (tools queue) |
+| postgres | 5432 | Primary database + LangGraph checkpoints |
+| redis | 6379 | Cache + Celery broker |
+| vault | 8200 | Secret management |
+| mailhog | 8025 | Email testing UI |
 
-6. Start worker (separate shell):
+---
 
-```bash
-celery -A apps.backend.src.worker.celery_app.celery_app worker -Q tools,intrusive --loglevel=info
-```
+## Security Model
 
-Optional local stack:
+- **Tool Risk Bands**: Band 0 (passive, auto-approved) through Band 3 (exploit-like, always blocked)
+- **Governance Stack**: 5 enforcement layers — PraisonGovernor validates, audit hook records, enforce hook blocks
+- **Delegation Contracts**: Frozen, immutable, bidirectional trust enforcement between agents
+- **Scope Enforcement**: Deny-by-default. Explicit deny checked first, then CIDR, then allowlist
+- **Secrets**: Vault-only. Credentials never pass through graph state or LLM context
+- **Approval Gates**: Band 2 tools require human-in-the-loop approval before execution
 
-```bash
-docker-compose -f docker-compose.dev.yml up -d
-```
+---
 
-Frontend operator (separate shell):
+## Execution Modes
 
-```bash
-cd apps/frontend-operator
-npm install
-npm run dev
-```
+| Mode | LLM Calls | Tool Execution | Use Case |
+|------|-----------|---------------|----------|
+| `live` | Real | Real | Production missions |
+| `graph_only` | None | None | Topology validation |
+| `tool_mock` | Optional | Fixtures | Strategy testing |
+| `replay` | None | None | Historical analysis |
 
-Canonical MVP walkthrough:
+Simulation modes **never** escalate to live tool execution. All simulation artifacts carry provenance markers.
 
-- [`docs/mvp_quickstart.md`](docs/mvp_quickstart.md)
-- `bash scripts/frontend_smoke.sh`
-- `bash scripts/mvp_demo_flow.sh`
+---
+
+## Multi-Provider AI
+
+Kai routes LLM inference through a unified provider abstraction with automatic failover:
+
+- Anthropic Claude
+- OpenAI
+- Google Gemini
+- Ollama (local)
+- Gemma, Qwen, OpenRouter
+
+Configure via `K1_PRIMARY_LLM_PROVIDER` and `K1_FALLBACK_LLM_PROVIDERS` environment variables.
+
+---
 
 ## Testing
 
-Full suite:
-
 ```bash
-python3 -m pytest -q
+# Self-contained tests (no external services required)
+python -m pytest tests/test_scope_guardrails.py tests/test_tool_registry_catalog.py \
+  tests/test_bugbounty_workflow_engine.py tests/test_tool_adapters_bugbounty.py -q
+
+# Full suite (requires PostgreSQL, Redis, Vault)
+pytest
 ```
 
-Backend quality checks (matches CI):
+---
 
-```bash
-bash scripts/check_backend_quality.sh
-```
+## Documentation
 
-Focused suites:
+| Document | Content |
+|----------|---------|
+| [Architecture](docs/architecture.md) | 6-layer system design, control flow, authority boundaries |
+| [Security Architecture](docs/security-architecture.md) | Governance model, risk bands, approval flow, delegation contracts |
+| [Mission Runtime](docs/mission-runtime.md) | K1GraphState, DAG execution, checkpointing, interrupts |
+| [LangChain / DeepAgents / LangSmith](docs/langstudio-integration.md) | Model abstraction, governed tools, specialist execution, observability |
+| [Simulation Mode](docs/simulation-mode.md) | graph_only, tool_mock, replay, fixtures, safety barriers |
+| [Operator Guide](docs/operator-guide.md) | Missions, approvals, artifacts, troubleshooting |
+| [Developer Guide](docs/developer-guide.md) | Adding agents, tools, nodes, schemas, fixtures |
 
-```bash
-python3 -m pytest -q tests/test_campaign*
-python3 -m pytest -q tests/test_reports*
-python3 -m pytest -q tests/test_hil*
-```
+---
 
 ## License
 
-This project is licensed under the MIT License. See [`LICENSE`](LICENSE).
-
-## Contributing
-
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for setup, coding standards, and PR guidance.
+Licensed under the MIT License.

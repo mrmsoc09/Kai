@@ -1,10 +1,13 @@
 import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { api } from '../lib/api'
+import axios from 'axios'
 import { useStore } from '../store/system'
 
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
+
 export default function Login() {
-  const [token, setToken] = useState('')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const login = useStore((s) => s.login)
@@ -12,20 +15,46 @@ export default function Login() {
   const location = useLocation()
   const from = (location.state as any)?.from?.pathname || '/dashboard'
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    boxSizing: 'border-box',
+    padding: '0.6rem 0.75rem',
+    background: '#0B0C0D',
+    border: `1px solid ${error ? '#D97706' : '#355E3B'}`,
+    borderRadius: 4,
+    color: '#8FAF9B',
+    fontSize: '0.875rem',
+    fontFamily: 'inherit',
+    outline: 'none',
+    marginBottom: 12,
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!token.trim()) { setError('Token is required.'); return }
+    if (!username.trim()) { setError('Username is required.'); return }
+    if (!password) { setError('Password is required.'); return }
     setError('')
     setLoading(true)
     try {
-      const res = await api.post('/auth/login', { token: token.trim() })
-      const { access_token } = res.data
-      const meRes = await api.get('/auth/me')
-      login(access_token, { id: meRes.data.id, roles: meRes.data.roles ?? [] })
+      // OAuth2 password grant — must be submitted as form-urlencoded
+      const params = new URLSearchParams()
+      params.append('username', username.trim())
+      params.append('password', password)
+
+      const res = await axios.post(`${API_BASE}/auth/token`, params, {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      })
+
+      const { access_token, user_id, tenant_id, role } = res.data
+      login(access_token, {
+        id: user_id ?? username,
+        roles: role ? [role] : [],
+        tenant_id: tenant_id ?? undefined,
+      })
       navigate(from, { replace: true })
     } catch (err: any) {
       const detail = err?.response?.data?.detail
-      setError(typeof detail === 'string' ? detail : 'Invalid token. Check your K1_DEV_TOKEN.')
+      setError(typeof detail === 'string' ? detail : 'Invalid credentials.')
     } finally {
       setLoading(false)
     }
@@ -65,32 +94,34 @@ export default function Login() {
 
         <form onSubmit={handleSubmit}>
           <label style={{ display: 'block', color: '#8FAF9B', fontSize: '0.75rem', marginBottom: 6, letterSpacing: '0.1em' }}>
-            ACCESS TOKEN
+            USERNAME
+          </label>
+          <input
+            type="text"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="username"
+            autoFocus
+            autoComplete="username"
+            style={inputStyle}
+          />
+
+          <label style={{ display: 'block', color: '#8FAF9B', fontSize: '0.75rem', marginBottom: 6, letterSpacing: '0.1em' }}>
+            PASSWORD
           </label>
           <input
             type="password"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-            placeholder="Enter your K1_DEV_TOKEN…"
-            autoFocus
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
             autoComplete="current-password"
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              padding: '0.6rem 0.75rem',
-              background: '#0B0C0D',
-              border: `1px solid ${error ? '#D97706' : '#355E3B'}`,
-              borderRadius: 4,
-              color: '#8FAF9B',
-              fontSize: '0.875rem',
-              fontFamily: 'inherit',
-              outline: 'none',
-              marginBottom: error ? 6 : 16,
-            }}
+            style={{ ...inputStyle, marginBottom: error ? 6 : 16 }}
           />
+
           {error && (
             <div style={{ color: '#D97706', fontSize: '0.75rem', marginBottom: 12 }}>{error}</div>
           )}
+
           <button
             type="submit"
             disabled={loading}
@@ -109,16 +140,9 @@ export default function Login() {
               transition: 'background 0.15s',
             }}
           >
-            {loading ? 'AUTHENTICATING…' : 'AUTHENTICATE'}
+            {loading ? 'AUTHENTICATING…' : 'SIGN IN'}
           </button>
         </form>
-
-        <div style={{ marginTop: '1.5rem', padding: '0.75rem', background: '#0B0C0D', borderRadius: 4, border: '1px solid #1a2030' }}>
-          <div style={{ color: '#6F8E7A', fontSize: '0.7rem', lineHeight: 1.6 }}>
-            Set <span style={{ color: '#355E3B' }}>K1_DEV_TOKEN</span> in your environment and enter it above.
-            The token is exchanged for a signed JWT — it is not stored in the browser.
-          </div>
-        </div>
       </div>
     </div>
   )

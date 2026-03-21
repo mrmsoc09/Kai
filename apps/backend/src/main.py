@@ -27,6 +27,7 @@ from apps.backend.src.routers import (
     agent_training,
     approvals,
     artifact_signing,
+    artifacts,
     auth,
     autonomous,
     bug_bounty,
@@ -36,6 +37,7 @@ from apps.backend.src.routers import (
     docs,
     dorks,
     embeddings,
+    events,
     evidence,
     export,
     finding_validation,
@@ -53,6 +55,7 @@ from apps.backend.src.routers import (
     mailer,
     mcp,
     metrics,
+    mission_control,
     model_bidding,
     opportunities,
     payouts,
@@ -68,8 +71,10 @@ from apps.backend.src.routers import (
     runs,
     runs_api,
     scope,
+    simulation,
     state,
     submissions,
+    system,
     tools,
     tasks,
     workflows,
@@ -249,8 +254,13 @@ def _probe_worker_subsystem() -> dict:
         return {"ok": False, "status": "down", "error": str(exc)}
 
 
-from .core.token_blocklist import get_blocklist_status
-from .core.auth import require_roles, ROLE_ADMIN
+from apps.backend.src.auth import routes as auth_routes
+from apps.backend.src.auth.dependencies import require_roles, CurrentUser, get_current_active_user, get_current_tenant
+from apps.backend.src.auth.models import UserRole # Import UserRole enum
+
+from apps.backend.src.core.token_blocklist import get_blocklist_status # Keep this for token blocklisting
+# No longer import from .core.auth for roles as we have new auth system
+# from apps.backend.src.core.auth import require_roles, ROLE_ADMIN 
 ...
 # Health
 @app.get("/health")
@@ -265,7 +275,7 @@ async def health(request: Request) -> dict:
 @app.get("/health/detailed")
 async def health_detailed(
     request: Request,
-    current_user=Depends(require_roles(ROLE_ADMIN))
+    current_user: CurrentUser = Depends(require_roles(UserRole.ADMIN))
 ) -> dict:
     """Detailed health check - restricted to ROLE_ADMIN."""
     svc = getattr(request.app.state, "services", None)
@@ -326,7 +336,7 @@ app.include_router(metrics.router)
 app.include_router(governance.router)
 
 # Auth and scope
-app.include_router(auth.router)
+app.include_router(auth_routes.router) # New authentication router
 app.include_router(scope.router)
 
 # Key Management (Cryptographic keys and PGP signatures)
@@ -364,6 +374,11 @@ app.include_router(embeddings.router)
 app.include_router(intel.router)
 app.include_router(mcp.router)
 app.include_router(realtime.router)
+app.include_router(mission_control.router)
+app.include_router(artifacts.router)
+app.include_router(events.router)
+app.include_router(simulation.router)
+app.include_router(system.router)
 
 # Model Bidding and Orchestration (v7.4)
 app.include_router(model_bidding.router)
@@ -431,6 +446,22 @@ except Exception as exc:
     _OPTIONAL_ROUTER_ERRORS.append(
         {"module": "apps.backend.src.routers.agent_zero", "error": str(exc)}
     )
+
+# Optional: Billing / Usage tracking
+try:
+    from apps.backend.src.routers.billing import router as billing_router
+    app.include_router(billing_router)
+except Exception as exc:
+    logger.warning("optional router unavailable: billing (%s)", exc)
+    _OPTIONAL_ROUTER_ERRORS.append({"module": "billing", "error": str(exc)})
+
+# Optional: Prometheus metrics endpoint
+try:
+    from apps.backend.src.routers.prometheus import router as prometheus_router
+    app.include_router(prometheus_router)
+except Exception as exc:
+    logger.warning("optional router unavailable: prometheus (%s)", exc)
+    _OPTIONAL_ROUTER_ERRORS.append({"module": "prometheus", "error": str(exc)})
 
 # Optional: Real-time WebSocket
 try:

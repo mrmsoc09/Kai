@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    platform: kai
+
+scrape_configs:
+  - job_name: "kai_backend"
+    static_configs:
+      - targets: ["backend:8080"]
+    metrics_path: /metrics
+    # Set scrape token if K1_METRICS_INTERNAL_ONLY=true
+    # authorization:
+    #   credentials: "${K1_METRICS_SCRAPE_TOKEN}"
+
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis-exporter:9121"]
+
+  - job_name: "postgres"
+    static_configs:
+      - targets: ["postgres-exporter:9187"]
+
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
