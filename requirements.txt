@@ -104,5 +104,5 @@ isort>=5.13,<6.0
 # Optional: For enhanced functionality
 plotly>=5.18,<6.0  # For visualization (optional)
 hvac==2.1.0
-pypdf==6.8.0
+pypdf==6.9.1
 python-multipart==0.0.22
