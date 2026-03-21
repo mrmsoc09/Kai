@@ -80,6 +80,7 @@ class MissionHandle:
     to start, resume, or inspect the mission.
     """
     mission_id: str
+    tenant_id: UUID
     workflow_id: str
     program_id: str
     graph_spec: MissionGraphSpec
@@ -101,6 +102,7 @@ class MissionHandle:
 @dataclass(frozen=True)
 class MissionStatus:
     mission_id: str
+    tenant_id: UUID
     workflow_id: str
     program_id: str
     state: str          # "created" | "running" | "paused" | "completed" | "failed"
@@ -114,6 +116,7 @@ class MissionStatus:
     def to_dict(self) -> dict[str, Any]:
         return {
             "mission_id": self.mission_id,
+            "tenant_id": str(self.tenant_id),
             "workflow_id": self.workflow_id,
             "program_id": self.program_id,
             "state": self.state,
@@ -143,7 +146,7 @@ class MissionRuntime:
     ) -> None:
         self._event_bus = event_bus or get_event_bus()
         self._checkpointer_dsn = checkpointer_dsn
-        self._missions: dict[str, MissionHandle] = {}
+        self._missions: dict[tuple[UUID, str], MissionHandle] = {}
         self._states: dict[str, dict[str, Any]] = {}
         self._statuses: dict[str, str] = {}  # mission_id -> state string
 
@@ -151,6 +154,7 @@ class MissionRuntime:
 
     def create_mission(
         self,
+        tenant_id: UUID,
         workflow_id: str,
         program_id: str,
         mission_name: str = "",
@@ -194,6 +198,7 @@ class MissionRuntime:
 
         # Build initial state
         initial = make_initial_state(
+            tenant_id=tenant_id,
             workflow_id=workflow_id,
             program_id=program_id,
             mission_name=mission_name,
@@ -203,6 +208,7 @@ class MissionRuntime:
 
         handle = MissionHandle(
             mission_id=mission_id,
+            tenant_id=tenant_id,
             workflow_id=workflow_id,
             program_id=program_id,
             graph_spec=graph_spec,
@@ -213,7 +219,7 @@ class MissionRuntime:
             execution_mode=execution_mode,
         )
 
-        self._missions[mission_id] = handle
+        self._missions[(tenant_id, mission_id)] = handle
         self._states[mission_id] = dict(initial)
         self._statuses[mission_id] = "created"
 
@@ -225,15 +231,14 @@ class MissionRuntime:
 
     # -- Start -----------------------------------------------------------------
 
-    def start_mission(self, mission_id: str) -> dict[str, Any]:
+    def start_mission(self, mission_id: str, tenant_id: UUID) -> dict[str, Any]:
         """
         Start mission execution. Returns final state dict.
-
         For graph_only mode: executes stub nodes synchronously.
         For live mode with LangGraph: invokes the compiled graph.
         For live mode without LangGraph: executes nodes via fallback path.
         """
-        handle = self._get_handle(mission_id)
+        handle = self._get_handle(mission_id, tenant_id)
         self._statuses[mission_id] = "running"
 
         emit(mission_started_event(
@@ -277,6 +282,7 @@ class MissionRuntime:
     def resume_mission(
         self,
         mission_id: str,
+        tenant_id: UUID,
         approval_data: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
@@ -284,7 +290,7 @@ class MissionRuntime:
 
         approval_data: If resuming after an approval gate, provide the approval decision.
         """
-        handle = self._get_handle(mission_id)
+        handle = self._get_handle(mission_id, tenant_id)
 
         if approval_data:
             current = self._states.get(mission_id, {})
@@ -328,12 +334,13 @@ class MissionRuntime:
 
     # -- Status ----------------------------------------------------------------
 
-    def get_status(self, mission_id: str) -> MissionStatus:
+    def get_status(self, mission_id: str, tenant_id: UUID) -> MissionStatus:
         """Return current mission status."""
-        handle = self._get_handle(mission_id)
+        handle = self._get_handle(mission_id, tenant_id)
         state = self._states.get(mission_id, {})
         return MissionStatus(
             mission_id=mission_id,
+            tenant_id=tenant_id,
             workflow_id=handle.workflow_id,
             program_id=handle.program_id,
             state=self._statuses.get(mission_id, "unknown"),
@@ -351,8 +358,10 @@ class MissionRuntime:
 
     # -- Stop ------------------------------------------------------------------
 
-    def stop_mission(self, mission_id: str, reason: str = "operator_stop") -> dict[str, Any]:
+    def stop_mission(self, mission_id: str, tenant_id: UUID, reason: str = "operator_stop") -> dict[str, Any]:
         """Gracefully stop and checkpoint a mission."""
+        # Ensure mission exists and belongs to tenant
+        self._get_handle(mission_id, tenant_id)
         self._statuses[mission_id] = "paused"
         state = self._states.get(mission_id, {})
         state["error"] = f"Mission stopped: {reason}"
@@ -362,12 +371,11 @@ class MissionRuntime:
 
     # -- Cancel ----------------------------------------------------------------
 
-    def cancel_mission(self, mission_id: str, reason: str = "operator_cancel") -> dict[str, Any]:
+    def cancel_mission(self, mission_id: str, tenant_id: UUID, reason: str = "operator_cancel") -> dict[str, Any]:
         """
         Permanently cancel a mission. Cannot be resumed after cancel.
-
-        Unlike stop_mission (which pauses for later resume), cancel is terminal.
         """
+        self._get_handle(mission_id, tenant_id)  # Ensure mission belongs to tenant
         self._statuses[mission_id] = "cancelled"
         state = self._states.get(mission_id, {})
         state["error"] = f"Mission cancelled: {reason}"
@@ -387,7 +395,7 @@ class MissionRuntime:
 
     # -- Inspect ---------------------------------------------------------------
 
-    def inspect_state(self, mission_id: str) -> dict[str, Any]:
+    def inspect_state(self, mission_id: str, tenant_id: UUID) -> dict[str, Any]:
         """
         Return detailed state inspection for debugging and time-travel analysis.
 
@@ -395,7 +403,7 @@ class MissionRuntime:
         Unlike get_state() which returns raw state, this includes contextual
         metadata useful for debugging interrupted or failed missions.
         """
-        handle = self._get_handle(mission_id)
+        handle = self._get_handle(mission_id, tenant_id)
         state = self._states.get(mission_id, {})
 
         return {
@@ -425,32 +433,38 @@ class MissionRuntime:
 
     # -- List ------------------------------------------------------------------
 
-    def list_missions(self) -> list[MissionStatus]:
-        """Return status summaries for all tracked missions."""
+    def list_missions(self, tenant_id: UUID) -> list[MissionStatus]:
+        """Return status summaries for all tracked missions for a given tenant."""
         results = []
-        for mid in self._missions:
-            try:
-                results.append(self.get_status(mid))
-            except ValueError:
-                pass
+        for (tid, mid), handle in self._missions.items():
+            if tid == tenant_id:
+                try:
+                    results.append(self.get_status(mid, tid))
+                except ValueError:
+                    pass
         return results
+
+    def tenant_for_mission(self, mission_id: str) -> UUID | None:
+        """Resolve tenant ownership for a mission id."""
+        for tenant_id, current_mission_id in self._missions.keys():
+            if current_mission_id == mission_id:
+                return tenant_id
+        return None
 
     # -- Approve ---------------------------------------------------------------
 
     def approve_pending(
         self,
         mission_id: str,
+        tenant_id: UUID,
         approval_id: str,
         decision: str = "approved",
         resolved_by: str = "operator",
     ) -> MissionStatus:
         """
         Resolve a pending approval and resume execution.
-
-        The approval is recorded in state, an event is emitted, and if the
-        mission is paused, it is resumed with the resolved approval.
         """
-        handle = self._get_handle(mission_id)
+        handle = self._get_handle(mission_id, tenant_id)
         current = self._states.get(mission_id, {})
 
         # Record the approval resolution
@@ -483,9 +497,9 @@ class MissionRuntime:
         # Auto-resume if mission was paused
         status = self._statuses.get(mission_id, "")
         if status == "paused" and decision == "approved":
-            self.resume_mission(mission_id)
+            self.resume_mission(mission_id, tenant_id=tenant_id)
 
-        return self.get_status(mission_id)
+        return self.get_status(mission_id, tenant_id=tenant_id)
 
     # -- Internal execution ----------------------------------------------------
 
@@ -545,8 +559,8 @@ class MissionRuntime:
 
         return state
 
-    def _get_handle(self, mission_id: str) -> MissionHandle:
-        handle = self._missions.get(mission_id)
+    def _get_handle(self, mission_id: str, tenant_id: UUID) -> MissionHandle:
+        handle = self._missions.get((tenant_id, mission_id))
         if not handle:
             raise ValueError(f"Mission {mission_id} not found")
         return handle

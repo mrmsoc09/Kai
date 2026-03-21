@@ -1,4 +1,9 @@
 from .base import Base
+
+# Auth models — imported first so Tenant/User are registered in the SQLAlchemy
+# class registry before campaign.py resolves relationship("Tenant") strings.
+from apps.backend.src.auth.models import APIToken, Tenant, User, UserRole
+
 from .bug_bounty import (
     AdaptiveScheduleActionRecord,
     AgentEvaluationRecord,

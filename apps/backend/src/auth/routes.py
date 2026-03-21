@@ -1,0 +1,223 @@
+from __future__ import annotations
+from datetime import datetime, timedelta, timezone
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from apps.backend.src.core.hil_db import get_db
+from apps.backend.src.auth.models import User, Tenant, APIToken, UserRole
+from apps.backend.src.auth.schemas import (
+    UserRead, UserCreate, Token, TokenData,
+    TenantRead, TenantCreate,
+    APITokenCreate, APITokenRead, APITokenResponse
+)
+from apps.backend.src.auth.utils import (
+    verify_password, hash_password, create_access_token,
+    generate_api_token, hash_api_token,
+    ACCESS_TOKEN_EXPIRE_MINUTES
+)
+from apps.backend.src.auth.dependencies import (
+    get_current_active_user, get_current_tenant,
+    CurrentUser,
+    require_roles
+)
+
+router = APIRouter(prefix="/auth", tags=["authentication"])
+
+# -- Tenant Management --------------------------------------------------------
+
+@router.post("/tenants", response_model=TenantRead, status_code=status.HTTP_201_CREATED)
+async def create_tenant(
+    tenant_create: TenantCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(require_roles(UserRole.ADMIN))
+):
+    """Create a new tenant (Admin only)."""
+    # Ensure tenant name is unique
+    result = await db.execute(select(Tenant).where(Tenant.name == tenant_create.name))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Tenant name already registered")
+    
+    new_tenant = Tenant(**tenant_create.model_dump())
+    db.add(new_tenant)
+    await db.commit()
+    await db.refresh(new_tenant)
+    return new_tenant
+
+@router.get("/tenants/{tenant_id}", response_model=TenantRead)
+async def get_tenant(
+    tenant_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(require_roles(UserRole.ADMIN))
+):
+    """Get tenant details (Admin only)."""
+    result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
+    tenant = result.scalar_one_or_none()
+    if not tenant:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tenant not found")
+    return tenant
+
+
+# -- User Management ----------------------------------------------------------
+
+@router.post("/users", response_model=UserRead, status_code=status.HTTP_201_CREATED)
+async def register_user(
+    user_create: UserCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: CurrentUser = Depends(require_roles(UserRole.ADMIN))
+):
+    """Register a new user (Admin only)."""
+    # Ensure username is unique within tenant
+    result = await db.execute(select(User).where(
+        User.username == user_create.username,
+        User.tenant_id == user_create.tenant_id
+    ))
+    if result.scalar_one_or_none():
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered in this tenant")
+    
+    hashed_password = hash_password(user_create.password)
+    new_user = User(**user_create.model_dump(exclude={"password"}), hashed_password=hashed_password)
+    db.add(new_user)
+    await db.commit()
+    await db.refresh(new_user)
+    return new_user
+
+@router.get("/users/me", response_model=UserRead)
+async def read_users_me(current_user: Annotated[CurrentUser, Depends(get_current_active_user)]):
+    """Get details of the current authenticated user."""
+    return UserRead(
+        id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        full_name=current_user.full_name,
+        is_active=current_user.is_active,
+        is_superuser=current_user.is_superuser,
+        role=current_user.role,
+        tenant_id=current_user.tenant_id,
+        created_at=current_user.created_at,
+        updated_at=current_user.updated_at
+    )
+
+
+# -- JWT Authentication -------------------------------------------------------
+
+@router.post("/token", response_model=Token)
+async def login_for_access_token(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Authenticate user and return JWT access token.
+    Requires username, password (and tenant_id in form or path, for multi-tenant).
+    For simplicity, assuming tenant_id is part of username or a default tenant.
+    Here, we'll assume a default tenant for initial setup, or later pass tenant_id.
+    """
+    # For MVP, assume a default tenant or derive from username.
+    # In a real multi-tenant app, tenant_id would be part of login form or subdomain.
+    # Let's use a dummy tenant_id for now for initial user creation.
+    
+    # First, find user by username.
+    # In a multi-tenant system, this needs to be user + tenant.
+    # For now, let's assume `username@tenant_name` or similar, or a default tenant.
+    
+    # For current setup, let's allow "admin" for any tenant or "k1-admin" from initial setup
+    # A more robust system would involve tenant selection at login.
+    result = await db.execute(select(User).where(User.username == form_data.username))
+    user = result.scalar_one_or_none()
+
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    if not user.is_active:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "tid": str(user.tenant_id),
+            "rol": user.role.value
+        },
+        expires_delta=access_token_expires
+    )
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        expires_at=datetime.now(timezone.utc) + access_token_expires,
+        user_id=user.id,
+        tenant_id=user.tenant_id,
+        role=user.role
+    )
+
+# -- API Token Management -----------------------------------------------------
+
+@router.post("/api-tokens", response_model=APITokenResponse, status_code=status.HTTP_201_CREATED)
+async def create_api_token(
+    payload: APITokenCreate,
+    current_user: CurrentUser = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a new API token for the current user."""
+    raw_token = generate_api_token()
+    hashed_token = hash_api_token(raw_token)
+    
+    expires_at: datetime | None = None
+    if payload.expires_in_hours:
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=payload.expires_in_hours)
+    
+    new_api_token = APIToken(
+        user_id=current_user.id,
+        tenant_id=current_user.tenant_id,
+        token_hash=hashed_token,
+        name=payload.name,
+        expires_at=expires_at
+    )
+    db.add(new_api_token)
+    await db.commit()
+    await db.refresh(new_api_token)
+    
+    return APITokenResponse(
+        **APITokenRead.model_validate(new_api_token).model_dump(),
+        token=raw_token # Return the raw token ONLY ON CREATION
+    )
+
+@router.get("/api-tokens", response_model=list[APITokenRead])
+async def list_api_tokens(
+    current_user: CurrentUser = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """List all API tokens for the current user."""
+    result = await db.execute(select(APIToken).where(
+        APIToken.user_id == current_user.id,
+        APIToken.tenant_id == current_user.tenant_id
+    ))
+    return list(result.scalars().all())
+
+@router.delete("/api-tokens/{token_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def revoke_api_token(
+    token_id: UUID,
+    current_user: CurrentUser = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revoke an API token for the current user."""
+    result = await db.execute(select(APIToken).where(
+        APIToken.id == token_id,
+        APIToken.user_id == current_user.id,
+        APIToken.tenant_id == current_user.tenant_id
+    ))
+    api_token = result.scalar_one_or_none()
+    
+    if not api_token:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="API token not found")
+    
+    await db.delete(api_token)
+    await db.commit()
+    return {"message": "API token revoked"}

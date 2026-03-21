@@ -1,0 +1,72 @@
+# K1 Production Backend Dockerfile
+# Multi-stage build: deps → app
+# Usage: docker build -f Dockerfile.prod -t kai-backend:latest .
+
+# ── Stage 1: dependency builder ───────────────────────────────────────────────
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+# Build-time deps only
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --upgrade pip wheel && \
+    pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# ── Stage 2: runtime image ────────────────────────────────────────────────────
+FROM python:3.11-slim AS runtime
+
+LABEL org.opencontainers.image.title="Kai Backend"
+LABEL org.opencontainers.image.description="Kai autonomous security research platform — API server"
+
+# Runtime deps only (no gcc)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Non-root user
+RUN groupadd --gid 1000 kai && useradd --uid 1000 --gid 1000 --no-create-home kai
+
+WORKDIR /app
+
+# Copy installed packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application code
+COPY --chown=kai:kai apps/backend/ apps/backend/
+COPY --chown=kai:kai apps/__init__.py apps/__init__.py
+COPY --chown=kai:kai orchestration/ orchestration/
+COPY --chown=kai:kai tools/ tools/
+COPY --chown=kai:kai config/ config/
+
+# Create artifact directories (volume-mounted in prod but must exist)
+RUN mkdir -p artifacts/audit artifacts/usage artifacts/telemetry artifacts/workflows \
+             artifacts/dork_runs output/logs \
+    && chown -R kai:kai artifacts output
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app \
+    ENVIRONMENT=production \
+    LOG_LEVEL=INFO \
+    PORT=8080
+
+USER kai
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:8080/health || exit 1
+
+CMD ["python", "-m", "uvicorn", \
+     "apps.backend.src.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8080", \
+     "--workers", "2", \
+     "--log-level", "info", \
+     "--no-access-log"]

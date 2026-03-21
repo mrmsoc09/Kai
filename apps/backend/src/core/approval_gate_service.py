@@ -50,11 +50,14 @@ class ApprovalGateService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def _latest_gate_for_scope(self, payload: ApprovalGateCreate) -> ApprovalGate | None:
+    async def _latest_gate_for_scope(self, payload: ApprovalGateCreate, tenant_id: UUID) -> ApprovalGate | None:
         try:
             stmt = (
                 select(ApprovalGate)
-                .where(ApprovalGate.campaign_id == payload.campaign_id)
+                .where(
+                    ApprovalGate.campaign_id == payload.campaign_id,
+                    ApprovalGate.tenant_id == tenant_id
+                )
                 .order_by(ApprovalGate.created_at.desc())
                 .limit(1)
             )
@@ -78,10 +81,11 @@ class ApprovalGateService:
     async def create_gate(
         self,
         payload: ApprovalGateCreate,
+        tenant_id: UUID,
         *,
         actor: str | None = None,
     ) -> ApprovalGate:
-        existing = await self._latest_gate_for_scope(payload)
+        existing = await self._latest_gate_for_scope(payload, tenant_id)
         if existing is not None:
             await record_transition_event(
                 self.db,
@@ -102,6 +106,7 @@ class ApprovalGateService:
 
         record = ApprovalGate(
             campaign_id=payload.campaign_id,
+            tenant_id=tenant_id,
             branch_id=payload.branch_id,
             phase_job_id=payload.phase_job_id,
             intention_id=payload.intention_id,
@@ -136,15 +141,19 @@ class ApprovalGateService:
         )
         return record
 
-    async def get_gate(self, gate_id: UUID) -> ApprovalGate | None:
-        result = await self.db.execute(select(ApprovalGate).where(ApprovalGate.id == gate_id))
+    async def get_gate(self, gate_id: UUID, tenant_id: UUID) -> ApprovalGate | None:
+        result = await self.db.execute(select(ApprovalGate).where(
+            ApprovalGate.id == gate_id,
+            ApprovalGate.tenant_id == tenant_id
+        ))
         return result.scalar_one_or_none()
 
-    async def list_pending_for_campaign(self, campaign_id: UUID) -> list[ApprovalGate]:
+    async def list_pending_for_campaign(self, campaign_id: UUID, tenant_id: UUID) -> list[ApprovalGate]:
         result = await self.db.execute(
             select(ApprovalGate)
             .where(
                 ApprovalGate.campaign_id == campaign_id,
+                ApprovalGate.tenant_id == tenant_id,
                 ApprovalGate.status.in_(
                     [ApprovalGateStatusEnum.PENDING, ApprovalGateStatusEnum.DEFERRED]
                 ),

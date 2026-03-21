@@ -40,7 +40,7 @@ Start here. Follow in order. Don't skip steps.
 # Update everything
 sudo apt update
 sudo apt upgrade -y
-sudo apt dist-upgrade -y
+sudo apt full-upgrade -y
 sudo apt autoremove -y
 
 # Reboot
@@ -57,7 +57,7 @@ sudo reboot
 **Time: 10 minutes**
 
 ```bash
-# On your HOST machine (Lenovo), NOT in VM
+# On your HOST machine, NOT in VM
 # Open PowerShell (Windows) or Terminal (Mac/Linux)
 
 # Generate SSH key
@@ -257,10 +257,10 @@ sudo systemctl status redis-server
 cd ~
 
 # Clone K1
-git clone https://github.com/mrmsoc09/Kaison_Latest_Build.git kai
+git clone https://github.com/mrmsoc09/Kai.git kai
 
 # Enter directory
-cd kai
+cd Kai
 
 # Verify you got the latest
 git log --oneline -1

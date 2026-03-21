@@ -37,7 +37,11 @@ import logging
 import time
 from datetime import datetime, timezone
 from typing import Any, Callable
+from urllib.parse import urlparse
 
+from apps.backend.src.core.decision_engine.decision_policy import DecisionAction, PolicyDecision
+from apps.backend.src.core.decision_engine.decision_trace import DecisionTraceRecorder
+from apps.backend.src.core.opportunity_engine import get_opportunity_engine
 from apps.backend.src.core.praison_execution_events import (
     emit,
     node_entered_event,
@@ -49,7 +53,17 @@ from apps.backend.src.core.praison_execution_events import (
     tool_profile_selected_event,
     prompt_profile_selected_event,
 )
+from apps.backend.src.core.praison_strategy_scoring import (
+    StrategyOutcome,
+    recommend_next_action_from_outcome,
+)
 from apps.backend.src.core.praison_state import ACCUMULATIVE_FIELDS
+from apps.backend.src.core.scope_guardrails import evaluate_target_scope, load_scope_policy
+from apps.backend.src.core.vulnerability_validation import (
+    ValidationEvidence,
+    ValidationResult,
+    decide_validation_next_action,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +71,11 @@ logger = logging.getLogger(__name__)
 # -- Accumulative state fields (canonical definition lives in praison_state) ----
 # Re-exported here for backward compatibility with existing importers.
 _ACCUMULATIVE_FIELDS = ACCUMULATIVE_FIELDS
+_SCOPE_POLICY = load_scope_policy()
+
+
+def _decision_trace_recorder() -> DecisionTraceRecorder:
+    return DecisionTraceRecorder()
 
 
 # -- Node history entry builder ------------------------------------------------
@@ -74,6 +93,263 @@ def _history_entry(
         "completed_at": datetime.now(timezone.utc).isoformat(),
         "duration_ms": round(duration_ms, 2),
     }
+
+
+def _safe_float(value: Any, default: float = 0.0) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return float(default)
+
+
+def _normalize_domain(value: Any) -> str:
+    raw = str(value or "").strip().lower()
+    if not raw:
+        return ""
+    if "://" in raw:
+        parsed = urlparse(raw)
+        raw = parsed.hostname or ""
+    if ":" in raw:
+        raw = raw.split(":", 1)[0]
+    return raw.strip(".")
+
+
+def _extract_domains_from_findings(findings: list[dict[str, Any]], state: dict[str, Any]) -> list[str]:
+    domains: list[str] = []
+    for finding in findings:
+        candidate = (
+            finding.get("domain")
+            or finding.get("host")
+            or finding.get("target")
+            or finding.get("url")
+            or state.get("program_id")
+        )
+        domain = _normalize_domain(candidate)
+        if not domain or "." not in domain or "*" in domain:
+            continue
+        decision = evaluate_target_scope(domain, _SCOPE_POLICY)
+        if decision.allowed:
+            domains.append(domain)
+    seen: set[str] = set()
+    unique: list[str] = []
+    for domain in domains:
+        if domain not in seen:
+            unique.append(domain)
+            seen.add(domain)
+    return unique
+
+
+def _estimate_duplicate_risk(findings: list[dict[str, Any]]) -> float:
+    targets = [_normalize_domain(row.get("target") or row.get("host") or row.get("domain") or row.get("url")) for row in findings]
+    filtered = [row for row in targets if row]
+    if not filtered:
+        return 0.0
+    unique = len(set(filtered))
+    duplicate_ratio = 1.0 - (unique / len(filtered))
+    return max(0.0, min(1.0, duplicate_ratio))
+
+
+def _average_confidence(findings: list[dict[str, Any]]) -> float:
+    confidences = [_safe_float(row.get("confidence") or row.get("confidence_score"), 0.4) for row in findings]
+    if not confidences:
+        return 0.0
+    return max(0.0, min(1.0, sum(confidences) / len(confidences)))
+
+
+def _opportunity_signal(findings: list[dict[str, Any]]) -> float:
+    if not findings:
+        return 0.0
+    confidence = _average_confidence(findings)
+    duplicate_penalty = 1.0 - _estimate_duplicate_risk(findings)
+    repeat_bonus = min(1.0, len(findings) / 4.0)
+    return max(0.0, min(1.0, confidence * duplicate_penalty * (0.6 + (0.4 * repeat_bonus))))
+
+
+def _is_validated_finding(row: dict[str, Any]) -> bool:
+    return bool(
+        row.get("validated")
+        or row.get("validated_vulnerability")
+        or row.get("validation_present")
+        or row.get("confirmed")
+    )
+
+
+def _build_validation_result(findings: list[dict[str, Any]]) -> ValidationResult:
+    top = findings[0]
+    validated = any(_is_validated_finding(row) for row in findings)
+    confidence = _average_confidence(findings)
+    evidence = [
+        ValidationEvidence(
+            check="runtime_finding_signal",
+            passed=bool(row.get("severity", "").lower() in {"critical", "high", "medium"}),
+            detail=f"severity={row.get('severity', 'unknown')}",
+            confidence_contribution=max(0.0, min(1.0, _safe_float(row.get("confidence") or row.get("confidence_score"), 0.0))),
+        )
+        for row in findings[:10]
+    ]
+    return ValidationResult(
+        finding_id=str(top.get("finding_id") or top.get("id") or "runtime-finding"),
+        validated_vulnerability=validated,
+        confidence_score=confidence,
+        validation_evidence=evidence,
+    )
+
+
+def _cluster_rows_from_findings(findings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    by_type: dict[str, int] = {}
+    for row in findings:
+        vuln_type = str(row.get("vuln_type") or row.get("type") or "unknown").strip().lower()
+        by_type[vuln_type] = by_type.get(vuln_type, 0) + 1
+    return [
+        {
+            "cluster_id": f"cluster:{vuln_type}",
+            "vuln_type": vuln_type,
+            "count": count,
+            "response_similarity": _average_confidence(findings),
+        }
+        for vuln_type, count in by_type.items()
+    ]
+
+
+def _append_policy_event(
+    result: dict[str, Any],
+    *,
+    node_id: str,
+    decision: PolicyDecision,
+    trace_id: str,
+) -> None:
+    result.setdefault("policy_events", [])
+    if not isinstance(result["policy_events"], list):
+        result["policy_events"] = []
+    result["policy_events"].append(
+        {
+            "type": "runtime_decision",
+            "node_id": node_id,
+            "decision_action": decision.chosen_action.value,
+            "reason_code": decision.reason_code,
+            "score": decision.score,
+            "trace_id": trace_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+    )
+
+
+def _governance_approved(state: dict[str, Any], result: dict[str, Any]) -> bool:
+    if str(result.get("governance_decision") or state.get("governance_decision") or "").lower() == "approved":
+        return True
+    resolved = state.get("approvals_resolved", [])
+    if isinstance(resolved, list):
+        return any(str(row.get("decision", "")).lower() == "approved" for row in resolved if isinstance(row, dict))
+    return False
+
+
+def _generate_opportunities(findings: list[dict[str, Any]], state: dict[str, Any]) -> list[dict[str, Any]]:
+    allowed_domains = _extract_domains_from_findings(findings, state)
+    if not allowed_domains:
+        return []
+    try:
+        engine = get_opportunity_engine()
+        result = engine.detect(
+            allowed_domains=allowed_domains,
+            min_confidence=0.55,
+            max_opportunities=5,
+            deduplicate=True,
+        )
+        return [row.to_dict() for row in result.opportunities]
+    except Exception as exc:
+        logger.warning("Opportunity generation from runtime decision failed: %s", exc)
+        return []
+
+
+def _apply_evidence_decision(
+    state: dict[str, Any],
+    result: dict[str, Any],
+    decision: PolicyDecision,
+    findings: list[dict[str, Any]],
+) -> None:
+    action = decision.chosen_action
+    result["decision_action"] = action.value
+    result["decision_reason_code"] = decision.reason_code
+    if action == DecisionAction.STOP:
+        result["error"] = f"Decision engine stop: {decision.reason_code}"
+        result["completed"] = True
+        result["phase_complete"] = True
+        return
+    if action == DecisionAction.PIVOT:
+        result["pivot_requested"] = True
+        result["phase_complete"] = True
+        return
+    if action == DecisionAction.VALIDATE:
+        result["requires_additional_validation"] = True
+        return
+    if action == DecisionAction.EXPLOIT:
+        approved = _governance_approved(state, result)
+        result["exploit_recommended"] = approved
+        if not approved:
+            result["exploit_blocked_reason"] = "governance_approval_required"
+        return
+    if action == DecisionAction.GENERATE_OPPORTUNITY:
+        generated = _generate_opportunities(findings, state)
+        result["generated_opportunities"] = generated
+        if generated:
+            result["last_artifact_type"] = "opportunity_signal"
+        return
+
+
+def _build_strategy_outcome(state: dict[str, Any], result: dict[str, Any]) -> StrategyOutcome:
+    findings = result.get("findings")
+    if not isinstance(findings, list):
+        findings = state.get("findings", [])
+    findings = findings if isinstance(findings, list) else []
+
+    severities = [str(row.get("severity", "")).lower() for row in findings if isinstance(row, dict)]
+    high = sum(1 for row in severities if row in {"critical", "high"})
+    medium = sum(1 for row in severities if row == "medium")
+    low = sum(1 for row in severities if row in {"low", "info", "informational"})
+    false_positives = sum(1 for row in findings if isinstance(row, dict) and bool(row.get("false_positive")))
+    validated = sum(1 for row in findings if isinstance(row, dict) and _is_validated_finding(row))
+    unique_keys = set(
+        f"{_normalize_domain(row.get('target') or row.get('host') or row.get('domain') or row.get('url'))}|{row.get('vuln_type') or row.get('type') or ''}"
+        for row in findings
+        if isinstance(row, dict)
+    )
+    metrics = state.get("runtime_metrics", {})
+    if not isinstance(metrics, dict):
+        metrics = {}
+
+    return StrategyOutcome(
+        mission_id=str(state.get("mission_id", "")),
+        phase=str(state.get("phase", "")),
+        strategy_id=str(state.get("workflow_id", "")),
+        targets_in_scope=max(1, len(set(_extract_domains_from_findings(findings, state)))),
+        targets_covered=max(0, len(set(_extract_domains_from_findings(findings, state)))),
+        total_findings=len(findings),
+        unique_findings=len([row for row in unique_keys if row and not row.startswith("|")]),
+        high_confidence_findings=high,
+        medium_confidence_findings=medium,
+        low_confidence_findings=low,
+        false_positives=false_positives,
+        budgeted_seconds=_safe_float(metrics.get("budgeted_seconds"), 3600.0),
+        actual_seconds=_safe_float(metrics.get("actual_seconds"), 0.0),
+        budgeted_tokens=int(_safe_float(metrics.get("budgeted_tokens"), 100000)),
+        actual_tokens=int(_safe_float(metrics.get("actual_tokens"), 0.0)),
+        tool_invocations=int(_safe_float(metrics.get("tool_invocations"), 0.0)),
+        escalation_count=len(state.get("escalations", []) if isinstance(state.get("escalations", []), list) else []),
+        blocked_count=sum(
+            1
+            for row in (state.get("policy_events", []) if isinstance(state.get("policy_events", []), list) else [])
+            if isinstance(row, dict) and str(row.get("decision", "")).lower() == "blocked"
+        ),
+        approval_count=len(state.get("approvals_resolved", []) if isinstance(state.get("approvals_resolved", []), list) else []),
+        artifacts_produced=len(state.get("artifact_ids", []) if isinstance(state.get("artifact_ids", []), list) else []),
+        high_value_artifacts=len([row for row in findings if isinstance(row, dict) and str(row.get("severity", "")).lower() in {"critical", "high"}]),
+        validated_vulnerabilities=validated,
+        exploit_attempts=int(_safe_float(metrics.get("exploit_attempts"), 0.0)),
+        exploit_successes=int(_safe_float(metrics.get("exploit_successes"), 0.0)),
+        chain_attempts=int(_safe_float(metrics.get("chain_attempts"), 0.0)),
+        chain_successes=int(_safe_float(metrics.get("chain_successes"), 0.0)),
+        avg_chain_length=_safe_float(metrics.get("avg_chain_length"), 0.0),
+    )
 
 
 # -- Base executor wrapper -----------------------------------------------------
@@ -302,6 +578,8 @@ def make_evidence_analysis_executor(
         result = base(state)
         # Determine artifact type for routing
         findings = result.get("findings", [])
+        findings = findings if isinstance(findings, list) else []
+        findings = [row for row in findings if isinstance(row, dict)]
         has_significant = any(
             f.get("severity") in ("critical", "high", "medium") for f in findings
         )
@@ -309,6 +587,56 @@ def make_evidence_analysis_executor(
             result["last_artifact_type"] = "vulnerability_signal"
         else:
             result["last_artifact_type"] = "recon_surface"
+
+        if isinstance(findings, list) and findings:
+            runtime_metrics = state.get("runtime_metrics", {})
+            if not isinstance(runtime_metrics, dict):
+                runtime_metrics = {}
+            decision = decide_validation_next_action(
+                _build_validation_result(findings),
+                clusters=_cluster_rows_from_findings(findings),
+                memory_hits=state.get("memory_hits", []) if isinstance(state.get("memory_hits", []), list) else [],
+                duplicate_risk=_estimate_duplicate_risk(findings),
+                budget_remaining_ratio=_safe_float(runtime_metrics.get("budget_remaining_ratio"), 1.0),
+                time_remaining_ratio=_safe_float(runtime_metrics.get("time_remaining_ratio"), 1.0),
+                opportunity_signal=_opportunity_signal(findings),
+                trace_recorder=None,
+            )
+            trace_recorder = _decision_trace_recorder()
+            trace = trace_recorder.build_trace(
+                input_evidence=[
+                    {
+                        "mission_id": state.get("mission_id", ""),
+                        "workflow_id": state.get("workflow_id", ""),
+                        "finding_count": len(findings),
+                        "duplicate_risk": _estimate_duplicate_risk(findings),
+                        "opportunity_signal": _opportunity_signal(findings),
+                    }
+                ],
+                hypotheses=[],
+                decision=decision,
+                metadata={
+                    "source": "praison_node_executors.evidence_analysis",
+                    "node_id": "evidence_analysis",
+                    "phase": state.get("phase", ""),
+                },
+            )
+            trace_recorder.record(trace)
+            _append_policy_event(
+                result,
+                node_id="evidence_analysis",
+                decision=decision,
+                trace_id=trace.trace_id,
+            )
+            emit(policy_decision_event(
+                mission_id=state.get("mission_id", ""),
+                workflow_id=state.get("workflow_id", ""),
+                program_id=state.get("program_id", ""),
+                decision=decision.chosen_action.value,
+                reason=f"{decision.reason_code};trace_id={trace.trace_id}",
+                node_id="evidence_analysis",
+            ))
+            _apply_evidence_decision(state, result, decision, findings)
         return result
 
     executor.__name__ = "evidence_analysis"
@@ -397,6 +725,57 @@ def make_handoff_liaison_executor(
         result = base(state)
         result["completed"] = True
         result["progress"] = 1.0
+        findings = result.get("findings")
+        if not isinstance(findings, list):
+            findings = state.get("findings", [])
+        findings = findings if isinstance(findings, list) else []
+        findings = [row for row in findings if isinstance(row, dict)]
+        strategy_outcome = _build_strategy_outcome(state, result)
+        decision = recommend_next_action_from_outcome(
+            strategy_outcome,
+            duplicate_risk=_estimate_duplicate_risk(findings),
+            top_hypothesis_confidence=_average_confidence(findings),
+            hypothesis_count=max(1, len(findings)),
+            opportunity_signal=_opportunity_signal(findings),
+            trace_recorder=None,
+        )
+        trace_recorder = _decision_trace_recorder()
+        trace = trace_recorder.build_trace(
+            input_evidence=[
+                {
+                    "mission_id": state.get("mission_id", ""),
+                    "workflow_id": state.get("workflow_id", ""),
+                    "phase": state.get("phase", ""),
+                    "finding_count": len(findings),
+                }
+            ],
+            hypotheses=[],
+            decision=decision,
+            metadata={
+                "source": "praison_node_executors.handoff_liaison",
+                "node_id": "handoff_liaison",
+            },
+        )
+        trace_recorder.record(trace)
+        result["next_action_recommendation"] = decision.to_dict()
+        _append_policy_event(
+            result,
+            node_id="handoff_liaison",
+            decision=decision,
+            trace_id=trace.trace_id,
+        )
+        emit(policy_decision_event(
+            mission_id=state.get("mission_id", ""),
+            workflow_id=state.get("workflow_id", ""),
+            program_id=state.get("program_id", ""),
+            decision=decision.chosen_action.value,
+            reason=f"{decision.reason_code};trace_id={trace.trace_id}",
+            node_id="handoff_liaison",
+        ))
+        if decision.chosen_action == DecisionAction.GENERATE_OPPORTUNITY:
+            generated = _generate_opportunities(findings, state)
+            if generated:
+                result["generated_opportunities"] = generated
         return result
 
     executor.__name__ = "handoff_liaison"

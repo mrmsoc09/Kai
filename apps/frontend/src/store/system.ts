@@ -5,6 +5,7 @@ import type { SystemState } from '../api/types'
 export type UserProfile = {
   id: string
   roles: string[]
+  tenant_id?: string
 }
 
 type AuthState = {

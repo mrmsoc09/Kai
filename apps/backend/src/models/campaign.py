@@ -391,9 +391,12 @@ class ApprovalGate(Base, TimestampMixin):
         Index("ix_approval_gates_phase_job_id", "phase_job_id"),
         Index("ix_approval_gates_status", "status"),
         Index("ix_approval_gates_requested_at", "requested_at"),
+        Index("ix_approval_gates_tenant_id", "tenant_id"),
+        UniqueConstraint("id", "tenant_id", name="uq_approval_gate_tenant_id") # Unique constraint for safety
     )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False)
     campaign_id = Column(
         UUID(as_uuid=True),
         ForeignKey("campaign_runs.id", ondelete="CASCADE"),
@@ -450,6 +453,7 @@ class ApprovalGate(Base, TimestampMixin):
     decision_payload_json = Column(JSON, nullable=False, server_default="{}")
 
     campaign = relationship("CampaignRun", back_populates="approval_gates")
+    tenant = relationship("Tenant") # One-way for tenant_id filtering
     branch = relationship("ExecutionBranch", back_populates="approval_gates")
     phase_job = relationship("PhaseJob", back_populates="approval_gates")
     intention = relationship("IntentionRecord", back_populates="approval_gates")

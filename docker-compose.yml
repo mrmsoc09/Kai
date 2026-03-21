@@ -1,0 +1,103 @@
+# K1 Developer Compose — start with: docker compose up
+# For production: use docker-compose.prod.yml
+# For monitoring: overlay with docker-compose.monitoring.yml
+
+name: kai
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: k1_postgres
+    environment:
+      POSTGRES_USER: k1
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-k1devpass}
+      POSTGRES_DB: k1
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U k1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: k1_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: k1_backend
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql://k1:${POSTGRES_PASSWORD:-k1devpass}@postgres:5432/k1
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-jwt-secret-change-in-production}
+      K1_DEV_TOKEN: ${K1_DEV_TOKEN:-dev-token}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:8081"
+      K1_REQUIRED_SERVICES: postgres
+      K1_METRICS_INTERNAL_ONLY: "false"
+      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./artifacts:/app/artifacts
+      - ./output:/app/output
+      # Hot-reload: mount source for development
+      - .:/app:delegated
+    command: >
+      python -m uvicorn apps.backend.src.main:app
+      --host 0.0.0.0 --port 8080 --reload --log-level debug
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: k1_worker
+    environment:
+      DATABASE_URL: postgresql://k1:${POSTGRES_PASSWORD:-k1devpass}@postgres:5432/k1
+      REDIS_URL: redis://redis:6379/0
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./artifacts:/app/artifacts
+      - .:/app:delegated
+
+  ui:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    container_name: k1_ui
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend
+    environment:
+      VITE_API_BASE: http://localhost:8080
+
+volumes:
+  postgres_data:

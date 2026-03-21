@@ -25,6 +25,7 @@ security = HTTPBearer(auto_error=True)
 class User(BaseModel):
     id: str
     roles: List[str] = Field(default_factory=list)
+    tenant_id: Optional[str] = None  # populated from JWT "tid" claim
 
 
 ROLE_VIEWER = "viewer"
@@ -109,18 +110,25 @@ def _normalize_roles(roles: List[str]) -> List[str]:
     return normalized
 
 
-def create_access_token(subject: str, roles: List[str], expires_delta: timedelta | None = None) -> str:
+def create_access_token(
+    subject: str,
+    roles: List[str],
+    expires_delta: timedelta | None = None,
+    tenant_id: Optional[str] = None,
+) -> str:
     _require_jose()
     now = datetime.now(timezone.utc)
     exp_delta = expires_delta or timedelta(minutes=_access_expiry_minutes())
     normalized_roles = _normalize_roles(roles)
-    payload = {
+    payload: dict = {
         "sub": subject,
         "roles": normalized_roles,
         "jti": str(uuid4()),
         "iat": int(now.timestamp()),
         "exp": int((now + exp_delta).timestamp()),
     }
+    if tenant_id:
+        payload["tid"] = tenant_id
     return jwt.encode(payload, _jwt_secret(), algorithm=_jwt_algorithm())
 
 
@@ -153,7 +161,14 @@ def decode_access_token(token: str) -> User:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
     subject = payload.get("sub")
-    roles = payload.get("roles", [])
+    roles_claim = payload.get("roles")
+    if isinstance(roles_claim, list):
+        roles = roles_claim
+    elif isinstance(roles_claim, str):
+        roles = [roles_claim]
+    else:
+        role_claim = payload.get("rol")
+        roles = [role_claim] if isinstance(role_claim, str) else []
     jti = payload.get("jti")
 
     if not isinstance(subject, str) or not subject:
@@ -168,7 +183,8 @@ def decode_access_token(token: str) -> User:
         normalized_roles = _normalize_roles(roles)
     except AuthConfigError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token_roles")
-    return User(id=subject, roles=normalized_roles)
+    tenant_id = payload.get("tid") or None
+    return User(id=subject, roles=normalized_roles, tenant_id=tenant_id)
 
 
 def extract_jti_and_exp(token: str) -> tuple[Optional[str], int]:
