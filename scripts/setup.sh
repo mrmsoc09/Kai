@@ -36,6 +36,18 @@ has_cmd() {
     command -v "$1" >/dev/null 2>&1
 }
 
+compose_cmd() {
+    if has_cmd docker && docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+        return 0
+    fi
+    if has_cmd docker-compose; then
+        echo "docker-compose"
+        return 0
+    fi
+    return 1
+}
+
 can_use_apt() {
     has_cmd apt-get
 }
@@ -91,6 +103,36 @@ set_env_value() {
         sed -i "s|^${key}=.*|${key}=${value}|" "${file}"
     else
         printf "\n%s=%s\n" "${key}" "${value}" >> "${file}"
+    fi
+}
+
+read_env_value() {
+    local key="$1"
+    local default="$2"
+    local file="$3"
+    local value=""
+    if [[ -f "${file}" ]]; then
+        value="$(grep -E "^${key}=" "${file}" | tail -n 1 | cut -d= -f2- || true)"
+        value="${value%\"}"
+        value="${value#\"}"
+    fi
+    if [[ -n "${value}" ]]; then
+        echo "${value}"
+    else
+        echo "${default}"
+    fi
+}
+
+read_env_bool() {
+    local key="$1"
+    local default="$2"
+    local file="$3"
+    local value
+    value="$(read_env_value "${key}" "${default}" "${file}" | tr '[:upper:]' '[:lower:]')"
+    if [[ "${value}" == "1" || "${value}" == "true" || "${value}" == "yes" || "${value}" == "on" ]]; then
+        echo "true"
+    else
+        echo "false"
     fi
 }
 
@@ -355,6 +397,19 @@ for key in DATABASE_URL REDIS_URL JWT_SECRET_KEY K1_DEV_TOKEN; do
     fi
 done
 
+WHONIX_ENFORCE="$(read_env_bool K1_ENFORCE_WHONIX_KVM false .env)"
+if [[ "${WHONIX_ENFORCE}" == "true" ]]; then
+    if has_cmd virsh; then
+        info "Whonix/KVM enforcement enabled and virsh is available."
+    elif can_use_apt && apt_install_packages libvirt-clients; then
+        info "Installed virsh (libvirt-clients) for Whonix/KVM enforcement."
+    else
+        warn "K1_ENFORCE_WHONIX_KVM=true but virsh is not available."
+        warn "Install libvirt-clients and ensure Whonix Gateway VM is running."
+        MANUAL_PREREQS+=("Whonix/KVM: libvirt-clients (virsh) + running Whonix Gateway VM")
+    fi
+fi
+
 if [[ "${ENV_CREATED}" -eq 1 ]]; then
     set_env_value "K1_STARTUP_VALIDATE_SECRETS" "false" .env
     set_env_value "K1_STARTUP_VALIDATE_TOOLPACKS" "false" .env
@@ -380,8 +435,9 @@ mkdir -p \
 ENV_OK=true
 
 section "Infrastructure + migrations"
-if has_cmd docker && docker compose version >/dev/null 2>&1; then
-    docker compose -f docker-compose.yml up -d postgres redis
+COMPOSE_BIN="$(compose_cmd || true)"
+if [[ -n "${COMPOSE_BIN}" ]]; then
+    ${COMPOSE_BIN} -f docker-compose.yml up -d postgres redis
     if wait_for_port 127.0.0.1 5432 60 && wait_for_port 127.0.0.1 6379 45; then
         DOCKER_INFRA_OK=true
         info "PostgreSQL and Redis are reachable."
@@ -390,10 +446,10 @@ if has_cmd docker && docker compose version >/dev/null 2>&1; then
     fi
 else
     MANUAL_PREREQS+=("Docker Engine + compose plugin (or manually running PostgreSQL/Redis)")
-    warn "docker compose not available; assuming PostgreSQL/Redis are managed externally."
+    warn "No docker compose command available; assuming PostgreSQL/Redis are managed externally."
 fi
 
-if alembic upgrade head; then
+if alembic upgrade heads; then
     MIGRATIONS_OK=true
 else
     error "Database migrations failed."
@@ -402,6 +458,7 @@ else
 fi
 
 section "External tool verification"
+REQUIRE_EXTERNAL_TOOLS="$(read_env_bool K1_BOOTSTRAP_REQUIRE_EXTERNAL_TOOLS true .env)"
 mapfile -t TOOL_RECORDS < <(load_enabled_tools)
 
 for record in "${TOOL_RECORDS[@]}"; do
@@ -439,6 +496,9 @@ done
 
 if [[ ${#TOOL_ERRORS[@]} -eq 0 ]]; then
     TOOLS_OK=true
+elif [[ "${REQUIRE_EXTERNAL_TOOLS}" == "false" ]]; then
+    TOOLS_OK=true
+    warn "External tool verification failures are allowed (K1_BOOTSTRAP_REQUIRE_EXTERNAL_TOOLS=false)."
 fi
 
 section "Readiness summary"
@@ -455,7 +515,11 @@ else
 fi
 
 if [[ ${#TOOL_ERRORS[@]} -gt 0 ]]; then
+    if [[ "${REQUIRE_EXTERNAL_TOOLS}" == "false" ]]; then
+        echo -e "\n${YELLOW}Optional external tools missing (startup will continue):${NC}"
+    else
     echo -e "\n${RED}Missing required external tools:${NC}"
+    fi
     for item in "${TOOL_ERRORS[@]}"; do
         echo "  - ${item}"
     done

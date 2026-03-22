@@ -17,6 +17,18 @@ info() { echo -e "${GREEN}[k1-stop]${NC} $*"; }
 warn() { echo -e "${YELLOW}[k1-stop]${NC} $*"; }
 error() { echo -e "${RED}[k1-stop]${NC} $*" >&2; }
 
+compose_cmd() {
+    if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+        return 0
+    fi
+    if command -v docker-compose >/dev/null 2>&1; then
+        echo "docker-compose"
+        return 0
+    fi
+    return 1
+}
+
 stop_service() {
     local name="$1"
     local pid_file="$2"
@@ -60,11 +72,12 @@ stop_service "Operator UI" "runtime/pids/ui.pid"
 stop_service "Celery worker" "runtime/pids/worker.pid"
 stop_service "Backend API" "runtime/pids/backend.pid"
 
-if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
-    info "Stopping docker infrastructure services (postgres, redis)..."
-    docker compose -f docker-compose.yml stop postgres redis >/dev/null 2>&1 || true
+COMPOSE_BIN="$(compose_cmd || true)"
+if [[ -n "${COMPOSE_BIN}" ]]; then
+    info "Stopping docker infrastructure services (postgres, redis, vault, ollama)..."
+    ${COMPOSE_BIN} -f docker-compose.yml stop postgres redis vault ollama >/dev/null 2>&1 || true
 else
-    warn "docker compose not available; skipped postgres/redis stop."
+    warn "No docker compose command available; skipped infrastructure stop."
 fi
 
 echo -e "${GREEN}Kai services stopped.${NC}"

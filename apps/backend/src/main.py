@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import logging
 import importlib
+import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
@@ -102,6 +103,16 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _env_float(name: str, default: float) -> float:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return float(raw.strip())
+    except ValueError:
+        return default
+
+
 def _required_startup_services() -> list[str]:
     raw = os.getenv("K1_REQUIRED_SERVICES", "postgres")
     values = [item.strip().lower() for item in raw.split(",") if item.strip()]
@@ -195,7 +206,15 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error(f"Failed to initialize column-level encryption: {str(e)}")
 
-        await initialize_llm_providers()
+        llm_init_timeout = max(5.0, _env_float("K1_STARTUP_LLM_INIT_TIMEOUT_SECONDS", 20.0))
+        try:
+            async with asyncio.timeout(llm_init_timeout):
+                await initialize_llm_providers()
+        except TimeoutError:
+            logger.warning(
+                "LLM/MCP initialization timed out after %ss; continuing startup in degraded mode",
+                llm_init_timeout,
+            )
         _initialize_praison_governor()
     try:
         yield
@@ -478,7 +497,6 @@ except Exception as exc:
 
 # Multi-LLM Provider Initialization
 from apps.backend.src.core.llm_providers import llm_factory
-import asyncio
 
 # Initialize from environment variables
 async def initialize_llm_providers():

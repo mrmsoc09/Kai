@@ -133,7 +133,7 @@ class FixValidator:
         fixed: str,
         vulnerability_type: str
     ) -> Dict[str, Any]:
-        """Layer 2: LLM review with LOCAL model (mistral:7b or qwen-2.5-32b)"""
+        """Layer 2: LLM review with LOCAL model (mistral:7b or qwen2.5-coder:7b)"""
 
         logger.info("Running LLM security review (local model)...")
 
@@ -172,7 +172,7 @@ Provide approval (yes/no) and concerns."""
         return {
             "approved": approved,
             "concerns": concerns,
-            "model": "qwen-2.5-32b",
+            "model": "qwen2.5-coder:7b",
             "cost": 0.0  # Local model
         }
 

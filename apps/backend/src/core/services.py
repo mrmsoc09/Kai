@@ -33,6 +33,19 @@ class Services:
         except ValueError:
             return 3.0
 
+    def _env_bool(self, name: str, default: bool = False) -> bool:
+        raw = os.getenv(name)
+        if raw is None:
+            return default
+        return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+    def _optional_startup_timeout_seconds(self) -> float:
+        raw = os.getenv("K1_STARTUP_OPTIONAL_INIT_TIMEOUT_SECONDS", "8")
+        try:
+            return max(1.0, float(raw))
+        except ValueError:
+            return 8.0
+
     async def probe_postgres(self) -> dict[str, Any]:
         try:
             engine = get_async_engine()
@@ -139,29 +152,51 @@ class Services:
                 logger.warning("Neo4j startup skipped: %s", exc)
                 self.neo4j_available = False
 
-        try:
-            from ..core.intelligence_engine import get_intelligence_engine
+        if self._env_bool("K1_STARTUP_ENABLE_INTELLIGENCE", False):
+            try:
+                from ..core.intelligence_engine import get_intelligence_engine
+                timeout = self._optional_startup_timeout_seconds()
+                async with asyncio.timeout(timeout):
+                    intelligence_engine = await get_intelligence_engine()
+                self.intelligence_ready = intelligence_engine is not None
 
-            intelligence_engine = await get_intelligence_engine()
-            self.intelligence_ready = intelligence_engine is not None
-
-            background_scan_enabled = (
-                os.getenv("INTELLIGENCE_BACKGROUND_SCAN_ENABLED", "false").lower() == "true"
-            )
-            if background_scan_enabled and intelligence_engine is not None:
-                interval = int(os.getenv("INTELLIGENCE_SCAN_INTERVAL_MINUTES", "60"))
-                await intelligence_engine.start_background_scanner(interval_minutes=interval)
-        except Exception as exc:
-            logger.warning("Intelligence engine startup skipped: %s", exc)
+                background_scan_enabled = (
+                    os.getenv("INTELLIGENCE_BACKGROUND_SCAN_ENABLED", "false").lower() == "true"
+                )
+                if background_scan_enabled and intelligence_engine is not None:
+                    interval = int(os.getenv("INTELLIGENCE_SCAN_INTERVAL_MINUTES", "60"))
+                    await intelligence_engine.start_background_scanner(interval_minutes=interval)
+            except TimeoutError:
+                logger.warning(
+                    "Intelligence engine startup timed out after %ss; continuing without intelligence subsystem",
+                    self._optional_startup_timeout_seconds(),
+                )
+                self.intelligence_ready = False
+            except Exception as exc:
+                logger.warning("Intelligence engine startup skipped: %s", exc)
+                self.intelligence_ready = False
+        else:
+            logger.info("Intelligence engine startup disabled (K1_STARTUP_ENABLE_INTELLIGENCE=false).")
             self.intelligence_ready = False
 
-        try:
-            from ..integrations.llamaindex_rag import get_llamaindex_rag
-
-            rag = await get_llamaindex_rag()
-            self.rag_ready = rag is not None
-        except Exception as exc:
-            logger.warning("RAG startup skipped: %s", exc)
+        if self._env_bool("K1_STARTUP_ENABLE_RAG", False):
+            try:
+                from ..integrations.llamaindex_rag import get_llamaindex_rag
+                timeout = self._optional_startup_timeout_seconds()
+                async with asyncio.timeout(timeout):
+                    rag = await get_llamaindex_rag()
+                self.rag_ready = rag is not None
+            except TimeoutError:
+                logger.warning(
+                    "RAG startup timed out after %ss; continuing without RAG subsystem",
+                    self._optional_startup_timeout_seconds(),
+                )
+                self.rag_ready = False
+            except Exception as exc:
+                logger.warning("RAG startup skipped: %s", exc)
+                self.rag_ready = False
+        else:
+            logger.info("RAG startup disabled (K1_STARTUP_ENABLE_RAG=false).")
             self.rag_ready = False
 
         self.started = True

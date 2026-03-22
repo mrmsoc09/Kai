@@ -167,7 +167,7 @@ class UniversalModelFactory:
                 "opsec": 0.6,
                 "complexity": (3, 9)
             },
-            "gemma-2-9b": {
+            "gemma:7b": {
                 "family": ModelFamily.GEMMA,
                 "local": True,
                 "cost_input": 0.0,
@@ -178,7 +178,7 @@ class UniversalModelFactory:
                 "opsec": 1.0,
                 "complexity": (1, 7)
             },
-            "qwen-2.5-32b": {
+            "qwen2.5-coder:7b": {
                 "family": ModelFamily.QWEN,
                 "local": True,
                 "cost_input": 0.0,
@@ -207,8 +207,18 @@ class UniversalModelFactory:
 
         for model_id, config in self.model_configs.items():
             if config["local"]:
-                # Check if local model is running
-                if model_id.replace("-", "_").split("_")[0] in local_models:
+                # Check exact or prefix match against installed Ollama tags.
+                canonical_id = model_id.lower()
+                canonical_base = canonical_id.split(":")[0]
+                normalized_local = [m.lower() for m in local_models]
+                if (
+                    canonical_id in normalized_local
+                    or any(
+                        m.split(":")[0] == canonical_base
+                        or m.startswith(canonical_base)
+                        for m in normalized_local
+                    )
+                ):
                     all_available[model_id] = self._create_model_metrics(model_id, config, True)
             else:
                 # Check if cloud API is available

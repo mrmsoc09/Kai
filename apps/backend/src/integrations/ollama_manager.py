@@ -52,34 +52,22 @@ class OllamaManager:
 
     # Model catalog with requirements
     MODEL_CATALOG = {
-        'llama3:70b': {
-            'size_gb': 40,
-            'min_vram_gb': 24,
-            'description': 'Best for complex reasoning and code analysis',
+        'llama3.1:8b': {
+            'size_gb': 4.9,
+            'min_vram_gb': 8,
+            'description': 'Strong general model under 9B for local reasoning',
             'tier': 'best'
         },
-        'mixtral:8x7b': {
-            'size_gb': 26,
-            'min_vram_gb': 24,
-            'description': 'Best for code generation and mixed tasks',
+        'qwen2.5-coder:7b': {
+            'size_gb': 4.3,
+            'min_vram_gb': 8,
+            'description': 'Recommended coding model under 9B',
             'tier': 'best'
         },
-        'codestral:22b': {
-            'size_gb': 13,
-            'min_vram_gb': 16,
-            'description': 'Best for vulnerability analysis',
-            'tier': 'best'
-        },
-        'llama3:13b': {
-            'size_gb': 7.5,
+        'gemma:7b': {
+            'size_gb': 4.8,
             'min_vram_gb': 12,
-            'description': 'Balanced performance for general tasks',
-            'tier': 'balanced'
-        },
-        'codellama:13b': {
-            'size_gb': 7.5,
-            'min_vram_gb': 12,
-            'description': 'Code-focused model for security work',
+            'description': 'Balanced local model with strong efficiency',
             'tier': 'balanced'
         },
         'llama3:8b': {

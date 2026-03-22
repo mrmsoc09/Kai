@@ -88,7 +88,9 @@ By default, secrets are loaded from environment variables. For production, use V
 
 ```bash
 K1_SECRET_BACKEND=vault
-VAULT_ADDR=http://vault:8200
+K1_VAULT_HOST_BIND=127.0.0.1
+K1_VAULT_HOST_PORT=8200
+VAULT_ADDR=http://localhost:8200
 VAULT_TOKEN=<vault-token>
 VAULT_MOUNT_POINT=secret
 VAULT_SECRET_PREFIX=kai
@@ -228,10 +230,10 @@ authorization:
 
 ```bash
 # Run inside backend container
-docker compose exec backend alembic upgrade head
+docker compose exec backend alembic upgrade heads
 
 # Or directly
-alembic -c apps/backend/alembic.ini upgrade head
+alembic -c apps/backend/alembic.ini upgrade heads
 ```
 
 ---

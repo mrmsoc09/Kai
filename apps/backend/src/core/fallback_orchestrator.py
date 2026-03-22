@@ -53,8 +53,8 @@ class FallbackOrchestrator:
     2. Claude 3.5 Sonnet ($3/1M) - Advanced reasoning
     3. GPT-4o ($5/1M) - Strong reasoning
     4. Gemini 2.0 Flash ($0.075/1M) - Basic reasoning
-    5. Llama3:70b (local, $0) - Local fallback
-    6. Qwen-2.5-32b (local, $0) - Final fallback
+    5. Llama3.1:8b (local, $0) - Local fallback
+    6. Qwen2.5-Coder:7b (local, $0) - Final fallback
 
     Strategy:
     - Try each model in order until one succeeds
@@ -104,14 +104,14 @@ class FallbackOrchestrator:
                 "min_complexity": 3
             },
             {
-                "model_id": "llama3:70b",
+                "model_id": "llama3.1:8b",
                 "family": ModelFamily.OLLAMA_LOCAL,
                 "cost_multiplier": 0.0,
                 "quality": "local_advanced",
                 "min_complexity": 1
             },
             {
-                "model_id": "qwen-2.5-32b",
+                "model_id": "qwen2.5-coder:7b",
                 "family": ModelFamily.OLLAMA_LOCAL,
                 "cost_multiplier": 0.0,
                 "quality": "local_moderate",
@@ -289,8 +289,9 @@ class FallbackOrchestrator:
         # In production: call actual model API
         # For now, simulate success
 
-        # Simulate occasional failures for paid models
-        if "local" not in model_id.lower():
+        # Simulate occasional failures for paid models.
+        local_markers = ("llama", "qwen", "gemma", "mistral", "tinyllama", "codellama")
+        if not any(marker in model_id.lower() for marker in local_markers):
             import random
             return random.random() > 0.1  # 90% success rate
 

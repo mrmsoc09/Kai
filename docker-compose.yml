@@ -2,8 +2,6 @@
 # For production: use docker-compose.prod.yml
 # For monitoring: overlay with docker-compose.monitoring.yml
 
-name: kai
-
 services:
   postgres:
     image: postgres:16-alpine
@@ -34,6 +32,28 @@ services:
       timeout: 5s
       retries: 5
 
+  vault:
+    image: hashicorp/vault:1.16
+    container_name: k1_vault
+    command: server -dev -dev-root-token-id=${VAULT_DEV_ROOT_TOKEN:-k1-dev-root-token}
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN:-k1-dev-root-token}
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+    ports:
+      - "${K1_VAULT_HOST_BIND:-127.0.0.1}:${K1_VAULT_HOST_PORT:-8200}:8200"
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - vault_data:/vault/file
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: k1_ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+
   backend:
     build:
       context: .
@@ -47,7 +67,10 @@ services:
       K1_DEV_TOKEN: ${K1_DEV_TOKEN:-dev-token}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://ollama:11434}
+      K1_SECRET_BACKEND: ${K1_SECRET_BACKEND:-env}
+      VAULT_ADDR: ${VAULT_ADDR:-http://vault:8200}
+      VAULT_TOKEN: ${VAULT_TOKEN:-}
       CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:8081"
       K1_REQUIRED_SERVICES: postgres
       K1_METRICS_INTERNAL_ONLY: "false"
@@ -59,6 +82,10 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      vault:
+        condition: service_started
+      ollama:
+        condition: service_started
     volumes:
       - ./artifacts:/app/artifacts
       - ./output:/app/output
@@ -78,11 +105,19 @@ services:
       REDIS_URL: redis://redis:6379/0
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://ollama:11434}
+      K1_SECRET_BACKEND: ${K1_SECRET_BACKEND:-env}
+      VAULT_ADDR: ${VAULT_ADDR:-http://vault:8200}
+      VAULT_TOKEN: ${VAULT_TOKEN:-}
     depends_on:
       redis:
         condition: service_healthy
       postgres:
         condition: service_healthy
+      vault:
+        condition: service_started
+      ollama:
+        condition: service_started
     volumes:
       - ./artifacts:/app/artifacts
       - .:/app:delegated
@@ -101,3 +136,5 @@ services:
 
 volumes:
   postgres_data:
+  vault_data:
+  ollama_data:

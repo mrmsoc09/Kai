@@ -15,8 +15,8 @@ Kai coordinates autonomous agents to perform security research missions under st
 | Linux (Debian/Ubuntu recommended) | — | Windows via WSL2 |
 | Python | 3.11+ | `python3 --version` |
 | Node.js | 18+ | `node --version` — [nodejs.org](https://nodejs.org) |
-| Docker Engine + Compose plugin | 24+ | For PostgreSQL and Redis |
-| At least one LLM API key | — | `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env` |
+| Docker Engine + Compose | 24+ | Supports `docker compose` and `docker-compose` |
+| LLM credentials | Optional | Cloud API key or local Ollama runtime |
 
 `bootstrap.sh` installs system packages and Python/Node dependencies automatically on Ubuntu/Debian.
 External recon tools (amass, subfinder, nuclei, etc.) are auto-installed when `go` is available.
@@ -29,7 +29,8 @@ cd Kai
 
 ./bootstrap.sh   # install deps, configure env, run migrations, verify tools
 
-# Edit .env — set API keys before starting (see .env.example)
+# Optional local-only profile (Ollama <=9B + Vault dev defaults)
+./scripts/apply_local_ollama_profile.sh
 
 ./k1-start       # start backend + celery worker + operator UI
 ```
@@ -46,7 +47,7 @@ API docs at **http://localhost:8080/docs**.
 1. Installs system packages (`curl`, `git`, `build-essential`, pango/cairo for weasyprint)
 2. Creates Python virtualenv at `.venv` — installs `requirements.txt`
 3. Installs Node.js packages in `ui/node_modules`
-4. Creates `.env` from `.env.example` (first run) — **fill in API keys before starting**
+4. Creates `.env` from `.env.example` (first run)
 5. Creates artifact/runtime directories (`artifacts/`, `output/`, `runtime/`)
 6. Starts PostgreSQL + Redis via Docker Compose and runs Alembic migrations
 7. Verifies and auto-installs enabled external tools (amass, subfinder, httpx, nuclei, etc.)
@@ -55,7 +56,8 @@ API docs at **http://localhost:8080/docs**.
 ### What must be configured manually
 
 Edit `.env` after the first bootstrap run:
-- `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` — at least one LLM provider key required
+- For cloud providers: `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`
+- For local-only mode: run `./scripts/apply_local_ollama_profile.sh` to pin Ollama + Vault defaults
 - `JWT_SECRET_KEY` — replace placeholder with a cryptographically random value
 - `K1_DEV_TOKEN` — replace placeholder
 
@@ -106,6 +108,7 @@ Kai is built on six integrated layers, each with explicit authority boundaries:
 | worker | — | Celery worker (tools queue) |
 | postgres | 5432 | Primary database + LangGraph checkpoints |
 | redis | 6379 | Cache + Celery broker |
+| ollama | 11434 | Local model inference |
 | vault | 8200 | Secret management |
 | mailhog | 8025 | Email testing UI |
 

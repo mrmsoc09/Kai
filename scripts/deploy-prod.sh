@@ -32,6 +32,18 @@ info()  { echo -e "${GREEN}[K1-PROD]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[K1-PROD]${NC} $*"; }
 error() { echo -e "${RED}[K1-PROD]${NC} $*" >&2; }
 
+compose_cmd() {
+  if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+    echo "docker compose"
+    return 0
+  fi
+  if command -v docker-compose >/dev/null 2>&1; then
+    echo "docker-compose"
+    return 0
+  fi
+  return 1
+}
+
 # -- Parse args ---------------------------------------------------------------
 DOWN=false
 for arg in "$@"; do
@@ -49,8 +61,9 @@ if ! command -v docker &>/dev/null; then
   error "docker not found."
   exit 1
 fi
-if ! docker compose version &>/dev/null 2>&1; then
-  error "docker compose v2 not found."
+COMPOSE_BIN="$(compose_cmd || true)"
+if [[ -z "${COMPOSE_BIN}" ]]; then
+  error "Neither 'docker compose' nor 'docker-compose' is available."
   exit 1
 fi
 
@@ -63,7 +76,7 @@ fi
 # -- Down mode ----------------------------------------------------------------
 if ${DOWN}; then
   info "Stopping production stack..."
-  docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" down
+  ${COMPOSE_BIN} -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" down
   info "Production stack stopped."
   exit 0
 fi
@@ -111,13 +124,13 @@ info "Artifact directories ready."
 
 # -- Build images -------------------------------------------------------------
 info "Building production images..."
-docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" build \
+${COMPOSE_BIN} -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" build \
   --build-arg BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
   --no-cache
 
 # -- Deploy -------------------------------------------------------------------
 info "Deploying production stack..."
-docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" up -d --remove-orphans
+${COMPOSE_BIN} -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" up -d --remove-orphans
 
 # -- Wait for health ----------------------------------------------------------
 info "Waiting for backend health..."
@@ -127,7 +140,7 @@ BACKEND_PORT=8080
 until curl -sf "http://localhost:${BACKEND_PORT}/health" >/dev/null 2>&1; do
   if [[ $ELAPSED -ge $MAX_WAIT ]]; then
     error "Backend did not become healthy after ${MAX_WAIT}s."
-    docker compose -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" logs backend --tail=50
+    ${COMPOSE_BIN} -f "${COMPOSE_FILE}" --env-file "${ENV_FILE}" logs backend --tail=50
     exit 1
   fi
   sleep 3
@@ -136,10 +149,10 @@ done
 
 info "Production deployment complete!"
 echo ""
-echo "  Stack:        docker compose -f docker-compose.prod.yml ps"
-echo "  Logs:         docker compose -f docker-compose.prod.yml logs -f"
+echo "  Stack:        ${COMPOSE_BIN} -f docker-compose.prod.yml ps"
+echo "  Logs:         ${COMPOSE_BIN} -f docker-compose.prod.yml logs -f"
 echo "  Health:       curl http://localhost:${BACKEND_PORT}/health"
 echo "  Metrics:      curl http://localhost:${BACKEND_PORT}/metrics"
 echo ""
 warn "Reminder: Ensure Vault is unsealed and tool credentials are loaded."
-warn "Run: docker compose -f docker-compose.prod.yml logs vault  to verify."
+warn "Run: ${COMPOSE_BIN} -f docker-compose.prod.yml logs vault  to verify."

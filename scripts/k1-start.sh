@@ -29,6 +29,53 @@ has_cmd() {
     command -v "$1" >/dev/null 2>&1
 }
 
+compose_cmd() {
+    if has_cmd docker && docker compose version >/dev/null 2>&1; then
+        echo "docker compose"
+        return 0
+    fi
+    if has_cmd docker-compose; then
+        echo "docker-compose"
+        return 0
+    fi
+    return 1
+}
+
+cleanup_compose_stale_containers() {
+    local service="$1"
+    local canonical="k1_${service}"
+    docker rm -f "${canonical}" >/dev/null 2>&1 || true
+    while IFS= read -r container_name; do
+        [[ -z "${container_name}" ]] && continue
+        if [[ "${container_name}" == *_k1_"${service}" ]]; then
+            docker rm -f "${container_name}" >/dev/null 2>&1 || true
+        fi
+    done < <(docker ps -a --format '{{.Names}}' 2>/dev/null || true)
+}
+
+compose_up_with_retry() {
+    local compose_bin="$1"
+    shift
+    local services=("$@")
+    local output=""
+    if output="$(${compose_bin} -f docker-compose.yml up -d "${services[@]}" 2>&1)"; then
+        [[ -n "${output}" ]] && echo "${output}"
+        return 0
+    fi
+
+    echo "${output}" >&2
+    if [[ "${output}" == *"ContainerConfig"* ]]; then
+        warn "Detected docker-compose recreate bug (ContainerConfig). Cleaning stale containers and retrying once."
+        for service in "${services[@]}"; do
+            cleanup_compose_stale_containers "${service}"
+        done
+        ${compose_bin} -f docker-compose.yml up -d "${services[@]}"
+        return $?
+    fi
+
+    return 1
+}
+
 read_env_value() {
     local key="$1"
     local default="$2"
@@ -43,6 +90,12 @@ read_env_value() {
     else
         echo "${default}"
     fi
+}
+
+env_truthy() {
+    local raw="${1:-}"
+    raw="$(echo "${raw}" | tr '[:upper:]' '[:lower:]')"
+    [[ "${raw}" == "1" || "${raw}" == "true" || "${raw}" == "yes" || "${raw}" == "on" ]]
 }
 
 pid_is_running() {
@@ -117,6 +170,85 @@ raise SystemExit(1)
 PY
 }
 
+run_virsh() {
+    local uri
+    uri="$(read_env_value K1_WHONIX_LIBVIRT_URI "")"
+    if [[ -n "${uri}" ]]; then
+        virsh -c "${uri}" "$@"
+    else
+        virsh "$@"
+    fi
+}
+
+validate_whonix_kvm_proxy() {
+    local enforce
+    enforce="$(read_env_value K1_ENFORCE_WHONIX_KVM false)"
+    if ! env_truthy "${enforce}"; then
+        return 0
+    fi
+
+    if ! has_cmd virsh; then
+        error "Whonix/KVM enforcement is enabled but 'virsh' is not installed."
+        error "Install libvirt/virsh, start the Whonix Gateway VM, then retry."
+        return 1
+    fi
+
+    local vm_names_csv
+    vm_names_csv="$(read_env_value K1_WHONIX_VM_NAMES "whonix-gateway,Whonix-Gateway,whonix_gateway")"
+    IFS=',' read -r -a vm_candidates <<< "${vm_names_csv}"
+    local running_vm=""
+    local configured_uri
+    configured_uri="$(read_env_value K1_WHONIX_LIBVIRT_URI "")"
+    for vm in "${vm_candidates[@]}"; do
+        vm="$(echo "${vm}" | xargs)"
+        [[ -z "${vm}" ]] && continue
+        state="$(run_virsh domstate "${vm}" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
+        if [[ "${state}" == *"running"* ]]; then
+            running_vm="${vm}"
+            break
+        fi
+    done
+
+    if [[ -z "${running_vm}" ]]; then
+        error "Whonix/KVM enforcement is enabled but no configured Whonix VM is running."
+        error "Checked VMs: ${vm_names_csv}"
+        if [[ -n "${configured_uri}" ]]; then
+            error "Using libvirt URI: ${configured_uri}"
+        fi
+        return 1
+    fi
+
+    local proxy_url proxy_host proxy_port
+    proxy_url="$(read_env_value HTTPS_PROXY "")"
+    if [[ -z "${proxy_url}" ]]; then
+        proxy_url="$(read_env_value HTTP_PROXY "")"
+    fi
+    if [[ -z "${proxy_url}" ]]; then
+        proxy_host="$(read_env_value K1_WHONIX_PROXY_HOST 10.152.152.10)"
+        proxy_port="$(read_env_value K1_WHONIX_PROXY_PORT 9050)"
+    else
+        proxy_host="$(PROXY_URL="${proxy_url}" python3 -c 'import os, urllib.parse; u = urllib.parse.urlparse(os.environ["PROXY_URL"]); print(u.hostname or "")')"
+        proxy_port="$(PROXY_URL="${proxy_url}" python3 -c 'import os, urllib.parse; u = urllib.parse.urlparse(os.environ["PROXY_URL"]); print(u.port or (443 if u.scheme == "https" else 80))')"
+    fi
+
+    if [[ -z "${proxy_host}" || -z "${proxy_port}" ]]; then
+        error "Unable to resolve Whonix proxy host/port from HTTP_PROXY/HTTPS_PROXY."
+        return 1
+    fi
+
+    if ! wait_for_port "${proxy_host}" "${proxy_port}" 12; then
+        error "Whonix proxy ${proxy_host}:${proxy_port} is not reachable."
+        error "Ensure Whonix Gateway is running in KVM and proxy listener is active."
+        return 1
+    fi
+
+    if [[ -n "${configured_uri}" ]]; then
+        info "Whonix/KVM proxy enforcement passed (uri=${configured_uri}, vm=${running_vm}, proxy=${proxy_host}:${proxy_port})."
+    else
+        info "Whonix/KVM proxy enforcement passed (vm=${running_vm}, proxy=${proxy_host}:${proxy_port})."
+    fi
+}
+
 if [[ ! -f "${BOOTSTRAP_MARKER}" ]]; then
     error "Bootstrap marker not found (${BOOTSTRAP_MARKER})."
     error "Run ./bootstrap.sh before starting Kai."
@@ -134,17 +266,51 @@ if [[ ! -f .env ]]; then
 fi
 
 source .venv/bin/activate
-export PATH="${HOME}/.local/bin:${PATH}"
+# Keep virtualenv binaries ahead of user-local binaries (e.g. celery).
+if [[ -n "${VIRTUAL_ENV:-}" ]]; then
+    export PATH="${VIRTUAL_ENV}/bin:${HOME}/.local/bin:${PATH}"
+else
+    export PATH="${HOME}/.local/bin:${PATH}"
+fi
+# Export .env so backend/worker inherit DATABASE_URL, REDIS_URL, VAULT_ADDR, etc.
+set -a
+# shellcheck disable=SC1091
+source .env
+set +a
 mkdir -p runtime/logs runtime/pids
+
+validate_whonix_kvm_proxy || exit 1
 
 BACKEND_HOST="$(read_env_value BACKEND_HOST 0.0.0.0)"
 BACKEND_PORT="$(read_env_value BACKEND_PORT 8080)"
 FRONTEND_URL="$(read_env_value FRONTEND_URL http://localhost:8081)"
 UI_PORT="$(FRONTEND_URL="${FRONTEND_URL}" python3 -c 'import os,urllib.parse; print(urllib.parse.urlparse(os.environ["FRONTEND_URL"]).port or 8081)')"
+VAULT_HOST_BIND="$(read_env_value K1_VAULT_HOST_BIND 127.0.0.1)"
+if [[ "${VAULT_HOST_BIND}" == "0.0.0.0" || "${VAULT_HOST_BIND}" == "::" ]]; then
+    VAULT_WAIT_HOST="127.0.0.1"
+else
+    VAULT_WAIT_HOST="${VAULT_HOST_BIND}"
+fi
+VAULT_HOST_PORT="$(read_env_value K1_VAULT_HOST_PORT 8200)"
 
-if has_cmd docker && docker compose version >/dev/null 2>&1; then
-    info "Ensuring PostgreSQL and Redis are running..."
-    docker compose -f docker-compose.yml up -d postgres redis
+COMPOSE_BIN="$(compose_cmd || true)"
+START_VAULT=false
+START_OLLAMA=false
+if [[ -n "${COMPOSE_BIN}" ]]; then
+    SECRET_BACKEND="$(read_env_value K1_SECRET_BACKEND env | tr '[:upper:]' '[:lower:]')"
+    PROVIDER_CHAIN="$(printf "%s,%s" "$(read_env_value K1_PRIMARY_LLM_PROVIDER anthropic)" "$(read_env_value K1_FALLBACK_LLM_PROVIDERS openai,gemini,ollama)" | tr '[:upper:]' '[:lower:]')"
+    INFRA_SERVICES=(postgres redis)
+    if [[ "${SECRET_BACKEND}" == "vault" ]]; then
+        INFRA_SERVICES+=(vault)
+        START_VAULT=true
+    fi
+    if [[ "${PROVIDER_CHAIN}" == *"ollama"* ]]; then
+        INFRA_SERVICES+=(ollama)
+        START_OLLAMA=true
+    fi
+
+    info "Ensuring infrastructure services are running: ${INFRA_SERVICES[*]}"
+    compose_up_with_retry "${COMPOSE_BIN}" "${INFRA_SERVICES[@]}"
     wait_for_port 127.0.0.1 5432 60 || {
         error "PostgreSQL did not become reachable."
         exit 1
@@ -153,12 +319,29 @@ if has_cmd docker && docker compose version >/dev/null 2>&1; then
         error "Redis did not become reachable."
         exit 1
     }
+    if [[ "${START_VAULT}" == "true" ]]; then
+        wait_for_port "${VAULT_WAIT_HOST}" "${VAULT_HOST_PORT}" 45 || {
+            error "Vault did not become reachable."
+            exit 1
+        }
+    fi
+    if [[ "${START_OLLAMA}" == "true" ]]; then
+        wait_for_port 127.0.0.1 11434 90 || {
+            error "Ollama did not become reachable."
+            exit 1
+        }
+        if [[ -x "${REPO_ROOT}/scripts/ensure_ollama_models.sh" ]]; then
+            if ! "${REPO_ROOT}/scripts/ensure_ollama_models.sh"; then
+                warn "Ollama model sync reported an issue. Continue startup and inspect logs."
+            fi
+        fi
+    fi
 else
-    warn "docker compose not available; expecting external PostgreSQL/Redis."
+    warn "No docker compose command available; expecting external PostgreSQL/Redis."
 fi
 
 info "Applying database migrations (idempotent)..."
-alembic upgrade head
+alembic upgrade heads
 
 start_service "Backend API" "${BACKEND_PID_FILE}" "${BACKEND_LOG}" \
     python -m uvicorn apps.backend.src.main:app --host "${BACKEND_HOST}" --port "${BACKEND_PORT}"
@@ -169,7 +352,7 @@ if ! wait_for_http "http://127.0.0.1:${BACKEND_PORT}/health" 75; then
 fi
 
 start_service "Celery worker" "${WORKER_PID_FILE}" "${WORKER_LOG}" \
-    celery -A apps.backend.src.worker.celery_app:celery_app worker -Q tools,intrusive --loglevel=info
+    python -m celery -A apps.backend.src.worker.celery_app:celery_app worker -Q tools,intrusive --loglevel=info
 
 if [[ -d ui ]]; then
     if ! has_cmd npm; then

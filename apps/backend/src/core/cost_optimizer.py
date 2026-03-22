@@ -174,7 +174,7 @@ class CostOptimizer:
                     {
                         "type": "deterministic",
                         "description": "Extract and parse data",
-                        "model": "qwen-2.5-32b",
+                        "model": "qwen2.5-coder:7b",
                         "cost_cents": 0.0
                     },
                     {

@@ -25,6 +25,18 @@ info()  { echo -e "${GREEN}[K1]${NC} $*"; }
 warn()  { echo -e "${YELLOW}[K1]${NC} $*"; }
 error() { echo -e "${RED}[K1]${NC} $*" >&2; }
 
+compose_cmd() {
+  if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+    echo "docker compose"
+    return 0
+  fi
+  if command -v docker-compose >/dev/null 2>&1; then
+    echo "docker-compose"
+    return 0
+  fi
+  return 1
+}
+
 # -- Parse args ---------------------------------------------------------------
 REBUILD=false
 DOWN=false
@@ -47,22 +59,23 @@ if ! command -v docker &>/dev/null; then
   error "docker not found. Install Docker Desktop or Docker Engine."
   exit 1
 fi
-if ! docker compose version &>/dev/null 2>&1; then
-  error "docker compose (v2) not found. Upgrade Docker or install the plugin."
+COMPOSE_BIN="$(compose_cmd || true)"
+if [[ -z "${COMPOSE_BIN}" ]]; then
+  error "Neither 'docker compose' nor 'docker-compose' is available."
   exit 1
 fi
 
 # -- Down mode ----------------------------------------------------------------
 if ${DOWN}; then
   info "Stopping K1 local stack..."
-  docker compose -f "${COMPOSE_FILE}" down --remove-orphans
+  ${COMPOSE_BIN} -f "${COMPOSE_FILE}" down --remove-orphans
   info "Stack stopped."
   exit 0
 fi
 
 # -- Logs mode ----------------------------------------------------------------
 if ${SHOW_LOGS}; then
-  docker compose -f "${COMPOSE_FILE}" logs -f --tail=100
+  ${COMPOSE_BIN} -f "${COMPOSE_FILE}" logs -f --tail=100
   exit 0
 fi
 
@@ -115,7 +128,7 @@ if ${REBUILD}; then
 fi
 
 info "Starting K1 local stack (docker compose)..."
-docker compose -f "${COMPOSE_FILE}" up -d ${BUILD_FLAGS}
+${COMPOSE_BIN} -f "${COMPOSE_FILE}" up -d ${BUILD_FLAGS}
 
 # -- Wait for backend health --------------------------------------------------
 info "Waiting for backend health check..."
@@ -124,7 +137,7 @@ ELAPSED=0
 until curl -sf http://localhost:8080/health >/dev/null 2>&1; do
   if [[ $ELAPSED -ge $MAX_WAIT ]]; then
     error "Backend did not become healthy after ${MAX_WAIT}s."
-    docker compose -f "${COMPOSE_FILE}" logs backend --tail=30
+    ${COMPOSE_BIN} -f "${COMPOSE_FILE}" logs backend --tail=30
     exit 1
   fi
   sleep 2
@@ -138,6 +151,6 @@ echo "  Frontend UI:  http://localhost:8081"
 echo "  API Docs:     http://localhost:8080/docs"
 echo "  Metrics:      http://localhost:8080/metrics"
 echo ""
-echo "  docker compose logs -f     # follow all logs"
-echo "  docker compose ps          # check service status"
+echo "  ${COMPOSE_BIN} -f ${COMPOSE_FILE} logs -f     # follow all logs"
+echo "  ${COMPOSE_BIN} -f ${COMPOSE_FILE} ps          # check service status"
 echo "  ./scripts/deploy-local.sh --down   # stop stack"

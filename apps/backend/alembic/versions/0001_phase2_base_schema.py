@@ -27,6 +27,7 @@ def upgrade() -> None:
         "HIGH",
         "CRITICAL",
         name="severity_enum",
+        create_type=False,
     )
     finding_status_enum = postgresql.ENUM(
         "NEW",
@@ -37,12 +38,14 @@ def upgrade() -> None:
         "REJECTED",
         "DUPLICATE",
         name="finding_status_enum",
+        create_type=False,
     )
     hil_approval_status_enum = postgresql.ENUM(
         "PENDING",
         "APPROVED",
         "REJECTED",
         name="hil_approval_status_enum",
+        create_type=False,
     )
     program_scope_min_severity_enum = postgresql.ENUM(
         "INFO",
@@ -51,12 +54,14 @@ def upgrade() -> None:
         "HIGH",
         "CRITICAL",
         name="program_scope_min_severity_enum",
+        create_type=False,
     )
     execution_status_enum = postgresql.ENUM(
         "PENDING",
         "COMPLETED",
         "FAILED",
         name="execution_status_enum",
+        create_type=False,
     )
 
     bind = op.get_bind()

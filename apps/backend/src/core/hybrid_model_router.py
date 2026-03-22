@@ -94,9 +94,9 @@ class HybridModelRouter:
         # Model tier mapping (complexity -> preferred local models)
         self.local_model_tiers = {
             1: ["tinyllama:1.1b", "gemma-2-2b"],  # Trivial
-            2: ["gemma-2-9b", "mistral:7b"],  # Basic
-            3: ["llama3:8b", "qwen-2.5-14b"],  # Moderate-low
-            4: ["qwen-2.5-32b", "llama3:70b"],  # Moderate-high
+            2: ["gemma:7b", "mistral:7b"],  # Basic
+            3: ["llama3.1:8b", "qwen2.5-coder:7b"],  # Moderate-low
+            4: ["qwen2.5-coder:7b", "llama3.1:8b"],  # Moderate-high
         }
 
         # Paid model preferences by complexity
@@ -234,7 +234,7 @@ class HybridModelRouter:
         # Select best local model for complexity
         preferred_models = self.local_model_tiers.get(
             min(complexity, 4),  # Cap at 4 for local
-            ["qwen-2.5-32b", "llama3:8b"]
+            ["qwen2.5-coder:7b", "llama3.1:8b"]
         )
 
         # Use first available model
@@ -249,7 +249,7 @@ class HybridModelRouter:
                 selected_model = local_available[0]
             else:
                 logger.error("No local models available!")
-                selected_model = "qwen-2.5-32b"  # Default
+                selected_model = "qwen2.5-coder:7b"  # Default
 
         return RoutingDecision(
             model_id=selected_model,

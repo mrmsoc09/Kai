@@ -1,6 +1,6 @@
 provider: qwen
 models:
-  - name: qwen2.5-72b
+  - name: qwen2.5-coder-7b
     capabilities:
       tool_calling: true
       structured_output: true

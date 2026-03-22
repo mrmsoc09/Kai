@@ -30,6 +30,7 @@ def upgrade() -> None:
         "FAILED",
         "CANCELED",
         name="campaign_status_enum",
+        create_type=False,
     )
     branch_status_enum = postgresql.ENUM(
         "PENDING",
@@ -41,6 +42,7 @@ def upgrade() -> None:
         "FAILED",
         "CANCELED",
         name="branch_status_enum",
+        create_type=False,
     )
     phase_job_status_enum = postgresql.ENUM(
         "CREATED",
@@ -53,6 +55,7 @@ def upgrade() -> None:
         "SKIPPED",
         "CANCELED",
         name="phase_job_status_enum",
+        create_type=False,
     )
     approval_gate_status_enum = postgresql.ENUM(
         "PENDING",
@@ -62,6 +65,7 @@ def upgrade() -> None:
         "EXPIRED",
         "CANCELED",
         name="approval_gate_status_enum",
+        create_type=False,
     )
     tool_execution_status_enum = postgresql.ENUM(
         "CREATED",
@@ -72,6 +76,7 @@ def upgrade() -> None:
         "FAILED",
         "CANCELED",
         name="tool_execution_status_enum",
+        create_type=False,
     )
     artifact_type_enum = postgresql.ENUM(
         "RAW_OUTPUT",
@@ -84,6 +89,7 @@ def upgrade() -> None:
         "REPORT_DRAFT",
         "OTHER",
         name="artifact_type_enum",
+        create_type=False,
     )
     observation_type_enum = postgresql.ENUM(
         "DISCOVERY",
@@ -95,6 +101,7 @@ def upgrade() -> None:
         "METRIC",
         "OTHER",
         name="observation_type_enum",
+        create_type=False,
     )
     intention_source_enum = postgresql.ENUM(
         "USER",
@@ -103,6 +110,7 @@ def upgrade() -> None:
         "POLICY_ENGINE",
         "OPERATOR",
         name="intention_source_enum",
+        create_type=False,
     )
     intention_type_enum = postgresql.ENUM(
         "CAMPAIGN_START",
@@ -116,6 +124,7 @@ def upgrade() -> None:
         "POLICY_OVERRIDE",
         "SYSTEM_MAINTENANCE",
         name="intention_type_enum",
+        create_type=False,
     )
     risk_policy_class_enum = postgresql.ENUM(
         "LOW",
@@ -126,6 +135,7 @@ def upgrade() -> None:
         "OUT_OF_SCOPE",
         "POLICY_EXCEPTION",
         name="risk_policy_class_enum",
+        create_type=False,
     )
 
     bind = op.get_bind()

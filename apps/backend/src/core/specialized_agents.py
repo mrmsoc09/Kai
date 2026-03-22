@@ -117,7 +117,7 @@ class OSINTAgent(AutonomousAgent):
     def __init__(self):
         super().__init__(
             role=AgentRole.OSINT_SPECIALIST,
-            llm_model="qwen-2.5-32b",  # Local only
+            llm_model="qwen2.5-coder:7b",  # Local only
             autonomy_level=3,
             budget_threshold_cents=0  # No paid API budget
         )
@@ -166,7 +166,7 @@ class OSINTAgent(AutonomousAgent):
 
             if not routing.is_local:
                 logger.warning("⚠️ OSINT task routed to paid API - forcing local fallback")
-                routing.model_id = "qwen-2.5-32b"
+                routing.model_id = "qwen2.5-coder:7b"
                 routing.is_local = True
                 routing.estimated_cost_cents = 0.0
 
@@ -344,7 +344,7 @@ class ReasoningAgent(AutonomousAgent):
         # Simulated local reasoning (degraded quality)
         output = {
             "task": task.description,
-            "model": "qwen-2.5-32b (local fallback)",
+            "model": "qwen2.5-coder:7b (local fallback)",
             "analysis": "Basic analysis using local model (budget constraints)",
             "confidence": "medium",
             "cost": "$0.00",
@@ -357,7 +357,7 @@ class ReasoningAgent(AutonomousAgent):
             success=True,
             output=output,
             cost_cents=0.0,
-            model_used="qwen-2.5-32b"
+            model_used="qwen2.5-coder:7b"
         )
 
     async def _run_reasoning_workflow(
