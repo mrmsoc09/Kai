@@ -200,7 +200,7 @@ tools:
     category: crawling_url_discovery
     execution_mode: native
     binary_path: hakrawler
-    install_verification_cmd: ["hakrawler", "-h"]
+    install_verification_cmd: ["hakrawler", "--help"]
     input_schema: {"target": "url"}
     output_schema: {"urls": "list[str]"}
     timeout_seconds: 180
@@ -504,7 +504,7 @@ tools:
     category: validation_support
     execution_mode: native
     binary_path: searchsploit
-    install_verification_cmd: ["searchsploit", "-h"]
+    install_verification_cmd: ["python3", "-c", "import shutil,sys; sys.exit(0 if shutil.which('searchsploit') else 1)"]
     input_schema: {"target": "query"}
     output_schema: {"results": "list[str]"}
     timeout_seconds: 120

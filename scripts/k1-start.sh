@@ -249,6 +249,36 @@ validate_whonix_kvm_proxy() {
     fi
 }
 
+ensure_whonix_kvm_proxy() {
+    local enforce
+    enforce="$(read_env_value K1_ENFORCE_WHONIX_KVM false)"
+    if ! env_truthy "${enforce}"; then
+        return 0
+    fi
+
+    if validate_whonix_kvm_proxy; then
+        return 0
+    fi
+
+    if [[ -x "${REPO_ROOT}/scripts/setup_whonix_kvm.sh" ]]; then
+        warn "Whonix proxy check failed; attempting auto-setup via scripts/setup_whonix_kvm.sh"
+        if ! "${REPO_ROOT}/scripts/setup_whonix_kvm.sh"; then
+            error "Automatic Whonix setup failed."
+            return 1
+        fi
+        # Reload .env because setup_whonix_kvm.sh may update URI/VM/proxy vars.
+        set -a
+        # shellcheck disable=SC1091
+        source .env
+        set +a
+        validate_whonix_kvm_proxy
+        return $?
+    fi
+
+    error "Whonix enforcement failed and setup helper script is unavailable."
+    return 1
+}
+
 if [[ ! -f "${BOOTSTRAP_MARKER}" ]]; then
     error "Bootstrap marker not found (${BOOTSTRAP_MARKER})."
     error "Run ./bootstrap.sh before starting Kai."
@@ -279,7 +309,7 @@ source .env
 set +a
 mkdir -p runtime/logs runtime/pids
 
-validate_whonix_kvm_proxy || exit 1
+ensure_whonix_kvm_proxy || exit 1
 
 BACKEND_HOST="$(read_env_value BACKEND_HOST 0.0.0.0)"
 BACKEND_PORT="$(read_env_value BACKEND_PORT 8080)"

@@ -94,14 +94,38 @@ run_virsh() {
 
 validate_archive() {
     local archive="$1"
+    local stamp="${archive}.k1-validated"
+    local size mtime signature skip_xz skip_validate
     [[ -f "${archive}" ]] || return 1
     [[ -s "${archive}" ]] || return 1
 
-    if command -v xz >/dev/null 2>&1; then
-        xz -t "${archive}" >/dev/null 2>&1 || return 1
+    skip_validate="$(echo "${K1_WHONIX_SKIP_ARCHIVE_VALIDATION:-false}" | tr '[:upper:]' '[:lower:]')"
+    if [[ "${skip_validate}" == "1" || "${skip_validate}" == "true" || "${skip_validate}" == "yes" || "${skip_validate}" == "on" ]]; then
+        return 0
+    fi
+
+    size="$(stat -c%s "${archive}" 2>/dev/null || echo "")"
+    mtime="$(stat -c%Y "${archive}" 2>/dev/null || echo "")"
+    signature="${size}:${mtime}"
+
+    if [[ -n "${size}" && -n "${mtime}" && -f "${stamp}" ]]; then
+        if [[ "$(cat "${stamp}" 2>/dev/null || true)" == "${signature}" ]]; then
+            tar -tf "${archive}" >/dev/null 2>&1 || return 1
+            return 0
+        fi
+    fi
+
+    skip_xz="$(echo "${K1_WHONIX_SKIP_XZ_TEST:-false}" | tr '[:upper:]' '[:lower:]')"
+    if [[ "${skip_xz}" != "1" && "${skip_xz}" != "true" && "${skip_xz}" != "yes" && "${skip_xz}" != "on" ]]; then
+        if command -v xz >/dev/null 2>&1; then
+            xz -t "${archive}" >/dev/null 2>&1 || return 1
+        fi
     fi
 
     tar -tf "${archive}" >/dev/null 2>&1 || return 1
+    if [[ -n "${size}" && -n "${mtime}" ]]; then
+        printf "%s\n" "${signature}" > "${stamp}"
+    fi
     return 0
 }
 
@@ -224,11 +248,27 @@ download_archive() {
 
 find_local_archive() {
     local dir="$1"
+    local pattern
     if [[ ! -d "${dir}" ]]; then
         return 1
     fi
-    find "${dir}" -maxdepth 1 -type f -name 'Whonix-*.qcow2.libvirt.xz' \
-        | sort -V | tail -n 1
+    for pattern in \
+        'Whonix-CLI-*.qcow2.libvirt.xz' \
+        'Whonix-LXQt-*.qcow2.libvirt.xz' \
+        'Whonix-Xfce-*.qcow2.libvirt.xz' \
+        'Whonix-*.qcow2.libvirt.xz'; do
+        local candidate
+        candidate="$(find "${dir}" -maxdepth 1 -type f -name "${pattern}" | sort -V | tail -n 1)"
+        [[ -z "${candidate}" ]] && continue
+
+        if validate_archive "${candidate}"; then
+            printf "%s\n" "${candidate}"
+            return 0
+        fi
+
+        warn "Skipping invalid local archive: ${candidate}" >&2
+    done
+    return 1
 }
 
 extract_file() {
@@ -335,7 +375,21 @@ for net_xml in "${ext_net_xml}" "${int_net_xml}"; do
     run_virsh net-autostart "${net_name}" >/dev/null || true
     if ! run_virsh net-info "${net_name}" | grep -qi 'Active:.*yes'; then
         info "Starting network ${net_name}"
-        run_virsh net-start "${net_name}" >/dev/null || true
+        if ! run_virsh net-start "${net_name}" >/dev/null; then
+            if [[ "${URI}" == "qemu:///session" ]]; then
+                error "Unable to start ${net_name} on qemu:///session (bridge creation is not permitted)."
+                error "Whonix KVM requires qemu:///system with libvirt network privileges."
+                error "Run this once in a terminal with sudo access:"
+                error "  K1_WHONIX_LIBVIRT_URI=qemu:///system ./scripts/setup_whonix_kvm.sh --archive ${ARCHIVE_PATH}"
+            else
+                error "Failed to start libvirt network ${net_name}."
+            fi
+            exit 1
+        fi
+    fi
+    if ! run_virsh net-info "${net_name}" | grep -qi 'Active:.*yes'; then
+        error "Network ${net_name} is not active after setup."
+        exit 1
     fi
 done
 

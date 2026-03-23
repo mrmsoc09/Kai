@@ -222,14 +222,84 @@ install_go_tool() {
     GO111MODULE=on go install "${module}"
 }
 
+install_local_download_tool() {
+    local tool="$1"
+    local downloads_dir="${K1_DOWNLOADS_DIR:-${HOME}/Downloads}"
+    local gobin="${HOME}/.local/bin"
+
+    mkdir -p "${gobin}"
+
+    case "${tool}" in
+        amass)
+            if [[ -d "${downloads_dir}/amass" ]] && ensure_go; then
+                (cd "${downloads_dir}/amass" && CGO_ENABLED=0 go build -o "${gobin}/amass" ./cmd/amass)
+                return $?
+            fi
+            ;;
+        hakrawler)
+            if [[ -d "${downloads_dir}/hakrawler" ]] && ensure_go; then
+                (cd "${downloads_dir}/hakrawler" && go build -o "${gobin}/hakrawler" .)
+                return $?
+            fi
+            ;;
+        gitleaks)
+            if [[ -d "${downloads_dir}/gitleaks" ]] && ensure_go; then
+                (cd "${downloads_dir}/gitleaks" && go build -o "${gobin}/gitleaks" .)
+                return $?
+            fi
+            ;;
+        findomain)
+            if [[ -d "${downloads_dir}/Findomain" ]]; then
+                if ! has_cmd cargo; then
+                    apt_install_packages cargo >/dev/null 2>&1 || return 1
+                fi
+                (cd "${downloads_dir}/Findomain" && cargo build --release)
+                cp -f "${downloads_dir}/Findomain/target/release/findomain" "${gobin}/findomain"
+                return $?
+            fi
+            ;;
+        searchsploit)
+            if [[ -x "${downloads_dir}/exploitdb/searchsploit" ]]; then
+                cat > "${gobin}/searchsploit" <<EOF
+#!/usr/bin/env bash
+exec "${downloads_dir}/exploitdb/searchsploit" "\$@"
+EOF
+                chmod +x "${gobin}/searchsploit"
+                return 0
+            fi
+            ;;
+        theharvester)
+            if [[ -d "${downloads_dir}/theHarvester/theHarvester" ]]; then
+                cat > "${gobin}/theHarvester" <<EOF
+#!/usr/bin/env bash
+export PYTHONPATH="${downloads_dir}/theHarvester:\${PYTHONPATH:-}"
+exec python3 -m theHarvester.theHarvester "\$@"
+EOF
+                chmod +x "${gobin}/theHarvester"
+                return 0
+            fi
+            ;;
+    esac
+
+    return 1
+}
+
 install_native_tool() {
     local tool="$1"
     case "${tool}" in
-        amass) apt_install_packages amass ;;
+        amass)
+            install_local_download_tool amass || apt_install_packages amass
+            ;;
         nmap) apt_install_packages nmap ;;
-        theharvester) apt_install_packages theharvester ;;
-        searchsploit) apt_install_packages exploitdb ;;
-        findomain) apt_install_packages findomain ;;
+        theharvester)
+            install_local_download_tool theharvester || apt_install_packages theharvester
+            ;;
+        searchsploit)
+            install_local_download_tool searchsploit || apt_install_packages exploitdb
+            ;;
+        findomain)
+            install_local_download_tool findomain || apt_install_packages findomain
+            ;;
         assetfinder) install_go_tool github.com/tomnomnom/assetfinder@latest ;;
         subfinder) install_go_tool github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest ;;
         dnsx) install_go_tool github.com/projectdiscovery/dnsx/cmd/dnsx@latest ;;
@@ -239,8 +309,12 @@ install_native_tool() {
         httprobe) install_go_tool github.com/tomnomnom/httprobe@latest ;;
         naabu) install_go_tool github.com/projectdiscovery/naabu/v2/cmd/naabu@latest ;;
         tlsx) install_go_tool github.com/projectdiscovery/tlsx/cmd/tlsx@latest ;;
-        hakrawler) install_go_tool github.com/hakluke/hakrawler@latest ;;
-        gitleaks) install_go_tool github.com/gitleaks/gitleaks/v8@latest ;;
+        hakrawler)
+            install_local_download_tool hakrawler || install_go_tool github.com/hakluke/hakrawler@latest
+            ;;
+        gitleaks)
+            install_local_download_tool gitleaks || install_go_tool github.com/zricethezav/gitleaks/v8@latest
+            ;;
         *)
             return 1
             ;;
@@ -437,16 +511,44 @@ ENV_OK=true
 section "Infrastructure + migrations"
 COMPOSE_BIN="$(compose_cmd || true)"
 if [[ -n "${COMPOSE_BIN}" ]]; then
-    ${COMPOSE_BIN} -f docker-compose.yml up -d postgres redis
+    SECRET_BACKEND="$(read_env_value K1_SECRET_BACKEND env .env | tr '[:upper:]' '[:lower:]')"
+    PROVIDER_CHAIN="$(printf "%s,%s" "$(read_env_value K1_PRIMARY_LLM_PROVIDER anthropic .env)" "$(read_env_value K1_FALLBACK_LLM_PROVIDERS openai,gemini,ollama .env)" | tr '[:upper:]' '[:lower:]')"
+    INFRA_SERVICES=(postgres redis)
+
+    if [[ "${SECRET_BACKEND}" == "vault" ]]; then
+        INFRA_SERVICES+=(vault)
+    fi
+    if [[ "${PROVIDER_CHAIN}" == *"ollama"* ]]; then
+        INFRA_SERVICES+=(ollama)
+    fi
+
+    ${COMPOSE_BIN} -f docker-compose.yml up -d "${INFRA_SERVICES[@]}"
     if wait_for_port 127.0.0.1 5432 60 && wait_for_port 127.0.0.1 6379 45; then
+        if [[ " ${INFRA_SERVICES[*]} " == *" vault "* ]]; then
+            VAULT_HOST_BIND="$(read_env_value K1_VAULT_HOST_BIND 127.0.0.1 .env)"
+            if [[ "${VAULT_HOST_BIND}" == "0.0.0.0" || "${VAULT_HOST_BIND}" == "::" ]]; then
+                VAULT_WAIT_HOST="127.0.0.1"
+            else
+                VAULT_WAIT_HOST="${VAULT_HOST_BIND}"
+            fi
+            VAULT_HOST_PORT="$(read_env_value K1_VAULT_HOST_PORT 8200 .env)"
+            if ! wait_for_port "${VAULT_WAIT_HOST}" "${VAULT_HOST_PORT}" 45; then
+                warn "Vault was requested but did not become reachable at ${VAULT_WAIT_HOST}:${VAULT_HOST_PORT}."
+            fi
+        fi
+        if [[ " ${INFRA_SERVICES[*]} " == *" ollama "* ]]; then
+            if ! wait_for_port 127.0.0.1 11434 90; then
+                warn "Ollama was requested but did not become reachable on 127.0.0.1:11434."
+            fi
+        fi
         DOCKER_INFRA_OK=true
-        info "PostgreSQL and Redis are reachable."
+        info "Docker infra reachable: ${INFRA_SERVICES[*]}"
     else
         warn "Docker infra started but ports did not become reachable in time."
     fi
 else
-    MANUAL_PREREQS+=("Docker Engine + compose plugin (or manually running PostgreSQL/Redis)")
-    warn "No docker compose command available; assuming PostgreSQL/Redis are managed externally."
+    MANUAL_PREREQS+=("Docker Engine + compose plugin (or manually running PostgreSQL/Redis/Vault/Ollama as needed)")
+    warn "No docker compose command available; assuming required services are managed externally."
 fi
 
 if alembic upgrade heads; then
@@ -509,9 +611,9 @@ readiness_line "Migrations applied" "${MIGRATIONS_OK}"
 readiness_line "External tools verified" "${TOOLS_OK}"
 
 if [[ "${DOCKER_INFRA_OK}" == "true" ]]; then
-    readiness_line "Docker infra healthy (postgres, redis)" "true"
+    readiness_line "Docker infra healthy (postgres, redis, conditional vault/ollama)" "true"
 else
-    readiness_line "Docker infra healthy (postgres, redis)" "false"
+    readiness_line "Docker infra healthy (postgres, redis, conditional vault/ollama)" "false"
 fi
 
 if [[ ${#TOOL_ERRORS[@]} -gt 0 ]]; then
