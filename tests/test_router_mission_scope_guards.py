@@ -27,6 +27,7 @@ def test_artifact_mission_guard_blocks_cross_tenant_access(monkeypatch):
         full_name="User One",
         is_active=True,
         is_superuser=False,
+        must_change_password=False,
         role="operator",
     )
     other_tenant = uuid4()
@@ -47,6 +48,7 @@ def test_event_mission_guard_blocks_cross_tenant_access(monkeypatch):
         full_name="User Two",
         is_active=True,
         is_superuser=False,
+        must_change_password=False,
         role="operator",
     )
     other_tenant = uuid4()
@@ -67,6 +69,7 @@ def test_mission_guard_allows_when_runtime_has_no_mapping(monkeypatch):
         full_name="User Three",
         is_active=True,
         is_superuser=False,
+        must_change_password=False,
         role="operator",
     )
     monkeypatch.setattr(events_router, "get_mission_runtime", lambda: _RuntimeStub(None))

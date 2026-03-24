@@ -5,8 +5,10 @@ This guide covers how operators use the current Kai UI against real backend serv
 ## 1) Login and access model
 
 1. Open the UI login page.
-2. Sign in with username/password (backend `POST /auth/token`).
-3. UI loads current identity (`GET /auth/users/me`) and applies role-aware controls.
+2. On first local bring-up, sign in as `k1-admin` with a blank password.
+3. You will be forced to set an initial password (persisted to PostgreSQL).
+4. Subsequent logins use username/password via backend `POST /auth/token`.
+5. UI loads current identity (`GET /auth/users/me`) and applies role-aware controls.
 
 Role behavior in UI:
 
@@ -126,6 +128,8 @@ Opportunities page is connected to:
 - `GET /opportunities`
 - `GET /opportunities/{id}`
 - `GET /opportunities/actions/capabilities`
+- `GET /opportunities/scan-queue/settings`
+- `PUT /opportunities/scan-queue/settings`
 - `POST /opportunities/{id}/expand`
 - `POST /opportunities/{id}/approve`
 - `POST /opportunities/{id}/reject`
@@ -153,6 +157,7 @@ Execution behavior:
 - Mission progress is reflected back into `execution_metadata` (`missions_launched`, `missions_completed`, `missions_failed`, findings/yield proxy).
 - Linked mission/report counts are surfaced directly in the workbench for quick path compression.
 - Chain context and decision summary are surfaced in the detail panel when expansion source metadata is available.
+- Scan queue min/max concurrency limits are persisted server-side per authenticated user + tenant (team context), not only browser-local state.
 
 Auditability:
 

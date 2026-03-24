@@ -3,8 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -13,7 +12,8 @@ from apps.backend.src.auth.models import User, Tenant, APIToken, UserRole
 from apps.backend.src.auth.schemas import (
     UserRead, UserCreate, Token, TokenData,
     TenantRead, TenantCreate,
-    APITokenCreate, APITokenRead, APITokenResponse
+    APITokenCreate, APITokenRead, APITokenResponse,
+    InitialPasswordSetupRequest,
 )
 from apps.backend.src.auth.utils import (
     verify_password, hash_password, create_access_token,
@@ -96,6 +96,7 @@ async def read_users_me(current_user: Annotated[CurrentUser, Depends(get_current
         full_name=current_user.full_name,
         is_active=current_user.is_active,
         is_superuser=current_user.is_superuser,
+        must_change_password=current_user.must_change_password,
         role=current_user.role,
         tenant_id=current_user.tenant_id,
         created_at=current_user.created_at,
@@ -107,7 +108,7 @@ async def read_users_me(current_user: Annotated[CurrentUser, Depends(get_current
 
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    request: Request,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -126,10 +127,21 @@ async def login_for_access_token(
     
     # For current setup, let's allow "admin" for any tenant or "k1-admin" from initial setup
     # A more robust system would involve tenant selection at login.
-    result = await db.execute(select(User).where(User.username == form_data.username))
+    form = await request.form()
+    username = str(form.get("username") or "").strip()
+    password = form.get("password")
+    password_text = "" if password is None else str(password)
+
+    if not username:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="username_required",
+        )
+
+    result = await db.execute(select(User).where(User.username == username))
     user = result.scalar_one_or_none()
 
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not verify_password(password_text, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -154,8 +166,44 @@ async def login_for_access_token(
         expires_at=datetime.now(timezone.utc) + access_token_expires,
         user_id=user.id,
         tenant_id=user.tenant_id,
-        role=user.role
+        role=user.role,
+        password_setup_required=user.must_change_password,
     )
+
+
+@router.post("/users/set-initial-password")
+async def set_initial_password(
+    payload: InitialPasswordSetupRequest,
+    current_user: CurrentUser = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Set the first password for users flagged with must_change_password=true.
+    This is intended for first-login bootstrap accounts such as k1-admin.
+    """
+    if not current_user.must_change_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="initial_password_setup_not_required")
+
+    new_password = payload.new_password.strip()
+    if len(new_password) < 8:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="password_too_short")
+
+    result = await db.execute(select(User).where(
+        User.id == current_user.id,
+        User.tenant_id == current_user.tenant_id,
+    ))
+    user = result.scalar_one_or_none()
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="user_not_found")
+
+    if verify_password(new_password, user.hashed_password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="new_password_must_differ")
+
+    user.hashed_password = hash_password(new_password)
+    user.must_change_password = False
+    await db.commit()
+
+    return {"ok": True}
 
 # -- API Token Management -----------------------------------------------------
 

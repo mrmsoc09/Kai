@@ -4,11 +4,14 @@ from __future__ import annotations
 
 from fnmatch import fnmatchcase
 import re
+from uuid import UUID
 from typing import Any, List, Optional
 from urllib.parse import urlparse
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from apps.backend.src.core.opportunity_catalog import (
     CredentialRequirement,
@@ -27,6 +30,8 @@ from apps.backend.src.core.auth import (
     get_current_user,
     require_roles,
 )
+from apps.backend.src.core.hil_db import get_db
+from apps.backend.src.auth.models import UserScanQueueSettings
 from apps.backend.src.core.opportunity_actions import get_opportunity_action_service
 from apps.backend.src.core.opportunity_engine import get_opportunity_engine
 from apps.backend.src.core.opportunity_expansion import ExpansionCandidate, OpportunityExpansionResult, TargetBatch
@@ -37,6 +42,11 @@ router = APIRouter(
     tags=["opportunities"],
     dependencies=[Depends(get_current_user)],  # any authenticated user
 )
+
+SCAN_QUEUE_MIN_CONCURRENCY = 1
+SCAN_QUEUE_MAX_CONCURRENCY = 20
+SCAN_QUEUE_DEFAULT_MIN = 1
+SCAN_QUEUE_DEFAULT_MAX = 3
 
 
 # ---------------------------------------------------------------------------
@@ -130,12 +140,39 @@ class OpportunityExpandRequest(BaseModel):
     candidate_targets: list[str] | None = None
 
 
+class ScanQueueSettingsResponse(BaseModel):
+    min_concurrent: int
+    max_concurrent: int
+
+
+class ScanQueueSettingsUpdateRequest(BaseModel):
+    min_concurrent: int = Field(..., ge=SCAN_QUEUE_MIN_CONCURRENCY, le=SCAN_QUEUE_MAX_CONCURRENCY)
+    max_concurrent: int = Field(..., ge=SCAN_QUEUE_MIN_CONCURRENCY, le=SCAN_QUEUE_MAX_CONCURRENCY)
+
+
 def _tenant_context(user: User, *, require_tenant: bool = False) -> str:
     if user.tenant_id:
         return user.tenant_id
     if require_tenant:
         raise HTTPException(status_code=400, detail="tenant_context_required")
     return "__global__"
+
+
+def _scan_queue_owner_ids(user: User) -> tuple[UUID, UUID]:
+    if not user.tenant_id:
+        raise HTTPException(status_code=400, detail="tenant_context_required")
+    try:
+        return UUID(str(user.id)), UUID(str(user.tenant_id))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="invalid_auth_identity") from exc
+
+
+def _validated_scan_queue_bounds(payload: ScanQueueSettingsUpdateRequest) -> tuple[int, int]:
+    min_concurrent = int(payload.min_concurrent)
+    max_concurrent = int(payload.max_concurrent)
+    if min_concurrent > max_concurrent:
+        raise HTTPException(status_code=400, detail="scan_queue_min_exceeds_max")
+    return min_concurrent, max_concurrent
 
 
 def _normalize_target(value: str) -> str:
@@ -347,6 +384,66 @@ async def opportunity_action_capabilities(current_user: User = Depends(get_curre
         execute=True,
         reason="enabled",
         requires_role="analyst",
+    )
+
+
+@router.get("/scan-queue/settings", response_model=ScanQueueSettingsResponse)
+async def get_scan_queue_settings(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user_id, tenant_id = _scan_queue_owner_ids(current_user)
+    result = await db.execute(
+        select(UserScanQueueSettings).where(
+            UserScanQueueSettings.user_id == user_id,
+            UserScanQueueSettings.tenant_id == tenant_id,
+        )
+    )
+    settings = result.scalar_one_or_none()
+    if settings is None:
+        return ScanQueueSettingsResponse(
+            min_concurrent=SCAN_QUEUE_DEFAULT_MIN,
+            max_concurrent=SCAN_QUEUE_DEFAULT_MAX,
+        )
+    return ScanQueueSettingsResponse(
+        min_concurrent=int(settings.min_concurrent),
+        max_concurrent=int(settings.max_concurrent),
+    )
+
+
+@router.put("/scan-queue/settings", response_model=ScanQueueSettingsResponse)
+async def update_scan_queue_settings(
+    payload: ScanQueueSettingsUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    user_id, tenant_id = _scan_queue_owner_ids(current_user)
+    min_concurrent, max_concurrent = _validated_scan_queue_bounds(payload)
+
+    result = await db.execute(
+        select(UserScanQueueSettings).where(
+            UserScanQueueSettings.user_id == user_id,
+            UserScanQueueSettings.tenant_id == tenant_id,
+        )
+    )
+    settings = result.scalar_one_or_none()
+    if settings is None:
+        settings = UserScanQueueSettings(
+            user_id=user_id,
+            tenant_id=tenant_id,
+            min_concurrent=min_concurrent,
+            max_concurrent=max_concurrent,
+        )
+        db.add(settings)
+    else:
+        settings.min_concurrent = min_concurrent
+        settings.max_concurrent = max_concurrent
+
+    await db.commit()
+    await db.refresh(settings)
+    return ScanQueueSettingsResponse(
+        min_concurrent=int(settings.min_concurrent),
+        max_concurrent=int(settings.max_concurrent),
     )
 
 @router.get("", response_model=dict)

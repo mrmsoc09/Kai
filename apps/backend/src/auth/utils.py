@@ -20,7 +20,9 @@ API_TOKEN_HASH_ALGORITHM = os.getenv("API_TOKEN_HASH_ALGORITHM", "sha256")
 _INSECURE_DEFAULT_SECRET = "super-secret-jwt-key"
 _ALLOWED_JWT_ALGORITHMS = {"HS256", "HS384", "HS512"}
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Prefer PBKDF2 for portability across local environments where bcrypt backends
+# may be missing or incompatible; keep bcrypt support for legacy hash verify.
+pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
 
 def _is_non_production() -> bool:

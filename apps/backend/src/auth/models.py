@@ -7,10 +7,12 @@ from sqlalchemy import (
     Column,
     String,
     Boolean,
+    Integer,
     Enum as SAEnum,
     ForeignKey,
     DateTime,
     func,
+    CheckConstraint,
     UniqueConstraint,
     JSON,
 )
@@ -51,8 +53,15 @@ class User(Base, TimestampMixin):
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
     is_superuser = Column(Boolean, default=False, nullable=False)
+    must_change_password = Column(Boolean, default=False, nullable=False)
     role = Column(
-        SAEnum(UserRole, name="user_role_enum", native_enum=True, create_constraint=True),
+        SAEnum(
+            UserRole,
+            name="user_role_enum",
+            native_enum=True,
+            create_constraint=True,
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
         nullable=False,
         default=UserRole.VIEWER
     )
@@ -73,3 +82,23 @@ class APIToken(Base, TimestampMixin):
 
     user = relationship("User", back_populates="api_tokens")
     tenant = relationship("Tenant") # One-way relationship for tenant_id filtering
+
+
+class UserScanQueueSettings(Base, TimestampMixin):
+    __tablename__ = "user_scan_queue_settings"
+    __table_args__ = (
+        UniqueConstraint("user_id", "tenant_id", name="uq_user_scan_queue_settings_user_tenant"),
+        CheckConstraint("min_concurrent >= 1", name="ck_user_scan_queue_settings_min_ge_1"),
+        CheckConstraint("max_concurrent <= 20", name="ck_user_scan_queue_settings_max_le_20"),
+        CheckConstraint("max_concurrent >= 1", name="ck_user_scan_queue_settings_max_ge_1"),
+        CheckConstraint("min_concurrent <= max_concurrent", name="ck_user_scan_queue_settings_min_le_max"),
+    )
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id"), nullable=False, index=True)
+    min_concurrent = Column(Integer, nullable=False, server_default="1")
+    max_concurrent = Column(Integer, nullable=False, server_default="3")
+
+    user = relationship("User")
+    tenant = relationship("Tenant")

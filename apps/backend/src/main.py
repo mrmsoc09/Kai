@@ -21,6 +21,7 @@ from apps.backend.src.core.tools import get_registry, initialize_default_tools
 from apps.backend.src.core.toolpacks import validate_toolpacks_or_raise
 from apps.backend.src.core.secret_manager import get_secret_manager
 from apps.backend.src.core.auth import assert_bootstrap_auth_safe, AuthConfigError
+from apps.backend.src.auth.bootstrap import ensure_bootstrap_admin_user
 
 # Import routers exactly once
 from apps.backend.src.routers import (
@@ -184,6 +185,7 @@ async def lifespan(app: FastAPI):
         raise RuntimeError(str(exc)) from exc
     if not test_mode:
         await services.startup()
+        await ensure_bootstrap_admin_user()
         if _env_bool("K1_STARTUP_VALIDATE_DEPENDENCIES", True):
             await _validate_startup_dependencies()
         if _env_bool("K1_STARTUP_VALIDATE_TOOLPACKS", True):

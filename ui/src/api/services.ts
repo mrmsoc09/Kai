@@ -26,6 +26,7 @@ import type {
   OpportunityExecuteInput,
   OpportunityListResponse,
   OpportunityRankedResponse,
+  ScanQueueSettings,
   RealtimeMissionEvent,
   RealtimeRecentMissionEventsResponse,
   Report,
@@ -158,9 +159,33 @@ export const authService = {
       isActive: payload.is_active,
       isSuperuser: payload.is_superuser,
     })),
+  setInitialPassword: (bootstrapToken: string, newPassword: string): Promise<{ ok: boolean }> =>
+    request<{ ok: boolean }>({
+      method: 'POST',
+      url: '/auth/users/set-initial-password',
+      data: {
+        new_password: newPassword,
+      },
+      headers: {
+        Authorization: `Bearer ${bootstrapToken}`,
+      },
+    }),
 };
 
 export const missionService = {
+  create: (payload: {
+    workflow_id: string;
+    program_id: string;
+    mission_name?: string;
+    execution_mode?: string;
+    run_config?: Record<string, unknown>;
+    graph_spec?: Record<string, unknown>;
+  }): Promise<{ mission_id: string; workflow_id: string; program_id: string; state: string; execution_mode: string; phase: string; active_node: string; progress: number; error?: string | null }> =>
+    request<{ mission_id: string; workflow_id: string; program_id: string; state: string; execution_mode: string; phase: string; active_node: string; progress: number; error?: string | null }>({
+      method: 'POST',
+      url: '/missions/',
+      data: payload,
+    }),
   list: (): Promise<Mission[]> =>
     request<MissionResponse[]>({
       method: 'GET',
@@ -391,6 +416,48 @@ export const opportunityService = {
       url: `/opportunities/${opportunityId}/expand`,
       data: payload ?? {},
     }),
+  getScanQueueSettings: (): Promise<ScanQueueSettings> =>
+    request<{ min_concurrent: number; max_concurrent: number }>({
+      method: 'GET',
+      url: '/opportunities/scan-queue/settings',
+    }).then((payload) => ({
+      minConcurrent: payload.min_concurrent,
+      maxConcurrent: payload.max_concurrent,
+    })),
+  setScanQueueSettings: (payload: ScanQueueSettings): Promise<ScanQueueSettings> =>
+    request<{ min_concurrent: number; max_concurrent: number }>({
+      method: 'PUT',
+      url: '/opportunities/scan-queue/settings',
+      data: {
+        min_concurrent: payload.minConcurrent,
+        max_concurrent: payload.maxConcurrent,
+      },
+    }).then((response) => ({
+      minConcurrent: response.min_concurrent,
+      maxConcurrent: response.max_concurrent,
+    })),
+};
+
+export const workflowService = {
+  create: (payload: { opportunity_id: string; notes?: string }): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: '/workflows',
+      data: payload,
+    }),
+  list: (params?: {
+    status?: string;
+    platform?: string;
+    opportunity_id?: string;
+    created_by?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/workflows',
+      params,
+    }),
 };
 
 export const reportService = {
@@ -445,6 +512,105 @@ export const systemService = {
     request<SystemStatus>({
       method: 'GET',
       url: '/system/status',
+    }),
+};
+
+export const vaultService = {
+  importKeyFile: async (file: File): Promise<Record<string, unknown>> => {
+    const form = new FormData();
+    form.append('file', file);
+    const response = await apiClient.request<Record<string, unknown>>({
+      method: 'POST',
+      url: '/keys/import',
+      data: form,
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response.data;
+  },
+  getProviderCatalog: (market?: string): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/hil-api/providers/catalog',
+      params: market ? { market } : undefined,
+    }),
+  storeProviderKey: (
+    providerId: string,
+    payload: {
+      api_key?: string;
+      token?: string;
+      client_id?: string;
+      client_secret?: string;
+      notes?: string;
+      rate_limit?: string;
+      tos_version?: string;
+    },
+  ): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: `/hil-api/providers/${encodeURIComponent(providerId)}/key`,
+      data: payload,
+    }),
+};
+
+export const agentZeroService = {
+  getHealth: (): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/v1/agent-zero/health',
+    }),
+  getAgents: (): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/v1/agent-zero/agents',
+    }),
+  getWorkflows: (limit = 30): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/v1/agent-zero/workflows',
+      params: { limit },
+    }),
+  createHuntWorkflow: (target: string): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: '/v1/agent-zero/workflows/hunt',
+      params: { target },
+      data: {},
+    }),
+  getLlmUsage: (): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/v1/agent-zero/llm/usage',
+    }),
+  getPluginInfo: (): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/v1/agent-zero/plugin/info',
+    }),
+  sendChatMessage: (payload: { content: string; session_id?: string; context?: Record<string, unknown> }): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: '/v1/agent-zero/chat/message',
+      data: payload,
+    }),
+  getChatHistory: (sessionId: string, limit = 80): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/v1/agent-zero/chat/history',
+      params: { session_id: sessionId, limit },
+    }),
+  respondToApproval: (payload: { approval_id: string; decision: 'approved' | 'rejected'; reason?: string }): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: '/v1/agent-zero/chat/approval',
+      data: payload,
+    }),
+  getRelayLogs: (limit = 50): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/agent0/logs',
+      params: { limit },
     }),
 };
 

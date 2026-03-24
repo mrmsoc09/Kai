@@ -1,9 +1,12 @@
 import {
   ActivitySquare,
+  Bot,
   Blocks,
   Compass,
   FileText,
   Gauge,
+  GitBranchPlus,
+  KeyRound,
   ListChecks,
   Network,
   ShieldCheck,
@@ -25,6 +28,9 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: (props) => <Gauge {...props} /> },
+  { label: 'Agent-Zero', path: '/agent-zero', icon: (props) => <Bot {...props} /> },
+  { label: 'Vault Keys', path: '/vault-keys', icon: (props) => <KeyRound {...props} /> },
+  { label: 'LangGraph', path: '/langgraph-builder', icon: (props) => <GitBranchPlus {...props} /> },
   { label: 'Mission Control', path: '/mission-control', icon: (props) => <Compass {...props} /> },
   { label: 'Intelligence Center', path: '/intelligence-center', icon: (props) => <Network {...props} /> },
   { label: 'Opportunities', path: '/opportunities', icon: (props) => <Waypoints {...props} /> },

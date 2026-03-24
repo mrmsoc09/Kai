@@ -213,6 +213,8 @@ CSRF_EXEMPT_ENDPOINTS = [
     "/redoc",
     "/openapi.json",
     "/auth/login",
+    "/auth/token",
+    "/auth/users/set-initial-password",
     "/auth/logout",
     "/auth/refresh",
 ]

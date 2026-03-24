@@ -1,8 +1,16 @@
+import sys
+
 from .base import Base
 
 # Auth models — imported first so Tenant/User are registered in the SQLAlchemy
 # class registry before campaign.py resolves relationship("Tenant") strings.
-from apps.backend.src.auth.models import APIToken, Tenant, User, UserRole
+_auth_module = sys.modules.get("apps.backend.src.auth.models")
+if _auth_module is not None and not all(
+    hasattr(_auth_module, name) for name in ("APIToken", "Tenant", "User", "UserRole", "UserScanQueueSettings")
+):
+    APIToken = Tenant = User = UserRole = UserScanQueueSettings = None  # type: ignore[assignment]
+else:
+    from apps.backend.src.auth.models import APIToken, Tenant, User, UserRole, UserScanQueueSettings
 
 from .bug_bounty import (
     AdaptiveScheduleActionRecord,
@@ -134,6 +142,7 @@ __all__ = [
     "SubmissionDraft",
     "AuditEvent",
     "IntentionRecord",
+    "UserScanQueueSettings",
     "WorkflowRun",
     "StageRun",
     "WorkflowFinding",

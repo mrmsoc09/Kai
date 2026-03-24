@@ -80,6 +80,10 @@ read_env_value() {
     local key="$1"
     local default="$2"
     local value=""
+    if [[ -n "${!key:-}" ]]; then
+        echo "${!key}"
+        return 0
+    fi
     if [[ -f .env ]]; then
         value="$(grep -E "^${key}=" .env | tail -n 1 | cut -d= -f2- || true)"
         value="${value%\"}"
@@ -199,14 +203,33 @@ validate_whonix_kvm_proxy() {
     local running_vm=""
     local configured_uri
     configured_uri="$(read_env_value K1_WHONIX_LIBVIRT_URI "")"
-    for vm in "${vm_candidates[@]}"; do
-        vm="$(echo "${vm}" | xargs)"
-        [[ -z "${vm}" ]] && continue
-        state="$(run_virsh domstate "${vm}" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
-        if [[ "${state}" == *"running"* ]]; then
-            running_vm="${vm}"
-            break
-        fi
+    local active_uri=""
+    local uri
+    local -a uri_candidates
+    uri_candidates=()
+    if [[ -n "${configured_uri}" ]]; then
+        uri_candidates+=("${configured_uri}")
+    fi
+    if [[ "${configured_uri}" != "qemu:///system" ]]; then
+        uri_candidates+=("qemu:///system")
+    fi
+    if [[ "${configured_uri}" != "qemu:///session" ]]; then
+        uri_candidates+=("qemu:///session")
+    fi
+
+    for uri in "${uri_candidates[@]}"; do
+        virsh -c "${uri}" list --all >/dev/null 2>&1 || continue
+        for vm in "${vm_candidates[@]}"; do
+            vm="$(echo "${vm}" | xargs)"
+            [[ -z "${vm}" ]] && continue
+            state="$(virsh -c "${uri}" domstate "${vm}" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
+            if [[ "${state}" == *"running"* ]]; then
+                running_vm="${vm}"
+                active_uri="${uri}"
+                break
+            fi
+        done
+        [[ -n "${running_vm}" ]] && break
     done
 
     if [[ -z "${running_vm}" ]]; then
@@ -216,6 +239,11 @@ validate_whonix_kvm_proxy() {
             error "Using libvirt URI: ${configured_uri}"
         fi
         return 1
+    fi
+
+    if [[ -n "${active_uri}" && -n "${configured_uri}" && "${active_uri}" != "${configured_uri}" ]]; then
+        warn "Configured libvirt URI ${configured_uri} does not contain a running Whonix VM; using ${active_uri}."
+        configured_uri="${active_uri}"
     fi
 
     local proxy_url proxy_host proxy_port

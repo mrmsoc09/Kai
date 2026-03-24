@@ -1,4 +1,4 @@
-import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import axios, { AxiosError, type AxiosInstance, type AxiosRequestConfig, type AxiosRequestHeaders, type AxiosResponse } from 'axios';
 import { useAppStore } from '../store/appStore';
 import { appConfig } from '../utils/config';
 import { tokenStorage } from '../utils/storage';
@@ -15,9 +15,14 @@ const apiClient: AxiosInstance = axios.create({
 apiClient.interceptors.request.use((config) => {
   const storeToken = useAppStore.getState().auth.token;
   const token = storeToken ?? tokenStorage.getToken();
+  if (!config.headers) {
+    config.headers = {} as AxiosRequestHeaders;
+  }
+  const headers = config.headers as AxiosRequestHeaders & Record<string, unknown>;
+  const hasAuthHeader = typeof headers.Authorization === 'string' || typeof headers.authorization === 'string';
 
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (token && !hasAuthHeader) {
+    (headers as Record<string, string>).Authorization = `Bearer ${token}`;
   }
 
   return config;

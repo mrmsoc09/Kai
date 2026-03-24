@@ -287,10 +287,40 @@ network_name_from_xml() {
     awk -F'[<>]' '/<name>/{print $3; exit}' "${xml}"
 }
 
+is_network_active() {
+    local net_name="$1"
+    run_virsh net-list --name 2>/dev/null | grep -Fxq "${net_name}"
+}
+
+network_bridge_name() {
+    local net_name="$1"
+    run_virsh net-dumpxml "${net_name}" 2>/dev/null | awk -F"'" '/<bridge name=/{print $2; exit}'
+}
+
+bridge_has_ipv4() {
+    local bridge="$1"
+    ip -o -4 addr show dev "${bridge}" 2>/dev/null | grep -q 'inet '
+}
+
+ensure_internal_bridge_host_ip() {
+    local net_name="$1"
+    local bridge cidr
+    bridge="$(network_bridge_name "${net_name}")"
+    [[ -z "${bridge}" ]] && return 1
+    cidr="${K1_WHONIX_INTERNAL_HOST_CIDR:-10.152.152.11/18}"
+    if bridge_has_ipv4 "${bridge}"; then
+        return 0
+    fi
+    info "Assigning host IP ${cidr} to ${bridge} for Whonix proxy reachability"
+    ip addr add "${cidr}" dev "${bridge}" >/dev/null 2>&1 || true
+    bridge_has_ipv4 "${bridge}"
+}
+
 need_cmd virsh
 need_cmd curl
 need_cmd tar
 need_cmd python3
+need_cmd ip
 
 IMAGE_DIR="/var/lib/libvirt/images"
 if [[ "${URI}" == "qemu:///session" ]]; then
@@ -373,21 +403,29 @@ for net_xml in "${ext_net_xml}" "${int_net_xml}"; do
         info "Network ${net_name} already defined"
     fi
     run_virsh net-autostart "${net_name}" >/dev/null || true
-    if ! run_virsh net-info "${net_name}" | grep -qi 'Active:.*yes'; then
+    if ! is_network_active "${net_name}"; then
+        start_err=""
         info "Starting network ${net_name}"
-        if ! run_virsh net-start "${net_name}" >/dev/null; then
-            if [[ "${URI}" == "qemu:///session" ]]; then
-                error "Unable to start ${net_name} on qemu:///session (bridge creation is not permitted)."
-                error "Whonix KVM requires qemu:///system with libvirt network privileges."
-                error "Run this once in a terminal with sudo access:"
-                error "  K1_WHONIX_LIBVIRT_URI=qemu:///system ./scripts/setup_whonix_kvm.sh --archive ${ARCHIVE_PATH}"
+        if ! start_err="$(run_virsh net-start "${net_name}" 2>&1 >/dev/null)"; then
+            # Race-safe: treat a failed start as non-fatal when the network is
+            # already active by the time we re-check state.
+            if is_network_active "${net_name}"; then
+                info "Network ${net_name} became active."
             else
-                error "Failed to start libvirt network ${net_name}."
+                if [[ "${URI}" == "qemu:///session" ]]; then
+                    error "Unable to start ${net_name} on qemu:///session (bridge creation is not permitted)."
+                    error "Whonix KVM requires qemu:///system with libvirt network privileges."
+                    error "Run this once in a terminal with sudo access:"
+                    error "  K1_WHONIX_LIBVIRT_URI=qemu:///system ./scripts/setup_whonix_kvm.sh --archive ${ARCHIVE_PATH}"
+                else
+                    error "Failed to start libvirt network ${net_name}."
+                fi
+                [[ -n "${start_err}" ]] && error "${start_err}"
+                exit 1
             fi
-            exit 1
         fi
     fi
-    if ! run_virsh net-info "${net_name}" | grep -qi 'Active:.*yes'; then
+    if ! is_network_active "${net_name}"; then
         error "Network ${net_name} is not active after setup."
         exit 1
     fi
@@ -449,6 +487,13 @@ fi
 
 proxy_host="${K1_WHONIX_PROXY_HOST:-10.152.152.10}"
 proxy_port="${K1_WHONIX_PROXY_PORT:-9050}"
+
+if [[ "${URI}" == "qemu:///system" && "${proxy_host}" == "10.152.152.10" ]]; then
+    if ! ensure_internal_bridge_host_ip "Whonix-Internal"; then
+        warn "Unable to confirm host IPv4 on Whonix-Internal bridge; proxy check may fail."
+    fi
+fi
+
 info "Waiting for Whonix proxy at ${proxy_host}:${proxy_port} (timeout: ${PROXY_WAIT_SECONDS}s)..."
 elapsed=0
 while ! is_port_open "${proxy_host}" "${proxy_port}"; do

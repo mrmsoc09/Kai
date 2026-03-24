@@ -61,6 +61,7 @@ class CurrentUser:
         full_name: str | None,
         is_active: bool,
         is_superuser: bool,
+        must_change_password: bool,
         role: str,
         created_at: datetime | None = None,
         updated_at: datetime | None = None,
@@ -72,6 +73,7 @@ class CurrentUser:
         self.full_name = full_name
         self.is_active = is_active
         self.is_superuser = is_superuser
+        self.must_change_password = must_change_password
         self.role = role
         self.created_at = created_at
         self.updated_at = updated_at
@@ -87,6 +89,7 @@ def _user_to_current(user: User) -> CurrentUser:
         full_name=user.full_name,
         is_active=user.is_active,
         is_superuser=user.is_superuser,
+        must_change_password=user.must_change_password,
         role=role_val,
         created_at=getattr(user, "created_at", None),
         updated_at=getattr(user, "updated_at", None),
@@ -167,18 +170,39 @@ async def get_current_active_user(
     if api_key:
         user = await _resolve_from_api_key(api_key, db)
         if user:
+            _enforce_password_setup_gate(user, request)
             return user
 
     # 2. Try JWT Bearer
     if jwt_token:
         user = await _resolve_from_jwt(jwt_token, db)
         if user:
+            _enforce_password_setup_gate(user, request)
             return user
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Not authenticated. Provide a valid Bearer token or X-API-Key.",
         headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
+def _enforce_password_setup_gate(user: CurrentUser, request: Request) -> None:
+    """Restrict authenticated access until initial password setup is completed."""
+    if not user.must_change_password:
+        return
+
+    allowed_paths = {
+        "/auth/token",
+        "/auth/users/set-initial-password",
+    }
+    request_path = request.url.path.rstrip("/") or "/"
+    if request_path in allowed_paths:
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="password_setup_required",
     )
 
 

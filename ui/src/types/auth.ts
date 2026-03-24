@@ -29,4 +29,5 @@ export interface AuthTokenResponse {
   user_id: string;
   tenant_id: string;
   role: UserRole;
+  password_setup_required?: boolean;
 }

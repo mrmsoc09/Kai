@@ -137,7 +137,7 @@ def test_execute_requires_approval(tmp_path, monkeypatch):
         assert str(exc) == "approval_required"
 
 
-def test_execute_blocks_invalid_scope_targets(tmp_path, monkeypatch):
+def test_execute_materializes_wildcard_targets_and_blocks_non_network_targets(tmp_path, monkeypatch):
     monkeypatch.setenv("K1_OPPORTUNITY_ACTION_STATE_PATH", str(tmp_path / "state.json"))
     monkeypatch.setenv("K1_AUDIT_LOG_PATH", str(tmp_path / "audit.jsonl"))
     monkeypatch.setenv("K1_REPORT_ENGINE_STATE_PATH", str(tmp_path / "report_state.json"))
@@ -149,14 +149,18 @@ def test_execute_blocks_invalid_scope_targets(tmp_path, monkeypatch):
         runtime_provider=lambda: runtime,
         event_emitter=lambda event: events.append(event.event_type),
     )
-    service._policy = ScopePolicy()
+    service._policy = ScopePolicy(strict_allowlist=True)
     tenant_id = str(uuid4())
     opportunity = _sample_opportunity(scope_domains=["*.example.com", "ios"])
 
     service.approve(opportunity, tenant_id=tenant_id, actor="analyst-1", reason="ready")
     result = service.execute(opportunity, tenant_id=tenant_id, actor="analyst-1", reason="launch")
 
-    assert result.status == "failed"
+    assert result.status == "executing"
+    selected_targets = result.execution_metadata.get("selected_targets", [])
+    assert selected_targets == ["example.com"]
     blocked = result.execution_metadata.get("blocked_targets", [])
-    assert len(blocked) == 2
-    assert "opportunity_execution_failed" in events
+    assert len(blocked) == 1
+    assert blocked[0]["target"] == "ios"
+    assert blocked[0]["reason"] == "non_network_target"
+    assert "opportunity_execution_started" in events

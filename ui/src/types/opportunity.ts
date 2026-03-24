@@ -110,3 +110,8 @@ export interface OpportunityExpandInput {
   vuln_type?: string;
   candidate_targets?: string[];
 }
+
+export interface ScanQueueSettings {
+  minConcurrent: number;
+  maxConcurrent: number;
+}

@@ -57,7 +57,7 @@ from apps.backend.src.core.praison_langgraph_builder import (
     PraisonLangGraphBuilder,
     _LANGGRAPH_AVAILABLE,
 )
-from apps.backend.src.core.praison_node_executors import build_standard_node_callables
+from apps.backend.src.core.praison_node_executors import build_standard_node_callables, make_node_executor
 from apps.backend.src.core.praison_state import (
     K1GraphState,
     make_initial_state,
@@ -174,6 +174,8 @@ class MissionRuntime:
         """
         mission_id = str(uuid.uuid4())
 
+        custom_graph_spec_supplied = graph_spec is not None
+
         # Build topology
         if graph_spec is None:
             specs = agent_specs or _make_minimal_agent_specs()
@@ -190,6 +192,12 @@ class MissionRuntime:
             node_callables = agent_callables
         else:
             node_callables = build_standard_node_callables(agent_callables)
+            if custom_graph_spec_supplied:
+                # For imported custom graphs, provide a safe graph-only fallback
+                # executor for any node not mapped by standard callables.
+                for node_id in graph_spec.nodes.keys():
+                    if node_id not in node_callables:
+                        node_callables[node_id] = make_node_executor(node_id, None)
 
         # Compile LangGraph
         builder = PraisonLangGraphBuilder(graph_spec, node_callables)

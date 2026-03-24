@@ -16,6 +16,7 @@ from .opportunity_catalog import Opportunity
 from .opportunity_expansion import OpportunityExpansionResult
 from .praison_execution_events import MissionEvent, emit
 from .scope_guardrails import (
+    ScopePolicy,
     ScopeDecision,
     audit_scope_decision,
     evaluate_target_scope,
@@ -456,28 +457,76 @@ class OpportunityActionService:
         )
         self._event_emitter(event)
 
-    def _is_target_executable(self, target: str) -> tuple[bool, str]:
-        if "*" in target:
-            return False, "wildcard_target_not_executable"
-        if "." not in target:
-            return False, "non_network_target"
-        return True, "ok"
+    def _effective_scope_policy(self, scope_patterns: list[str] | None) -> ScopePolicy:
+        if not scope_patterns:
+            return self._policy
 
-    def _validate_targets(self, targets: list[str]) -> tuple[list[str], list[dict[str, str]]]:
+        allowlist = list(self._policy.allowlist)
+        seen = {row.lower() for row in allowlist}
+        for raw_pattern in scope_patterns:
+            pattern = _normalize_target(raw_pattern)
+            if not pattern:
+                continue
+            if pattern not in seen:
+                allowlist.append(pattern)
+                seen.add(pattern)
+            if pattern.startswith("*."):
+                # Treat wildcard scope as allowing the root domain as the seed target.
+                root_domain = pattern[2:]
+                if root_domain and root_domain not in seen:
+                    allowlist.append(root_domain)
+                    seen.add(root_domain)
+
+        return ScopePolicy(
+            allowlist=allowlist,
+            denylist=list(self._policy.denylist),
+            cidr_allowlist=list(self._policy.cidr_allowlist),
+            safe_mode_default=self._policy.safe_mode_default,
+            strict_allowlist=self._policy.strict_allowlist,
+        )
+
+    def _materialize_executable_target(self, target: str) -> tuple[str | None, str]:
+        normalized = _normalize_target(target)
+        if not normalized:
+            return None, "invalid_target"
+        if normalized.startswith("*."):
+            root_domain = normalized[2:]
+            if root_domain and "." in root_domain:
+                return root_domain, "wildcard_seed_target"
+            return None, "wildcard_target_not_executable"
+        if any(ch in normalized for ch in "*?[]"):
+            return None, "wildcard_target_not_executable"
+        if "." not in normalized:
+            return None, "non_network_target"
+        return normalized, "ok"
+
+    def _validate_targets(
+        self,
+        targets: list[str],
+        *,
+        scope_patterns: list[str] | None = None,
+    ) -> tuple[list[str], list[dict[str, str]]]:
+        policy = self._effective_scope_policy(scope_patterns)
         valid: list[str] = []
         blocked: list[dict[str, str]] = []
-        for target in targets:
-            executable, executable_reason = self._is_target_executable(target)
-            if not executable:
-                blocked.append({"target": target, "reason": executable_reason})
+        for raw_target in targets:
+            target, executable_reason = self._materialize_executable_target(raw_target)
+            if not target:
+                blocked.append({"target": raw_target, "reason": executable_reason})
                 continue
 
-            decision: ScopeDecision = evaluate_target_scope(target, self._policy)
+            decision: ScopeDecision = evaluate_target_scope(target, policy)
             audit_scope_decision(decision)
             if decision.allowed:
                 valid.append(target)
             else:
-                blocked.append({"target": target, "reason": decision.reason})
+                blocked.append(
+                    {
+                        "target": raw_target,
+                        "evaluated_target": target,
+                        "reason": decision.reason,
+                    }
+                )
         return valid, blocked
 
     def _parse_tenant_uuid(self, tenant_id: str) -> UUID:
@@ -569,7 +618,19 @@ class OpportunityActionService:
             raise ValueError(f"invalid_state:{record.status}")
 
         execution_targets = list(record.approved_targets) if record.approved_targets else list(record.candidate_targets)
-        valid_targets, blocked_targets = self._validate_targets(execution_targets)
+        valid_targets, blocked_targets = self._validate_targets(
+            execution_targets,
+            scope_patterns=record.candidate_targets,
+        )
+        deduped_valid_targets: list[str] = []
+        seen_targets: set[str] = set()
+        for target in valid_targets:
+            if target in seen_targets:
+                continue
+            seen_targets.add(target)
+            deduped_valid_targets.append(target)
+
+        valid_targets = deduped_valid_targets
         if not valid_targets:
             record.status = "failed"
             record.updated_at = _utcnow_iso()

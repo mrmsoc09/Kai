@@ -33,6 +33,7 @@ class UserRead(BaseModel):
     full_name: Optional[str] = None
     is_active: bool
     is_superuser: bool
+    must_change_password: bool
     role: UserRole
     tenant_id: UUID
     created_at: datetime
@@ -49,6 +50,11 @@ class Token(BaseModel):
     user_id: UUID
     tenant_id: UUID
     role: UserRole
+    password_setup_required: bool = False
+
+
+class InitialPasswordSetupRequest(BaseModel):
+    new_password: str = Field(..., min_length=8, max_length=255)
 
 class TokenData(BaseModel):
     user_id: UUID
