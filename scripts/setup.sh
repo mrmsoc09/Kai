@@ -36,6 +36,12 @@ has_cmd() {
     command -v "$1" >/dev/null 2>&1
 }
 
+is_container_running() {
+    local name="$1"
+    has_cmd docker || return 1
+    docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"
+}
+
 compose_cmd() {
     if has_cmd docker && docker compose version >/dev/null 2>&1; then
         echo "docker compose"
@@ -167,6 +173,26 @@ while time.time() < deadline:
         time.sleep(1)
 raise SystemExit(1)
 PY
+}
+
+should_manage_ollama_container() {
+    local env_file="$1"
+    local external_raw
+    external_raw="$(read_env_bool K1_OLLAMA_MANAGED_EXTERNALLY false "${env_file}")"
+    if [[ "${external_raw}" == "true" ]]; then
+        info "K1_OLLAMA_MANAGED_EXTERNALLY=true; using external Ollama on 127.0.0.1:11434."
+        return 1
+    fi
+
+    if wait_for_port 127.0.0.1 11434 1; then
+        if is_container_running "k1_ollama"; then
+            return 0
+        fi
+        warn "Detected existing Ollama listener on 127.0.0.1:11434 (non-k1_ollama). Using external Ollama."
+        return 1
+    fi
+
+    return 0
 }
 
 run_verify_cmd() {
@@ -514,12 +540,16 @@ if [[ -n "${COMPOSE_BIN}" ]]; then
     SECRET_BACKEND="$(read_env_value K1_SECRET_BACKEND env .env | tr '[:upper:]' '[:lower:]')"
     PROVIDER_CHAIN="$(printf "%s,%s" "$(read_env_value K1_PRIMARY_LLM_PROVIDER anthropic .env)" "$(read_env_value K1_FALLBACK_LLM_PROVIDERS openai,gemini,ollama .env)" | tr '[:upper:]' '[:lower:]')"
     INFRA_SERVICES=(postgres redis)
+    OLLAMA_REQUIRED=false
 
     if [[ "${SECRET_BACKEND}" == "vault" ]]; then
         INFRA_SERVICES+=(vault)
     fi
     if [[ "${PROVIDER_CHAIN}" == *"ollama"* ]]; then
-        INFRA_SERVICES+=(ollama)
+        OLLAMA_REQUIRED=true
+        if should_manage_ollama_container .env; then
+            INFRA_SERVICES+=(ollama)
+        fi
     fi
 
     ${COMPOSE_BIN} -f docker-compose.yml up -d "${INFRA_SERVICES[@]}"
@@ -536,7 +566,7 @@ if [[ -n "${COMPOSE_BIN}" ]]; then
                 warn "Vault was requested but did not become reachable at ${VAULT_WAIT_HOST}:${VAULT_HOST_PORT}."
             fi
         fi
-        if [[ " ${INFRA_SERVICES[*]} " == *" ollama "* ]]; then
+        if [[ "${OLLAMA_REQUIRED}" == "true" ]]; then
             if ! wait_for_port 127.0.0.1 11434 90; then
                 warn "Ollama was requested but did not become reachable on 127.0.0.1:11434."
             fi
