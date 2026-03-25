@@ -109,7 +109,7 @@ if [[ $JWT_LEN -lt 32 ]]; then
 fi
 
 # Warn on insecure defaults
-if [[ "${JWT_SECRET_KEY}" == "super-secret-jwt-key" ]]; then
+if [[ "${JWT_SECRET_KEY}" == "change-me-jwt-key" ]]; then
   error "JWT_SECRET_KEY is set to the insecure default. Generate a new secret."
   exit 1
 fi
