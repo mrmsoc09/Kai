@@ -70,7 +70,7 @@ def main():
     # 3. generate secrets if missing
     print("\n--- Generating Secure Tokens ---")
     jwt_secret = existing_config.get("JWT_SECRET_KEY") or generate_secret(64)
-    postgres_password = existing_config.get("POSTGRES_PASSWORD") or "k1password" # Keep default for dev simplicity if not changed
+    postgres_password = existing_config.get("POSTGRES_PASSWORD") or generate_secret(32)  # Always generate if not set
     
     # 4. Write .env file
     print(f"\nWriting configuration to {env_path}...")
