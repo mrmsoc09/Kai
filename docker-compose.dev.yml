@@ -10,7 +10,8 @@ services:
     container_name: k1_postgres
     environment:
       POSTGRES_USER: k1
-      POSTGRES_PASSWORD: k1password
+      POSTGRES_PASSWORD: 3733eba8112d4532d4b3d0a4e51dc81f
+
       POSTGRES_DB: k1
     volumes:
       - postgres_data:/var/lib/postgresql/data
