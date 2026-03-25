@@ -87,7 +87,7 @@ async def approve_gate(
         mission_id = str(updated_gate.campaign_id)
         # Verify if mission exists in runtime
         runtime.get_status(mission_id, tenant_id=current_user.tenant_id)
-        runtime.approve_pending(
+        await runtime.approve_pending(
             mission_id=mission_id,
             tenant_id=current_user.tenant_id,
             approval_id=str(gate_id),
@@ -97,7 +97,7 @@ async def approve_gate(
     except ValueError:
         # Mission might not be active in this runtime instance
         pass
-    
+
     return updated_gate
 
 
@@ -128,7 +128,7 @@ async def reject_gate(
     try:
         mission_id = str(updated_gate.campaign_id)
         runtime.get_status(mission_id, tenant_id=current_user.tenant_id)
-        runtime.approve_pending(
+        await runtime.approve_pending(
             mission_id=mission_id,
             tenant_id=current_user.tenant_id,
             approval_id=str(gate_id),

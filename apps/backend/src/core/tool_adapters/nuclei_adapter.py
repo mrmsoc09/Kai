@@ -5,6 +5,8 @@ Fast and customizable vulnerability scanner
 
 import asyncio
 import json
+import os
+import re
 import shutil
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
@@ -18,6 +20,36 @@ from .base_adapter import (
     ToolExecutionResult,
     ToolCapability
 )
+
+# Base directory for nuclei templates. Override via NUCLEI_TEMPLATES_BASE env var.
+_NUCLEI_TEMPLATES_BASE: str = os.environ.get(
+    "NUCLEI_TEMPLATES_BASE",
+    str(Path.home() / "nuclei-templates"),
+)
+
+
+def _validate_nuclei_tags(tags: str) -> str:
+    """Validate nuclei tags string contains only safe characters.
+
+    Raises ValueError if the tags contain characters outside a-zA-Z0-9,_-
+    which prevents shell-metacharacter injection into CLI arguments.
+    """
+    if not re.match(r'^[a-zA-Z0-9,_-]+$', tags):
+        raise ValueError(f"Invalid nuclei tags format: {tags!r}")
+    return tags
+
+
+def _validate_nuclei_template_path(template: str) -> str:
+    """Validate and resolve a nuclei template path to prevent path traversal.
+
+    Returns the absolute resolved path as a string.
+    Raises ValueError if the resolved path escapes the templates base directory.
+    """
+    base = os.path.realpath(_NUCLEI_TEMPLATES_BASE)
+    resolved = os.path.realpath(os.path.join(base, template))
+    if not resolved.startswith(base + os.sep) and resolved != base:
+        raise ValueError(f"Template path traversal detected: {template!r}")
+    return resolved
 
 
 class NucleiAdapter(BaseToolAdapter):
@@ -156,13 +188,15 @@ class NucleiAdapter(BaseToolAdapter):
             # Default: critical and high only for performance
             cmd.extend(["-severity", "critical,high"])
 
-        # Tags filter
+        # Tags filter — validate before appending to prevent argument injection.
         if options.get("tags"):
-            cmd.extend(["-tags", options["tags"]])
+            safe_tags = _validate_nuclei_tags(options["tags"])
+            cmd.extend(["-tags", safe_tags])
 
-        # Custom templates
+        # Custom templates — validate path to prevent directory traversal.
         if options.get("templates"):
-            cmd.extend(["-t", options["templates"]])
+            safe_template_path = _validate_nuclei_template_path(options["templates"])
+            cmd.extend(["-t", safe_template_path])
 
         # Rate limiting
         rate_limit = options.get("rate_limit", 150)

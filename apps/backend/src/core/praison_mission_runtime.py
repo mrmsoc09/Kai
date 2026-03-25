@@ -39,6 +39,7 @@ Checkpointing:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 from dataclasses import dataclass, field
@@ -149,6 +150,13 @@ class MissionRuntime:
         self._missions: dict[tuple[UUID, str], MissionHandle] = {}
         self._states: dict[str, dict[str, Any]] = {}
         self._statuses: dict[str, str] = {}  # mission_id -> state string
+        self._mission_locks: dict[str, asyncio.Lock] = {}
+
+    def _get_lock(self, mission_id: str) -> asyncio.Lock:
+        """Return the per-mission asyncio.Lock, creating it on first access."""
+        if mission_id not in self._mission_locks:
+            self._mission_locks[mission_id] = asyncio.Lock()
+        return self._mission_locks[mission_id]
 
     # -- Create ----------------------------------------------------------------
 
@@ -287,7 +295,7 @@ class MissionRuntime:
 
     # -- Resume ----------------------------------------------------------------
 
-    def resume_mission(
+    async def resume_mission(
         self,
         mission_id: str,
         tenant_id: UUID,
@@ -298,6 +306,16 @@ class MissionRuntime:
 
         approval_data: If resuming after an approval gate, provide the approval decision.
         """
+        async with self._get_lock(mission_id):
+            return self._resume_mission_locked(mission_id, tenant_id, approval_data)
+
+    def _resume_mission_locked(
+        self,
+        mission_id: str,
+        tenant_id: UUID,
+        approval_data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Internal: execute resume logic with lock already held."""
         handle = self._get_handle(mission_id, tenant_id)
 
         if approval_data:
@@ -366,40 +384,42 @@ class MissionRuntime:
 
     # -- Stop ------------------------------------------------------------------
 
-    def stop_mission(self, mission_id: str, tenant_id: UUID, reason: str = "operator_stop") -> dict[str, Any]:
+    async def stop_mission(self, mission_id: str, tenant_id: UUID, reason: str = "operator_stop") -> dict[str, Any]:
         """Gracefully stop and checkpoint a mission."""
-        # Ensure mission exists and belongs to tenant
-        self._get_handle(mission_id, tenant_id)
-        self._statuses[mission_id] = "paused"
-        state = self._states.get(mission_id, {})
-        state["error"] = f"Mission stopped: {reason}"
-        self._states[mission_id] = state
-        logger.info("Mission %s stopped: %s", mission_id, reason)
-        return state
+        async with self._get_lock(mission_id):
+            # Ensure mission exists and belongs to tenant
+            self._get_handle(mission_id, tenant_id)
+            self._statuses[mission_id] = "paused"
+            state = self._states.get(mission_id, {})
+            state["error"] = f"Mission stopped: {reason}"
+            self._states[mission_id] = state
+            logger.info("Mission %s stopped: %s", mission_id, reason)
+            return state
 
     # -- Cancel ----------------------------------------------------------------
 
-    def cancel_mission(self, mission_id: str, tenant_id: UUID, reason: str = "operator_cancel") -> dict[str, Any]:
+    async def cancel_mission(self, mission_id: str, tenant_id: UUID, reason: str = "operator_cancel") -> dict[str, Any]:
         """
         Permanently cancel a mission. Cannot be resumed after cancel.
         """
-        self._get_handle(mission_id, tenant_id)  # Ensure mission belongs to tenant
-        self._statuses[mission_id] = "cancelled"
-        state = self._states.get(mission_id, {})
-        state["error"] = f"Mission cancelled: {reason}"
-        state["completed"] = True
-        self._states[mission_id] = state
+        async with self._get_lock(mission_id):
+            self._get_handle(mission_id, tenant_id)  # Ensure mission belongs to tenant
+            self._statuses[mission_id] = "cancelled"
+            state = self._states.get(mission_id, {})
+            state["error"] = f"Mission cancelled: {reason}"
+            state["completed"] = True
+            self._states[mission_id] = state
 
-        emit(mission_completed_event(
-            mission_id=mission_id,
-            workflow_id=state.get("workflow_id", ""),
-            program_id=state.get("program_id", ""),
-            success=False,
-            final_report_id="",
-        ))
+            emit(mission_completed_event(
+                mission_id=mission_id,
+                workflow_id=state.get("workflow_id", ""),
+                program_id=state.get("program_id", ""),
+                success=False,
+                final_report_id="",
+            ))
 
-        logger.info("Mission %s cancelled: %s", mission_id, reason)
-        return state
+            logger.info("Mission %s cancelled: %s", mission_id, reason)
+            return state
 
     # -- Inspect ---------------------------------------------------------------
 
@@ -461,7 +481,7 @@ class MissionRuntime:
 
     # -- Approve ---------------------------------------------------------------
 
-    def approve_pending(
+    async def approve_pending(
         self,
         mission_id: str,
         tenant_id: UUID,
@@ -472,6 +492,24 @@ class MissionRuntime:
         """
         Resolve a pending approval and resume execution.
         """
+        async with self._get_lock(mission_id):
+            return await self._approve_pending_locked(
+                mission_id=mission_id,
+                tenant_id=tenant_id,
+                approval_id=approval_id,
+                decision=decision,
+                resolved_by=resolved_by,
+            )
+
+    async def _approve_pending_locked(
+        self,
+        mission_id: str,
+        tenant_id: UUID,
+        approval_id: str,
+        decision: str = "approved",
+        resolved_by: str = "operator",
+    ) -> MissionStatus:
+        """Internal: execute approval with lock already held."""
         handle = self._get_handle(mission_id, tenant_id)
         current = self._states.get(mission_id, {})
 
@@ -502,10 +540,11 @@ class MissionRuntime:
             approval_id, mission_id, decision, resolved_by,
         )
 
-        # Auto-resume if mission was paused
+        # Auto-resume if mission was paused.
+        # Lock is already held — call the internal method directly to avoid deadlock.
         status = self._statuses.get(mission_id, "")
         if status == "paused" and decision == "approved":
-            self.resume_mission(mission_id, tenant_id=tenant_id)
+            self._resume_mission_locked(mission_id, tenant_id=tenant_id)
 
         return self.get_status(mission_id, tenant_id=tenant_id)
 

@@ -12,12 +12,12 @@ from apps.backend.src.auth.schemas import TokenData
 from apps.backend.src.auth.models import UserRole
 
 # -- Configuration Constants --------------------------------------------------
-# These would typically be loaded from environment variables or a config file
-# In a real app, ensure these are SECURELY managed (e.g., Docker secrets, Vault)
+# JWT_SECRET_KEY MUST be set in the environment. The application will refuse to
+# start or sign tokens if this variable is absent or empty.
+# Generate with: python3 -c "import secrets; print(secrets.token_hex(32))"
 
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 API_TOKEN_HASH_ALGORITHM = os.getenv("API_TOKEN_HASH_ALGORITHM", "sha256")
-_INSECURE_DEFAULT_SECRET = "super-secret-jwt-key"
 _ALLOWED_JWT_ALGORITHMS = {"HS256", "HS384", "HS512"}
 
 # Prefer PBKDF2 for portability across local environments where bcrypt backends
@@ -25,21 +25,11 @@ _ALLOWED_JWT_ALGORITHMS = {"HS256", "HS384", "HS512"}
 pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto")
 
 
-def _is_non_production() -> bool:
-    return os.getenv("ENVIRONMENT", "development").strip().lower() != "production"
-
-
-def _allow_insecure_default_secret() -> bool:
-    raw = os.getenv("K1_ALLOW_INSECURE_JWT_SECRET", "false").strip().lower()
-    return raw in {"1", "true", "yes", "on"}
-
-
 def _jwt_secret() -> str:
+    # Raises KeyError if JWT_SECRET_KEY is not set — intentional: no insecure fallback.
     secret = (os.getenv("JWT_SECRET_KEY") or os.getenv("K1_JWT_SECRET") or "").strip()
     if not secret:
         raise HTTPException(status_code=503, detail="jwt_secret_not_configured")
-    if secret == _INSECURE_DEFAULT_SECRET and not (_is_non_production() and _allow_insecure_default_secret()):
-        raise HTTPException(status_code=503, detail="jwt_secret_insecure_default")
     return secret
 
 

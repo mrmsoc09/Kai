@@ -2,11 +2,16 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any
 from ..core.scope import require_scope_accept
+from ..core.auth import require_roles, ROLE_OPERATOR
 from ..core.jobs import enqueue
 from ..core.logs import log_decision
 import re, time
 
-router = APIRouter(prefix="/scans", tags=["scans"], dependencies=[Depends(require_scope_accept)])
+router = APIRouter(
+    prefix="/scans",
+    tags=["scans"],
+    dependencies=[Depends(require_scope_accept), Depends(require_roles(ROLE_OPERATOR))],
+)
 
 
 def _safe_id(s: str) -> str:

@@ -138,6 +138,7 @@ rate_limiter: InMemoryRateLimiter | RedisRateLimiter = _build_rate_limiter()
 DEFAULT_RATE_LIMITS: dict[str, tuple[int, int]] = {
     # Authentication endpoints (very strict)
     "/auth/login": (5, 300),      # 5 requests per 5 minutes
+    "/auth/token": (5, 300),      # 5 requests per 5 minutes — same as /auth/login
     "/auth/logout": (20, 60),     # 20 requests per minute
     "/auth/refresh": (20, 60),    # 20 requests per minute
     # Heavy compute endpoints (restrictive)

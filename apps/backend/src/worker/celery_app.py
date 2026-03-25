@@ -70,6 +70,12 @@ def run_tool_task(
     import time
     import hashlib
 
+    import re as _re
+
+    # Validate tool_id before any path construction to prevent path injection.
+    if not _re.match(r'^[a-zA-Z0-9_-]{1,64}$', tool_id):
+        raise ValueError(f"Invalid tool_id format: {tool_id!r}")
+
     task_id = getattr(self.request, "id", "")
     retry_attempt = int(getattr(self.request, "retries", 0) or 0)
     max_retries = int(getattr(self, "max_retries", 0) or 0)
@@ -149,15 +155,10 @@ def run_tool_task(
         from apps.backend.src.core.tool_registry_catalog import get_catalog_entry as _get_cat
 
         vc = VaultClient()
-        # Primary lookup by tool_id
-        tool_secret_path = f"secret/tools/{tool_id}"
-        creds = vc.read_secret(tool_secret_path)
-        
-        # Fallback to legacy path if not found
-        if not creds:
-            vault_path = params.get("vault_path") or params.get("_vault_path")
-            if vault_path:
-                creds = vc.read_secret(vault_path)
+        # Vault path is constructed exclusively from the validated tool_id.
+        # Caller-supplied vault_path params are never accepted (path injection prevention).
+        vault_secret_path = f"secret/tools/{tool_id}"
+        creds = vc.read_secret(vault_secret_path)
 
         if creds:
             params = {**params, "_credentials": creds}

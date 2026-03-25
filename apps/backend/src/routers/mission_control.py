@@ -339,7 +339,7 @@ async def stop_mission(
     """Stop/pause a running mission."""
     runtime = get_mission_runtime()
     try:
-        runtime.stop_mission(mission_id, tenant_id=current_user.tenant_id)
+        await runtime.stop_mission(mission_id, tenant_id=current_user.tenant_id)
         return {"status": "stopping", "mission_id": mission_id}
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
