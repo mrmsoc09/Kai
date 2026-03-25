@@ -47,7 +47,9 @@ build/
 # Environment files (never commit secrets)
 .env
 .env.*
+*.env
 !.env.example
+!.env.mvp.example
 
 .gemini/
 gha-creds-*.json
@@ -57,3 +59,4 @@ gha-creds-*.json
 .vault_keys
 .vault_init.json
 vault_data/
+kaison_fix.sh
