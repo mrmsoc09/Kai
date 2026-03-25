@@ -74,7 +74,7 @@ upsert_env "K1_STARTUP_ENABLE_RAG" "false"
 
 # Local host runtime endpoints for non-container backend startup.
 # Match docker-compose.dev local defaults to avoid host/container credential drift.
-POSTGRES_PASSWORD_VALUE="k1password"
+POSTGRES_PASSWORD_VALUE="${POSTGRES_PASSWORD}"
 upsert_env "POSTGRES_USER" "k1"
 upsert_env "POSTGRES_PASSWORD" "${POSTGRES_PASSWORD_VALUE}"
 upsert_env "POSTGRES_DB" "k1"
@@ -95,8 +95,8 @@ upsert_env "K1_SECRET_BACKEND" "vault"
 upsert_env "K1_VAULT_HOST_BIND" "127.0.0.1"
 upsert_env "K1_VAULT_HOST_PORT" "8201"
 upsert_env "VAULT_ADDR" "http://localhost:8201"
-upsert_env "VAULT_TOKEN" "k1-dev-root-token"
-upsert_env "VAULT_DEV_ROOT_TOKEN" "k1-dev-root-token"
+upsert_env "VAULT_TOKEN" "${VAULT_TOKEN}"
+upsert_env "VAULT_DEV_ROOT_TOKEN" "${VAULT_DEV_ROOT_TOKEN}"
 upsert_env "VAULT_MOUNT_POINT" "secret"
 upsert_env "VAULT_SECRET_PREFIX" "kai"
 
