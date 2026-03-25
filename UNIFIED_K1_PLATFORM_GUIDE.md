@@ -110,7 +110,7 @@ export DATABASE_URL=postgresql://user:pass@localhost/k1
 
 # Optional but recommended
 export DEBUG_MODE=true
-export K1_DEV_TOKEN=dev-token-123
+export K1_DEV_TOKEN=<generate-with: python3 -c "import secrets; print(secrets.token_urlsafe(32))">
 ```
 
 ### Running the System
