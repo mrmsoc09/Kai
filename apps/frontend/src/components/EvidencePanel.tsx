@@ -5,12 +5,29 @@ import React, { useCallback, useRef, useState } from 'react'
 import { addEvidence } from '../lib/api'
 import { toast } from '../store/toasts'
 
+export type VisionAnalysis = {
+  verdict: 'confirmed' | 'false_positive' | 'inconclusive'
+  confidence: number // 0.0–1.0
+  visual_delta: string
+  indicators: string[]
+  finding_type_detected?: string
+  error?: string
+  sha256?: string
+}
+
+export type VisionValidation = {
+  status: string
+  screenshots: string[]
+  analysis?: VisionAnalysis
+}
+
 export type EvidenceItem = {
   id: string
   kind: string
   uri: string
   sha256_hex: string
   meta?: Record<string, any>
+  vision_validation?: VisionValidation
 }
 
 type Props = {
@@ -99,18 +116,50 @@ export default function EvidencePanel({ findingId, existingEvidence = [], onAdde
         <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {existingEvidence.map((ev) => (
             <div key={ev.id} style={{
-              display: 'flex', gap: 10, alignItems: 'center',
+              display: 'flex', flexDirection: 'column',
               padding: '0.5rem 0.75rem',
               background: '#0B0C0D',
               border: '1px solid #355E3B',
               borderRadius: 4,
               fontSize: '0.75rem',
+              gap: 4,
             }}>
-              <span style={{ color: '#a78bfa', minWidth: 90 }}>{ev.kind}</span>
-              <span style={{ color: '#8FAF9B', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.uri}</span>
-              <span style={{ color: '#355E3B', fontSize: '0.65rem', fontFamily: 'monospace' }}>
-                {ev.sha256_hex.slice(0, 12)}…
-              </span>
+              {/* Primary row: kind | uri | sha256 */}
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <span style={{ color: '#a78bfa', minWidth: 90 }}>{ev.kind}</span>
+                <span style={{ color: '#8FAF9B', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.uri}</span>
+                <span style={{ color: '#355E3B', fontSize: '0.65rem', fontFamily: 'monospace' }}>
+                  {ev.sha256_hex.slice(0, 12)}…
+                </span>
+              </div>
+              {/* Vision analysis verdict chip — only rendered when analysis data is present */}
+              {ev.vision_validation?.analysis?.verdict && (() => {
+                const { verdict, confidence } = ev.vision_validation!.analysis!
+                const chipColor =
+                  verdict === 'confirmed' ? '#22c55e' :
+                  verdict === 'false_positive' ? '#f97316' :
+                  '#9ca3af' // inconclusive
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '0.1rem 0.45rem',
+                      background: `${chipColor}22`,
+                      border: `1px solid ${chipColor}`,
+                      borderRadius: 3,
+                      color: chipColor,
+                      fontSize: '0.65rem',
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.04em',
+                    }}>
+                      {verdict.replace('_', ' ')}
+                    </span>
+                    <span style={{ color: '#6F8E7A', fontSize: '0.65rem', fontFamily: 'monospace' }}>
+                      {Math.round(confidence * 100)}% confidence
+                    </span>
+                  </div>
+                )
+              })()}
             </div>
           ))}
         </div>

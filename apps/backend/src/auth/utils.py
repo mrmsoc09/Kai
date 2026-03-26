@@ -6,10 +6,12 @@ from uuid import UUID
 
 from fastapi import HTTPException
 from passlib.context import CryptContext
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import PyJWTError as JWTError
 
 from apps.backend.src.auth.schemas import TokenData
 from apps.backend.src.auth.models import UserRole
+from apps.backend.src.core.secret_manager import get_secret_manager
 
 # -- Configuration Constants --------------------------------------------------
 # JWT_SECRET_KEY MUST be set in the environment. The application will refuse to
@@ -27,7 +29,12 @@ pwd_context = CryptContext(schemes=["pbkdf2_sha256", "bcrypt"], deprecated="auto
 
 def _jwt_secret() -> str:
     # Raises KeyError if JWT_SECRET_KEY is not set — intentional: no insecure fallback.
-    secret = (os.getenv("JWT_SECRET_KEY") or os.getenv("K1_JWT_SECRET") or "").strip()
+    secret_manager = get_secret_manager()
+    secret = (
+        secret_manager.get_optional("JWT_SECRET_KEY")
+        or secret_manager.get_optional("K1_JWT_SECRET")
+        or ""
+    ).strip()
     if not secret:
         raise HTTPException(status_code=503, detail="jwt_secret_not_configured")
     return secret

@@ -12,7 +12,7 @@ from uuid import UUID
 
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import APIKeyHeader, OAuth2PasswordBearer
-from jose import JWTError  # type: ignore
+from jwt.exceptions import PyJWTError as JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 

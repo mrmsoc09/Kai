@@ -12,10 +12,11 @@ from pydantic import BaseModel, Field
 from .token_blocklist import is_revoked
 
 try:
-    from jose import JWTError, jwt  # type: ignore
+    import jwt
+    from jwt.exceptions import PyJWTError as JWTError
 except ModuleNotFoundError:  # pragma: no cover - environment/bootstrap safeguard
     class JWTError(Exception):
-        """Fallback JWT error when python-jose is unavailable."""
+        """Fallback JWT error when PyJWT is unavailable."""
 
     jwt = None  # type: ignore[assignment]
 
@@ -56,6 +57,23 @@ def _is_non_production() -> bool:
 
 def _expected_token() -> Optional[str]:
     return os.getenv(DEV_TOKEN_ENV)
+
+
+def _bootstrap_auth_enabled() -> bool:
+    return os.getenv("K1_ENABLE_BOOTSTRAP_AUTH", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _bootstrap_user_from_token(token: str) -> Optional[User]:
+    expected = _expected_token()
+    if not expected or token != expected:
+        return None
+    if not _bootstrap_auth_enabled() or not _is_non_production():
+        return None
+    return User(
+        id="dev",
+        roles=[ROLE_ADMIN, ROLE_ANALYST, ROLE_OPERATOR, ROLE_VIEWER],
+        tenant_id=os.getenv("K1_BOOTSTRAP_TENANT_ID") or None,
+    )
 
 
 def assert_bootstrap_auth_safe() -> None:
@@ -152,12 +170,19 @@ def issue_dev_access_token(bootstrap_token: str) -> str:
 
 
 def decode_access_token(token: str) -> User:
+    bootstrap_user = _bootstrap_user_from_token(token)
+    if bootstrap_user is not None:
+        return bootstrap_user
+
     try:
         _require_jose()
         payload = jwt.decode(token, _jwt_secret(), algorithms=[_jwt_algorithm()])
     except AuthConfigError:
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="auth_not_configured")
     except JWTError:
+        bootstrap_user = _bootstrap_user_from_token(token)
+        if bootstrap_user is not None:
+            return bootstrap_user
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
 
     subject = payload.get("sub")
