@@ -1,6 +1,7 @@
 provider: gemini
 models:
-  - name: gemini-2.0-pro
+  - name: gemini-2.5-flash
+    role: primary
     capabilities:
       tool_calling: true
       structured_output: true
@@ -8,9 +9,23 @@ models:
       context_window: 1000000
       privacy_tier: 2
       cost_tier: 2
-      speed_tier: 2
+      speed_tier: 3
       local_or_remote: remote
-      preferred_workloads: [analysis, planning, multimodal]
+      preferred_workloads: [agentic_execution, tool_dispatch, bbp_pipeline, analysis, multimodal]
+  - name: gemini-2.5-flash-lite
+    role: fallback
+    quota:
+      rpd: 1000
+    capabilities:
+      tool_calling: true
+      structured_output: true
+      multimodal: false
+      context_window: 1000000
+      privacy_tier: 2
+      cost_tier: 1
+      speed_tier: 3
+      local_or_remote: remote
+      preferred_workloads: [analysis, summarization]
 auth:
   method: env
-  token_env: GEMINI_API_KEY
+  token_env: GOOGLE_API_KEY

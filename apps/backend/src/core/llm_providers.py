@@ -40,6 +40,7 @@ class LLMProvider(str, Enum):
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
     GEMINI = "gemini"
+    GEMINI_FLASH_LITE = "gemini-flash-lite"  # quota fallback tier
     OLLAMA = "ollama"
     GEMMA = "gemma"
 
@@ -62,15 +63,30 @@ class LLMModel(str, Enum):
     GEMINI_2_FLASH = "gemini-2.0-flash"
     GEMINI_1_5_PRO = "gemini-1.5-pro"
     GEMINI_1_5_FLASH = "gemini-1.5-flash"
+    # Gemini 2.5 series
+    GEMINI_2_5_FLASH = "gemini-2.5-flash"
+    GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
 
     # Ollama (local)
     OLLAMA_LLAMA2 = "llama2"
     OLLAMA_NEURAL = "neural-chat"
     OLLAMA_MISTRAL = "mistral"
 
-    # Gemma (Google)
+    # Gemma (Google open-source, served via Ollama)
     GEMMA_2_9B = "gemma:2b"
     GEMMA_7B = "gemma:7b"
+    GEMMA3_8B = "gemma3:8b"  # routing-tier model
+
+    # Qwen (local emergency fallback)
+    QWEN2_5_7B = "qwen2.5:7b"
+
+
+class ProviderRole(str, Enum):
+    """Semantic role of a provider in the 4-tier routing chain."""
+    PRIMARY = "primary"    # full execution, tool calls, BBP pipeline
+    ROUTING = "routing"    # classification only, no tool calls dispatched
+    FALLBACK = "fallback"  # quota exhaustion fallback
+    EMERGENCY = "emergency"  # offline-only last resort
 
 
 @dataclass
@@ -111,6 +127,11 @@ class ProviderConfig:
     max_tokens: int = 2048
     is_primary: bool = False
     is_fallback: bool = False
+    # 4-tier routing fields
+    role: ProviderRole = ProviderRole.FALLBACK
+    routing_only: bool = False  # when True: strip tools before calling this provider
+    rpm_limit: int = 0          # 0 = unlimited; set for quota-limited providers
+    rpd_limit: int = 0          # requests per day limit
 
 
 class BaseLLMProvider(ABC):
@@ -450,7 +471,7 @@ class GeminiProvider(BaseLLMProvider):
         api_key = _resolve_api_key(self.config.api_key, "GOOGLE_API_KEY")
 
         genai.configure(api_key=api_key)
-        self.model = os.getenv("K1_GEMINI_MODEL", LLMModel.GEMINI_2_FLASH.value)
+        self.model = os.getenv("K1_GEMINI_MODEL", LLMModel.GEMINI_2_5_FLASH.value)
         self.client = genai.GenerativeModel(self.model)
 
     async def complete(
@@ -566,6 +587,46 @@ class GeminiProvider(BaseLLMProvider):
         for chunk in response:
             if chunk.text:
                 yield chunk.text
+
+
+class GeminiFlashLiteProvider(GeminiProvider):
+    """Gemini 2.5 Flash-Lite — quota fallback (1,000 RPD).
+
+    Inherits the full Gemini completion logic but targets the lighter model
+    and enforces a daily request cap via a class-level counter. The counter
+    resets automatically at UTC midnight.
+    """
+
+    _daily_request_count: int = 0
+    _count_date: str = ""
+
+    def _initialize_client(self):
+        if not genai:
+            raise ImportError("google-generativeai package not installed")
+        api_key = _resolve_api_key(self.config.api_key, "GOOGLE_API_KEY")
+        genai.configure(api_key=api_key)
+        self.model = os.getenv(
+            "K1_GEMINI_FLASH_LITE_MODEL", LLMModel.GEMINI_2_5_FLASH_LITE.value
+        )
+        self.client = genai.GenerativeModel(self.model)
+
+    def _check_daily_quota(self) -> None:
+        """Increment daily counter and raise if the configured RPD limit is hit."""
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        if GeminiFlashLiteProvider._count_date != today:
+            GeminiFlashLiteProvider._count_date = today
+            GeminiFlashLiteProvider._daily_request_count = 0
+        limit = self.config.rpd_limit or 1000
+        if GeminiFlashLiteProvider._daily_request_count >= limit:
+            raise RuntimeError(
+                f"GeminiFlashLite daily quota exhausted ({limit} RPD)"
+            )
+        GeminiFlashLiteProvider._daily_request_count += 1
+
+    async def complete(self, messages, system=None, tools=None, **kwargs):
+        """Check daily quota then delegate to the parent Gemini implementation."""
+        self._check_daily_quota()
+        return await super().complete(messages, system=system, tools=tools, **kwargs)
 
 
 class OllamaProvider(BaseLLMProvider):
@@ -762,6 +823,7 @@ class LLMProviderFactory:
         self.providers: Dict[LLMProvider, BaseLLMProvider] = {}
         self.primary_provider: Optional[LLMProvider] = None
         self.fallback_chain: List[LLMProvider] = []
+        self.routing_provider: Optional[LLMProvider] = None  # classification-only tier
         self._usage_log: List[Dict[str, Any]] = []
 
     def register_provider(self, config: ProviderConfig):
@@ -770,8 +832,9 @@ class LLMProviderFactory:
             LLMProvider.ANTHROPIC: AnthropicProvider,
             LLMProvider.OPENAI: OpenAIProvider,
             LLMProvider.GEMINI: GeminiProvider,
+            LLMProvider.GEMINI_FLASH_LITE: GeminiFlashLiteProvider,
             LLMProvider.OLLAMA: OllamaProvider,
-            LLMProvider.GEMMA: GemmaProvider
+            LLMProvider.GEMMA: GemmaProvider,
         }
 
         provider_class = provider_map.get(config.provider)
@@ -796,65 +859,63 @@ class LLMProviderFactory:
             return False
 
     def initialize_from_env(self):
-        """Initialize providers from environment variables"""
-        primary = os.getenv("K1_PRIMARY_LLM_PROVIDER", "anthropic")
-        fallbacks = os.getenv("K1_FALLBACK_LLM_PROVIDERS", "openai,gemini,ollama").split(",")
+        """Initialize the 4-tier provider chain from environment variables.
 
-        # Register primary
-        if primary == "anthropic":
+        Tiers (in priority order):
+          1. PRIMARY   — gemini (gemini-2.5-flash) — all agentic execution, tool dispatch, BBP pipeline
+          2. ROUTING   — gemma (gemma3:8b local)   — routing/classification only, no tool calls
+          3. FALLBACK  — gemini-flash-lite (1,000 RPD quota)
+          4. EMERGENCY — ollama (qwen2.5:7b Q4_K_M local) — full offline fallback, last resort
+        """
+        primary = os.getenv("K1_PRIMARY_LLM_PROVIDER", "gemini").strip().lower()
+        fallbacks_raw = os.getenv(
+            "K1_FALLBACK_LLM_PROVIDERS", "gemini-flash-lite,ollama"
+        ).split(",")
+        fallbacks = [f.strip().lower() for f in fallbacks_raw if f.strip()]
+        routing = os.getenv("K1_ROUTING_LLM_PROVIDER", "gemma").strip().lower()
+
+        # Canonical mapping from env-string → LLMProvider enum
+        _provider_key_map: Dict[str, LLMProvider] = {
+            "anthropic": LLMProvider.ANTHROPIC,
+            "openai": LLMProvider.OPENAI,
+            "gemini": LLMProvider.GEMINI,
+            "gemini-flash-lite": LLMProvider.GEMINI_FLASH_LITE,
+            "ollama": LLMProvider.OLLAMA,
+            "gemma": LLMProvider.GEMMA,
+        }
+
+        # Register primary provider
+        primary_enum = _provider_key_map.get(primary)
+        if primary_enum:
             self.register_provider(ProviderConfig(
-                provider=LLMProvider.ANTHROPIC,
-                is_primary=True
-            ))
-        elif primary == "openai":
-            self.register_provider(ProviderConfig(
-                provider=LLMProvider.OPENAI,
-                is_primary=True
-            ))
-        elif primary == "gemini":
-            self.register_provider(ProviderConfig(
-                provider=LLMProvider.GEMINI,
-                is_primary=True
-            ))
-        elif primary == "ollama":
-            self.register_provider(ProviderConfig(
-                provider=LLMProvider.OLLAMA,
-                is_primary=True
-            ))
-        elif primary == "gemma":
-            self.register_provider(ProviderConfig(
-                provider=LLMProvider.GEMMA,
-                is_primary=True
+                provider=primary_enum,
+                is_primary=True,
+                role=ProviderRole.PRIMARY,
             ))
 
-        # Register fallbacks
-        for fallback in fallbacks:
-            fallback = fallback.strip()
-            if fallback == "anthropic":
-                self.register_provider(ProviderConfig(
-                    provider=LLMProvider.ANTHROPIC,
-                    is_fallback=True
-                ))
-            elif fallback == "openai":
-                self.register_provider(ProviderConfig(
-                    provider=LLMProvider.OPENAI,
-                    is_fallback=True
-                ))
-            elif fallback == "gemini":
-                self.register_provider(ProviderConfig(
-                    provider=LLMProvider.GEMINI,
-                    is_fallback=True
-                ))
-            elif fallback == "ollama":
-                self.register_provider(ProviderConfig(
-                    provider=LLMProvider.OLLAMA,
-                    is_fallback=True
-                ))
-            elif fallback == "gemma":
-                self.register_provider(ProviderConfig(
-                    provider=LLMProvider.GEMMA,
-                    is_fallback=True
-                ))
+        # Register routing provider (classification only — tools stripped before dispatch)
+        routing_enum = _provider_key_map.get(routing)
+        if routing_enum and routing_enum != primary_enum:
+            self.register_provider(ProviderConfig(
+                provider=routing_enum,
+                is_fallback=False,
+                role=ProviderRole.ROUTING,
+                routing_only=True,
+            ))
+            self.routing_provider = routing_enum
+
+        # Register fallbacks in declared order; last local provider is EMERGENCY
+        for i, fb in enumerate(fallbacks):
+            fb_enum = _provider_key_map.get(fb)
+            if not fb_enum or fb_enum == primary_enum:
+                continue
+            is_emergency = i == len(fallbacks) - 1 and fb in ("ollama", "gemma")
+            self.register_provider(ProviderConfig(
+                provider=fb_enum,
+                is_fallback=True,
+                role=ProviderRole.EMERGENCY if is_emergency else ProviderRole.FALLBACK,
+                rpd_limit=1000 if fb == "gemini-flash-lite" else 0,
+            ))
 
     async def complete(
         self,
@@ -886,7 +947,12 @@ class LLMProviderFactory:
                 if not provider:
                     continue
 
-                response = await provider.complete(messages, system, tools, **kwargs)
+                # Routing-only providers never receive tool definitions — strip them
+                actual_tools = tools
+                if getattr(provider.config, "routing_only", False):
+                    actual_tools = None
+
+                response = await provider.complete(messages, system, actual_tools, **kwargs)
 
                 # Log usage
                 self._usage_log.append({

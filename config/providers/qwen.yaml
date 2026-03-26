@@ -1,16 +1,20 @@
 provider: qwen
+role: emergency
 models:
-  - name: qwen2.5-coder-7b
+  - name: qwen2.5:7b
+    quantization: Q4_K_M
+    role: emergency_fallback
     capabilities:
       tool_calling: true
       structured_output: true
       multimodal: false
       context_window: 128000
-      privacy_tier: 2
-      cost_tier: 2
-      speed_tier: 2
-      local_or_remote: remote
-      preferred_workloads: [coding, extraction]
+      privacy_tier: 3
+      cost_tier: 0
+      speed_tier: 1
+      local_or_remote: local
+      preferred_workloads: [emergency_fallback, offline_execution]
+      notes: "Full offline fallback. Slow but tool-call capable. Last resort only."
 auth:
-  method: env
-  token_env: QWEN_API_KEY
+  method: none
+  backend: ollama

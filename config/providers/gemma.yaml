@@ -1,15 +1,19 @@
 provider: gemma
+role: routing
 models:
-  - name: gemma-2-9b
+  - name: gemma3:8b
+    role: routing_only
     capabilities:
       tool_calling: false
       structured_output: true
       multimodal: false
       context_window: 8192
       privacy_tier: 3
-      cost_tier: 1
+      cost_tier: 0
       speed_tier: 2
       local_or_remote: local
-      preferred_workloads: [summarization, classification]
+      preferred_workloads: [routing_classification, text_classification]
+      notes: "5-15 t/s acceptable for routing decisions. No tool calls dispatched."
 auth:
   method: none
+  backend: ollama
