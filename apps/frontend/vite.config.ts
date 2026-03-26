@@ -32,7 +32,7 @@ server: {
     '/evidence': { target: 'http://localhost:8000', changeOrigin: true },
     '/logs': { target: 'http://localhost:8000', changeOrigin: true },
     '/ws': { target: 'ws://localhost:8000', ws: true },
-    '/api/v1/agent-zero/ws': { target: 'ws://localhost:8000', ws: true }
+    '/api/v1/orchestration/ws': { target: 'ws://localhost:8000', ws: true }
   }
 },
 

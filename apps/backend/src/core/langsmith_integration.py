@@ -42,6 +42,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Generator
 
+from .secret_manager import get_secret_manager
+
 logger = logging.getLogger(__name__)
 
 # -- LangSmith availability detection -----------------------------------------
@@ -99,9 +101,10 @@ def load_langsmith_config() -> LangSmithConfig:
     except (ValueError, TypeError):
         sample_rate = 1.0
 
+    secret_manager = get_secret_manager()
     return LangSmithConfig(
         enabled=enabled,
-        api_key=os.getenv("LANGSMITH_API_KEY", ""),
+        api_key=secret_manager.get_optional("LANGSMITH_API_KEY") or "",
         project=os.getenv("LANGSMITH_PROJECT", "kai-missions"),
         endpoint=os.getenv(
             "LANGSMITH_ENDPOINT", "https://api.smith.langchain.com"

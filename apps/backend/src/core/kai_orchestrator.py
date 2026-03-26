@@ -1044,7 +1044,7 @@ class KaiOrchestrator:
         hybrid_router = get_hybrid_router()
 
         # Check if this is an LLM task that requires budget control
-        llm_tools = ["agent_zero", "llm_query", "code_generation", "analysis"]
+        llm_tools = ["orchestration", "llm_query", "code_generation", "analysis"]
         requires_budget_check = any(llm_tool in tool_name.lower() for llm_tool in llm_tools)
 
         budget_decision = None

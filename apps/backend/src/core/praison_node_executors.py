@@ -558,7 +558,10 @@ def make_specialist_cluster_executor(
         result["cluster_status"] = cluster_status
         # In simulation modes, set artifact type so ON_ARTIFACT edges can fire
         execution_mode = state.get("execution_mode", "live")
-        if simulation_artifact_type and execution_mode in ("graph_only", "tool_mock"):
+        if simulation_artifact_type and (
+            execution_mode in ("graph_only", "tool_mock")
+            or (execution_mode == "live" and agent_callable is None)
+        ):
             result["last_artifact_type"] = simulation_artifact_type
         return result
 

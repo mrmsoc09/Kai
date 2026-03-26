@@ -1,16 +1,18 @@
 /**
  * Kaison Composer Chat Interface
- * Main chat component with streaming, tool calls, and HiL approval integration
+ * Main chat component with streaming, tool calls, and HiL approval integration.
+ *
+ * Orchestration is handled by Gemini CLI. See orchestration/gemini_orchestrator.py.
  */
 
 import React, { useState, useRef, useEffect } from 'react';
 import { COLORS, UI } from '@/theme/branding';
-import { useAgentZeroStream } from './hooks/useAgentZeroStream';
+import { useOrchestrationStream } from './hooks/useOrchestrationStream';
 import { ChatMessage } from './ChatMessage';
 import { ApprovalDialog } from './ApprovalDialog';
-import type { ApprovalRequest } from './hooks/useAgentZeroStream';
+import type { ApprovalRequest } from './hooks/useOrchestrationStream';
 
-export const AgentZeroChat: React.FC = () => {
+export const OrchestrationChat: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [currentApproval, setCurrentApproval] = useState<ApprovalRequest | null>(null);
   const [ragEnabled, setRagEnabled] = useState(true);
@@ -30,7 +32,7 @@ export const AgentZeroChat: React.FC = () => {
     approveRequest,
     rejectRequest,
     clearHistory,
-  } = useAgentZeroStream({
+  } = useOrchestrationStream({
     onApprovalRequired: (approval) => {
       setCurrentApproval(approval);
     },
@@ -420,4 +422,4 @@ export const AgentZeroChat: React.FC = () => {
   );
 };
 
-export default AgentZeroChat;
+export default OrchestrationChat;

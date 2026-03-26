@@ -28,7 +28,7 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   { label: 'Dashboard', path: '/dashboard', icon: (props) => <Gauge {...props} /> },
-  { label: 'Agent-Zero', path: '/agent-zero', icon: (props) => <Bot {...props} /> },
+  { label: 'Orchestration', path: '/mission-control', icon: (props) => <Bot {...props} /> },
   { label: 'Vault Keys', path: '/vault-keys', icon: (props) => <KeyRound {...props} /> },
   { label: 'LangGraph', path: '/langgraph-builder', icon: (props) => <GitBranchPlus {...props} /> },
   { label: 'Mission Control', path: '/mission-control', icon: (props) => <Compass {...props} /> },

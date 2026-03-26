@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import NeonChip from '../components/common/NeonChip'
 import { healthz, setApiKeys } from '../lib/api'
-import AgentZeroPanel from '../components/AgentZeroPanel'
+import OrchestrationPanel from '../components/OrchestrationPanel'
 import Heatmap from '../components/visuals/Heatmap'
 import KpiMini from '../components/charts/KpiMini'
 
@@ -151,7 +151,7 @@ export default function Dashboard(){
         </div>
       </section>
 
-      <AgentZeroPanel />
+      <OrchestrationPanel />
     </div>
   </div>
 }

@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..auth.models import Tenant
 from ..models.campaign import ApprovalGate
 from ..models.enums import ApprovalGateStatusEnum
 from ..schemas.campaigns import ApprovalGateCreate, ApprovalGateDecision
@@ -50,6 +51,18 @@ class ApprovalGateService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
+    async def _resolve_tenant_id(self, tenant_id: UUID | None) -> UUID:
+        if tenant_id is not None:
+            return tenant_id
+        try:
+            result = await self.db.execute(select(Tenant.id).order_by(Tenant.created_at.asc()).limit(1))
+            resolved = result.scalar_one_or_none()
+            if resolved is not None:
+                return resolved
+        except Exception:
+            pass
+        return UUID(int=0)
+
     async def _latest_gate_for_scope(self, payload: ApprovalGateCreate, tenant_id: UUID) -> ApprovalGate | None:
         try:
             stmt = (
@@ -81,11 +94,12 @@ class ApprovalGateService:
     async def create_gate(
         self,
         payload: ApprovalGateCreate,
-        tenant_id: UUID,
+        tenant_id: UUID | None = None,
         *,
         actor: str | None = None,
     ) -> ApprovalGate:
-        existing = await self._latest_gate_for_scope(payload, tenant_id)
+        resolved_tenant_id = await self._resolve_tenant_id(tenant_id)
+        existing = await self._latest_gate_for_scope(payload, resolved_tenant_id)
         if existing is not None:
             await record_transition_event(
                 self.db,
@@ -106,7 +120,7 @@ class ApprovalGateService:
 
         record = ApprovalGate(
             campaign_id=payload.campaign_id,
-            tenant_id=tenant_id,
+            tenant_id=resolved_tenant_id,
             branch_id=payload.branch_id,
             phase_job_id=payload.phase_job_id,
             intention_id=payload.intention_id,
@@ -141,19 +155,21 @@ class ApprovalGateService:
         )
         return record
 
-    async def get_gate(self, gate_id: UUID, tenant_id: UUID) -> ApprovalGate | None:
+    async def get_gate(self, gate_id: UUID, tenant_id: UUID | None = None) -> ApprovalGate | None:
+        resolved_tenant_id = await self._resolve_tenant_id(tenant_id)
         result = await self.db.execute(select(ApprovalGate).where(
             ApprovalGate.id == gate_id,
-            ApprovalGate.tenant_id == tenant_id
+            ApprovalGate.tenant_id == resolved_tenant_id
         ))
         return result.scalar_one_or_none()
 
-    async def list_pending_for_campaign(self, campaign_id: UUID, tenant_id: UUID) -> list[ApprovalGate]:
+    async def list_pending_for_campaign(self, campaign_id: UUID, tenant_id: UUID | None = None) -> list[ApprovalGate]:
+        resolved_tenant_id = await self._resolve_tenant_id(tenant_id)
         result = await self.db.execute(
             select(ApprovalGate)
             .where(
                 ApprovalGate.campaign_id == campaign_id,
-                ApprovalGate.tenant_id == tenant_id,
+                ApprovalGate.tenant_id == resolved_tenant_id,
                 ApprovalGate.status.in_(
                     [ApprovalGateStatusEnum.PENDING, ApprovalGateStatusEnum.DEFERRED]
                 ),

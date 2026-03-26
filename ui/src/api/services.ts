@@ -554,62 +554,64 @@ export const vaultService = {
     }),
 };
 
-export const agentZeroService = {
+// KAISON-TODO: GeminiOrchestrator replacement required here — update all URLs once
+// gemini_orchestrator.py exposes /api/v1/orchestration/* endpoints.
+export const orchestrationService = {
   getHealth: (): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/agent-zero/health',
+      url: '/v1/orchestration/health',
     }),
   getAgents: (): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/agent-zero/agents',
+      url: '/v1/orchestration/agents',
     }),
   getWorkflows: (limit = 30): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/agent-zero/workflows',
+      url: '/v1/orchestration/workflows',
       params: { limit },
     }),
   createHuntWorkflow: (target: string): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'POST',
-      url: '/v1/agent-zero/workflows/hunt',
+      url: '/v1/orchestration/workflows/hunt',
       params: { target },
       data: {},
     }),
   getLlmUsage: (): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/agent-zero/llm/usage',
+      url: '/v1/orchestration/llm/usage',
     }),
   getPluginInfo: (): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/agent-zero/plugin/info',
+      url: '/v1/orchestration/plugin/info',
     }),
   sendChatMessage: (payload: { content: string; session_id?: string; context?: Record<string, unknown> }): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'POST',
-      url: '/v1/agent-zero/chat/message',
+      url: '/v1/orchestration/chat/message',
       data: payload,
     }),
   getChatHistory: (sessionId: string, limit = 80): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/agent-zero/chat/history',
+      url: '/v1/orchestration/chat/history',
       params: { session_id: sessionId, limit },
     }),
   respondToApproval: (payload: { approval_id: string; decision: 'approved' | 'rejected'; reason?: string }): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'POST',
-      url: '/v1/agent-zero/chat/approval',
+      url: '/v1/orchestration/chat/approval',
       data: payload,
     }),
   getRelayLogs: (limit = 50): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/agent0/logs',
+      url: '/orchestration/logs',
       params: { limit },
     }),
 };

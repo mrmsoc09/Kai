@@ -1,3 +1,9 @@
+"""
+Docs endpoint tests.
+
+Note: The agent0 chat/logs endpoints were removed when Agent Zero was replaced by
+Gemini CLI orchestration. Only the /docs/* endpoint tests remain here.
+"""
 from fastapi.testclient import TestClient
 from src.main import app
 import os
@@ -5,9 +11,10 @@ import os
 client = TestClient(app)
 AUTH = {"Authorization": f"Bearer {os.environ.get('K1_DEV_TOKEN', 'devtoken')}"}
 
+
 def test_docs_index_requires_auth():
     r = client.get('/docs/index')
-    assert r.status_code in (401,403)
+    assert r.status_code in (401, 403)
 
 
 def test_docs_index_ok_and_get():
@@ -27,17 +34,9 @@ def test_docs_index_ok_and_get():
         assert 'docker' in r2.text.lower() or len(r2.text) > 10
 
 
-def test_agent0_chat_and_logs_with_auth():
-    r = client.post('/agent0/chat', json={"text": "ping"}, headers=AUTH)
-    assert r.status_code == 200
-    j = r.json()
-    assert 'reply' in j
-    r2 = client.get('/agent0/logs', headers=AUTH)
-    assert r2.status_code == 200
-    j2 = r2.json()
-    assert 'logs' in j2 and isinstance(j2['logs'], list)
-
-
-def test_agent0_requires_auth():
-    r = client.post('/agent0/chat', json={"text": "noauth"})
-    assert r.status_code in (401,403)
+def test_agent0_endpoints_no_longer_exist():
+    """Verify agent0 chat/logs endpoints have been removed (Agent Zero was replaced by Gemini CLI)."""
+    r_chat = client.post('/agent0/chat', json={"text": "ping"}, headers=AUTH)
+    assert r_chat.status_code == 404, f"Expected 404 (removed), got {r_chat.status_code}"
+    r_logs = client.get('/agent0/logs', headers=AUTH)
+    assert r_logs.status_code == 404, f"Expected 404 (removed), got {r_logs.status_code}"

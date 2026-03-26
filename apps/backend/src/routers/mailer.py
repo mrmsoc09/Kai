@@ -38,7 +38,7 @@ def _send_via_smtp(raw_eml: bytes, smtp_cfg: Dict[str, Any]) -> Dict[str, Any]:
     use_tls = bool(smtp_cfg.get('tls') or smtp_cfg.get('starttls'))
     use_ssl = bool(smtp_cfg.get('ssl'))
     to_addrs = [a.strip() for a in (smtp_cfg.get('to') or msg.get('To') or '').split(',') if a.strip()]
-    from_addr = smtp_cfg.get('from') or (msg.get('From') or 'agent-zero@k1.local')
+    from_addr = smtp_cfg.get('from') or (msg.get('From') or 'k1-orchestration@k1.local')
     if not to_addrs:
         raise HTTPException(400, 'No recipients provided or in EML')
     if use_ssl:
@@ -135,13 +135,13 @@ async def followup(payload: Dict[str, Any]) -> Dict[str, Any]:
     body = payload.get('body') or (
         "Hello program team,\n\nThis is a friendly follow-up on report {run_id}. "
         "We have provided a full reproduction, mitigation plan, and a compliance-formatted report package. "
-        "Please let us know if additional details are needed.\n\nRegards,\nAgent Zero" 
+        "Please let us know if additional details are needed.\n\nRegards,\nK1 Orchestration"
     ).format(run_id=run_id)
     # Build minimal EML
     from email.message import EmailMessage
     msg = EmailMessage()
     msg['Subject'] = subj
-    msg['From'] = payload.get('from') or 'agent-zero@k1.local'
+    msg['From'] = payload.get('from') or 'k1-orchestration@k1.local'
     msg['To'] = payload.get('to') or 'stakeholder@program.local'
     msg.set_content(body)
     raw = msg.as_bytes()

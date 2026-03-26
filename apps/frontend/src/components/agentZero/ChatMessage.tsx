@@ -4,7 +4,7 @@
 
 import React from 'react';
 import { COLORS, UI } from '@/theme/branding';
-import type { ChatMessage as ChatMessageType, ToolCall } from './hooks/useAgentZeroStream';
+import type { ChatMessage as ChatMessageType, ToolCall } from './hooks/useOrchestrationStream';
 
 interface ChatMessageProps {
   message: ChatMessageType;

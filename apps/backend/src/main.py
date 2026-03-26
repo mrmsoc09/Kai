@@ -25,7 +25,6 @@ from apps.backend.src.auth.bootstrap import ensure_bootstrap_admin_user
 
 # Import routers exactly once
 from apps.backend.src.routers import (
-    agent0,
     agent_training,
     approvals,
     artifact_signing,
@@ -358,6 +357,7 @@ app.include_router(governance.router)
 
 # Auth and scope
 app.include_router(auth_routes.router) # New authentication router
+app.include_router(auth.router)  # Legacy auth compatibility endpoints (/auth/login, /auth/me)
 app.include_router(scope.router)
 
 # Key Management (Cryptographic keys and PGP signatures)
@@ -441,7 +441,6 @@ app.include_router(payouts.router)
 app.include_router(mailer.router)
 app.include_router(logs.router)
 app.include_router(logs_api.router)
-app.include_router(agent0.router)
 app.include_router(docs.router)
 app.include_router(triage.router)
 
@@ -456,16 +455,6 @@ except Exception as exc:
     logger.warning("optional router unavailable: %s (%s)", "apps.backend.src.routers.vector", exc)
     _OPTIONAL_ROUTER_ERRORS.append(
         {"module": "apps.backend.src.routers.vector", "error": str(exc)}
-    )
-
-# Optional: Agent Zero integration
-try:
-    agent_zero_router = importlib.import_module('apps.backend.src.routers.agent_zero')
-    app.include_router(agent_zero_router.router)
-except Exception as exc:
-    logger.warning("optional router unavailable: %s (%s)", "apps.backend.src.routers.agent_zero", exc)
-    _OPTIONAL_ROUTER_ERRORS.append(
-        {"module": "apps.backend.src.routers.agent_zero", "error": str(exc)}
     )
 
 # Optional: Billing / Usage tracking
@@ -555,39 +544,8 @@ async def initialize_llm_providers():
     except Exception as e:
         print(f"✗ A2A initialization error: {str(e)}")
 
-    # Agent Zero Integration Initialization
-    print("\n" + "-"*60)
-    print("INITIALIZING AGENT ZERO INTEGRATION")
-    print("-"*60)
-
-    try:
-        from apps.backend.src.core.agent_zero_integration import (
-            initialize_agent_zero_integration,
-            AgentZeroCommandProcessor
-        )
-        from apps.backend.src.core.agent_zero_k1_customization import (
-            initialize_k1_orchestrator
-        )
-
-        agent_zero_bridge = initialize_agent_zero_integration()
-
-        # Initialize K1-specific orchestrator
-        k1_orchestrator = initialize_k1_orchestrator(agent_registry, a2a_bus, mcp_manager)
-        print("✓ K1-customized Agent Zero orchestrator ready")
-
-        # Register with Agent Zero
-        if await agent_zero_bridge.register_with_agent_zero():
-            print("✓ Registered with Agent Zero")
-        else:
-            print("⚠ Agent Zero not available (running in standalone mode)")
-
-        # Start command processor
-        command_processor = AgentZeroCommandProcessor(agent_zero_bridge, workflow_orchestrator)
-        asyncio.create_task(command_processor.start())
-        print("✓ Agent Zero command processor running")
-
-    except Exception as e:
-        print(f"⚠ Agent Zero initialization (optional): {str(e)}")
+    # KAISON-TODO: GeminiOrchestrator replacement required here
+    # Orchestration is handled by Gemini CLI. See orchestration/gemini_orchestrator.py.
 
     # Autonomous Multi-Agent Systems Initialization
     print("\n" + "-"*60)

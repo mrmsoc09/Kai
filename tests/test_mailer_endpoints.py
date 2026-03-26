@@ -26,7 +26,7 @@ def test_mailer_archive_no_smtp(tmp_path):
     eml_path = OUTBOX / f"{RUN_ID}_{STAKEHOLDER}.eml"
     msg = EmailMessage()
     msg['Subject'] = 'Test Dispatch'
-    msg['From'] = 'agent-zero@k1.local'
+    msg['From'] = 'k1-orchestration@k1.local'
     msg['To'] = 'vrp@example.com'
     msg.set_content('Body')
     eml_path.write_bytes(msg.as_bytes())

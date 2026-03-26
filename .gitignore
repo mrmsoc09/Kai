@@ -60,3 +60,6 @@ gha-creds-*.json
 .vault_init.json
 vault_data/
 kaison_fix.sh
+test_output_*.txt
+KAISON_GO_NOGO_*.txt
+kaison_fix.log

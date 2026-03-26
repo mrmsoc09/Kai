@@ -118,7 +118,7 @@ async def followup(payload: Dict[str, Any]) -> Dict[str, Any]:
     msg = EmailMessage()
     msg['Date'] = formatdate(localtime=False)
     msg['Subject'] = f'Follow-up on submission {run_id}'
-    msg['From'] = 'agent-zero@k1.local'
+    msg['From'] = 'k1-orchestration@k1.local'
     msg['To'] = 'stakeholder@program.local'
     default_body = "Hello,\n\nFollowing up on report {rid}. Please advise on the current status.\n\nRegards,\nK1".format(rid=run_id)
     body = payload.get('body') or default_body

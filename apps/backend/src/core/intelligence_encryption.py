@@ -34,6 +34,8 @@ import os
 import warnings
 from typing import Any
 
+from .secret_manager import get_secret_manager
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -88,7 +90,9 @@ def _resolve_key(tenant_id: str | None = None) -> tuple[bytes, str]:
         return material, "__platform__"
 
     # 3. Derive from JWT secret (dev fallback)
-    jwt_secret = os.getenv("JWT_SECRET_KEY", "") or os.getenv("K1_JWT_SECRET", "")
+    jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+    if not jwt_secret:
+        jwt_secret = get_secret_manager().get_optional("K1_JWT_SECRET") or ""
     if jwt_secret:
         logger.warning(
             "intelligence_encryption: using JWT_SECRET_KEY as fallback key — "

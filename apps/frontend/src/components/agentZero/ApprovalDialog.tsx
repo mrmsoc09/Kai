@@ -5,7 +5,7 @@
 
 import React, { useState } from 'react';
 import { COLORS, UI } from '@/theme/branding';
-import type { ApprovalRequest } from './hooks/useAgentZeroStream';
+import type { ApprovalRequest } from './hooks/useOrchestrationStream';
 
 interface ApprovalDialogProps {
   approval: ApprovalRequest;

@@ -20,7 +20,6 @@ import Recon from './routes/Recon'
 import AttackGraph from './routes/AttackGraph'
 import Docs from './routes/Docs'
 import Wizard from './routes/Wizard'
-import AgentZero from './routes/AgentZero'
 import Operations from './routes/Operations'
 import Arsenal from './routes/Arsenal'
 import Intelligence from './routes/Intelligence'
@@ -118,8 +117,6 @@ export default function App() {
                 <Route path='/validation' element={<Validation />} />
                 <Route path='/intelligence' element={<Intelligence />} />
                 <Route path='/kpi' element={<KPI />} />
-                <Route path='/agent-zero' element={<AgentZero />} />
-
                 {/* Reporting & Planning */}
                 <Route path='/report-builder' element={<ReportBuilder />} />
                 <Route path='/plans' element={<Plans />} />

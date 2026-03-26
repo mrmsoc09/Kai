@@ -321,8 +321,11 @@ Validation Status: {finding_data.get('validation_status', 'pending')}
             logger.error(f"Error analyzing finding context: {e}")
             return f"Error analyzing finding context: {str(e)}"
 
-    async def enrich_agent_zero_context(self, user_query: str) -> str:
-        """Provide RAG context for Agent Zero responses"""
+    async def enrich_orchestration_context(self, user_query: str) -> str:
+        """Provide RAG context for orchestration responses.
+
+        Orchestration is handled by Gemini CLI. See orchestration/gemini_orchestrator.py.
+        """
         try:
             # Query RAG for relevant context
             response = await self.query(user_query, top_k=3)
@@ -352,7 +355,7 @@ Validation Status: {finding_data.get('validation_status', 'pending')}
             return context
 
         except Exception as e:
-            logger.error(f"Error enriching Agent Zero context: {e}")
+            logger.error(f"Error enriching orchestration context: {e}")
             return "RAG context unavailable."
 
     async def search_cves(self, query: str, top_k: int = 10) -> List[Dict[str, Any]]:

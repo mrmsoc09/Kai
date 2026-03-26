@@ -18,7 +18,7 @@ def generate_http_template(cve_id: str, name: str, path: str, matchers: List[Dic
         "id": f"{cve_id.lower()}-{_slug(name)}",
         "info": {
             "name": f"{cve_id} - {name}",
-            "author": "agent-zero",
+            "author": "k1-orchestration",
             "severity": "medium",
             "tags": ["cve", "autogen"],
             "description": f"Auto-generated probe for {cve_id}",

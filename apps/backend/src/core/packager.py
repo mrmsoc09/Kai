@@ -102,7 +102,7 @@ def _build_email(stakeholder: str, ctx: Dict[str, Any], attachments: Dict[str, b
     rendered = render_email(stakeholder, ctx)
     msg['Date'] = formatdate(localtime=False)
     msg['Subject'] = rendered['subject']
-    msg['From'] = 'agent-zero@k1.local'
+    msg['From'] = 'k1-orchestration@k1.local'
     msg['To'] = 'stakeholder@program.local'
     for k,v in rendered['headers'].items():
         msg[k] = v

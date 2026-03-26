@@ -1,6 +1,9 @@
 /**
- * WebSocket hook for Kaison Composer chat streaming
- * Handles real-time message streaming and approval workflows
+ * WebSocket hook for Kaison Orchestration chat streaming
+ * Handles real-time message streaming and approval workflows.
+ *
+ * Orchestration is handled by Gemini CLI. See orchestration/gemini_orchestrator.py.
+ * The default WebSocket URL is controlled by the K1_ORCHESTRATION_WS_URL env variable.
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -39,7 +42,7 @@ export interface StreamEvent {
   timestamp?: string;
 }
 
-interface UseAgentZeroStreamOptions {
+interface UseOrchestrationStreamOptions {
   apiUrl?: string;
   sessionId?: string;
   onMessage?: (message: ChatMessage) => void;
@@ -51,7 +54,7 @@ interface UseAgentZeroStreamOptions {
   reconnectInterval?: number;
 }
 
-interface UseAgentZeroStreamReturn {
+interface UseOrchestrationStreamReturn {
   isConnected: boolean;
   isStreaming: boolean;
   sessionId: string | null;
@@ -66,10 +69,18 @@ interface UseAgentZeroStreamReturn {
   clearHistory: () => void;
 }
 
-export function useAgentZeroStream(options: UseAgentZeroStreamOptions = {}): UseAgentZeroStreamReturn {
-  const defaultApiUrl = typeof window !== 'undefined'
-    ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/api/v1/agent-zero/ws/chat`
-    : 'ws://localhost:8000/api/v1/agent-zero/ws/chat';
+export function useOrchestrationStream(
+  options: UseOrchestrationStreamOptions = {},
+): UseOrchestrationStreamReturn {
+  // K1_ORCHESTRATION_WS_URL is injected at build time via VITE_K1_ORCHESTRATION_WS_URL
+  const envWsUrl = typeof window !== 'undefined'
+    ? (import.meta as any).env?.VITE_K1_ORCHESTRATION_WS_URL
+    : undefined;
+  const defaultApiUrl = envWsUrl
+    ?? (typeof window !== 'undefined'
+      ? `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/api/v1/orchestration/ws/chat`
+      : 'ws://localhost:8000/api/v1/orchestration/ws/chat');
+
   const {
     apiUrl = defaultApiUrl,
     sessionId: initialSessionId,
@@ -105,7 +116,7 @@ export function useAgentZeroStream(options: UseAgentZeroStreamOptions = {}): Use
 
     ws.onopen = () => {
       setIsConnected(true);
-      console.log('[AgentZero] WebSocket connected');
+      console.log('[Orchestration] WebSocket connected');
 
       // Start heartbeat
       heartbeatRef.current = setInterval(() => {
@@ -120,14 +131,14 @@ export function useAgentZeroStream(options: UseAgentZeroStreamOptions = {}): Use
         const data: StreamEvent = JSON.parse(event.data);
         handleStreamEvent(data);
       } catch (error) {
-        console.error('[AgentZero] Failed to parse message:', error);
+        console.error('[Orchestration] Failed to parse message:', error);
       }
     };
 
     ws.onclose = () => {
       setIsConnected(false);
       setIsStreaming(false);
-      console.log('[AgentZero] WebSocket disconnected');
+      console.log('[Orchestration] WebSocket disconnected');
 
       if (heartbeatRef.current) {
         clearInterval(heartbeatRef.current);
@@ -136,14 +147,14 @@ export function useAgentZeroStream(options: UseAgentZeroStreamOptions = {}): Use
       // Auto-reconnect
       if (autoReconnect) {
         reconnectTimeoutRef.current = setTimeout(() => {
-          console.log('[AgentZero] Attempting to reconnect...');
+          console.log('[Orchestration] Attempting to reconnect...');
           connect();
         }, reconnectInterval);
       }
     };
 
     ws.onerror = (error) => {
-      console.error('[AgentZero] WebSocket error:', error);
+      console.error('[Orchestration] WebSocket error:', error);
       onError?.(new Error('WebSocket connection error'));
     };
   }, [apiUrl, initialSessionId, autoReconnect, reconnectInterval, onError]);
@@ -163,101 +174,108 @@ export function useAgentZeroStream(options: UseAgentZeroStreamOptions = {}): Use
   }, []);
 
   // Handle incoming stream events
-  const handleStreamEvent = useCallback((event: StreamEvent) => {
-    switch (event.type) {
-      case 'session_started':
-        setSessionId(event.data?.session_id || event.timestamp);
-        break;
+  const handleStreamEvent = useCallback(
+    (event: StreamEvent) => {
+      switch (event.type) {
+        case 'session_started':
+          setSessionId(event.data?.session_id || event.timestamp);
+          break;
 
-      case 'message_received':
-        // User message was received by server
-        break;
+        case 'message_received':
+          // User message was received by server
+          break;
 
-      case 'token':
-        // Streaming token
-        setIsStreaming(true);
-        setStreamingContent((prev) => prev + (event.content || ''));
-        onToken?.(event.content || '');
-        break;
+        case 'token':
+          // Streaming token
+          setIsStreaming(true);
+          setStreamingContent((prev) => prev + (event.content || ''));
+          onToken?.(event.content || '');
+          break;
 
-      case 'message_complete':
-        // Assistant message complete
-        setIsStreaming(false);
-        const assistantMessage = event.message || {
-          id: Date.now().toString(),
-          role: 'assistant' as const,
-          content: streamingContent,
-          timestamp: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, assistantMessage]);
-        setStreamingContent('');
-        onMessage?.(assistantMessage);
-        break;
+        case 'message_complete': {
+          // Assistant message complete
+          setIsStreaming(false);
+          const assistantMessage = event.message || {
+            id: Date.now().toString(),
+            role: 'assistant' as const,
+            content: streamingContent,
+            timestamp: new Date().toISOString(),
+          };
+          setMessages((prev) => [...prev, assistantMessage]);
+          setStreamingContent('');
+          onMessage?.(assistantMessage);
+          break;
+        }
 
-      case 'tool_call':
-        const toolCall: ToolCall = {
-          tool: event.data?.tool || '',
-          params: event.data?.params || {},
-          description: event.data?.description,
-          tier: event.data?.tier,
-        };
-        onToolCall?.(toolCall);
-        break;
+        case 'tool_call': {
+          const toolCall: ToolCall = {
+            tool: event.data?.tool || '',
+            params: event.data?.params || {},
+            description: event.data?.description,
+            tier: event.data?.tier,
+          };
+          onToolCall?.(toolCall);
+          break;
+        }
 
-      case 'tool_result':
-        // Tool execution result
-        const toolResultMessage: ChatMessage = {
-          id: Date.now().toString(),
-          role: 'tool',
-          content: JSON.stringify(event.data?.result || event.data, null, 2),
-          timestamp: new Date().toISOString(),
-          metadata: { tool: event.data?.tool },
-        };
-        setMessages((prev) => [...prev, toolResultMessage]);
-        break;
+        case 'tool_result': {
+          // Tool execution result
+          const toolResultMessage: ChatMessage = {
+            id: Date.now().toString(),
+            role: 'tool',
+            content: JSON.stringify(event.data?.result || event.data, null, 2),
+            timestamp: new Date().toISOString(),
+            metadata: { tool: event.data?.tool },
+          };
+          setMessages((prev) => [...prev, toolResultMessage]);
+          break;
+        }
 
-      case 'approval_required':
-        const approval: ApprovalRequest = {
-          approvalId: event.data?.approval_id || '',
-          operation: event.data?.operation || '',
-          tier: event.data?.tier || 0,
-          details: event.data?.details || {},
-          message: event.data?.message || 'Approval required',
-        };
-        setPendingApprovals((prev) => [...prev, approval]);
-        onApprovalRequired?.(approval);
-        break;
+        case 'approval_required': {
+          const approval: ApprovalRequest = {
+            approvalId: event.data?.approval_id || '',
+            operation: event.data?.operation || '',
+            tier: event.data?.tier || 0,
+            details: event.data?.details || {},
+            message: event.data?.message || 'Approval required',
+          };
+          setPendingApprovals((prev) => [...prev, approval]);
+          onApprovalRequired?.(approval);
+          break;
+        }
 
-      case 'approval_granted':
-      case 'approval_rejected':
-        setPendingApprovals((prev) =>
-          prev.filter((a) => a.approvalId !== event.data?.approval_id)
-        );
-        break;
+        case 'approval_granted':
+        case 'approval_rejected':
+          setPendingApprovals((prev) =>
+            prev.filter((a) => a.approvalId !== event.data?.approval_id),
+          );
+          break;
 
-      case 'history':
-        // Received chat history
-        setMessages(event.data?.messages || []);
-        break;
+        case 'history':
+          // Received chat history
+          setMessages(event.data?.messages || []);
+          break;
 
-      case 'error':
-        console.error('[AgentZero] Server error:', event.data?.message);
-        onError?.(new Error(event.data?.message || 'Server error'));
-        break;
+        case 'error':
+          console.error('[Orchestration] Server error:', event.data?.message);
+          onError?.(new Error(event.data?.message || 'Server error'));
+          break;
 
-      case 'pong':
-        // Heartbeat response
-        break;
+        case 'pong':
+          // Heartbeat response
+          break;
 
-      default:
-        console.log('[AgentZero] Unknown event type:', event.type);
-    }
-  }, [streamingContent, onToken, onMessage, onToolCall, onApprovalRequired, onError]);
+        default:
+          console.log('[Orchestration] Unknown event type:', event.type);
+      }
+    },
+    [streamingContent, onToken, onMessage, onToolCall, onApprovalRequired, onError],
+  );
 
   // Send a message
   const sendMessage = useCallback((content: string, context?: Record<string, any>) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('[AgentZero] WebSocket not connected');
+      console.error('[Orchestration] WebSocket not connected');
       return;
     }
 
@@ -274,40 +292,46 @@ export function useAgentZeroStream(options: UseAgentZeroStreamOptions = {}): Use
     setStreamingContent('');
 
     // Send to server
-    wsRef.current.send(JSON.stringify({
-      type: 'message',
-      content,
-      context,
-    }));
+    wsRef.current.send(
+      JSON.stringify({
+        type: 'message',
+        content,
+        context,
+      }),
+    );
   }, []);
 
   // Approve a pending request
   const approveRequest = useCallback((approvalId: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('[AgentZero] WebSocket not connected');
+      console.error('[Orchestration] WebSocket not connected');
       return;
     }
 
-    wsRef.current.send(JSON.stringify({
-      type: 'approval_response',
-      approval_id: approvalId,
-      decision: 'approved',
-    }));
+    wsRef.current.send(
+      JSON.stringify({
+        type: 'approval_response',
+        approval_id: approvalId,
+        decision: 'approved',
+      }),
+    );
   }, []);
 
   // Reject a pending request
   const rejectRequest = useCallback((approvalId: string, reason?: string) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      console.error('[AgentZero] WebSocket not connected');
+      console.error('[Orchestration] WebSocket not connected');
       return;
     }
 
-    wsRef.current.send(JSON.stringify({
-      type: 'approval_response',
-      approval_id: approvalId,
-      decision: 'rejected',
-      reason: reason || 'User rejected',
-    }));
+    wsRef.current.send(
+      JSON.stringify({
+        type: 'approval_response',
+        approval_id: approvalId,
+        decision: 'rejected',
+        reason: reason || 'User rejected',
+      }),
+    );
   }, []);
 
   // Clear chat history
@@ -339,4 +363,4 @@ export function useAgentZeroStream(options: UseAgentZeroStreamOptions = {}): Use
   };
 }
 
-export default useAgentZeroStream;
+export default useOrchestrationStream;

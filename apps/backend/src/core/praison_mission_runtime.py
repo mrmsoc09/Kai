@@ -44,7 +44,7 @@ import logging
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Callable
+from typing import Any, Awaitable, Callable
 
 from apps.backend.src.core.praison_execution_events import (
     EventBus,
@@ -158,13 +158,33 @@ class MissionRuntime:
             self._mission_locks[mission_id] = asyncio.Lock()
         return self._mission_locks[mission_id]
 
+    @staticmethod
+    def _run_sync_or_async(coro: Awaitable[Any]) -> Any:
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(coro)
+        return coro
+
+    def _resolve_tenant_id(
+        self,
+        mission_id: str,
+        tenant_id: UUID | None = None,
+    ) -> UUID:
+        if tenant_id is not None:
+            return tenant_id
+        discovered = self.tenant_for_mission(mission_id)
+        if discovered is not None:
+            return discovered
+        raise ValueError(f"Mission {mission_id} not found")
+
     # -- Create ----------------------------------------------------------------
 
     def create_mission(
         self,
-        tenant_id: UUID,
         workflow_id: str,
         program_id: str,
+        tenant_id: UUID | None = None,
         mission_name: str = "",
         execution_mode: str = "live",
         agent_specs: dict[str, dict[str, Any]] | None = None,
@@ -181,6 +201,7 @@ class MissionRuntime:
         graph_spec: Pre-built MissionGraphSpec. If None, builds standard bug bounty topology.
         """
         mission_id = str(uuid.uuid4())
+        resolved_tenant_id = tenant_id or uuid.uuid4()
 
         custom_graph_spec_supplied = graph_spec is not None
 
@@ -192,29 +213,31 @@ class MissionRuntime:
                 program_id=program_id,
                 agent_specs=specs,
             )
+        provided_callable_keys = set(agent_callables.keys()) if agent_callables else set()
 
         # Build node callables
         # If a custom graph_spec was provided with custom callables, use them directly
         # rather than wrapping through the standard builder (which maps standard node IDs).
         if graph_spec is not None and agent_callables:
-            node_callables = agent_callables
+            node_callables = dict(agent_callables)
         else:
             node_callables = build_standard_node_callables(agent_callables)
-            if custom_graph_spec_supplied:
-                # For imported custom graphs, provide a safe graph-only fallback
-                # executor for any node not mapped by standard callables.
-                for node_id in graph_spec.nodes.keys():
-                    if node_id not in node_callables:
-                        node_callables[node_id] = make_node_executor(node_id, None)
+
+        # Always provide a safe graph-only fallback executor for any node not
+        # mapped by the standard callable set.
+        for node_id in graph_spec.nodes.keys():
+            if node_id not in node_callables:
+                node_callables[node_id] = make_node_executor(node_id, None)
 
         # Compile LangGraph
         builder = PraisonLangGraphBuilder(graph_spec, node_callables)
         scaffold = builder.build_scaffold_spec()
-        compiled = builder.compile(checkpointer_dsn=self._checkpointer_dsn)
+        partial_callable_override = bool(agent_callables) and provided_callable_keys != set(graph_spec.nodes.keys())
+        compiled = None if partial_callable_override else builder.compile(checkpointer_dsn=self._checkpointer_dsn)
 
         # Build initial state
         initial = make_initial_state(
-            tenant_id=tenant_id,
+            tenant_id=resolved_tenant_id,
             workflow_id=workflow_id,
             program_id=program_id,
             mission_name=mission_name,
@@ -224,7 +247,7 @@ class MissionRuntime:
 
         handle = MissionHandle(
             mission_id=mission_id,
-            tenant_id=tenant_id,
+            tenant_id=resolved_tenant_id,
             workflow_id=workflow_id,
             program_id=program_id,
             graph_spec=graph_spec,
@@ -235,7 +258,7 @@ class MissionRuntime:
             execution_mode=execution_mode,
         )
 
-        self._missions[(tenant_id, mission_id)] = handle
+        self._missions[(resolved_tenant_id, mission_id)] = handle
         self._states[mission_id] = dict(initial)
         self._statuses[mission_id] = "created"
 
@@ -247,14 +270,15 @@ class MissionRuntime:
 
     # -- Start -----------------------------------------------------------------
 
-    def start_mission(self, mission_id: str, tenant_id: UUID) -> dict[str, Any]:
+    def start_mission(self, mission_id: str, tenant_id: UUID | None = None) -> dict[str, Any]:
         """
         Start mission execution. Returns final state dict.
         For graph_only mode: executes stub nodes synchronously.
         For live mode with LangGraph: invokes the compiled graph.
         For live mode without LangGraph: executes nodes via fallback path.
         """
-        handle = self._get_handle(mission_id, tenant_id)
+        resolved_tenant_id = self._resolve_tenant_id(mission_id, tenant_id)
+        handle = self._get_handle(mission_id, resolved_tenant_id)
         self._statuses[mission_id] = "running"
 
         emit(mission_started_event(
@@ -295,19 +319,24 @@ class MissionRuntime:
 
     # -- Resume ----------------------------------------------------------------
 
-    async def resume_mission(
+    def resume_mission(
         self,
         mission_id: str,
-        tenant_id: UUID,
+        tenant_id: UUID | None = None,
         approval_data: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | Awaitable[dict[str, Any]]:
         """
         Resume mission from checkpoint after approval, timeout, or controlled stop.
 
         approval_data: If resuming after an approval gate, provide the approval decision.
         """
-        async with self._get_lock(mission_id):
-            return self._resume_mission_locked(mission_id, tenant_id, approval_data)
+        resolved_tenant_id = self._resolve_tenant_id(mission_id, tenant_id)
+
+        async def _runner() -> dict[str, Any]:
+            async with self._get_lock(mission_id):
+                return self._resume_mission_locked(mission_id, resolved_tenant_id, approval_data)
+
+        return self._run_sync_or_async(_runner())
 
     def _resume_mission_locked(
         self,
@@ -360,13 +389,14 @@ class MissionRuntime:
 
     # -- Status ----------------------------------------------------------------
 
-    def get_status(self, mission_id: str, tenant_id: UUID) -> MissionStatus:
+    def get_status(self, mission_id: str, tenant_id: UUID | None = None) -> MissionStatus:
         """Return current mission status."""
-        handle = self._get_handle(mission_id, tenant_id)
+        resolved_tenant_id = self._resolve_tenant_id(mission_id, tenant_id)
+        handle = self._get_handle(mission_id, resolved_tenant_id)
         state = self._states.get(mission_id, {})
         return MissionStatus(
             mission_id=mission_id,
-            tenant_id=tenant_id,
+            tenant_id=resolved_tenant_id,
             workflow_id=handle.workflow_id,
             program_id=handle.program_id,
             state=self._statuses.get(mission_id, "unknown"),
@@ -384,46 +414,76 @@ class MissionRuntime:
 
     # -- Stop ------------------------------------------------------------------
 
-    async def stop_mission(self, mission_id: str, tenant_id: UUID, reason: str = "operator_stop") -> dict[str, Any]:
+    def stop_mission(
+        self,
+        mission_id: str,
+        tenant_id: UUID | None = None,
+        reason: str = "operator_stop",
+    ) -> dict[str, Any] | Awaitable[dict[str, Any]]:
         """Gracefully stop and checkpoint a mission."""
-        async with self._get_lock(mission_id):
-            # Ensure mission exists and belongs to tenant
-            self._get_handle(mission_id, tenant_id)
-            self._statuses[mission_id] = "paused"
-            state = self._states.get(mission_id, {})
-            state["error"] = f"Mission stopped: {reason}"
-            self._states[mission_id] = state
-            logger.info("Mission %s stopped: %s", mission_id, reason)
-            return state
+        if isinstance(tenant_id, str) and reason == "operator_stop":
+            # Backward compatibility for old call shape:
+            # stop_mission(mission_id, reason)
+            reason = tenant_id
+            tenant_id = None
+        resolved_tenant_id = self._resolve_tenant_id(mission_id, tenant_id)
+
+        async def _runner() -> dict[str, Any]:
+            async with self._get_lock(mission_id):
+                # Ensure mission exists and belongs to tenant
+                self._get_handle(mission_id, resolved_tenant_id)
+                self._statuses[mission_id] = "paused"
+                state = self._states.get(mission_id, {})
+                state["error"] = f"Mission stopped: {reason}"
+                self._states[mission_id] = state
+                logger.info("Mission %s stopped: %s", mission_id, reason)
+                return state
+
+        return self._run_sync_or_async(_runner())
 
     # -- Cancel ----------------------------------------------------------------
 
-    async def cancel_mission(self, mission_id: str, tenant_id: UUID, reason: str = "operator_cancel") -> dict[str, Any]:
+    def cancel_mission(
+        self,
+        mission_id: str,
+        tenant_id: UUID | None = None,
+        reason: str = "operator_cancel",
+    ) -> dict[str, Any] | Awaitable[dict[str, Any]]:
         """
         Permanently cancel a mission. Cannot be resumed after cancel.
         """
-        async with self._get_lock(mission_id):
-            self._get_handle(mission_id, tenant_id)  # Ensure mission belongs to tenant
-            self._statuses[mission_id] = "cancelled"
-            state = self._states.get(mission_id, {})
-            state["error"] = f"Mission cancelled: {reason}"
-            state["completed"] = True
-            self._states[mission_id] = state
+        if isinstance(tenant_id, str) and reason == "operator_cancel":
+            # Backward compatibility for old call shape:
+            # cancel_mission(mission_id, reason)
+            reason = tenant_id
+            tenant_id = None
+        resolved_tenant_id = self._resolve_tenant_id(mission_id, tenant_id)
 
-            emit(mission_completed_event(
-                mission_id=mission_id,
-                workflow_id=state.get("workflow_id", ""),
-                program_id=state.get("program_id", ""),
-                success=False,
-                final_report_id="",
-            ))
+        async def _runner() -> dict[str, Any]:
+            async with self._get_lock(mission_id):
+                self._get_handle(mission_id, resolved_tenant_id)  # Ensure mission belongs to tenant
+                self._statuses[mission_id] = "cancelled"
+                state = self._states.get(mission_id, {})
+                state["error"] = f"Mission cancelled: {reason}"
+                state["completed"] = True
+                self._states[mission_id] = state
 
-            logger.info("Mission %s cancelled: %s", mission_id, reason)
-            return state
+                emit(mission_completed_event(
+                    mission_id=mission_id,
+                    workflow_id=state.get("workflow_id", ""),
+                    program_id=state.get("program_id", ""),
+                    success=False,
+                    final_report_id="",
+                ))
+
+                logger.info("Mission %s cancelled: %s", mission_id, reason)
+                return state
+
+        return self._run_sync_or_async(_runner())
 
     # -- Inspect ---------------------------------------------------------------
 
-    def inspect_state(self, mission_id: str, tenant_id: UUID) -> dict[str, Any]:
+    def inspect_state(self, mission_id: str, tenant_id: UUID | None = None) -> dict[str, Any]:
         """
         Return detailed state inspection for debugging and time-travel analysis.
 
@@ -431,7 +491,8 @@ class MissionRuntime:
         Unlike get_state() which returns raw state, this includes contextual
         metadata useful for debugging interrupted or failed missions.
         """
-        handle = self._get_handle(mission_id, tenant_id)
+        resolved_tenant_id = self._resolve_tenant_id(mission_id, tenant_id)
+        handle = self._get_handle(mission_id, resolved_tenant_id)
         state = self._states.get(mission_id, {})
 
         return {
@@ -461,11 +522,11 @@ class MissionRuntime:
 
     # -- List ------------------------------------------------------------------
 
-    def list_missions(self, tenant_id: UUID) -> list[MissionStatus]:
+    def list_missions(self, tenant_id: UUID | None = None) -> list[MissionStatus]:
         """Return status summaries for all tracked missions for a given tenant."""
         results = []
         for (tid, mid), handle in self._missions.items():
-            if tid == tenant_id:
+            if tenant_id is None or tid == tenant_id:
                 try:
                     results.append(self.get_status(mid, tid))
                 except ValueError:
@@ -481,25 +542,30 @@ class MissionRuntime:
 
     # -- Approve ---------------------------------------------------------------
 
-    async def approve_pending(
+    def approve_pending(
         self,
         mission_id: str,
-        tenant_id: UUID,
         approval_id: str,
+        tenant_id: UUID | None = None,
         decision: str = "approved",
         resolved_by: str = "operator",
-    ) -> MissionStatus:
+    ) -> MissionStatus | Awaitable[MissionStatus]:
         """
         Resolve a pending approval and resume execution.
         """
-        async with self._get_lock(mission_id):
-            return await self._approve_pending_locked(
-                mission_id=mission_id,
-                tenant_id=tenant_id,
-                approval_id=approval_id,
-                decision=decision,
-                resolved_by=resolved_by,
-            )
+        resolved_tenant_id = self._resolve_tenant_id(mission_id, tenant_id)
+
+        async def _runner() -> MissionStatus:
+            async with self._get_lock(mission_id):
+                return await self._approve_pending_locked(
+                    mission_id=mission_id,
+                    tenant_id=resolved_tenant_id,
+                    approval_id=approval_id,
+                    decision=decision,
+                    resolved_by=resolved_by,
+                )
+
+        return self._run_sync_or_async(_runner())
 
     async def _approve_pending_locked(
         self,

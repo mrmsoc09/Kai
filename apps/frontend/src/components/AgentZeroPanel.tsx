@@ -1,10 +1,14 @@
+/**
+ * Kaison Composer Link widget.
+ * Orchestration is handled by Gemini CLI. See orchestration/gemini_orchestrator.py.
+ */
 import React from 'react'
 import NeonChip from './common/NeonChip'
-export default function AgentZeroPanel(){
+export default function OrchestrationPanel(){
   const callsign = 'Kaison Composer — Spectre-1'
   const mode = 'HiL Relay'
-  const inbound = 'Routed via A0'
-  const outbound = 'Routed via A0'
+  const inbound = 'Routed via Orchestration'
+  const outbound = 'Routed via Orchestration'
   return <div className='widget'>
     <div className='widget-title'>Kaison Composer Link</div>
     <div className='row' style={{gap:8, flexWrap:'wrap'}}>

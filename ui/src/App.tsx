@@ -2,7 +2,6 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { AppLayout } from './layouts/AppLayout';
 import { Artifacts } from './pages/Artifacts';
-import { AgentZero } from './pages/AgentZero';
 import { Dashboard } from './pages/Dashboard';
 import { Governance } from './pages/Governance';
 import { IntelligenceCenter } from './pages/IntelligenceCenter';
@@ -23,7 +22,6 @@ function App() {
           <Route element={<AppLayout />}>
             <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/agent-zero" element={<AgentZero />} />
             <Route path="/vault-keys" element={<VaultKeys />} />
             <Route path="/langgraph-builder" element={<LangGraphBuilder />} />
             <Route path="/mission-control" element={<MissionControl />} />

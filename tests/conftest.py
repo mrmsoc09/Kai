@@ -28,6 +28,19 @@ if not _path.startswith("/usr/bin:"):
     os.environ["PATH"] = f"/usr/bin:{_path}"
 
 _ORIGINAL_RUN_SYNC = anyio.to_thread.run_sync
+_ORIGINAL_EVENT_LOOP_POLICY = asyncio.get_event_loop_policy()
+
+
+class _CompatEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+    """Compatibility policy for tests that call asyncio.get_event_loop() in sync code."""
+
+    def get_event_loop(self):
+        try:
+            return super().get_event_loop()
+        except RuntimeError:
+            loop = self.new_event_loop()
+            self.set_event_loop(loop)
+            return loop
 
 async def _inline_run_sync(func, *args, abandon_on_cancel=False, cancellable=None, limiter=None):
     """Test-only fallback for environments where anyio thread handoff is unavailable."""
@@ -57,6 +70,8 @@ if _INLINE_THREADPOOL_FALLBACK:
     anyio.to_thread.run_sync = _inline_run_sync
     os.environ.setdefault("K1_TEST_INLINE_THREADPOOL_FALLBACK", "1")
 
+asyncio.set_event_loop_policy(_CompatEventLoopPolicy())
+
 @pytest.fixture(scope='session')
 def auth_headers():
     from apps.backend.src.core.auth import (
@@ -83,3 +98,4 @@ def client(auth_headers):
 
 def pytest_sessionfinish(session: pytest.Session, exitstatus: int) -> None:  # pragma: no cover - cleanup hook
     anyio.to_thread.run_sync = _ORIGINAL_RUN_SYNC
+    asyncio.set_event_loop_policy(_ORIGINAL_EVENT_LOOP_POLICY)

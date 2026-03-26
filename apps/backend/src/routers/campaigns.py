@@ -612,6 +612,7 @@ async def decide_campaign_approval_gate(
 ):
     approvals = ApprovalGateService(db)
     scheduler = BranchScheduler(db)
+    actor_id = getattr(current_user, "id", None) or body.decided_by or "operator"
     gate = await approvals.get_gate(gate_id)
     if gate is None:
         raise HTTPException(status_code=404, detail=f"Approval gate not found: {gate_id}")
@@ -620,7 +621,7 @@ async def decide_campaign_approval_gate(
         if body.status == ApprovalGateStatusEnum.CANCELED:
             decided = await approvals.cancel_gate(
                 gate,
-                actor=current_user.id,
+                actor=actor_id,
                 note=body.operator_notes,
                 intention_id=body.intention_id,
             )
@@ -629,11 +630,11 @@ async def decide_campaign_approval_gate(
                 gate,
                 ApprovalGateDecision(
                     status=body.status,
-                    decided_by=current_user.id,
+                    decided_by=actor_id,
                     operator_notes=body.operator_notes,
                     decision_payload_json=body.decision_payload_json,
                 ),
-                actor=current_user.id,
+                actor=actor_id,
                 intention_id=body.intention_id,
             )
     except ValueError as exc:
@@ -643,7 +644,7 @@ async def decide_campaign_approval_gate(
     if body.trigger_scheduler:
         schedule_summary = await scheduler.schedule_campaign(
             decided.campaign_id,
-            actor=f"{current_user.id}.approval",
+            actor=f"{actor_id}.approval",
         )
     return CampaignApprovalDecisionResponse(
         gate_id=decided.id,

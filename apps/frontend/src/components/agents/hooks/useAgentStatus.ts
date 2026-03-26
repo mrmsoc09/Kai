@@ -17,7 +17,9 @@ export interface AgentNode {
   };
 }
 
-export function useAgentStatus(apiUrl: string = `ws://${window.location.hostname}:8000/api/v1/agent-zero/ws/agents`) {
+// KAISON-TODO: GeminiOrchestrator replacement required here — update default WS URL
+// once gemini_orchestrator.py exposes /api/v1/orchestration/ws/agents
+export function useAgentStatus(apiUrl: string = `ws://${window.location.hostname}:8000/api/v1/orchestration/ws/agents`) {
   const [agents, setAgents] = useState<AgentNode[]>([]);
   const [isConnected, setIsConnected] = useState(false);
 

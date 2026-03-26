@@ -115,12 +115,12 @@ def status():
         except Exception:
             api_status = "unreachable"
 
-        # Check Agent Zero
+        # Check Orchestration (Gemini CLI — see orchestration/gemini_orchestrator.py)
         try:
-            response = client.get("/api/v1/agent-zero/health")
-            agent_zero_status = "healthy" if response.status_code == 200 else "degraded"
+            response = client.get("/api/v1/orchestration/health")
+            orchestration_status = "healthy" if response.status_code == 200 else "degraded"
         except Exception:
-            agent_zero_status = "unavailable"
+            orchestration_status = "unavailable"
 
         # Check Autonomous System
         try:
@@ -139,7 +139,7 @@ def status():
 
         status_data = {
             "API Server": api_status,
-            "Agent Zero": agent_zero_status,
+            "Orchestration": orchestration_status,
             "Autonomous System": autonomous_status,
             "Version": __version__,
         }

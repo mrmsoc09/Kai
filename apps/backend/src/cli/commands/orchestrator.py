@@ -111,7 +111,7 @@ def health_check():
 
     # Check Agent Zero
     try:
-        response = client.get("/api/v1/agent-zero/health")
+        response = client.get("/api/v1/orchestration/health")
         checks.append(["Agent Zero", "healthy" if response.status_code == 200 else "degraded", response.status_code])
     except Exception:
         checks.append(["Agent Zero", "unavailable", "-"])

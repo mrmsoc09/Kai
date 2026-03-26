@@ -61,7 +61,7 @@ def list_workflows(status: Optional[str], limit: int):
         if status:
             params["status"] = status
 
-        response = client.get("/api/v1/agent-zero/workflows", params=params)
+        response = client.get("/api/v1/orchestration/workflows", params=params)
 
         if response.status_code == 200:
             data = response.json()
@@ -131,7 +131,7 @@ def run_workflow(template: str, target: str, scope: Optional[str], watch: bool, 
             **extra_params
         }
 
-        response = client.post("/api/v1/agent-zero/workflows/hunt", params={"target": target}, json=scope_config)
+        response = client.post("/api/v1/orchestration/workflows/hunt", params={"target": target}, json=scope_config)
 
         if response.status_code == 200:
             data = response.json()
@@ -166,7 +166,7 @@ def workflow_status(workflow_id: str, watch: bool):
         return
 
     try:
-        response = client.get(f"/api/v1/agent-zero/workflows/{workflow_id}")
+        response = client.get(f"/api/v1/orchestration/workflows/{workflow_id}")
 
         if response.status_code == 200:
             data = response.json()
@@ -193,7 +193,7 @@ def cancel_workflow(workflow_id: str, force: bool):
         return
 
     try:
-        response = client.post(f"/api/v1/agent-zero/workflows/{workflow_id}/cancel")
+        response = client.post(f"/api/v1/orchestration/workflows/{workflow_id}/cancel")
 
         if response.status_code == 200:
             print_success(f"Workflow {workflow_id} cancelled")
@@ -294,7 +294,7 @@ def show_workflow_graph(workflow_id: str):
         return
 
     try:
-        response = client.get(f"/api/v1/agent-zero/workflows/{workflow_id}")
+        response = client.get(f"/api/v1/orchestration/workflows/{workflow_id}")
 
         if response.status_code == 200:
             data = response.json()
@@ -335,7 +335,7 @@ async def _watch_workflow(workflow_id: str):
         while True:
             try:
                 client = get_api_client()
-                response = client.get(f"/api/v1/agent-zero/workflows/{workflow_id}")
+                response = client.get(f"/api/v1/orchestration/workflows/{workflow_id}")
 
                 if response.status_code != 200:
                     print_error(f"Failed to fetch workflow status")

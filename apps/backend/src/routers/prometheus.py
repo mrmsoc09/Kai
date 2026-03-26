@@ -12,11 +12,15 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import PlainTextResponse
 
 from apps.backend.src.core.prometheus_metrics import generate_metrics_output
+from apps.backend.src.core.secret_manager import get_secret_manager
 
 router = APIRouter(tags=["observability"])
 
 _INTERNAL_ONLY = os.getenv("K1_METRICS_INTERNAL_ONLY", "false").lower() in {"1", "true", "yes"}
-_SCRAPE_TOKEN = os.getenv("K1_METRICS_SCRAPE_TOKEN", "")
+
+
+def _scrape_token() -> str:
+    return get_secret_manager().get_optional("K1_METRICS_SCRAPE_TOKEN") or ""
 
 
 def _check_metrics_access(request: Request) -> None:
@@ -30,9 +34,10 @@ def _check_metrics_access(request: Request) -> None:
         return  # open
 
     # Check scrape token
-    if _SCRAPE_TOKEN:
+    scrape_token = _scrape_token()
+    if scrape_token:
         auth_header = request.headers.get("Authorization", "")
-        if auth_header == f"Bearer {_SCRAPE_TOKEN}":
+        if auth_header == f"Bearer {scrape_token}":
             return
 
     # Check internal IP

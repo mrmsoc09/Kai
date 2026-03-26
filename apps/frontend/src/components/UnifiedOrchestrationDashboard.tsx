@@ -1,14 +1,16 @@
 /**
- * Unified Kaison Composer Dashboard Hub
- * K1 + Kaison Composer Integration Frontend
+ * Unified Kaison Orchestration Dashboard Hub
+ * K1 Orchestration Frontend
  * Primary user communication interface
+ *
+ * Orchestration is handled by Gemini CLI. See orchestration/gemini_orchestrator.py.
  *
  * Features:
  * - Real-time agent activity visualization
  * - Natural language command input
  * - Findings stream
  * - Workflow progress tracking
- * - Kaison Composer integration status
+ * - Orchestration integration status
  */
 
 import React, { useState, useEffect, useRef } from 'react'
@@ -48,14 +50,18 @@ interface Workflow {
   created_at: string
 }
 
-export const UnifiedAgentZeroDashboard: React.FC = () => {
+// KAISON-TODO: GeminiOrchestrator replacement required here — update API base URL
+// once gemini_orchestrator.py exposes its own /api/v1/orchestration/* endpoints.
+const ORCHESTRATION_API_BASE = '/api/v1/orchestration'
+
+export const UnifiedOrchestrationDashboard: React.FC = () => {
   // State
   const [command, setCommand] = useState('')
   const [agents, setAgents] = useState<Agent[]>([])
   const [findings, setFindings] = useState<Finding[]>([])
   const [workflows, setWorkflows] = useState<Workflow[]>([])
   const [currentWorkflow, setCurrentWorkflow] = useState<Workflow | null>(null)
-  const [agentZeroConnected, setAgentZeroConnected] = useState(false)
+  const [orchestrationConnected, setOrchestrationConnected] = useState(false)
   const [isHunting, setIsHunting] = useState(false)
   const [target, setTarget] = useState('')
   const [llmStats, setLLMStats] = useState<any>(null)
@@ -63,48 +69,49 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
 
   const wsRef = useRef<WebSocket | null>(null)
   const token = useAuth().getState().token
-  const API_URL = 'http://localhost:8000/api/v1'
+  const API_URL = `http://localhost:8000${ORCHESTRATION_API_BASE}`
 
   // Initialize dashboard
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
-        // Check Kaison Composer connection
-        const healthResponse = await axios.get(`${API_URL}/agent-zero/health`, {
+        // Check orchestration health
+        const healthResponse = await axios.get(`${API_URL}/health`, {
           headers: { Authorization: `Bearer ${token}` }
         })
 
-        setAgentZeroConnected(
-          healthResponse.data.systems.kaison_composer.status === 'operational'
+        setOrchestrationConnected(
+          healthResponse.data.systems?.orchestration?.status === 'operational'
         )
 
         // Get agent status
-        const agentsResponse = await axios.get(`${API_URL}/agent-zero/agents`, {
+        const agentsResponse = await axios.get(`${API_URL}/agents`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setAgents(agentsResponse.data.agents || [])
 
         // Get MCP servers
-        const mcpResponse = await axios.get(`${API_URL}/agent-zero/mcp/registry`, {
+        const mcpResponse = await axios.get(`${API_URL}/mcp/registry`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setMCPServers(mcpResponse.data.servers || [])
 
         // Get LLM stats
-        const llmResponse = await axios.get(`${API_URL}/agent-zero/llm/providers`, {
+        const llmResponse = await axios.get(`${API_URL}/llm/providers`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setLLMStats(llmResponse.data)
 
       } catch (error) {
-        console.error('Failed to initialize dashboard:', error)
+        console.error('[Orchestration] Failed to initialize dashboard:', error)
       }
     }
 
     initializeDashboard()
 
     // Setup WebSocket for real-time updates
-    const wsUrl = 'ws://localhost:8000/api/v1/agent-zero/ws/agents'
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+    const wsUrl = `${wsProtocol}://${window.location.host}${ORCHESTRATION_API_BASE}/ws/agents`
     const ws = new WebSocket(wsUrl)
 
     ws.onmessage = (event) => {
@@ -128,7 +135,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
 
     try {
       const response = await axios.post(
-        `${API_URL}/agent-zero/commands/natural-language`,
+        `${API_URL}/commands/natural-language`,
         {
           query: command,
           context: { user_id: 'current_user', timestamp: new Date().toISOString() }
@@ -136,14 +143,14 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
-      console.log('Command executed:', response.data)
+      console.log('[Orchestration] Command executed:', response.data)
       setCommand('')
 
       // Refresh workflows
       await refreshWorkflows()
 
     } catch (error) {
-      console.error('Command execution failed:', error)
+      console.error('[Orchestration] Command execution failed:', error)
     }
   }
 
@@ -155,7 +162,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
       setIsHunting(true)
 
       const response = await axios.post(
-        `${API_URL}/agent-zero/workflows/hunt?target=${target}`,
+        `${API_URL}/workflows/hunt?target=${target}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -164,14 +171,15 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
       setCurrentWorkflow(response.data)
 
       // Connect to workflow WebSocket
-      const wsUrl = `ws://localhost:8000/api/v1/agent-zero/ws/workflows/${workflowId}`
+      const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
+      const wsUrl = `${wsProtocol}://${window.location.host}${ORCHESTRATION_API_BASE}/ws/workflows/${workflowId}`
       const ws = new WebSocket(wsUrl)
 
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data)
 
         if (data.type === 'status_update') {
-          console.log('Workflow status:', data)
+          console.log('[Orchestration] Workflow status:', data)
         } else if (data.type === 'finding_discovered') {
           setFindings((prev) => [...prev, data.finding])
         }
@@ -181,7 +189,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
       const interval = setInterval(async () => {
         try {
           const statusResponse = await axios.get(
-            `${API_URL}/agent-zero/workflows/${workflowId}`,
+            `${API_URL}/workflows/${workflowId}`,
             { headers: { Authorization: `Bearer ${token}` } }
           )
 
@@ -193,12 +201,12 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
           }
 
         } catch (error) {
-          console.error('Failed to fetch workflow status:', error)
+          console.error('[Orchestration] Failed to fetch workflow status:', error)
         }
       }, 2000)
 
     } catch (error) {
-      console.error('Hunt workflow creation failed:', error)
+      console.error('[Orchestration] Hunt workflow creation failed:', error)
       setIsHunting(false)
     }
   }
@@ -206,14 +214,14 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
   // Refresh workflows
   const refreshWorkflows = async () => {
     try {
-      const response = await axios.get(`${API_URL}/agent-zero/workflows`, {
+      const response = await axios.get(`${API_URL}/workflows`, {
         headers: { Authorization: `Bearer ${token}` }
       })
 
       setWorkflows(response.data.workflows || [])
 
     } catch (error) {
-      console.error('Failed to fetch workflows:', error)
+      console.error('[Orchestration] Failed to fetch workflows:', error)
     }
   }
 
@@ -303,7 +311,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
             .filter((s) => s.status !== 'pending')
             .map((s) => (
               <div key={s.step_id} style={{ marginBottom: '4px' }}>
-                ✓ {s.name}
+                {'\u2713'} {s.name}
               </div>
             ))}
         </div>
@@ -332,13 +340,13 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
           className="connection-status"
           style={{
             padding: '8px',
-            backgroundColor: agentZeroConnected ? 'rgba(95, 143, 107, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+            backgroundColor: orchestrationConnected ? 'rgba(95, 143, 107, 0.12)' : 'rgba(239, 68, 68, 0.12)',
             borderRadius: '4px',
             marginBottom: '16px',
             fontSize: '12px'
           }}
         >
-          Kaison Composer: {agentZeroConnected ? '🟢 Connected' : '🔴 Offline'}
+          Orchestration: {orchestrationConnected ? '\u{1F7E2} Connected' : '\u{1F534} Offline'}
         </div>
 
         <div className="agents-list">
@@ -355,7 +363,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
         <div className="mcp-status">
           {mcpServers.map((server) => (
             <div key={server.server_id} style={{ fontSize: '12px', marginBottom: '8px' }}>
-              <span style={{ color: server.status === 'online' ? '#22c55e' : '#7b8798' }}>●</span>
+              <span style={{ color: server.status === 'online' ? '#22c55e' : '#7b8798' }}>{'\u25CF'}</span>
               {' '}
               {server.name} ({server.tools?.length || 0} tools)
             </div>
@@ -385,7 +393,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
             marginBottom: '24px'
           }}
         >
-          <h2 style={{ marginBottom: '16px' }}>🚀 Quick Vulnerability Hunt</h2>
+          <h2 style={{ marginBottom: '16px' }}>Quick Vulnerability Hunt</h2>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
             <input
@@ -435,7 +443,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
             marginBottom: '24px'
           }}
         >
-          <h3 style={{ marginBottom: '12px' }}>💬 Natural Language Commands</h3>
+          <h3 style={{ marginBottom: '12px' }}>Natural Language Commands</h3>
 
           <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
             <input
@@ -489,7 +497,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
               marginBottom: '24px'
             }}
           >
-            <h3 style={{ marginBottom: '12px' }}>🔄 Current Workflow</h3>
+            <h3 style={{ marginBottom: '12px' }}>Current Workflow</h3>
             {renderWorkflowProgress(currentWorkflow)}
           </div>
         )}
@@ -504,7 +512,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
               borderRadius: '8px'
             }}
           >
-            <h3 style={{ marginBottom: '12px' }}>🎯 Discovered Vulnerabilities</h3>
+            <h3 style={{ marginBottom: '12px' }}>Discovered Vulnerabilities</h3>
 
             {findings.map((finding) => {
               const sev = (finding.severity || 'info').toLowerCase()
@@ -537,7 +545,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
                   </div>
                   <div style={{ fontSize: '12px', color: '#8a95a7', marginTop: '4px' }}>
                     Severity: <strong>{(finding.severity || 'INFO').toUpperCase()}</strong> | Confidence:{' '}
-                    {typeof finding.confidence === 'number' ? `${(finding.confidence as number) * 100}%` : finding.confidence ?? '—'}
+                    {typeof finding.confidence === 'number' ? `${(finding.confidence as number) * 100}%` : finding.confidence ?? '\u2014'}
                   </div>
                   {finding.source_tool && (
                     <div style={{ fontSize: '11px', color: '#7b8798', marginTop: '4px' }}>
@@ -553,7 +561,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
 
       {/* Right Sidebar: Activity & Status */}
       <div className="activity-panel" style={{ borderLeft: '1px solid #355E3B' }}>
-        <h3 style={{ marginBottom: '16px' }}>📊 Statistics</h3>
+        <h3 style={{ marginBottom: '16px' }}>Statistics</h3>
 
         <div style={{ fontSize: '14px', marginBottom: '12px' }}>
           <div style={{ marginBottom: '8px' }}>
@@ -574,7 +582,7 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
 
         <hr style={{ margin: '12px 0' }} />
 
-        <h4 style={{ marginBottom: '12px' }}>💰 Cost Tracking</h4>
+        <h4 style={{ marginBottom: '12px' }}>Cost Tracking</h4>
         <div style={{ fontSize: '12px' }}>
           <div>Session Cost: ${llmStats?.stats?.total_cost_usd?.toFixed(2) || '0.00'}</div>
           <div>Tokens: {llmStats?.stats?.total_tokens || 0}</div>
@@ -585,22 +593,22 @@ export const UnifiedAgentZeroDashboard: React.FC = () => {
 
         <hr style={{ margin: '12px 0' }} />
 
-        <h4 style={{ marginBottom: '12px' }}>🔧 System Health</h4>
+        <h4 style={{ marginBottom: '12px' }}>System Health</h4>
         <div style={{ fontSize: '12px' }}>
-          <div>✓ LLM System</div>
-          <div>✓ MCP Servers</div>
-          <div>✓ A2A Bus</div>
-          <div>{agentZeroConnected && '✓ Kaison Composer'}</div>
+          <div>{'\u2713'} LLM System</div>
+          <div>{'\u2713'} MCP Servers</div>
+          <div>{'\u2713'} A2A Bus</div>
+          <div>{orchestrationConnected && `${'\u2713'} Orchestration`}</div>
         </div>
 
         <hr style={{ margin: '12px 0' }} />
 
         <p style={{ fontSize: '12px', color: '#8a95a7', margin: 0 }}>
-          K1 v7.0 | Powered by Kaison Composer
+          K1 v7.0 | Gemini CLI Orchestration
         </p>
       </div>
     </div>
   )
 }
 
-export default UnifiedAgentZeroDashboard
+export default UnifiedOrchestrationDashboard

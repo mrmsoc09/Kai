@@ -34,8 +34,8 @@ export const useStore = create<K1Store>()((set) => ({
 }))
 
 // Backward-compat shim.
-// api/client.ts:  useAuth.getState().token     (object access)
-// UnifiedAgentZeroDashboard: useAuth().getState().token  (function call)
+// api/client.ts:  useAuth.getState().token            (object access)
+// UnifiedOrchestrationDashboard: useAuth().getState().token  (function call)
 // This shim satisfies both patterns.
 const _authShim = {
   getState: () => ({

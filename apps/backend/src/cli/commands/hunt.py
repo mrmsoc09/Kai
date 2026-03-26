@@ -146,14 +146,14 @@ def hunt_status(hunt_id: Optional[str], show_all: bool):
 
     try:
         if hunt_id:
-            response = client.get(f"/api/v1/agent-zero/workflows/{hunt_id}")
+            response = client.get(f"/api/v1/orchestration/workflows/{hunt_id}")
             if response.status_code == 200:
                 workflow = response.json()
                 _display_hunt_details(workflow)
             else:
                 print_error(f"Hunt not found: {hunt_id}")
         else:
-            response = client.get("/api/v1/agent-zero/workflows", params={"limit": 50 if show_all else 10})
+            response = client.get("/api/v1/orchestration/workflows", params={"limit": 50 if show_all else 10})
             if response.status_code == 200:
                 data = response.json()
                 workflows = data.get("workflows", [])
@@ -184,7 +184,7 @@ def cancel_hunt(hunt_id: str, force: bool):
         return
 
     try:
-        response = client.post(f"/api/v1/agent-zero/workflows/{hunt_id}/cancel")
+        response = client.post(f"/api/v1/orchestration/workflows/{hunt_id}/cancel")
         if response.status_code == 200:
             print_success(f"Hunt {hunt_id} cancelled")
         else:
@@ -206,7 +206,7 @@ def resume_hunt(hunt_id: str):
 
     try:
         # Get hunt details
-        response = client.get(f"/api/v1/agent-zero/workflows/{hunt_id}")
+        response = client.get(f"/api/v1/orchestration/workflows/{hunt_id}")
         if response.status_code != 200:
             print_error(f"Hunt not found: {hunt_id}")
             return
@@ -277,7 +277,7 @@ async def _execute_hunt(
     # Create hunt workflow
     try:
         response = client.post(
-            "/api/v1/agent-zero/workflows/hunt",
+            "/api/v1/orchestration/workflows/hunt",
             params={"target": target},
             json=scope
         )
@@ -310,7 +310,7 @@ async def _watch_hunt_progress(workflow_id: str) -> dict:
         while True:
             try:
                 client = get_api_client()
-                response = client.get(f"/api/v1/agent-zero/workflows/{workflow_id}")
+                response = client.get(f"/api/v1/orchestration/workflows/{workflow_id}")
 
                 if response.status_code != 200:
                     break
