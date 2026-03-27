@@ -392,4 +392,3 @@ def register_tool(tool: BaseTool):
 def get_tool(tool_id: str) -> Optional[BaseTool]:
     """Get tool from global registry"""
     return _global_registry.get(tool_id)
-l_registry.get(tool_id)

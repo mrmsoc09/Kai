@@ -96,11 +96,11 @@ def upgrade() -> None:
         ),
         sa.CheckConstraint(
             "min_concurrent >= 1",
-            name="ck_opportunity_scan_pools_opportunity_scan_pools_min_concurrent_ge_1",
+            name="ck_osp_min_concurrent_ge_1",
         ),
         sa.CheckConstraint(
             "max_concurrent >= 1 AND max_concurrent <= 25",
-            name="ck_opportunity_scan_pools_opportunity_scan_pools_max_concurrent_range",
+            name="ck_osp_max_concurrent_range",
         ),
         sa.CheckConstraint(
             "min_concurrent <= max_concurrent",
@@ -204,7 +204,7 @@ def upgrade() -> None:
             ["schedule_job_id"],
             ["hunt_schedule_jobs.id"],
             ondelete="SET NULL",
-            name="fk_opportunity_scan_pool_entries_schedule_job_id_hunt_schedule_jobs",
+            name="fk_ospe_schedule_job_hunt_schedule_jobs",
         ),
         # Unique position within pool.
         sa.UniqueConstraint(
@@ -215,7 +215,7 @@ def upgrade() -> None:
         # Status constraint.
         sa.CheckConstraint(
             "status IN ('waiting', 'active', 'paused', 'error')",
-            name="ck_opportunity_scan_pool_entries_opportunity_scan_pool_entries_status_allowed",
+            name="ck_ospe_status_allowed",
         ),
     )
 

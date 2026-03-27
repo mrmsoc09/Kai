@@ -691,8 +691,3 @@ def register_bugbounty_tools() -> None:
 
 def tool_entry_or_none(tool_name: str) -> ToolCatalogEntry | None:
     return get_catalog_entry(tool_name)
-  _register_with_tier(CatalogBackedCLITool(entry))
-
-
-def tool_entry_or_none(tool_name: str) -> ToolCatalogEntry | None:
-    return get_catalog_entry(tool_name)

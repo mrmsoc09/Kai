@@ -404,6 +404,3 @@ celery_app.conf.beat_schedule = {
     },
 }
 celery_app.conf.timezone = "UTC"
-   },
-}
-celery_app.conf.timezone = "UTC"
