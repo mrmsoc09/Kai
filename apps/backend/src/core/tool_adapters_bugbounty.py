@@ -399,7 +399,7 @@ class CatalogBackedCLITool(BaseTool):
 
         return {"items": [line for line in output.splitlines() if line.strip()]}
 
-    def execute(self, **kwargs) -> ToolResult:
+    def execute(self, headers: Optional[Dict[str, str]] = None, **kwargs) -> ToolResult:
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
@@ -435,7 +435,7 @@ class CatalogBackedCLITool(BaseTool):
         args, stdin_text = self._build_command(target, [str(arg) for arg in extra_args])
         if binary is None and self.catalog_entry.execution_mode in {"docker", "optional"}:
             if self._docker_available() and self.catalog_entry.container_image:
-                result = self._run_via_docker(args, timeout_seconds=timeout_seconds, stdin_text=stdin_text)
+                result = self._run_via_docker(args, timeout_seconds=timeout_seconds, stdin_text=stdin_text, headers=headers)
                 attempts = 1
                 command = result.command
             else:
@@ -462,6 +462,7 @@ class CatalogBackedCLITool(BaseTool):
                 retries=retries,
                 timeout_seconds=timeout_seconds,
                 stdin_text=stdin_text,
+                headers=headers,
             )
 
         parsed = self._parse_output(result.stdout)
@@ -529,7 +530,7 @@ class IntegrationHookTool(BaseTool):
             version="1.0.0",
         )
 
-    def execute(self, **kwargs) -> ToolResult:
+    def execute(self, headers: Optional[Dict[str, str]] = None, **kwargs) -> ToolResult:
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
@@ -589,7 +590,7 @@ class InternalCorrelationTool(BaseTool):
             version="1.0.0",
         )
 
-    def execute(self, **kwargs) -> ToolResult:
+    def execute(self, headers: Optional[Dict[str, str]] = None, **kwargs) -> ToolResult:
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
@@ -626,7 +627,7 @@ class PriorityRankingTool(BaseTool):
             version="1.0.0",
         )
 
-    def execute(self, **kwargs) -> ToolResult:
+    def execute(self, headers: Optional[Dict[str, str]] = None, **kwargs) -> ToolResult:
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
@@ -686,6 +687,11 @@ def register_bugbounty_tools() -> None:
         if not entry.binary_path:
             continue
         _register_with_tier(CatalogBackedCLITool(entry))
+
+
+def tool_entry_or_none(tool_name: str) -> ToolCatalogEntry | None:
+    return get_catalog_entry(tool_name)
+  _register_with_tier(CatalogBackedCLITool(entry))
 
 
 def tool_entry_or_none(tool_name: str) -> ToolCatalogEntry | None:

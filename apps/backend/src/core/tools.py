@@ -169,8 +169,8 @@ class BaseTool(ABC):
         self.failure_count = 0
 
     @abstractmethod
-    def execute(self, **kwargs) -> ToolResult:
-        """Execute the tool with given parameters"""
+    def execute(self, headers: Optional[Dict[str, str]] = None, **kwargs) -> ToolResult:
+        """Execute the tool with given parameters and optional headers"""
         pass
 
     def get_schema(self) -> Dict[str, Any]:
@@ -392,3 +392,4 @@ def register_tool(tool: BaseTool):
 def get_tool(tool_id: str) -> Optional[BaseTool]:
     """Get tool from global registry"""
     return _global_registry.get(tool_id)
+l_registry.get(tool_id)

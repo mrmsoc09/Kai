@@ -278,7 +278,7 @@ def run_tool_task(
         if "run_id" in allowed_param_names and "run_id" not in filtered_params:
             filtered_params["run_id"] = params.get("run_id") or workflow_id or task_id
 
-        result = tool.execute(**filtered_params)
+        result = tool.execute(headers=extra_headers, **filtered_params)
         elapsed = (time.time() - start) * 1000
         result.execution_time_ms = result.execution_time_ms or elapsed
         result_dict = result.to_dict()
@@ -402,5 +402,8 @@ celery_app.conf.beat_schedule = {
         "schedule": 120.0,  # every 2 minutes
         "options": {"queue": "tools"},
     },
+}
+celery_app.conf.timezone = "UTC"
+   },
 }
 celery_app.conf.timezone = "UTC"

@@ -102,7 +102,7 @@ class RSSIntelligenceParser:
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=30),
             headers={
-                'User-Agent': 'Kaison K1 Security Intelligence Platform/1.0'
+                'User-Agent': 'X-HackerOne-Bugcrowd-Intigriti-BBP-Autonomous_AI/LLM_Security_Researcher UN:KAISON ONE'
             }
         )
         return self

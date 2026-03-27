@@ -48,6 +48,7 @@ class ToolRunner:
         workflow_id: Optional[str] = None,
         require_approval: bool = True,
         approved: bool = False,
+        headers: Optional[Dict[str, str]] = None, # New parameter for custom headers
     ) -> str:
         initialize_default_tools()
         hooks = get_hook_registry()
@@ -160,9 +161,11 @@ class ToolRunner:
                 "certificate_id": certificate_id or "",
                 "workflow_id": workflow_id or "",
                 "scope_policy_hash": self._get_scope_hash(),
+                "extra_headers": headers or {}, # Pass headers to the Celery task
             },
         )
         return async_result.id
 
 
 tool_runner = ToolRunner()
+
