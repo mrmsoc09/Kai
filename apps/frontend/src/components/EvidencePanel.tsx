@@ -1,7 +1,7 @@
 /**
  * EvidencePanel — drag-drop evidence upload with client-side SHA256 computation.
  */
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useRef, useState, useEffect } from 'react'
 import { addEvidence } from '../lib/api'
 import { toast } from '../store/toasts'
 
@@ -37,6 +37,37 @@ type Props = {
 }
 
 const KINDS = ['screenshot', 'request_response', 'poc_script', 'log', 'video', 'other']
+
+/** Q3: SHA-256 chip with 1-click copy. Shows truncated hash; copies full hash. */
+function HashCopyChip({ hash }: { hash: string }) {
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 1500)
+    return () => clearTimeout(t)
+  }, [copied])
+  const copy = () => {
+    navigator.clipboard.writeText(hash).then(() => setCopied(true)).catch(() => {})
+  }
+  return (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+      <span style={{ color: '#355E3B', fontSize: '0.65rem', fontFamily: 'monospace' }}>
+        {hash.slice(0, 12)}…
+      </span>
+      <button
+        onClick={copy}
+        title="Copy full SHA-256 hash"
+        style={{
+          background: 'none', border: '1px solid #355E3B', borderRadius: 3,
+          color: copied ? '#22c55e' : '#355E3B', fontSize: '0.6rem',
+          cursor: 'pointer', padding: '0px 4px', lineHeight: '1.4',
+        }}
+      >
+        {copied ? '✓' : 'copy'}
+      </button>
+    </span>
+  )
+}
 
 async function sha256Hex(buf: ArrayBuffer): Promise<string> {
   const hashBuf = await crypto.subtle.digest('SHA-256', buf)
@@ -124,13 +155,11 @@ export default function EvidencePanel({ findingId, existingEvidence = [], onAdde
               fontSize: '0.75rem',
               gap: 4,
             }}>
-              {/* Primary row: kind | uri | sha256 */}
+              {/* Primary row: kind | uri | sha256 + copy button (Q3) */}
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                 <span style={{ color: '#a78bfa', minWidth: 90 }}>{ev.kind}</span>
                 <span style={{ color: '#8FAF9B', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ev.uri}</span>
-                <span style={{ color: '#355E3B', fontSize: '0.65rem', fontFamily: 'monospace' }}>
-                  {ev.sha256_hex.slice(0, 12)}…
-                </span>
+                <HashCopyChip hash={ev.sha256_hex} />
               </div>
               {/* Vision analysis verdict chip — only rendered when analysis data is present */}
               {ev.vision_validation?.analysis?.verdict && (() => {

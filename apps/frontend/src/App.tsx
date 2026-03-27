@@ -54,6 +54,7 @@ import WorkflowDashboard from './routes/WorkflowDashboard'
 import HuntOps from './routes/HuntOps'
 import AIEngine from './routes/AIEngine'
 import ScanOps from './routes/ScanOps'
+import ScanPoolDashboard from './routes/ScanPoolDashboard'
 
 function NotFound() {
   return (
@@ -126,6 +127,7 @@ export default function App() {
                 <Route path='/hunt' element={<HuntOps />} />
                 <Route path='/ai' element={<AIEngine />} />
                 <Route path='/scans' element={<ScanOps />} />
+                <Route path='/scan-pool' element={<ScanPoolDashboard />} />
                 <Route path='/intel' element={<Intelligence />} />
                 <Route path='/reports' element={<KPI />} />
 

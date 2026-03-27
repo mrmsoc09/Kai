@@ -572,10 +572,16 @@ export default function ScanOps() {
   const [tab, setTab] = useState<'arsenal' | 'runs' | 'hil' | 'logs'>('arsenal')
   const [hilCount, setHilCount] = useState(0)
 
+  // Q4: Poll HiL queue count every 4 seconds so badge stays fresh.
   useEffect(() => {
-    listFindings({ status: 'in_review', page_size: 1 })
-      .then(r => setHilCount(r.data?.total ?? 0))
-      .catch(() => {})
+    const poll = () => {
+      listFindings({ status: 'in_review', page_size: 1 })
+        .then(r => setHilCount(r.data?.total ?? 0))
+        .catch(() => {})
+    }
+    poll()
+    const interval = setInterval(poll, 4_000)
+    return () => clearInterval(interval)
   }, [])
 
   const tabs = [

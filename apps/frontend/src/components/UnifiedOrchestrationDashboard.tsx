@@ -80,9 +80,25 @@ interface QuotaData {
  *   Flash < 50                : orange  (spillover to Flash-Lite active)
  *   Pro   < 20                : red     (buffer zone — dispatch restricted)
  */
-const QuotaIndicator: React.FC<{ quota?: QuotaData }> = ({ quota }) => {
+const QuotaIndicator: React.FC<{ quota?: QuotaData; onRefresh?: () => void }> = ({ quota, onRefresh }) => {
   if (!quota) {
-    return <div style={{ fontSize: '11px', color: '#8a95a7' }}>quota data unavailable</div>
+    return (
+      <div style={{ fontSize: '11px', color: '#8a95a7' }}>
+        quota data unavailable
+        {onRefresh && (
+          <button
+            onClick={onRefresh}
+            style={{
+              marginLeft: '8px', background: 'none', border: '1px solid #355E3B',
+              borderRadius: '3px', color: '#355E3B', fontSize: '10px', cursor: 'pointer',
+              padding: '1px 6px',
+            }}
+          >
+            Retry
+          </button>
+        )}
+      </div>
+    )
   }
 
   const flashRpd = quota.flash?.rpd_remaining ?? 0
@@ -177,25 +193,58 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
   const [isHunting, setIsHunting] = useState(false)
   const [target, setTarget] = useState('')
   const [llmStats, setLLMStats] = useState<any>(null)
+  const [quota, setQuota] = useState<QuotaData | undefined>(undefined)
   const [mcpServers, setMCPServers] = useState<any[]>([])
+  // Q6: Live system health state (polled every 10s)
+  const [systemHealth, setSystemHealth] = useState<Record<string, boolean>>({
+    llm: true, mcp: true, a2a: true, orchestration: false,
+  })
 
   const wsRef = useRef<WebSocket | null>(null)
   const token = useAuth().getState().token
   const API_URL = `http://localhost:8000${ORCHESTRATION_API_BASE}`
 
+  // Q1: Standalone quota fetch — callable on demand (retry button) or on interval.
+  const fetchQuota = React.useCallback(async () => {
+    try {
+      const r = await axios.get(`${API_URL}/quota`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      setQuota(r.data as QuotaData)
+    } catch {
+      // Leave existing quota data in place; null means never loaded.
+    }
+  }, [API_URL, token])
+
+  // Q6: Poll health endpoint every 10 seconds.
+  useEffect(() => {
+    const pollHealth = async () => {
+      try {
+        const r = await axios.get(`${API_URL}/health`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        const sys = r.data.systems ?? {}
+        setOrchestrationConnected(sys.orchestration?.status === 'operational')
+        setSystemHealth({
+          llm: sys.llm?.status === 'operational',
+          mcp: sys.mcp?.status === 'operational',
+          a2a: sys.a2a?.status === 'operational',
+          orchestration: sys.orchestration?.status === 'operational',
+        })
+      } catch {
+        setOrchestrationConnected(false)
+        setSystemHealth({ llm: false, mcp: false, a2a: false, orchestration: false })
+      }
+    }
+    pollHealth()
+    const healthInterval = setInterval(pollHealth, 10_000)
+    return () => clearInterval(healthInterval)
+  }, [API_URL, token])
+
   // Initialize dashboard
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
-        // Check orchestration health
-        const healthResponse = await axios.get(`${API_URL}/health`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-
-        setOrchestrationConnected(
-          healthResponse.data.systems?.orchestration?.status === 'operational'
-        )
-
         // Get agent status
         const agentsResponse = await axios.get(`${API_URL}/agents`, {
           headers: { Authorization: `Bearer ${token}` }
@@ -208,16 +257,14 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
         })
         setMCPServers(mcpResponse.data.servers || [])
 
-        // Get LLM stats + quota
-        const [llmResponse, quotaResponse] = await Promise.all([
-          axios.get(`${API_URL}/llm/providers`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }),
-          axios.get(`${API_URL}/quota`, {
-            headers: { Authorization: `Bearer ${token}` }
-          }).catch(() => ({ data: null })),
-        ])
-        setLLMStats({ ...llmResponse.data, quota: quotaResponse.data })
+        // Get LLM stats
+        const llmResponse = await axios.get(`${API_URL}/llm/providers`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+        setLLMStats(llmResponse.data)
+
+        // Quota fetched separately so it can be retried independently (Q1).
+        await fetchQuota()
 
       } catch (error) {
         console.error('[Orchestration] Failed to initialize dashboard:', error)
@@ -344,11 +391,12 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
 
   // Render agent status indicator
   const renderAgentLane = (agent: Agent) => {
+    // Q2: Proper hex values — named CSS colors like '#gray' do not render.
     const statusColor: Record<string, string> = {
-      idle: '#gray',
-      working: '#green',
-      waiting: '#yellow',
-      error: '#red'
+      idle: '#4B5563',
+      working: '#22c55e',
+      waiting: '#fbbf24',
+      error: '#ef4444',
     }
 
     return (
@@ -500,7 +548,7 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
         <hr style={{ margin: '12px 0' }} />
 
         <h4 style={{ marginBottom: '8px' }}>Quota</h4>
-        <QuotaIndicator quota={llmStats?.quota as QuotaData | undefined} />
+        <QuotaIndicator quota={quota} onRefresh={fetchQuota} />
       </div>
 
       {/* Center: Command & Results */}
@@ -716,11 +764,18 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
         <hr style={{ margin: '12px 0' }} />
 
         <h4 style={{ marginBottom: '12px' }}>System Health</h4>
+        {/* Q6: Live health indicators polled every 10s */}
         <div style={{ fontSize: '12px' }}>
-          <div>{'\u2713'} LLM System</div>
-          <div>{'\u2713'} MCP Servers</div>
-          <div>{'\u2713'} A2A Bus</div>
-          <div>{orchestrationConnected && `${'\u2713'} Orchestration`}</div>
+          {[
+            ['llm', 'LLM System'],
+            ['mcp', 'MCP Servers'],
+            ['a2a', 'A2A Bus'],
+            ['orchestration', 'Orchestration'],
+          ].map(([key, label]) => (
+            <div key={key} style={{ marginBottom: '3px', color: systemHealth[key] ? '#22c55e' : '#ef4444' }}>
+              {systemHealth[key] ? '\u2713' : '\u2717'} {label}
+            </div>
+          ))}
         </div>
 
         <hr style={{ margin: '12px 0' }} />

@@ -171,14 +171,17 @@ export function Terminal() {
           <div className="grid gap-3 md:grid-cols-3">
             <label className="space-y-1 text-xs text-slate-300">
               <span className="font-medium text-slate-200">Provider</span>
+              {/* Q5: Disable offline providers in the dropdown */}
               <select
                 value={provider}
                 onChange={(event) => setProvider(event.target.value as Provider)}
                 className="w-full rounded-md border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-100 outline-none ring-cyan-500/30 focus:ring"
               >
-                <option value="ollama">ollama</option>
-                <option value="gemini">gemini</option>
-                <option value="codex">codex</option>
+                {(['ollama', 'gemini', 'codex'] as Provider[]).map((p) => (
+                  <option key={p} value={p} disabled={!providerAvailability[p]}>
+                    {p}{!providerAvailability[p] ? ' (offline)' : ''}
+                  </option>
+                ))}
               </select>
             </label>
             <label className="space-y-1 text-xs text-slate-300">
@@ -222,11 +225,15 @@ export function Terminal() {
 
           {error ? <p className="text-xs text-rose-300">{error}</p> : null}
 
+          {/* Q5: Colored status dots — offline providers visually distinct */}
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-400">
-              Availability: codex {providerAvailability.codex ? 'online' : 'offline'} · gemini{' '}
-              {providerAvailability.gemini ? 'online' : 'offline'} · ollama{' '}
-              {providerAvailability.ollama ? 'online' : 'offline'}
+            <p className="text-xs text-slate-400 flex items-center gap-3">
+              {(['codex', 'gemini', 'ollama'] as Provider[]).map((p) => (
+                <span key={p} className="inline-flex items-center gap-1">
+                  <span style={{ color: providerAvailability[p] ? '#22c55e' : '#6b7280' }}>●</span>
+                  <span style={{ color: providerAvailability[p] ? '#cbd5e1' : '#6b7280' }}>{p}</span>
+                </span>
+              ))}
             </p>
             <button
               type="submit"
