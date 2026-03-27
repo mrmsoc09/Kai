@@ -17,7 +17,7 @@ redis>=5.0.2,<6.0
 httpx>=0.28,<1.0
 cryptography>=46.0.5,<47.0
 bleach>=6.0,<7.0
-Pillow>=10.0,<13.0
+Pillow>=12.1.1  # CVE: out-of-bounds write in PSD loader fixed in 12.1.1
 
 # Phase 1 dependency deadlock fixes (index-compatible pins)
 llama-index>=0.14.15,<0.15
