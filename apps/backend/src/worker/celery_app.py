@@ -386,3 +386,21 @@ try:
     from apps.backend.src.worker import campaign_tasks as _campaign_tasks  # noqa: F401
 except Exception:
     _campaign_tasks = None
+
+# Register scan pool tasks on worker startup.
+try:
+    from apps.backend.src.worker import scan_pool_tasks as _scan_pool_tasks  # noqa: F401
+except Exception:
+    _scan_pool_tasks = None
+
+# ---------------------------------------------------------------------------
+# Celery Beat schedule
+# ---------------------------------------------------------------------------
+celery_app.conf.beat_schedule = {
+    "advance-scan-queues": {
+        "task": "scan_queue_advance_all",
+        "schedule": 120.0,  # every 2 minutes
+        "options": {"queue": "tools"},
+    },
+}
+celery_app.conf.timezone = "UTC"

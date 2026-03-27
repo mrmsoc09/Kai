@@ -554,58 +554,56 @@ export const vaultService = {
     }),
 };
 
-// KAISON-TODO: GeminiOrchestrator replacement required here — update all URLs once
-// gemini_orchestrator.py exposes /api/v1/orchestration/* endpoints.
 export const orchestrationService = {
   getHealth: (): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/orchestration/health',
+      url: '/api/v1/orchestration/health',
     }),
   getAgents: (): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/orchestration/agents',
+      url: '/api/v1/orchestration/agents',
     }),
   getWorkflows: (limit = 30): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/orchestration/workflows',
+      url: '/api/v1/orchestration/workflows',
       params: { limit },
     }),
   createHuntWorkflow: (target: string): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'POST',
-      url: '/v1/orchestration/workflows/hunt',
+      url: '/api/v1/orchestration/workflows/hunt',
       params: { target },
       data: {},
     }),
   getLlmUsage: (): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/orchestration/llm/usage',
+      url: '/api/v1/orchestration/llm/usage',
     }),
   getPluginInfo: (): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/orchestration/plugin/info',
+      url: '/api/v1/orchestration/plugin/info',
     }),
   sendChatMessage: (payload: { content: string; session_id?: string; context?: Record<string, unknown> }): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'POST',
-      url: '/v1/orchestration/chat/message',
+      url: '/api/v1/orchestration/chat/message',
       data: payload,
     }),
   getChatHistory: (sessionId: string, limit = 80): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'GET',
-      url: '/v1/orchestration/chat/history',
+      url: '/api/v1/orchestration/chat/history',
       params: { session_id: sessionId, limit },
     }),
   respondToApproval: (payload: { approval_id: string; decision: 'approved' | 'rejected'; reason?: string }): Promise<Record<string, unknown>> =>
     request<Record<string, unknown>>({
       method: 'POST',
-      url: '/v1/orchestration/chat/approval',
+      url: '/api/v1/orchestration/chat/approval',
       data: payload,
     }),
   getRelayLogs: (limit = 50): Promise<Record<string, unknown>> =>
@@ -614,6 +612,40 @@ export const orchestrationService = {
       url: '/orchestration/logs',
       params: { limit },
     }),
+
+  // --- 5-tier dispatch and quota methods ---
+
+  dispatch: (payload: {
+    instruction: string;
+    task_id?: string;
+    phase?: string;
+    context?: Record<string, unknown>;
+    tools_available?: string[];
+    complexity_hint?: 'low' | 'medium' | 'high';
+    timeout_seconds?: number;
+    priority?: number;
+    session_id?: string;
+  }): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: '/api/v1/orchestration/dispatch',
+      data: payload,
+    }),
+
+  getQuotaStatus: (): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/api/v1/orchestration/quota',
+    }),
+
+  getActiveTier: (): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/api/v1/orchestration/tier',
+    }),
+
+  streamSession: (taskId: string): EventSource =>
+    new EventSource(`/api/v1/orchestration/stream/${encodeURIComponent(taskId)}`),
 };
 
 export const realtimeService = {

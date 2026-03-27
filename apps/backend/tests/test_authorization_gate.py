@@ -30,8 +30,8 @@ def guardrails():
     engine.blocked_operations.clear()
 
 
-def test_scope_validator_rejects_missing_fields(monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr("apps.backend.src.core.authorization_gate.is_in_scope", lambda _: True)
+def test_scope_validator_rejects_missing_fields():
+    # Empty target/program_id/method are rejected before any scope lookup.
     assert scope_validator("", "program-1", "dns_enum") is False
     assert scope_validator("example.com", "", "dns_enum") is False
     assert scope_validator("example.com", "program-1", "") is False
@@ -63,9 +63,18 @@ def test_enforce_authorization_gates_blocks_without_valid_scope_or_cert(
     guardrails,
     monkeypatch: pytest.MonkeyPatch,
 ):
+    from apps.backend.src.core.scope_guardrails import ScopeDecision
+
     monkeypatch.setenv("K1_TEST_MODE", "true")
     monkeypatch.setenv("K1_RELAX_AUTH_GATES_FOR_TESTS", "false")
-    monkeypatch.setattr("apps.backend.src.core.authorization_gate.is_in_scope", lambda _: False)
+
+    # Simulate out-of-scope: evaluate_target_scope returns allowed=False.
+    monkeypatch.setattr(
+        "apps.backend.src.core.authorization_gate.evaluate_target_scope",
+        lambda target, policy, **kw: ScopeDecision(
+            target=target, normalized_host=target, allowed=False, reason="test_out_of_scope"
+        ),
+    )
 
     with pytest.raises(AuthorizationGateError, match="scope_validator failed"):
         enforce_authorization_gates(
@@ -77,7 +86,13 @@ def test_enforce_authorization_gates_blocks_without_valid_scope_or_cert(
             method="dns_enum",
         )
 
-    monkeypatch.setattr("apps.backend.src.core.authorization_gate.is_in_scope", lambda _: True)
+    # Simulate in-scope but missing cert → certificate check fails.
+    monkeypatch.setattr(
+        "apps.backend.src.core.authorization_gate.evaluate_target_scope",
+        lambda target, policy, **kw: ScopeDecision(
+            target=target, normalized_host=target, allowed=True, reason="test_in_scope"
+        ),
+    )
     with pytest.raises(AuthorizationGateError, match="authorization_certificate_check failed"):
         enforce_authorization_gates(
             "subfinder",

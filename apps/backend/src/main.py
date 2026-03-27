@@ -61,6 +61,7 @@ from apps.backend.src.routers import (
     opportunities,
     payouts,
     orchestration,
+    orchestration_v1,
     orchestrator,
     persona,
     planner,
@@ -89,6 +90,7 @@ from apps.backend.src.routers import (
     hil_workflow as hil_workflow_router,
 )
 from apps.backend.src.routers import platform_settings as platform_settings_router
+from apps.backend.src.routers import scan_pool as scan_pool_router
 
 
 services = Services()
@@ -404,6 +406,7 @@ app.include_router(system.router)
 # Model Bidding and Orchestration (v7.4)
 app.include_router(model_bidding.router)
 app.include_router(orchestration.router)
+app.include_router(orchestration_v1.router)
 
 # Autonomous Multi-Agent Systems (NEW)
 app.include_router(autonomous.router)
@@ -422,6 +425,9 @@ app.include_router(bug_bounty.router)
 
 # Platform Settings (LLM config, runtime settings)
 app.include_router(platform_settings_router.router)
+
+# Rotating Opportunity Scan Pool
+app.include_router(scan_pool_router.router)
 
 # Evidence and findings lifecycle
 app.include_router(evidence.router)
@@ -544,8 +550,13 @@ async def initialize_llm_providers():
     except Exception as e:
         print(f"✗ A2A initialization error: {str(e)}")
 
-    # KAISON-TODO: GeminiOrchestrator replacement required here
-    # Orchestration is handled by Gemini CLI. See orchestration/gemini_orchestrator.py.
+    # GeminiOrchestrator — 4-tier LLM routing stack
+    try:
+        from apps.backend.src.core.gemini_orchestrator import initialize_gemini_orchestrator
+        _gemini_orch = initialize_gemini_orchestrator()
+        print(f"✓ GeminiOrchestrator ready — primary={_gemini_orch._primary} routing={_gemini_orch._routing} fallbacks={_gemini_orch._fallbacks}")
+    except Exception as _e:
+        print(f"✗ GeminiOrchestrator initialization error: {_e}")
 
     # Autonomous Multi-Agent Systems Initialization
     print("\n" + "-"*60)

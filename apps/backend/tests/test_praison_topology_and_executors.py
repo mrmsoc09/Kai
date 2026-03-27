@@ -20,17 +20,17 @@ def test_standard_node_callables_include_aliases():
     callables = build_standard_node_callables()
     for required in (
         "GovernanceDirector",
-        "GovernanceReview",
-        "SecurityGovernorAgent",
+        "MissionDirector",
         "PhaseCoordinator",
-        "ScanningCoordinator",
-        "TriageAnalyst",
-        "HandoffAgent",
+        "EvidenceAnalyst",
+        "ReportSynthesisAgent",
+        "HandoffLiaison",
     ):
         assert required in callables
 
 
-def test_topology_uses_separate_governance_review_node():
+def test_topology_governance_director_is_approval_gate():
+    """GovernanceDirector serves as both entry and approval gate in the current topology."""
     agent_specs = {
         "GovernanceDirector": _spec("GovernanceDirector"),
         "MissionDirector": _spec("MissionDirector"),
@@ -48,9 +48,9 @@ def test_topology_uses_separate_governance_review_node():
         agent_specs=agent_specs,
     )
 
-    assert "GovernanceReview" in graph.nodes
+    assert "GovernanceDirector" in graph.nodes
 
     edges = {(edge.source, edge.target) for edge in graph.edges}
     assert ("GovernanceDirector", "MissionDirector") in edges
-    assert ("GovernanceReview", "ReportSynthesisAgent") in edges
-    assert ("GovernanceDirector", "ReportSynthesisAgent") not in edges
+    assert ("EvidenceAnalyst", "GovernanceDirector") in edges
+    assert ("GovernanceDirector", "ReportSynthesisAgent") in edges

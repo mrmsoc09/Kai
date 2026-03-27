@@ -144,6 +144,39 @@ services:
         celery -A apps.backend.src.worker.celery_app.celery_app worker -Q tools,intrusive --loglevel=info
       "
 
+  # Celery Beat Scheduler — drives the rotating scan pool and other periodic tasks
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile.worker
+    container_name: k1_beat
+    env_file: .env
+    environment:
+      PYTHONPATH: /app
+      VAULT_URL: http://vault:8200
+      OLLAMA_HOST: http://ollama:11434
+      REDIS_URL: "redis://:K1_SecR3tP4ssw0rd!_2026@redis:6379/0"
+      DATABASE_URL: "postgresql+asyncpg://k1:3733eba8112d4532d4b3d0a4e51dc81f@postgres:5432/k1"
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      vault:
+        condition: service_started
+    volumes:
+      - ./artifacts:/app/artifacts:rw
+      - ./apps:/app/apps:ro
+      - ./config:/app/config:ro
+    networks:
+      - k1_network
+    restart: unless-stopped
+    command: >
+      celery -A apps.backend.src.worker.celery_app.celery_app beat
+      --loglevel=info
+      --scheduler celery.beat.PersistentScheduler
+      --schedule /tmp/celerybeat-schedule
+
   # React Frontend (Kaison Composer UI)
   frontend:
     image: node:22-alpine

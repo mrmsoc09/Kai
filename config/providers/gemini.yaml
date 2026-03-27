@@ -1,7 +1,11 @@
 provider: gemini
 models:
   - name: gemini-2.5-flash
+    tier: 1
     role: primary
+    quota:
+      rpm: 10
+      rpd: 250
     capabilities:
       tool_calling: true
       structured_output: true
@@ -12,10 +16,14 @@ models:
       speed_tier: 3
       local_or_remote: remote
       preferred_workloads: [agentic_execution, tool_dispatch, bbp_pipeline, analysis, multimodal]
+
   - name: gemini-2.5-flash-lite
-    role: fallback
+    tier: 2
+    role: high_volume
     quota:
+      rpm: 15
       rpd: 1000
+      spillover_trigger_rpd: 50   # activates when Flash RPD < 50
     capabilities:
       tool_calling: true
       structured_output: true
@@ -25,7 +33,28 @@ models:
       cost_tier: 1
       speed_tier: 3
       local_or_remote: remote
-      preferred_workloads: [analysis, summarization]
+      preferred_workloads: [analysis, summarization, bulk_recon, classification]
+
+  - name: gemini-2.5-pro
+    tier: 3
+    role: complex
+    quota:
+      rpm: 5
+      rpd: 100
+      hard_cap_rpd: 80            # enforced client-side; reserves 20 RPD as buffer
+      alert_rpd: 20               # log warning when remaining < 20
+    capabilities:
+      tool_calling: true
+      structured_output: true
+      multimodal: true
+      context_window: 2000000
+      privacy_tier: 2
+      cost_tier: 3
+      speed_tier: 3
+      local_or_remote: remote
+      preferred_workloads: [report_generation, cve_triage, complex_chains, final_validation]
+      dispatch_constraint: COMPLEXITY_HIGH_ONLY  # never dispatched unless explicitly HIGH
+
 auth:
   method: env
   token_env: GOOGLE_API_KEY

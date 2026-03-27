@@ -462,8 +462,6 @@ function AgentChat() {
   const connectWS = () => {
     setWsStatus('connecting')
     const wsProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-    // KAISON-TODO: GeminiOrchestrator replacement required here — update WS URL once
-    // gemini_orchestrator.py exposes /api/v1/orchestration/ws/chat
     const ws = new WebSocket(`${wsProtocol}://${window.location.host}/api/v1/orchestration/ws/chat`)
     ws.onopen = () => setWsStatus('open')
     ws.onclose = () => setWsStatus('closed')

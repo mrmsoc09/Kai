@@ -50,9 +50,121 @@ interface Workflow {
   created_at: string
 }
 
-// KAISON-TODO: GeminiOrchestrator replacement required here — update API base URL
-// once gemini_orchestrator.py exposes its own /api/v1/orchestration/* endpoints.
 const ORCHESTRATION_API_BASE = '/api/v1/orchestration'
+
+// ---------------------------------------------------------------------------
+// Quota types and indicator
+// ---------------------------------------------------------------------------
+
+interface TierQuota {
+  rpm_remaining: number
+  rpd_remaining: number
+  rpm_limit: number
+  rpd_limit: number
+}
+
+interface QuotaData {
+  flash: TierQuota
+  flash_lite: TierQuota
+  pro: TierQuota
+  active_tier: string
+  emergency_fallback_active: boolean
+  flash_lite_spillover_active: boolean
+  pro_restricted: boolean
+}
+
+/**
+ * Color-coded quota indicator per the 5-tier spec:
+ *   Flash > 100 RPD remaining : green
+ *   Flash 50-100              : yellow
+ *   Flash < 50                : orange  (spillover to Flash-Lite active)
+ *   Pro   < 20                : red     (buffer zone — dispatch restricted)
+ */
+const QuotaIndicator: React.FC<{ quota?: QuotaData }> = ({ quota }) => {
+  if (!quota) {
+    return <div style={{ fontSize: '11px', color: '#8a95a7' }}>quota data unavailable</div>
+  }
+
+  const flashRpd = quota.flash?.rpd_remaining ?? 0
+  const flashRpdLimit = quota.flash?.rpd_limit ?? 250
+  const flashColor =
+    flashRpd > 100 ? '#22c55e' :
+    flashRpd > 50  ? '#fbbf24' :
+                     '#f97316'  // orange — spillover active
+
+  const liteRpd = quota.flash_lite?.rpd_remaining ?? 0
+  const liteRpdLimit = quota.flash_lite?.rpd_limit ?? 1000
+
+  const proRpd = quota.pro?.rpd_remaining ?? 0
+  const proRpdLimit = quota.pro?.rpd_limit ?? 100
+  const proColor = proRpd < 20 ? '#ef4444' : '#22c55e'
+
+  const barStyle = (color: string, pct: number): React.CSSProperties => ({
+    height: '4px',
+    borderRadius: '2px',
+    backgroundColor: '#2a3445',
+    marginTop: '3px',
+    overflow: 'hidden',
+    position: 'relative',
+  })
+
+  const fillStyle = (color: string, pct: number): React.CSSProperties => ({
+    height: '100%',
+    width: `${Math.max(0, Math.min(100, pct))}%`,
+    backgroundColor: color,
+    transition: 'width 0.4s ease',
+  })
+
+  const row = (
+    label: string,
+    rpd: number,
+    limit: number,
+    color: string,
+    note?: string,
+  ) => (
+    <div style={{ marginBottom: '8px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+        <span style={{ color: '#8a95a7' }}>{label}</span>
+        <span style={{ color }}>{rpd}/{limit} RPD{note ? ` · ${note}` : ''}</span>
+      </div>
+      <div style={barStyle(color, (rpd / limit) * 100)}>
+        <div style={fillStyle(color, (rpd / limit) * 100)} />
+      </div>
+    </div>
+  )
+
+  return (
+    <div style={{ fontSize: '11px' }}>
+      {quota.emergency_fallback_active && (
+        <div style={{
+          padding: '4px 8px', borderRadius: '4px',
+          backgroundColor: 'rgba(239,68,68,0.15)', color: '#ef4444',
+          marginBottom: '8px', fontWeight: 600,
+        }}>
+          ⚠ EMERGENCY: local Tier 5 active
+        </div>
+      )}
+      {row(
+        'Flash (T1)',
+        flashRpd,
+        flashRpdLimit,
+        flashColor,
+        quota.flash_lite_spillover_active ? 'spillover →T2' : undefined,
+      )}
+      {row('Flash-Lite (T2)', liteRpd, liteRpdLimit, '#60a5fa')}
+      {row(
+        'Pro (T3)',
+        proRpd,
+        proRpdLimit,
+        proColor,
+        quota.pro_restricted ? 'restricted' : undefined,
+      )}
+      <div style={{ color: '#8a95a7', marginTop: '4px' }}>
+        Active tier: <strong style={{ color: '#c7d2e0' }}>{quota.active_tier}</strong>
+      </div>
+    </div>
+  )
+}
 
 export const UnifiedOrchestrationDashboard: React.FC = () => {
   // State
@@ -96,11 +208,16 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
         })
         setMCPServers(mcpResponse.data.servers || [])
 
-        // Get LLM stats
-        const llmResponse = await axios.get(`${API_URL}/llm/providers`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        setLLMStats(llmResponse.data)
+        // Get LLM stats + quota
+        const [llmResponse, quotaResponse] = await Promise.all([
+          axios.get(`${API_URL}/llm/providers`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get(`${API_URL}/quota`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }).catch(() => ({ data: null })),
+        ])
+        setLLMStats({ ...llmResponse.data, quota: quotaResponse.data })
 
       } catch (error) {
         console.error('[Orchestration] Failed to initialize dashboard:', error)
@@ -379,6 +496,11 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
             Cost (session): ${llmStats?.stats?.total_cost_usd?.toFixed(2) || '0.00'}
           </div>
         </div>
+
+        <hr style={{ margin: '12px 0' }} />
+
+        <h4 style={{ marginBottom: '8px' }}>Quota</h4>
+        <QuotaIndicator quota={llmStats?.quota as QuotaData | undefined} />
       </div>
 
       {/* Center: Command & Results */}

@@ -40,7 +40,8 @@ class LLMProvider(str, Enum):
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
     GEMINI = "gemini"
-    GEMINI_FLASH_LITE = "gemini-flash-lite"  # quota fallback tier
+    GEMINI_FLASH_LITE = "gemini-flash-lite"  # Tier 2: quota fallback, high-volume
+    GEMINI_PRO = "gemini-pro"                # Tier 3: complex reasoning, scarce quota
     OLLAMA = "ollama"
     GEMMA = "gemma"
 
@@ -66,6 +67,7 @@ class LLMModel(str, Enum):
     # Gemini 2.5 series
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
+    GEMINI_2_5_PRO = "gemini-2.5-pro"
 
     # Ollama (local)
     OLLAMA_LLAMA2 = "llama2"
@@ -82,11 +84,13 @@ class LLMModel(str, Enum):
 
 
 class ProviderRole(str, Enum):
-    """Semantic role of a provider in the 4-tier routing chain."""
-    PRIMARY = "primary"    # full execution, tool calls, BBP pipeline
-    ROUTING = "routing"    # classification only, no tool calls dispatched
-    FALLBACK = "fallback"  # quota exhaustion fallback
-    EMERGENCY = "emergency"  # offline-only last resort
+    """Semantic role of a provider in the 5-tier routing chain."""
+    PRIMARY = "primary"          # Tier 1: full execution, tool calls, BBP pipeline
+    HIGH_VOLUME = "high_volume"  # Tier 2: quota spillover, high-volume tasks
+    COMPLEX = "complex"          # Tier 3: scarce quota — report gen, CVE triage
+    ROUTING = "routing"          # Tier 4: classification only, no tool calls dispatched
+    EMERGENCY = "emergency"      # Tier 5: offline-only last resort
+    FALLBACK = "fallback"        # legacy alias — maps to HIGH_VOLUME
 
 
 @dataclass
@@ -629,6 +633,79 @@ class GeminiFlashLiteProvider(GeminiProvider):
         return await super().complete(messages, system=system, tools=tools, **kwargs)
 
 
+class GeminiProProvider(GeminiProvider):
+    """Gemini 2.5 Pro — complex reasoning tier (Tier 3).
+
+    Strictly scarce: 5 RPM, 100 RPD.  A hard cap is enforced at
+    GEMINI_PRO_DAILY_CAP (default 80) RPD to keep 20 requests as a daily
+    buffer.
+
+    Use ONLY for: report generation, CVE triage, complex multi-hop exploit
+    chains, final vulnerability validation before submission.  Dispatched
+    EXCLUSIVELY when task complexity is explicitly classified as HIGH.
+
+    Hardware note: this is a remote API call — inference speed is not limited
+    by the CPU-only local hardware.
+    """
+
+    # Class-level state (shared across instances within the process)
+    _daily_request_count: int = 0
+    _count_date: str = ""
+    _minute_request_count: int = 0
+    _minute_window_start: float = 0.0
+
+    def _initialize_client(self) -> None:
+        if not genai:
+            raise ImportError("google-generativeai package not installed")
+        api_key = _resolve_api_key(self.config.api_key, "GOOGLE_API_KEY")
+        genai.configure(api_key=api_key)
+        self.model = os.getenv("GEMINI_PRO_MODEL", LLMModel.GEMINI_2_5_PRO.value)
+        self.client = genai.GenerativeModel(self.model)
+
+    def _check_quota(self) -> None:
+        """Enforce RPM (5) and RPD hard-cap (GEMINI_PRO_DAILY_CAP) for Pro tier.
+
+        Raises RuntimeError if either limit is breached — caller must catch
+        and promote to an available alternative tier.
+        """
+        import time as _time
+
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        if GeminiProProvider._count_date != today:
+            GeminiProProvider._count_date = today
+            GeminiProProvider._daily_request_count = 0
+            GeminiProProvider._minute_request_count = 0
+            GeminiProProvider._minute_window_start = _time.monotonic()
+
+        # Daily hard cap
+        rpd_cap: int = int(os.getenv("GEMINI_PRO_DAILY_CAP", "80"))
+        rpd_limit: int = self.config.rpd_limit or 100
+        if GeminiProProvider._daily_request_count >= rpd_cap:
+            raise RuntimeError(
+                f"GeminiPro daily hard cap reached ({rpd_cap}/{rpd_limit} RPD). "
+                "Reserved buffer — no further Pro requests until UTC midnight."
+            )
+
+        # RPM enforcement (5 RPM)
+        rpm_limit: int = self.config.rpm_limit or 5
+        now = _time.monotonic()
+        if now - GeminiProProvider._minute_window_start >= 60.0:
+            GeminiProProvider._minute_request_count = 0
+            GeminiProProvider._minute_window_start = now
+        if GeminiProProvider._minute_request_count >= rpm_limit:
+            raise RuntimeError(
+                f"GeminiPro RPM limit hit ({rpm_limit} RPM). Caller should backoff."
+            )
+
+        GeminiProProvider._daily_request_count += 1
+        GeminiProProvider._minute_request_count += 1
+
+    async def complete(self, messages, system=None, tools=None, **kwargs):
+        """Enforce Pro quota then delegate to parent Gemini implementation."""
+        self._check_quota()
+        return await super().complete(messages, system=system, tools=tools, **kwargs)
+
+
 class OllamaProvider(BaseLLMProvider):
     """Ollama provider (local models)"""
 
@@ -833,6 +910,7 @@ class LLMProviderFactory:
             LLMProvider.OPENAI: OpenAIProvider,
             LLMProvider.GEMINI: GeminiProvider,
             LLMProvider.GEMINI_FLASH_LITE: GeminiFlashLiteProvider,
+            LLMProvider.GEMINI_PRO: GeminiProProvider,
             LLMProvider.OLLAMA: OllamaProvider,
             LLMProvider.GEMMA: GemmaProvider,
         }
@@ -859,17 +937,22 @@ class LLMProviderFactory:
             return False
 
     def initialize_from_env(self):
-        """Initialize the 4-tier provider chain from environment variables.
+        """Initialize the 5-tier provider chain from environment variables.
 
         Tiers (in priority order):
-          1. PRIMARY   — gemini (gemini-2.5-flash) — all agentic execution, tool dispatch, BBP pipeline
-          2. ROUTING   — gemma (gemma3:8b local)   — routing/classification only, no tool calls
-          3. FALLBACK  — gemini-flash-lite (1,000 RPD quota)
-          4. EMERGENCY — ollama (qwen2.5:7b Q4_K_M local) — full offline fallback, last resort
+          1. PRIMARY      — gemini (gemini-2.5-flash)       — all agentic execution, tool dispatch
+          2. HIGH_VOLUME  — gemini-flash-lite (1,000 RPD)   — quota spillover, bulk tasks
+          3. COMPLEX      — gemini-pro (gemini-2.5-pro)     — complex reasoning, explicit HIGH only
+          4. ROUTING      — gemma (gemma3:8b local)         — classification only, no tool calls
+          5. EMERGENCY    — ollama (qwen2.5:7b Q4_K_M)      — full offline last resort
+
+        Hardware note: Tiers 4-5 are local models running at 5-15 t/s on CPU-only
+        hardware.  Acceptable for routing decisions only.  NOT suitable for sustained
+        agentic pipeline execution.
         """
         primary = os.getenv("K1_PRIMARY_LLM_PROVIDER", "gemini").strip().lower()
         fallbacks_raw = os.getenv(
-            "K1_FALLBACK_LLM_PROVIDERS", "gemini-flash-lite,ollama"
+            "K1_FALLBACK_LLM_PROVIDERS", "gemini-flash-lite,gemini-pro,ollama"
         ).split(",")
         fallbacks = [f.strip().lower() for f in fallbacks_raw if f.strip()]
         routing = os.getenv("K1_ROUTING_LLM_PROVIDER", "gemma").strip().lower()
@@ -880,6 +963,7 @@ class LLMProviderFactory:
             "openai": LLMProvider.OPENAI,
             "gemini": LLMProvider.GEMINI,
             "gemini-flash-lite": LLMProvider.GEMINI_FLASH_LITE,
+            "gemini-pro": LLMProvider.GEMINI_PRO,
             "ollama": LLMProvider.OLLAMA,
             "gemma": LLMProvider.GEMMA,
         }
@@ -904,17 +988,31 @@ class LLMProviderFactory:
             ))
             self.routing_provider = routing_enum
 
-        # Register fallbacks in declared order; last local provider is EMERGENCY
-        for i, fb in enumerate(fallbacks):
+        # Register fallbacks in declared order with explicit 5-tier roles
+        _role_map: Dict[str, ProviderRole] = {
+            "gemini-flash-lite": ProviderRole.HIGH_VOLUME,
+            "gemini-pro": ProviderRole.COMPLEX,
+            "ollama": ProviderRole.EMERGENCY,
+            "gemma": ProviderRole.EMERGENCY,
+        }
+        _rpd_map: Dict[str, int] = {
+            "gemini-flash-lite": 1000,
+            "gemini-pro": 100,
+        }
+        _rpm_map: Dict[str, int] = {
+            "gemini-flash-lite": 15,
+            "gemini-pro": 5,
+        }
+        for fb in fallbacks:
             fb_enum = _provider_key_map.get(fb)
             if not fb_enum or fb_enum == primary_enum:
                 continue
-            is_emergency = i == len(fallbacks) - 1 and fb in ("ollama", "gemma")
             self.register_provider(ProviderConfig(
                 provider=fb_enum,
                 is_fallback=True,
-                role=ProviderRole.EMERGENCY if is_emergency else ProviderRole.FALLBACK,
-                rpd_limit=1000 if fb == "gemini-flash-lite" else 0,
+                role=_role_map.get(fb, ProviderRole.FALLBACK),
+                rpd_limit=_rpd_map.get(fb, 0),
+                rpm_limit=_rpm_map.get(fb, 0),
             ))
 
     async def complete(
@@ -1014,6 +1112,21 @@ class LLMProviderFactory:
                 continue
 
         raise Exception(f"All LLM providers failed. Last error: {str(last_error)}")
+
+    def get_provider(self, provider: Optional[LLMProvider] = None) -> "BaseLLMProvider":
+        """Return a registered provider instance.
+
+        If *provider* is given, return that provider.  Otherwise return the
+        primary provider.  Raises ValueError if the requested provider is not
+        registered.
+        """
+        target = provider or self.primary_provider
+        if target and target in self.providers:
+            return self.providers[target]
+        # Fall back to first available provider
+        if self.providers:
+            return next(iter(self.providers.values()))
+        raise ValueError("No LLM providers registered")
 
     def get_usage_log(self) -> List[Dict[str, Any]]:
         """Get LLM usage history"""
