@@ -111,6 +111,13 @@ class EvidenceIntegrityService:
             return {"finalized": False, "finalized_at": None, "actor": None}
 
     def is_finalized(self, run_id: str) -> bool:
+        # SECURITY NOTE: finalization is enforced at the application layer only.
+        # The status.json and chain.jsonl files are protected by OS-level
+        # directory permissions but are NOT append-only at the filesystem level
+        # (no chattr +a).  Any process with write access to artifacts/evidence_chain/
+        # can reset finalized=false and rewrite chain.jsonl, bypassing this check.
+        # For production deployments, apply `chattr +a` to chain.jsonl after
+        # finalization, or move finalization HMAC storage off the writable filesystem.
         return bool(self._read_status(run_id).get("finalized"))
 
     def _last_chain_hash(self, run_id: str) -> str | None:

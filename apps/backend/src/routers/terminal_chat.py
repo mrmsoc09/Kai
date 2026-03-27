@@ -6,6 +6,7 @@ import os
 import pathlib
 import shutil
 import time
+import uuid
 from enum import Enum
 from typing import Any
 
@@ -169,9 +170,8 @@ async def terminal_execute(payload: TerminalExecuteIn, request: Request) -> dict
         stdin_data=stdin_data,
     )
 
-    ts = int(time.time() * 1000)
     audit = {
-        "ts": ts,
+        "ts": int(time.time() * 1000),
         "provider": payload.provider.value,
         "model": model_used,
         "timeout_seconds": payload.timeout_seconds,
@@ -181,9 +181,12 @@ async def terminal_execute(payload: TerminalExecuteIn, request: Request) -> dict
         "client": request.client.host if request.client else "unknown",
         "prompt_preview": payload.prompt[:500],
         "stdout_preview": stdout[:800],
+        # stderr logged server-side only — not returned in API response to
+        # prevent internal path disclosure and provider error leakage.
         "stderr_preview": stderr[:800],
     }
-    (ART_ROOT / f"terminal_exec_{ts}.json").write_text(
+    # uuid4 filename prevents timestamp-collision log overwrite races.
+    (ART_ROOT / f"terminal_exec_{uuid.uuid4().hex}.json").write_text(
         json.dumps(audit, indent=2),
         encoding="utf-8",
     )
@@ -191,12 +194,12 @@ async def terminal_execute(payload: TerminalExecuteIn, request: Request) -> dict
     return {
         "provider": payload.provider.value,
         "model": model_used,
-        "command": command,
+        # command list omitted from response — reveals internal binary paths.
         "return_code": return_code,
         "timed_out": timed_out,
         "duration_ms": duration_ms,
         "stdout": stdout,
-        "stderr": stderr,
+        # stderr is logged server-side (see audit log) but not returned here.
         "ok": return_code == 0 and not timed_out,
     }
 

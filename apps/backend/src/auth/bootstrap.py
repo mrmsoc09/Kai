@@ -21,9 +21,10 @@ def _env_truthy(name: str, default: bool) -> bool:
 
 
 def _bootstrap_enabled() -> bool:
-    # Enabled by default in non-production to simplify local bring-up.
-    non_production = os.getenv("ENVIRONMENT", "development").strip().lower() != "production"
-    return _env_truthy("K1_BOOTSTRAP_ADMIN_ENABLED", non_production)
+    # Requires explicit opt-in via K1_BOOTSTRAP_ADMIN_ENABLED=true in every
+    # environment.  Defaulting to True in non-production created a persistent
+    # empty-password admin account on every staging/CI instance.
+    return _env_truthy("K1_BOOTSTRAP_ADMIN_ENABLED", False)
 
 
 async def ensure_bootstrap_admin_user() -> None:

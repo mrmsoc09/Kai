@@ -1,8 +1,8 @@
 """FastAPI router for the rotating opportunity scan pool.
 
-All endpoints are under ``/api/v1/scan-pool``.  This is an internal admin
-API — no per-request authentication is enforced so that it can be called
-from CLI tooling and the beat task.
+All endpoints are under ``/api/v1/scan-pool``.  All routes require
+ROLE_OPERATOR authentication.  The Celery beat task calls the rotator
+service directly (not via HTTP), so no auth bypass is needed here.
 """
 from __future__ import annotations
 
@@ -13,13 +13,18 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
+from ..core.auth import ROLE_OPERATOR, require_roles
 from ..core.hil_db import get_db
 from ..core.scan_queue_rotator import ScanQueueRotator
 from ..models.scan_pool import OpportunityScanPool, OpportunityScanPoolEntry
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/scan-pool", tags=["scan-pool"])
+router = APIRouter(
+    prefix="/api/v1/scan-pool",
+    tags=["scan-pool"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR))],
+)
 
 
 # ============================================================================

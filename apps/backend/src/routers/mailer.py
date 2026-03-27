@@ -30,17 +30,27 @@ for d in (OUTBOX, SENT, FOLLOWUPS):
 
 
 def _send_via_smtp(raw_eml: bytes, smtp_cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """Send raw_eml via SMTP.
+
+    SMTP host, port, credentials, and sender address are read exclusively from
+    environment variables to prevent SSRF and credential-redirection attacks.
+    smtp_cfg may only influence TLS/SSL mode — never host, port, auth, or recipients.
+    Recipient addresses are taken from the EML To header only.
+    """
     msg = BytesParser(policy=default).parsebytes(raw_eml)
-    host = smtp_cfg.get('host') or 'localhost'
-    port = int(smtp_cfg.get('port') or 25)
-    user = smtp_cfg.get('user')
-    pw = smtp_cfg.get('pass') or smtp_cfg.get('password')
-    use_tls = bool(smtp_cfg.get('tls') or smtp_cfg.get('starttls'))
-    use_ssl = bool(smtp_cfg.get('ssl'))
-    to_addrs = [a.strip() for a in (smtp_cfg.get('to') or msg.get('To') or '').split(',') if a.strip()]
-    from_addr = smtp_cfg.get('from') or (msg.get('From') or 'k1-orchestration@k1.local')
+    # All sensitive parameters come from server-side environment only.
+    host = os.getenv('K1_SMTP_HOST', 'localhost')
+    port = int(os.getenv('K1_SMTP_PORT', '25'))
+    user = os.getenv('K1_SMTP_USER') or None
+    pw = os.getenv('K1_SMTP_PASSWORD') or None
+    from_addr = os.getenv('K1_SMTP_FROM') or (msg.get('From') or 'k1-orchestration@k1.local')
+    # Recipients from EML To header only — never from caller-supplied smtp_cfg.
+    to_addrs = [a.strip() for a in (msg.get('To') or '').split(',') if a.strip()]
     if not to_addrs:
-        raise HTTPException(400, 'No recipients provided or in EML')
+        raise HTTPException(400, 'No recipients found in EML To header')
+    # TLS/SSL mode is non-sensitive and may come from smtp_cfg.
+    use_tls = bool(smtp_cfg.get('tls') or smtp_cfg.get('starttls') or os.getenv('K1_SMTP_TLS'))
+    use_ssl = bool(smtp_cfg.get('ssl') or os.getenv('K1_SMTP_SSL'))
     if use_ssl:
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(host, port, context=context) as server:

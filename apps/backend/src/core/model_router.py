@@ -107,7 +107,10 @@ async def _classify_via_gemma(instruction: str, timeout: float = 8.0) -> Optiona
     model = _routing_model()
     prompt = _CLASSIFY_PROMPT.format(instruction=instruction[:500])
 
-    cmd = ["ollama", "run", model, prompt]
+    # Prompt is delivered via stdin — never as a positional CLI argument —
+    # to prevent argument-injection through crafted instruction strings.
+    cmd = ["ollama", "run", model]
+    prompt_bytes = prompt.encode("utf-8")
     try:
         loop = asyncio.get_event_loop()
         proc = await asyncio.wait_for(
@@ -115,8 +118,8 @@ async def _classify_via_gemma(instruction: str, timeout: float = 8.0) -> Optiona
                 None,
                 lambda: subprocess.run(
                     cmd,
+                    input=prompt_bytes,
                     capture_output=True,
-                    text=True,
                     timeout=timeout,
                 ),
             ),
@@ -126,7 +129,7 @@ async def _classify_via_gemma(instruction: str, timeout: float = 8.0) -> Optiona
         logger.debug("Gemma3 classification unavailable (%s) — using keyword fallback", exc)
         return None
 
-    stdout = (proc.stdout or "").strip()
+    stdout = (proc.stdout or b"").decode("utf-8", errors="replace").strip()
     if not stdout:
         return None
 

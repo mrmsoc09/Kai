@@ -4,19 +4,28 @@ Handles program scraping, discovery, and matching
 """
 
 from typing import Optional, List
-from fastapi import APIRouter, HTTPException, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from fastapi.responses import StreamingResponse
 import logging
 import asyncio
 import json
 
+from ..core.auth import ROLE_OPERATOR, ROLE_VIEWER, require_roles
 from ..core.program_scrapers import ScraperFactory, ScrapingProgress
 from ..schemas.programs import Program, ProgramsListResponse, ScrapeJob
 from ..schemas.common import Response
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/programs", tags=["Programs"])
+# All program discovery endpoints require at minimum ROLE_VIEWER.
+# Scrape-trigger endpoints override with ROLE_OPERATOR below.
+router = APIRouter(
+    prefix="/api/v1/programs",
+    tags=["Programs"],
+    dependencies=[Depends(require_roles(ROLE_VIEWER))],
+)
+
+_ALLOWED_PLATFORMS = frozenset(ScraperFactory._scrapers.keys()) if hasattr(ScraperFactory, "_scrapers") else frozenset()
 
 # In-memory storage for demo (replace with database in production)
 _programs_cache: List[dict] = []
@@ -125,18 +134,22 @@ async def get_program(program_id: str):
 # ============================================================================
 
 
-@router.post("/scrape/{platform}", response_model=Response)
+@router.post("/scrape/{platform}", response_model=Response, dependencies=[Depends(require_roles(ROLE_OPERATOR))])
 async def scrape_programs(
     platform: str,
     background_tasks: BackgroundTasks,
 ):
     """Start scraping programs from a platform"""
     try:
+        # Validate platform against known scraper allowlist before instantiation.
+        allowed = frozenset(ScraperFactory._scrapers.keys()) if hasattr(ScraperFactory, "_scrapers") else frozenset()
+        if allowed and platform not in allowed:
+            raise HTTPException(status_code=400, detail=f"Unsupported platform: {platform}")
         scraper = ScraperFactory.create(platform)
         if not scraper:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unsupported platform: {platform}. Available: {list(ScraperFactory._scrapers.keys())}",
+                detail=f"Unsupported platform: {platform}",
             )
 
         job_id = f"{platform}_{int(__import__('time').time())}"
@@ -186,7 +199,7 @@ async def scrape_programs(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/scrape-all", response_model=Response)
+@router.post("/scrape-all", response_model=Response, dependencies=[Depends(require_roles(ROLE_OPERATOR))])
 async def scrape_all_programs(background_tasks: BackgroundTasks):
     """Start scraping all platforms"""
     try:
@@ -233,7 +246,7 @@ async def get_scrape_status(job_id: str):
     )
 
 
-@router.get("/scrape/stream/{platform}")
+@router.get("/scrape/stream/{platform}", dependencies=[Depends(require_roles(ROLE_OPERATOR))])
 async def stream_scrape_programs(platform: str):
     """Stream programs as they are scraped from a platform"""
     scraper = ScraperFactory.create(platform)

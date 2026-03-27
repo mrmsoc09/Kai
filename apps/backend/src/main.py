@@ -797,9 +797,15 @@ async def initialize_llm_providers():
     try:
         from apps.backend.src.core.crypto_artifact_signing import initialize_kai_crypto
 
+        _pgp_key_source = os.getenv("K1_PGP_KEY_SOURCE_DIR", "").strip()
+        if not _pgp_key_source:
+            raise ValueError(
+                "K1_PGP_KEY_SOURCE_DIR is not set — artifact signing will be unsigned. "
+                "Set this env var to the directory containing the KAI PGP keys."
+            )
         kai_crypto = initialize_kai_crypto(
             gpg_home=os.path.expanduser("~/.kai/gpg_home"),
-            key_source_dir="/home/user/kai/Kai PGP-Keys"
+            key_source_dir=_pgp_key_source,
         )
         print("✓ Crypto system initialized")
         print(f"  GPG home: {kai_crypto.gpg_home}")

@@ -612,13 +612,15 @@ class AzurePwnValidate(ValidatorCLITool):
             proc = subprocess.run(args, capture_output=True, text=True, timeout=900)
             elapsed = (time.time() - start) * 1000
             ok2 = proc.returncode == 0
+            # Redact client_secret from repro_command — never log credentials.
+            safe_repro = f"{self.binary_name} --tenant {tenant} --client-id {client_id} --client-secret <REDACTED>"
             return ToolResult(
                 self.id,
                 ToolStatus.COMPLETED if ok2 else ToolStatus.FAILED,
                 {"tenant": tenant, "stdout": proc.stdout},
                 error=None if ok2 else proc.stderr,
                 execution_time_ms=elapsed,
-                metadata={"repro_command": " ".join(args)},
+                metadata={"repro_command": safe_repro},
             )
         except FileNotFoundError:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error="azurepwn not found in PATH")
@@ -708,13 +710,15 @@ class CMEValidate(ValidatorCLITool):
             proc = subprocess.run(args, capture_output=True, text=True, timeout=300)
             elapsed = (time.time() - start) * 1000
             ok2 = proc.returncode == 0
+            # Redact password from repro_command — never log credentials.
+            safe_repro = f"{self.binary_name} {protocol} {target} -u {user}" + (" -p <REDACTED>" if pw else "")
             return ToolResult(
                 self.id,
                 ToolStatus.COMPLETED if ok2 else ToolStatus.FAILED,
                 {"target": target, "protocol": protocol, "stdout": proc.stdout},
                 error=None if ok2 else proc.stderr,
                 execution_time_ms=elapsed,
-                metadata={"repro_command": " ".join(args)},
+                metadata={"repro_command": safe_repro},
             )
         except FileNotFoundError:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error="crackmapexec not found")
@@ -769,13 +773,16 @@ class ImpacketValidate(ValidatorCLITool):
             proc = subprocess.run(args, capture_output=True, text=True, timeout=180)
             elapsed = (time.time() - start) * 1000
             ok2 = proc.returncode == 0
+            # Redact password from repro_command — never log credentials.
+            safe_creds = f"{domain}/{user}:<REDACTED>" if domain else f"{user}:<REDACTED>"
+            safe_repro = f"{binary} {safe_creds} @{target} whoami"
             return ToolResult(
                 self.id,
                 ToolStatus.COMPLETED if ok2 else ToolStatus.FAILED,
                 {"target": target, "stdout": proc.stdout},
                 error=None if ok2 else proc.stderr,
                 execution_time_ms=elapsed,
-                metadata={"repro_command": " ".join(args)},
+                metadata={"repro_command": safe_repro},
             )
         except subprocess.TimeoutExpired:
             return ToolResult(self.id, ToolStatus.FAILED, {}, error="impacket psexec timed out after 180s")
