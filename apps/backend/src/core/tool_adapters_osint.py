@@ -106,6 +106,7 @@ class AmassTool(CLITool):
             parameters=[
                 ToolParameter("domain", "string", "Domain to enumerate"),
                 ToolParameter("passive", "boolean", "Use passive mode", required=False, default=True),
+                ToolParameter("run_id", "string", "Execution run ID for artifact persistence", required=False, default=None),
             ],
             version="0.1.0",
         )
@@ -117,22 +118,36 @@ class AmassTool(CLITool):
 
         domain = kwargs.get("domain")
         passive = bool(kwargs.get("passive", True))
+        run_id = kwargs.get("run_id")
 
         args = ["enum", "-d", domain]
         if passive:
             args.append("-passive")
 
         start = time.time()
-        success, stdout, stderr = self._run(CommandSpec(self.binary_name, args, timeout=300))
+        success, stdout, stderr = self._run(CommandSpec(self.binary_name, args, timeout=900))
         elapsed = (time.time() - start) * 1000
 
+        subdomains = [line.strip() for line in stdout.splitlines() if line.strip()]
         output = {
             "domain": domain,
             "passive": passive,
             "raw": stdout,
             "stderr": stderr,
-            "subdomains": [line.strip() for line in stdout.splitlines() if line.strip()],
+            "subdomains": subdomains,
         }
+
+        create_evidence_object(
+            tool=self.id,
+            target=domain,
+            run_id=run_id,
+            evidence_type="subdomain_enum",
+            structured_data={"domain": domain, "passive": passive, "subdomains": subdomains},
+            raw_payload={"stdout": stdout, "stderr": stderr},
+            confidence_score=0.9 if success else 0.2,
+            scope_status="validated",
+            description="amass subdomain enumeration results",
+        )
 
         status = ToolStatus.COMPLETED if success else ToolStatus.FAILED
         return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
@@ -336,7 +351,10 @@ class SubfinderTool(CLITool):
             description="Passive subdomain enumeration using subfinder",
             category=ToolCategory.OSINT,
             autonomy_tier=ToolAutonomyTier.TIER_1_NOTIFY,
-            parameters=[ToolParameter("domain", "string", "Domain to enumerate")],
+            parameters=[
+                ToolParameter("domain", "string", "Domain to enumerate"),
+                ToolParameter("run_id", "string", "Execution run ID for artifact persistence", required=False, default=None),
+            ],
             version="0.1.0",
         )
 
@@ -346,13 +364,27 @@ class SubfinderTool(CLITool):
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
 
         domain = kwargs["domain"]
+        run_id = kwargs.get("run_id")
         args = ["-silent", "-d", domain]
         start = time.time()
-        success, stdout, stderr = self._run(CommandSpec(self.binary_name, args, timeout=180))
+        success, stdout, stderr = self._run(CommandSpec(self.binary_name, args, timeout=600))
         elapsed = (time.time() - start) * 1000
 
         subs = [line.strip() for line in stdout.splitlines() if line.strip()]
         output = {"domain": domain, "subdomains": subs, "raw": stdout}
+
+        create_evidence_object(
+            tool=self.id,
+            target=domain,
+            run_id=run_id,
+            evidence_type="subdomain_enum",
+            structured_data={"domain": domain, "subdomains": subs},
+            raw_payload={"stdout": stdout, "stderr": stderr},
+            confidence_score=0.9 if success else 0.2,
+            scope_status="validated",
+            description="subfinder passive subdomain enumeration results",
+        )
+
         status = ToolStatus.COMPLETED if success else ToolStatus.FAILED
         return ToolResult(self.id, status, output, error=None if success else stderr, execution_time_ms=elapsed)
 

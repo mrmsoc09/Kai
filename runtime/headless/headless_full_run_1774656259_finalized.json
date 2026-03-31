@@ -1,0 +1,107 @@
+{
+  "source_run_artifact": "runtime/headless/headless_full_run_1774656259.json",
+  "reconciled_at_utc": "2026-03-28T00:29:56.082013Z",
+  "overall_reconciled_status": "success",
+  "final_program_states": {
+    "hackerone:coinbase": {
+      "status": "completed",
+      "missions_launched": 2,
+      "missions_completed": 2,
+      "missions_failed": 0,
+      "completion_event_emitted": true,
+      "report_ids": [],
+      "last_error": null,
+      "last_execution_started_at": "2026-03-28T00:04:21.851444+00:00",
+      "last_execution_completed_at": "2026-03-28T00:19:57.771774+00:00"
+    },
+    "hackerone:twitter": {
+      "status": "completed",
+      "missions_launched": 3,
+      "missions_completed": 3,
+      "missions_failed": 0,
+      "completion_event_emitted": true,
+      "report_ids": [],
+      "last_error": null,
+      "last_execution_started_at": "2026-03-28T00:04:20.596816+00:00",
+      "last_execution_completed_at": "2026-03-28T00:28:55.009462+00:00"
+    },
+    "hackerone:snapchat": {
+      "status": "completed",
+      "missions_launched": 3,
+      "missions_completed": 3,
+      "missions_failed": 0,
+      "completion_event_emitted": true,
+      "report_ids": [],
+      "last_error": null,
+      "last_execution_started_at": "2026-03-28T00:04:21.143479+00:00",
+      "last_execution_completed_at": "2026-03-28T00:28:55.060546+00:00"
+    }
+  },
+  "mission_ids": [
+    "338bc7d6-e469-4d7e-98dc-9cb59056e4b2",
+    "594f4731-4a3e-4105-933c-a0df9694e79c",
+    "68631004-19c2-487e-9e18-aa174ba20061",
+    "868e2755-f72c-4bd9-a1b8-20f3a2187b9a",
+    "a79231b0-42c0-4532-954b-1e2860aec10d",
+    "a7a1a612-6f39-4bcd-874c-491264462b74",
+    "cf31616a-faf5-4ac9-aedb-5e91fde0683f",
+    "f4a8f94c-8a71-4901-99c1-34389e40202f"
+  ],
+  "mission_event_counts": {
+    "opportunity_execution_started": 3,
+    "mission_started": 8,
+    "node_entered": 64,
+    "node_completed": 64,
+    "policy_decision": 40,
+    "mission_completed": 8,
+    "opportunity_execution_completed": 3
+  },
+  "mission_lifecycle": {
+    "594f4731-4a3e-4105-933c-a0df9694e79c": {
+      "mission_started": 1,
+      "mission_completed": 1,
+      "mission_failed": 0
+    },
+    "338bc7d6-e469-4d7e-98dc-9cb59056e4b2": {
+      "mission_started": 1,
+      "mission_completed": 1,
+      "mission_failed": 0
+    },
+    "68631004-19c2-487e-9e18-aa174ba20061": {
+      "mission_started": 1,
+      "mission_completed": 1,
+      "mission_failed": 0
+    },
+    "cf31616a-faf5-4ac9-aedb-5e91fde0683f": {
+      "mission_started": 1,
+      "mission_completed": 1,
+      "mission_failed": 0
+    },
+    "f4a8f94c-8a71-4901-99c1-34389e40202f": {
+      "mission_started": 1,
+      "mission_completed": 1,
+      "mission_failed": 0
+    },
+    "a79231b0-42c0-4532-954b-1e2860aec10d": {
+      "mission_started": 1,
+      "mission_completed": 1,
+      "mission_failed": 0
+    },
+    "a7a1a612-6f39-4bcd-874c-491264462b74": {
+      "mission_started": 1,
+      "mission_completed": 1,
+      "mission_failed": 0
+    },
+    "868e2755-f72c-4bd9-a1b8-20f3a2187b9a": {
+      "mission_started": 1,
+      "mission_completed": 1,
+      "mission_failed": 0
+    }
+  },
+  "observed_tools_from_policy_decisions": [
+    "amass_enum",
+    "dnsx",
+    "gau",
+    "subfinder"
+  ]
+}

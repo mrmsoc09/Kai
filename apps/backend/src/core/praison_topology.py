@@ -325,19 +325,17 @@ class PraisonTopology:
         graph.add_edge("MissionDirector", "PhaseCoordinator",
                        condition=EdgeCondition.ON_SUCCESS, label="recon_phase")
 
-        # Recon cluster: coordinator → specialists (parallel)
+        # Recon cluster: coordinator → specialists (deterministic sequence)
+        # NOTE: LangGraph conditional router returns a single branch target.
+        # Use explicit sequencing to ensure both specialist nodes execute.
         graph.add_edge("PhaseCoordinator", "SurfaceMapper",
                        condition=EdgeCondition.ON_SUCCESS, label="surface_scan")
-        graph.add_edge("PhaseCoordinator", "ReconSpecialist",
+        graph.add_edge("SurfaceMapper", "ReconSpecialist",
                        condition=EdgeCondition.ON_SUCCESS, label="active_recon")
 
         # Specialists → analysis
-        graph.add_edge("SurfaceMapper", "EvidenceAnalyst",
-                       condition=EdgeCondition.ON_ARTIFACT,
-                       artifact_type="recon_surface", label="surface_artifact")
         graph.add_edge("ReconSpecialist", "EvidenceAnalyst",
-                       condition=EdgeCondition.ON_ARTIFACT,
-                       artifact_type="pentest_evidence", label="evidence_artifact")
+                       condition=EdgeCondition.ON_SUCCESS, label="evidence_ready")
 
         # Analysis → governance gate
         graph.add_edge("EvidenceAnalyst", "GovernanceDirector",

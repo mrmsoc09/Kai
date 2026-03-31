@@ -707,3 +707,27 @@ async def execute_opp(
         background_tasks.add_task(service.start_execution_missions, state)
 
     return _out(opp, state.to_dict())
+
+
+@router.post("/{opp_id}/reset", response_model=OpportunityOut, dependencies=[Depends(require_roles(ROLE_ANALYST, ROLE_ADMIN))])
+async def reset_opp(
+    opp_id: str,
+    body: OpportunityDecisionRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Reset a completed/rejected opportunity to 'pending' so it can be re-approved and re-executed."""
+    opp = get_opportunity(opp_id)
+    if opp is None:
+        raise HTTPException(status_code=404, detail=f"Opportunity {opp_id!r} not found")
+    service = get_opportunity_action_service()
+    tenant_id = _tenant_context(current_user, require_tenant=True)
+    try:
+        state = service.reset(
+            opp,
+            tenant_id=tenant_id,
+            actor=current_user.id,
+            reason=body.reason,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
+    return _out(opp, state.to_dict())

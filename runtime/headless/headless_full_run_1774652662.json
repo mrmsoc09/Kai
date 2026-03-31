@@ -1,0 +1,1490 @@
+{
+  "started_at": "2026-03-27T23:04:22.031962+00:00",
+  "base_url": "http://127.0.0.1:8080",
+  "programs": [
+    "hackerone:twitter",
+    "hackerone:snapchat",
+    "hackerone:coinbase"
+  ],
+  "auth": {
+    "status": 200
+  },
+  "capabilities": {
+    "status": 200,
+    "payload": {
+      "approve": true,
+      "reject": true,
+      "execute": true,
+      "reason": "enabled",
+      "requires_role": "analyst"
+    }
+  },
+  "queue_settings": {
+    "status": 200,
+    "payload": {
+      "min_concurrent": 1,
+      "max_concurrent": 3
+    }
+  },
+  "actions": [
+    {
+      "program_id": "hackerone:twitter",
+      "error": "missing_opportunity"
+    },
+    {
+      "program_id": "hackerone:snapchat",
+      "error": "missing_opportunity"
+    },
+    {
+      "program_id": "hackerone:coinbase",
+      "error": "missing_opportunity"
+    }
+  ],
+  "poll": [
+    {
+      "ts": "2026-03-27T23:04:23.770946+00:00",
+      "states": {
+        "hackerone:twitter": {
+          "status": "missing",
+          "approval_state": "",
+          "missions_launched": null,
+          "missions_completed": null,
+          "missions_failed": null,
+          "report_ids": [],
+          "mission_ids": [],
+          "actual_yield_proxy": null,
+          "last_error": null
+        },
+        "hackerone:snapchat": {
+          "status": "missing",
+          "approval_state": "",
+          "missions_launched": null,
+          "missions_completed": null,
+          "missions_failed": null,
+          "report_ids": [],
+          "mission_ids": [],
+          "actual_yield_proxy": null,
+          "last_error": null
+        },
+        "hackerone:coinbase": {
+          "status": "missing",
+          "approval_state": "",
+          "missions_launched": null,
+          "missions_completed": null,
+          "missions_failed": null,
+          "report_ids": [],
+          "mission_ids": [],
+          "actual_yield_proxy": null,
+          "last_error": null
+        }
+      }
+    }
+  ],
+  "telemetry": {
+    "m-001": {
+      "event_counts": {
+        "llm_invocation_started": 1,
+        "llm_invocation_completed": 1,
+        "tool_invocation_started": 1,
+        "tool_invocation_completed": 1,
+        "node_failed": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T08:06:08.347861+00:00"
+    },
+    "m-003": {
+      "event_counts": {
+        "llm_invocation_started": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T08:06:08.439494+00:00"
+    },
+    "m-999": {
+      "event_counts": {
+        "llm_invocation_started": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T08:06:58.192717+00:00"
+    },
+    "1f675b1a-8d06-4c8a-8d9f-88e93a954d6b": {
+      "event_counts": {
+        "node_entered": 4,
+        "node_completed": 4
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T08:29:37.332527+00:00"
+    },
+    "e352d9a6-13e7-4d73-83b8-d98547b82042": {
+      "event_counts": {
+        "node_entered": 6,
+        "node_completed": 6
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T08:31:18.004657+00:00"
+    },
+    "ba86b13e-6b0c-4f1b-9157-311525b3b275": {
+      "event_counts": {
+        "node_entered": 6,
+        "node_completed": 6
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T08:32:29.989445+00:00"
+    },
+    "400629ae-f4ef-477b-bff3-0c419c349368": {
+      "event_counts": {
+        "node_entered": 7,
+        "node_completed": 7
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T08:34:06.766456+00:00"
+    },
+    "m-123": {
+      "event_counts": {
+        "test_event": 1,
+        "deep_agent_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:05:22.542554+00:00"
+    },
+    "wf-456": {
+      "event_counts": {
+        "contract_created": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:05:22.545831+00:00"
+    },
+    "m1": {
+      "event_counts": {
+        "sandbox_created": 1,
+        "sandbox_executed": 1,
+        "sandbox_destroyed": 1,
+        "deep_agent_started": 1,
+        "deep_agent_step": 1,
+        "deep_agent_tool_call": 1,
+        "deep_agent_tool_result": 1,
+        "deep_agent_subagent_started": 1,
+        "deep_agent_subagent_completed": 1,
+        "deep_agent_planning": 1,
+        "deep_agent_completed": 1,
+        "deep_agent_error": 1,
+        "deep_agent_cancelled": 1
+      },
+      "tools": [
+        "nmap"
+      ],
+      "last_ts": "2026-03-17T10:11:10.288063+00:00"
+    },
+    "m2": {
+      "event_counts": {
+        "sandbox_created": 2,
+        "sandbox_executed": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:11:47.002763+00:00"
+    },
+    "m3": {
+      "event_counts": {
+        "sandbox_created": 2,
+        "sandbox_executed": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:11:47.005031+00:00"
+    },
+    "m4": {
+      "event_counts": {
+        "sandbox_created": 2,
+        "sandbox_executed": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:11:47.007091+00:00"
+    },
+    "": {
+      "event_counts": {
+        "sandbox_created": 4
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:11:47.008264+00:00"
+    },
+    "mission_x": {
+      "event_counts": {
+        "sandbox_created": 4,
+        "sandbox_destroyed": 4
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:11:47.011657+00:00"
+    },
+    "mission_y": {
+      "event_counts": {
+        "sandbox_created": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:11:47.009731+00:00"
+    },
+    "m5": {
+      "event_counts": {
+        "sandbox_created": 2,
+        "sandbox_executed": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:11:47.013234+00:00"
+    },
+    "m6": {
+      "event_counts": {
+        "sandbox_created": 1,
+        "sandbox_executed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-17T10:11:33.113249+00:00"
+    },
+    "opportunity:vrp:google": {
+      "event_counts": {
+        "opportunity_approved": 1,
+        "opportunity_execution_failed": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-23T05:26:47.905285+00:00"
+    },
+    "opportunity:vrp:microsoft": {
+      "event_counts": {
+        "opportunity_approved": 1,
+        "opportunity_execution_failed": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-23T05:26:40.729703+00:00"
+    },
+    "opportunity:hackerone:coinbase": {
+      "event_counts": {
+        "opportunity_approved": 8,
+        "opportunity_execution_failed": 1,
+        "opportunity_rejected": 5
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:50:50.500444+00:00"
+    },
+    "6eaf0fb2-adf8-4799-8cf2-2e83739ed9e3": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 2,
+        "node_entered": 8,
+        "node_completed": 8,
+        "mission_completed": 2,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:21:09.638888+00:00"
+    },
+    "1b290195-757b-4ac2-83f1-a779b51adb95": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:18:53.108311+00:00"
+    },
+    "0ef3f7ed-8059-4ba2-aab3-0484ede10e05": {
+      "event_counts": {
+        "mission_started": 2,
+        "node_entered": 12,
+        "node_completed": 12,
+        "mission_completed": 2
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T18:01:23.647834+00:00"
+    },
+    "72739f65-9069-4cbc-aba6-cc0f5dfd7679": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:18:53.242629+00:00"
+    },
+    "92c514aa-c1c0-4795-8d7c-dbd3a882bfb4": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:18:53.300002+00:00"
+    },
+    "opportunity:vrp:apple": {
+      "event_counts": {
+        "opportunity_approved": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:19:01.944326+00:00"
+    },
+    "b7016dae-53d2-494f-94a4-a92e1a56c5d9": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:20:25.130966+00:00"
+    },
+    "5a23146b-b863-4da5-a869-bf6de7a2762a": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:19:31.729810+00:00"
+    },
+    "daef4019-5d40-4f43-96ad-683bbf9ef15a": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:19:31.761117+00:00"
+    },
+    "2374cbe7-6a85-45d3-9f55-e1d82b10a90c": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:19:31.800465+00:00"
+    },
+    "37233535-1158-4e28-a9b2-6fa612841df7": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:19:31.849869+00:00"
+    },
+    "opportunity:vrp:meta": {
+      "event_counts": {
+        "opportunity_approved": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:19:37.805594+00:00"
+    },
+    "d3b9898c-1240-467c-b2f3-8fa493bd0e81": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:23:03.094459+00:00"
+    },
+    "4e718624-2ecc-4b9b-9fcd-94a617beb8b5": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:22:24.281382+00:00"
+    },
+    "606fc0c6-b6c9-4bf1-9aa4-537ddd684883": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T08:22:24.330699+00:00"
+    },
+    "m-1": {
+      "event_counts": {
+        "opportunity_execution_failed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T18:10:15.001803+00:00"
+    },
+    "4fb58e42-548b-4b70-bfd2-69e703ee4637": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:21:17.002812+00:00"
+    },
+    "c3317e66-fefe-4756-b3e5-f1847ebf239b": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:21:01.589655+00:00"
+    },
+    "e882fb2c-9fad-4af1-8426-6f84497e1852": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:21:01.656988+00:00"
+    },
+    "995de3ec-641c-4c7b-a31a-05d6eb280148": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:21:01.711660+00:00"
+    },
+    "1921ab07-cd64-400d-a692-efe506abf553": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:21:01.759249+00:00"
+    },
+    "f812fdca-a0cc-4bf6-9890-0c386933cecb": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 2,
+        "node_entered": 8,
+        "node_completed": 8,
+        "mission_completed": 2,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:58:04.285112+00:00"
+    },
+    "970f6857-3c70-4d1b-a3e4-58742ae32817": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:45:07.909070+00:00"
+    },
+    "65411c8b-9661-42f1-b3c9-323c8025a691": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:45:07.942774+00:00"
+    },
+    "864ca02a-2345-4850-bf4e-c4b4f598fa34": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:45:07.969234+00:00"
+    },
+    "234be104-0517-45db-b07c-d7a163ee8600": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:45:08.000814+00:00"
+    },
+    "54795414-7d55-4e85-869b-23cb65802e4c": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:56:56.989415+00:00"
+    },
+    "239f7ba5-1951-42c2-b611-c2201086990f": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:54:38.933788+00:00"
+    },
+    "c93c910c-79d9-47bb-afc7-4479bed929dd": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:54:38.980247+00:00"
+    },
+    "08f57a09-1476-47bc-8064-e8386f2e1ddd": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:54:39.098139+00:00"
+    },
+    "99bb626d-ff2a-426a-8848-588cd9697b1d": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-24T23:54:39.155282+00:00"
+    },
+    "217c76e1-2319-4c73-8c7f-48cfeeaa39f4": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-25T00:15:49.211464+00:00"
+    },
+    "532062f6-7eec-4017-bc2a-b6568880e958": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-25T06:18:12.776635+00:00"
+    },
+    "1d053b9b-5e07-4cc1-85ca-ddbd6f9a2f45": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-25T06:19:07.408277+00:00"
+    },
+    "93de0697-5df6-4661-84bc-17593f6a2da5": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 10,
+        "node_completed": 10,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-25T06:19:47.301819+00:00"
+    },
+    "opportunity:hackerone:twitter": {
+      "event_counts": {
+        "opportunity_approved": 11,
+        "opportunity_rejected": 8
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:50:49.865228+00:00"
+    },
+    "4b0ae8a8-6a2a-4abe-ab7f-7bcb330cc1e3": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T08:52:08.432201+00:00"
+    },
+    "opportunity:hackerone:snapchat": {
+      "event_counts": {
+        "opportunity_approved": 8,
+        "opportunity_rejected": 5
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:50:50.096138+00:00"
+    },
+    "a49ba460-5775-4863-992b-10c74cf68313": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T08:51:08.235438+00:00"
+    },
+    "8d667f74-89e6-414d-b430-adb0c8bf787f": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T08:51:08.366353+00:00"
+    },
+    "b7e196a5-d6f9-499b-89bd-686ecd473b9e": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T08:52:08.479197+00:00"
+    },
+    "f72130a7-a93c-44f1-af60-1078566c570e": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T08:51:08.740500+00:00"
+    },
+    "b432723e-4b1e-403d-90f6-c9ae04ca4f32": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T08:51:08.961083+00:00"
+    },
+    "8b1e5091-273e-461b-a0b7-c19e7f05bd7f": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T08:52:08.513406+00:00"
+    },
+    "87c30e2e-030d-4dff-b09f-a30a89bebe55": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T08:51:09.121479+00:00"
+    },
+    "adda06f1-2b9a-43a4-ad4f-eb624ae93c22": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:26:20.605086+00:00"
+    },
+    "1d488d09-98f0-45d2-93b3-8401b3ab1b3d": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:25:36.819478+00:00"
+    },
+    "18a8159d-171e-43c6-9ad7-c3fe2294b1fc": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:25:36.996254+00:00"
+    },
+    "9d50bd65-f60b-4a05-9c53-ba46f3da3900": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:26:20.641567+00:00"
+    },
+    "e0af1193-ab26-4581-9e4c-d599c9328d32": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:25:37.258323+00:00"
+    },
+    "92c761a5-ff3e-41dd-8057-1573c50c3c34": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:25:37.370611+00:00"
+    },
+    "665467a9-6267-4a85-b61c-b1d7419ec722": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:26:20.672295+00:00"
+    },
+    "ef5f5d70-f0d1-4d86-8289-a7a2aa9c9b0d": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:25:37.540464+00:00"
+    },
+    "9b64abd6-7ba9-4558-9151-2e1051614031": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:43:06.236485+00:00"
+    },
+    "6c58168f-c3f1-4b85-8df8-4db371f9f956": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:36:24.409069+00:00"
+    },
+    "06a26d19-7146-44c0-964c-3c15db973da2": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:36:24.577121+00:00"
+    },
+    "8cbeb994-d17a-4e2d-ad3e-6ae3fb4ef4c4": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:43:06.257537+00:00"
+    },
+    "7aa09022-ed63-49f4-963c-6e6d73f6f157": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:36:25.181227+00:00"
+    },
+    "8f59ab2f-8302-431b-9994-9fdf8a3ed165": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:36:25.368424+00:00"
+    },
+    "8967e81e-b3b2-435c-aafe-d3da08ca3ca7": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:43:06.276425+00:00"
+    },
+    "7a031d4a-f650-44f0-83f8-43d476a287d8": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:36:25.814165+00:00"
+    },
+    "f19eb2f5-1072-4f4d-b9c0-4a69b7bce6ba": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:45:54.794278+00:00"
+    },
+    "f3dd906e-3481-4cb9-b768-9babee96c494": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:45:29.947892+00:00"
+    },
+    "1e502590-a4ed-4bfe-ad1b-c84638152c49": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:45:30.011620+00:00"
+    },
+    "be045f3e-e88a-4e82-99af-86a82924f277": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:49:16.731744+00:00"
+    },
+    "140f697f-a159-4019-870b-112e76a9e670": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:29.289737+00:00"
+    },
+    "c137d2cd-81c9-4b05-8266-72579ae21736": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:31.514049+00:00"
+    },
+    "cf30f8e3-66d3-4707-b890-f77b214f9001": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:29.900847+00:00"
+    },
+    "0ff44258-e837-418e-b002-48e772ffdfef": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:30.058375+00:00"
+    },
+    "5cfa951f-6dd0-4320-9da3-e4f3ff5cbbc1": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:31.744903+00:00"
+    },
+    "ee3046e2-b280-433a-840b-b093389655e3": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:30.834634+00:00"
+    },
+    "be50c464-8b3b-4c49-861d-d29248d078e4": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:31.029076+00:00"
+    },
+    "da00fe18-86c8-4921-906a-7ee7611fb8b4": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:31.977540+00:00"
+    },
+    "4f30e273-6afe-43d9-ad25-51a40ef412c2": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T21:55:31.913318+00:00"
+    },
+    "debug-m3": {
+      "event_counts": {
+        "policy_decision": 3
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:07.044456+00:00"
+    },
+    "debug-m4": {
+      "event_counts": {
+        "policy_decision": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:02:01.481587+00:00"
+    },
+    "c57ce0ba-1b5b-4ede-ae4c-43bd1ad16b46": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:21.871985+00:00"
+    },
+    "7f5d5a14-4631-4cc9-af1e-165c38e35426": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:13.854888+00:00"
+    },
+    "b92a9673-331f-4067-af52-a15d561da2f9": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:14.580838+00:00"
+    },
+    "d82e33e4-0605-41fc-a2ab-a3d5b94e8db3": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:22.325821+00:00"
+    },
+    "325031c1-4aa8-4045-816b-3450c71dfc7e": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:18.945712+00:00"
+    },
+    "b5d767ea-e84f-4efb-a887-e28ec9565f91": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:19.103902+00:00"
+    },
+    "fcc377f0-6685-452e-8217-502c7bc1aacd": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:22.702768+00:00"
+    },
+    "e86cd04e-7d77-4e5e-9d8b-bb0756df09a3": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 7,
+        "node_completed": 7,
+        "policy_decision": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:04:22.424958+00:00"
+    },
+    "d480803c-8cf7-4e1a-a340-a97e73978f44": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:05:48.070407+00:00"
+    },
+    "b860ab8f-39ee-4922-9e59-3883264d7fd0": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1,
+        "opportunity_execution_failed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:17:02.013124+00:00"
+    },
+    "e09f1885-72c8-4720-8055-117e4f36a43e": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:17:01.300555+00:00"
+    },
+    "b25f7d7e-37e9-46d1-a07b-c7d40aa695ba": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:17:01.358547+00:00"
+    },
+    "718702d3-5249-419c-aff8-aa7ac474a24e": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1,
+        "opportunity_execution_failed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:17:02.084463+00:00"
+    },
+    "adf232bf-cd0c-4b52-ba35-d9e0037f4743": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:17:01.676114+00:00"
+    },
+    "a8dbf4f9-3bd2-4de9-ad9a-b2e12f1168e7": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:17:01.761424+00:00"
+    },
+    "fd0dbffc-511c-43ce-8d31-30b4f669137a": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1,
+        "opportunity_execution_failed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:17:02.122804+00:00"
+    },
+    "c4a54c58-36ce-4758-9e5e-fdab0cc75bd1": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 1,
+        "node_completed": 1,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:17:02.057326+00:00"
+    },
+    "17f31328-1527-4675-9076-93ec718c700f": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "policy_decision": 3,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:45:48.644021+00:00"
+    },
+    "5ebbde90-f00f-4016-99a7-4938a3cb1f2b": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "policy_decision": 3,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:46:39.411403+00:00"
+    },
+    "fb963723-2c2f-40ac-afb7-923035b24920": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "policy_decision": 3,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:46:39.505063+00:00"
+    },
+    "a5283825-2684-4f23-a45f-1c7e1ba2031c": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "policy_decision": 3,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:31:08.960419+00:00"
+    },
+    "8fc9fc8e-4af9-45a3-be64-101f73341cd0": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "policy_decision": 3,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:31:08.595222+00:00"
+    },
+    "11dfe5e7-799f-4b8a-8642-ddb34e11272d": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "policy_decision": 3,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:31:09.176444+00:00"
+    },
+    "cd93ac4a-83ac-4845-9215-c01599b8aff2": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "policy_decision": 3,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:36:41.096723+00:00"
+    },
+    "6b582bb6-4639-478e-8920-eb11607970c0": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 4,
+        "node_completed": 4,
+        "policy_decision": 3,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T22:35:09.119843+00:00"
+    },
+    "36938ed3-5d98-477d-9d62-52902560f5ef": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 8,
+        "node_completed": 8,
+        "policy_decision": 5,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T23:12:47.704924+00:00"
+    },
+    "3eca09a0-6bd9-4b34-980e-064973ca6405": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 8,
+        "node_completed": 8,
+        "policy_decision": 5,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T23:13:28.344806+00:00"
+    },
+    "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": {
+      "event_counts": {
+        "opportunity_execution_started": 1,
+        "mission_started": 1,
+        "node_entered": 8,
+        "node_completed": 8,
+        "policy_decision": 5,
+        "mission_completed": 1,
+        "opportunity_execution_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T23:05:30.515487+00:00"
+    },
+    "bd197b62-2592-4ebe-93ee-dce4e17537b0": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 8,
+        "node_completed": 8,
+        "policy_decision": 5,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T23:05:29.987141+00:00"
+    },
+    "03dda148-de2b-46d8-b99e-bb065382496e": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 8,
+        "node_completed": 8,
+        "policy_decision": 5,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T23:06:57.853937+00:00"
+    },
+    "a2eb7f94-a7e8-4b06-9190-561321e00217": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 8,
+        "node_completed": 8,
+        "policy_decision": 5,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T23:09:52.208399+00:00"
+    },
+    "2ba98096-6597-462b-81c6-9b3eecd31863": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 8,
+        "node_completed": 8,
+        "policy_decision": 5,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T23:12:38.240696+00:00"
+    },
+    "45113c41-0125-4287-8718-b038cbce46cb": {
+      "event_counts": {
+        "mission_started": 1,
+        "node_entered": 8,
+        "node_completed": 8,
+        "policy_decision": 5,
+        "mission_completed": 1
+      },
+      "tools": [],
+      "last_ts": "2026-03-27T23:13:18.834441+00:00"
+    }
+  },
+  "status": "failed",
+  "errors": [
+    {
+      "step": "resolve_program",
+      "program_id": "hackerone:twitter",
+      "detail": "missing_opportunity"
+    },
+    {
+      "step": "resolve_program",
+      "program_id": "hackerone:snapchat",
+      "detail": "missing_opportunity"
+    },
+    {
+      "step": "resolve_program",
+      "program_id": "hackerone:coinbase",
+      "detail": "missing_opportunity"
+    }
+  ],
+  "queue_settings_update": {
+    "status": 200,
+    "payload": {
+      "min_concurrent": 1,
+      "max_concurrent": 3
+    }
+  },
+  "finished_at": "2026-03-27T23:14:29.250883+00:00"
+}

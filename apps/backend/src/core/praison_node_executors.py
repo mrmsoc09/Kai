@@ -33,9 +33,13 @@ Simulation-ready:
 
 from __future__ import annotations
 
+import json
 import logging
+import os
 import time
+import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlparse
 
@@ -571,6 +575,180 @@ def make_specialist_cluster_executor(
 
 # -- Evidence analysis / merge node --------------------------------------------
 
+def _artifacts_root() -> Path:
+    return Path(os.getenv("K1_ARTIFACTS_ROOT", "artifacts")).resolve()
+
+
+def _extract_recon_findings(artifacts: list[dict[str, Any]], mission_id: str, program_id: str) -> list[dict[str, Any]]:
+    """
+    Extract structured recon findings from tool_bootstrap_result artifacts.
+    Returns a list of finding dicts compatible with K1GraphState findings.
+    """
+    findings: list[dict[str, Any]] = []
+    ts = datetime.now(timezone.utc).isoformat()
+
+    for art in artifacts:
+        if not isinstance(art, dict):
+            continue
+        art_type = art.get("artifact_type", "")
+        content = art.get("content", {})
+        if not isinstance(content, dict):
+            continue
+        if art_type != "tool_bootstrap_result":
+            continue
+
+        tool_id = content.get("tool_id", "unknown")
+        target = content.get("target", "")
+        result = content.get("result", {})
+
+        # result may be a ToolResult-like object or a dict from GovernedToolWrapper
+        if isinstance(result, dict):
+            tool_status = result.get("status", "unknown")
+            inner = result.get("result", result)
+            if hasattr(inner, "output"):
+                output = inner.output  # ToolResult.output
+            elif isinstance(inner, dict):
+                output = inner.get("output", inner)
+            else:
+                output = {}
+        else:
+            tool_status = "unknown"
+            output = {}
+
+        if not isinstance(output, dict):
+            output = {}
+
+        # Subdomains from subfinder / amass_enum
+        subs = output.get("subdomains", [])
+        if isinstance(subs, list) and subs:
+            findings.append({
+                "finding_id": str(uuid.uuid4()),
+                "finding_type": "subdomain_enum",
+                "severity": "info",
+                "tool": tool_id,
+                "target": target,
+                "program_id": program_id,
+                "mission_id": mission_id,
+                "timestamp": ts,
+                "data": {"subdomains": subs[:200], "count": len(subs)},
+                "confidence": 0.85,
+                "source": "recon_specialist_bootstrap",
+            })
+            continue
+
+        # URLs from gau / waybackurls / katana
+        urls = output.get("urls", output.get("items", []))
+        if isinstance(urls, list) and urls and tool_id in {"gau", "waybackurls", "katana", "gospider"}:
+            findings.append({
+                "finding_id": str(uuid.uuid4()),
+                "finding_type": "url_surface",
+                "severity": "info",
+                "tool": tool_id,
+                "target": target,
+                "program_id": program_id,
+                "mission_id": mission_id,
+                "timestamp": ts,
+                "data": {"url_count": len(urls), "sample": urls[:20]},
+                "confidence": 0.75,
+                "source": "recon_specialist_bootstrap",
+            })
+            continue
+
+        # DNS records from dnsx / httpx
+        records = output.get("records", output.get("hosts", []))
+        if isinstance(records, list) and records:
+            findings.append({
+                "finding_id": str(uuid.uuid4()),
+                "finding_type": "dns_resolution",
+                "severity": "info",
+                "tool": tool_id,
+                "target": target,
+                "program_id": program_id,
+                "mission_id": mission_id,
+                "timestamp": ts,
+                "data": {"record_count": len(records), "sample": records[:20]},
+                "confidence": 0.8,
+                "source": "recon_specialist_bootstrap",
+            })
+            continue
+
+        # Nuclei findings — jsonl items
+        items = output.get("items", [])
+        if isinstance(items, list) and tool_id == "nuclei_scan":
+            for item in items[:50]:
+                if isinstance(item, dict):
+                    severity = str(item.get("info", {}).get("severity", "info")).lower()
+                    findings.append({
+                        "finding_id": str(uuid.uuid4()),
+                        "finding_type": "vulnerability",
+                        "severity": severity,
+                        "tool": tool_id,
+                        "target": item.get("host", target),
+                        "program_id": program_id,
+                        "mission_id": mission_id,
+                        "timestamp": ts,
+                        "data": item,
+                        "confidence": 0.7,
+                        "source": "nuclei_scan",
+                    })
+
+    # De-duplicate by (finding_type, tool, target)
+    seen: set[tuple[str, str, str]] = set()
+    deduped: list[dict[str, Any]] = []
+    for f in findings:
+        key = (f.get("finding_type", ""), f.get("tool", ""), f.get("target", ""))
+        if key not in seen:
+            seen.add(key)
+            deduped.append(f)
+    return deduped
+
+
+def _write_report_artifact(
+    mission_id: str,
+    program_id: str,
+    findings: list[dict[str, Any]],
+    artifacts: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Write a structured mission report JSON and return an artifact dict."""
+    ts = datetime.now(timezone.utc).isoformat()
+    report_id = f"report-{uuid.uuid4()}"
+    report = {
+        "report_id": report_id,
+        "mission_id": mission_id,
+        "program_id": program_id,
+        "generated_at": ts,
+        "finding_count": len(findings),
+        "findings_by_severity": {},
+        "findings": findings,
+        "artifact_count": len(artifacts),
+        "artifact_summary": [
+            {
+                "artifact_type": a.get("artifact_type", ""),
+                "summary": a.get("summary", ""),
+            }
+            for a in artifacts[:50]
+            if isinstance(a, dict)
+        ],
+    }
+    for f in findings:
+        sev = f.get("severity", "info")
+        report["findings_by_severity"][sev] = report["findings_by_severity"].get(sev, 0) + 1
+
+    report_dir = _artifacts_root() / "reports" / "generated"
+    report_dir.mkdir(parents=True, exist_ok=True)
+    report_path = report_dir / f"{report_id}.json"
+    report_path.write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    logger.info("Report written to %s (%d findings)", report_path, len(findings))
+
+    return {
+        "artifact_id": report_id,
+        "artifact_type": "final_report",
+        "artifact_path": str(report_path),
+        "summary": f"Mission report: {len(findings)} findings for {program_id}",
+        "timestamp": ts,
+    }
+
+
 def make_evidence_analysis_executor(
     agent_callable: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
 ) -> Callable[[dict[str, Any]], dict[str, Any]]:
@@ -583,6 +761,21 @@ def make_evidence_analysis_executor(
         findings = result.get("findings", [])
         findings = findings if isinstance(findings, list) else []
         findings = [row for row in findings if isinstance(row, dict)]
+
+        # Fallback: synthesize findings from bootstrap artifacts when agent_callable is None
+        if not findings and agent_callable is None:
+            state_artifacts = state.get("artifacts", [])
+            if isinstance(state_artifacts, list) and state_artifacts:
+                mission_id = state.get("mission_id", "")
+                program_id = state.get("program_id", "")
+                findings = _extract_recon_findings(state_artifacts, mission_id, program_id)
+                if findings:
+                    result["findings"] = findings
+                    logger.info(
+                        "EvidenceAnalyst fallback: extracted %d findings from %d bootstrap artifacts",
+                        len(findings), len(state_artifacts),
+                    )
+
         has_significant = any(
             f.get("severity") in ("critical", "high", "medium") for f in findings
         )
@@ -675,7 +868,6 @@ def make_governance_review_executor(
                 "timestamp": datetime.now(timezone.utc).isoformat(),
             }]
         else:
-            import uuid
             approval_id = str(uuid.uuid4())
             emit(approval_requested_event(
                 mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,
@@ -705,11 +897,32 @@ def make_report_synthesis_executor(
 
     def executor(state: dict[str, Any]) -> dict[str, Any]:
         result = base(state)
-        # Set final_report_id if report artifact was produced
+        # Set final_report_id if report artifact was produced by the agent
         for art in result.get("artifacts", []):
             if isinstance(art, dict) and art.get("artifact_type") in ("report_draft", "final_report"):
                 result["final_report_id"] = art.get("artifact_id", "")
                 break
+
+        # Fallback: write a structured report when agent_callable is None
+        if not result.get("final_report_id") and agent_callable is None:
+            mission_id = state.get("mission_id", "")
+            program_id = state.get("program_id", "")
+            findings = state.get("findings", [])
+            if not isinstance(findings, list):
+                findings = []
+            findings = [f for f in findings if isinstance(f, dict)]
+            state_artifacts = state.get("artifacts", [])
+            if not isinstance(state_artifacts, list):
+                state_artifacts = []
+            try:
+                report_art = _write_report_artifact(mission_id, program_id, findings, state_artifacts)
+                result["final_report_id"] = report_art["artifact_id"]
+                existing = result.get("artifacts", [])
+                result["artifacts"] = (existing if isinstance(existing, list) else []) + [report_art]
+                result["artifact_ids"] = [report_art["artifact_id"]]
+            except Exception as exc:
+                logger.warning("ReportSynthesisAgent fallback failed: %s", exc)
+
         return result
 
     executor.__name__ = "report_synthesis"

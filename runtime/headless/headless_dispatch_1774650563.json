@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-03-27T22:22:19.141421+00:00",
+  "status": "success",
+  "actions": [
+    {
+      "id": "hackerone:twitter",
+      "execute_status": 200,
+      "mission_ids": [
+        "17f31328-1527-4675-9076-93ec718c700f",
+        "8fc9fc8e-4af9-45a3-be64-101f73341cd0",
+        "cd93ac4a-83ac-4845-9215-c01599b8aff2"
+      ],
+      "missions_launched": 3,
+      "final_status": "executing",
+      "missions_completed": 1,
+      "missions_failed": 0,
+      "findings_produced": 0,
+      "validated_findings_produced": 0,
+      "reports_generated": 0
+    },
+    {
+      "id": "hackerone:snapchat",
+      "execute_status": 200,
+      "mission_ids": [
+        "5ebbde90-f00f-4016-99a7-4938a3cb1f2b",
+        "11dfe5e7-799f-4b8a-8642-ddb34e11272d",
+        "6b582bb6-4639-478e-8920-eb11607970c0"
+      ],
+      "missions_launched": 3,
+      "final_status": "executing",
+      "missions_completed": 1,
+      "missions_failed": 0,
+      "findings_produced": 0,
+      "validated_findings_produced": 0,
+      "reports_generated": 0
+    },
+    {
+      "id": "hackerone:coinbase",
+      "execute_status": 200,
+      "mission_ids": [
+        "fb963723-2c2f-40ac-afb7-923035b24920",
+        "a5283825-2684-4f23-a45f-1c7e1ba2031c"
+      ],
+      "missions_launched": 2,
+      "final_status": "executing",
+      "missions_completed": 1,
+      "missions_failed": 0,
+      "findings_produced": 0,
+      "validated_findings_produced": 0,
+      "reports_generated": 0
+    }
+  ],
+  "errors": [],
+  "launched_mission_ids": [
+    "17f31328-1527-4675-9076-93ec718c700f",
+    "8fc9fc8e-4af9-45a3-be64-101f73341cd0",
+    "cd93ac4a-83ac-4845-9215-c01599b8aff2",
+    "5ebbde90-f00f-4016-99a7-4938a3cb1f2b",
+    "11dfe5e7-799f-4b8a-8642-ddb34e11272d",
+    "6b582bb6-4639-478e-8920-eb11607970c0",
+    "fb963723-2c2f-40ac-afb7-923035b24920",
+    "a5283825-2684-4f23-a45f-1c7e1ba2031c"
+  ]
+}

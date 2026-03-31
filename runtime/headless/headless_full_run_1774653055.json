@@ -1,0 +1,2820 @@
+{
+  "started_at": "2026-03-27T22:50:49.737881+00:00",
+  "base_url": "http://127.0.0.1:8080",
+  "programs": [
+    "hackerone:twitter",
+    "hackerone:snapchat",
+    "hackerone:coinbase"
+  ],
+  "actions": [
+    {
+      "program_id": "hackerone:twitter",
+      "approve": {
+        "status": 200,
+        "payload": {
+          "id": "hackerone:twitter",
+          "name": "X (Twitter) Bug Bounty",
+          "organization": "X Corp",
+          "platform": "hackerone",
+          "access_type": "public_bbp",
+          "program_url": "https://hackerone.com/twitter",
+          "scope_url": "https://hackerone.com/twitter#scope",
+          "scope_summary": "*.twitter.com, *.x.com, *.twimg.com, mobile apps",
+          "scope_domains": [
+            "*.twitter.com",
+            "*.x.com",
+            "*.twimg.com",
+            "twitter-iOS",
+            "twitter-android"
+          ],
+          "max_payout_usd": 15000,
+          "min_payout_usd": 140,
+          "vdp_only": false,
+          "response_sla_days": 30,
+          "tags": [
+            "web",
+            "api",
+            "mobile",
+            "social"
+          ],
+          "vuln_types": [
+            "xss",
+            "sqli",
+            "idor",
+            "auth_bypass",
+            "ssrf",
+            "oauth",
+            "logic"
+          ],
+          "priority_score": 0.85,
+          "is_public": true,
+          "payout_label": "Up to $15K",
+          "notes": "",
+          "credential_requirements": [
+            {
+              "kind": "signup",
+              "label": "X / Twitter Account",
+              "signup_url": "https://x.com/i/flow/signup",
+              "notes": "Create a dedicated test account. Do not use your personal Twitter account for testing.",
+              "required": true
+            },
+            {
+              "kind": "api_key",
+              "label": "X Developer API v2 Credentials",
+              "signup_url": "https://developer.x.com/en/portal/dashboard",
+              "notes": "Apply for developer access to test API endpoints. Free Basic tier is sufficient.",
+              "required": false
+            }
+          ],
+          "needs_credentials": true,
+          "status": "approved",
+          "approval_state": "approved",
+          "approval_reason": "full_headless_validation_run",
+          "rejection_reason": null,
+          "execution_metadata": {
+            "mission_lineage": [],
+            "missions_launched": 0,
+            "missions_completed": 0,
+            "missions_failed": 0,
+            "findings_produced": 0,
+            "validated_findings_produced": 0,
+            "actual_yield_proxy": 0.0,
+            "report_ids": [],
+            "report_ids_by_mission": {},
+            "reports_generated": 0,
+            "reports_deduplicated": 0,
+            "last_error": null,
+            "target_review": {
+              "approved_targets": [
+                "*.twimg.com",
+                "*.twitter.com",
+                "*.x.com",
+                "twitter-android",
+                "twitter-ios"
+              ],
+              "rejected_targets": [],
+              "batch_ids": [],
+              "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+              "reviewed_at": "2026-03-27T22:50:49.864643+00:00"
+            }
+          },
+          "source_memory_id": null,
+          "source_pattern_id": null,
+          "source_type": "catalog_program",
+          "source_object_id": "hackerone:twitter",
+          "candidate_targets": [
+            "*.twitter.com",
+            "*.x.com",
+            "*.twimg.com",
+            "twitter-iOS",
+            "twitter-android"
+          ],
+          "expansion_candidates": [],
+          "approved_targets": [
+            "*.twimg.com",
+            "*.twitter.com",
+            "*.x.com",
+            "twitter-android",
+            "twitter-ios"
+          ],
+          "rejected_targets": [],
+          "target_batches": [],
+          "expansion_rationale": "",
+          "expansion_score": 0.0,
+          "expected_report_quality": 0.0,
+          "recommended_execution_order": [],
+          "linked_mission_count": 0,
+          "linked_report_count": 0,
+          "decision_summary": null,
+          "chain_summary": null,
+          "confidence_score": 0.85,
+          "estimated_yield": 2.55,
+          "expected_yield": 2.55,
+          "duplicate_risk": 0.0,
+          "created_at": "2026-03-27T22:50:49.856710+00:00",
+          "updated_at": "2026-03-27T22:50:49.864592+00:00",
+          "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+        }
+      },
+      "execute": {
+        "status": 200,
+        "payload": {
+          "id": "hackerone:twitter",
+          "name": "X (Twitter) Bug Bounty",
+          "organization": "X Corp",
+          "platform": "hackerone",
+          "access_type": "public_bbp",
+          "program_url": "https://hackerone.com/twitter",
+          "scope_url": "https://hackerone.com/twitter#scope",
+          "scope_summary": "*.twitter.com, *.x.com, *.twimg.com, mobile apps",
+          "scope_domains": [
+            "*.twitter.com",
+            "*.x.com",
+            "*.twimg.com",
+            "twitter-iOS",
+            "twitter-android"
+          ],
+          "max_payout_usd": 15000,
+          "min_payout_usd": 140,
+          "vdp_only": false,
+          "response_sla_days": 30,
+          "tags": [
+            "web",
+            "api",
+            "mobile",
+            "social"
+          ],
+          "vuln_types": [
+            "xss",
+            "sqli",
+            "idor",
+            "auth_bypass",
+            "ssrf",
+            "oauth",
+            "logic"
+          ],
+          "priority_score": 0.85,
+          "is_public": true,
+          "payout_label": "Up to $15K",
+          "notes": "",
+          "credential_requirements": [
+            {
+              "kind": "signup",
+              "label": "X / Twitter Account",
+              "signup_url": "https://x.com/i/flow/signup",
+              "notes": "Create a dedicated test account. Do not use your personal Twitter account for testing.",
+              "required": true
+            },
+            {
+              "kind": "api_key",
+              "label": "X Developer API v2 Credentials",
+              "signup_url": "https://developer.x.com/en/portal/dashboard",
+              "notes": "Apply for developer access to test API endpoints. Free Basic tier is sufficient.",
+              "required": false
+            }
+          ],
+          "needs_credentials": true,
+          "status": "executing",
+          "approval_state": "approved",
+          "approval_reason": "full_headless_validation_run",
+          "rejection_reason": null,
+          "execution_metadata": {
+            "mission_lineage": [
+              {
+                "mission_id": "36938ed3-5d98-477d-9d62-52902560f5ef",
+                "target": "twimg.com",
+                "workflow_id": "opportunity-hackerone:twitter-1",
+                "program_id": "twimg.com"
+              },
+              {
+                "mission_id": "03dda148-de2b-46d8-b99e-bb065382496e",
+                "target": "twitter.com",
+                "workflow_id": "opportunity-hackerone:twitter-2",
+                "program_id": "twitter.com"
+              },
+              {
+                "mission_id": "2ba98096-6597-462b-81c6-9b3eecd31863",
+                "target": "x.com",
+                "workflow_id": "opportunity-hackerone:twitter-3",
+                "program_id": "x.com"
+              }
+            ],
+            "missions_launched": 3,
+            "missions_completed": 0,
+            "missions_failed": 0,
+            "findings_produced": 0,
+            "validated_findings_produced": 0,
+            "actual_yield_proxy": 0.0,
+            "report_ids": [],
+            "report_ids_by_mission": {},
+            "reports_generated": 0,
+            "reports_deduplicated": 0,
+            "last_error": null,
+            "target_review": {
+              "approved_targets": [
+                "*.twimg.com",
+                "*.twitter.com",
+                "*.x.com",
+                "twitter-android",
+                "twitter-ios"
+              ],
+              "rejected_targets": [],
+              "batch_ids": [],
+              "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+              "reviewed_at": "2026-03-27T22:50:49.864643+00:00"
+            },
+            "requested_target_count": 5,
+            "valid_targets": [
+              "twimg.com",
+              "twitter.com",
+              "x.com"
+            ],
+            "blocked_targets": [
+              {
+                "target": "twitter-android",
+                "reason": "non_network_target"
+              },
+              {
+                "target": "twitter-ios",
+                "reason": "non_network_target"
+              }
+            ],
+            "selected_targets": [
+              "twimg.com",
+              "twitter.com",
+              "x.com"
+            ],
+            "target_cap": 3,
+            "mission_ids": [
+              "36938ed3-5d98-477d-9d62-52902560f5ef",
+              "03dda148-de2b-46d8-b99e-bb065382496e",
+              "2ba98096-6597-462b-81c6-9b3eecd31863"
+            ],
+            "last_execution_started_at": "2026-03-27T22:50:50.029505+00:00",
+            "execution_reason": "full_headless_validation_run",
+            "completion_event_emitted": false
+          },
+          "source_memory_id": null,
+          "source_pattern_id": null,
+          "source_type": "catalog_program",
+          "source_object_id": "hackerone:twitter",
+          "candidate_targets": [
+            "*.twitter.com",
+            "*.x.com",
+            "*.twimg.com",
+            "twitter-iOS",
+            "twitter-android"
+          ],
+          "expansion_candidates": [],
+          "approved_targets": [
+            "*.twimg.com",
+            "*.twitter.com",
+            "*.x.com",
+            "twitter-android",
+            "twitter-ios"
+          ],
+          "rejected_targets": [],
+          "target_batches": [],
+          "expansion_rationale": "",
+          "expansion_score": 0.0,
+          "expected_report_quality": 0.0,
+          "recommended_execution_order": [],
+          "linked_mission_count": 3,
+          "linked_report_count": 0,
+          "decision_summary": null,
+          "chain_summary": null,
+          "confidence_score": 0.85,
+          "estimated_yield": 2.55,
+          "expected_yield": 2.55,
+          "duplicate_risk": 0.0,
+          "created_at": "2026-03-27T22:50:49.856710+00:00",
+          "updated_at": "2026-03-27T22:50:50.029492+00:00",
+          "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+        }
+      },
+      "mission_ids": [
+        "36938ed3-5d98-477d-9d62-52902560f5ef",
+        "03dda148-de2b-46d8-b99e-bb065382496e",
+        "2ba98096-6597-462b-81c6-9b3eecd31863"
+      ]
+    },
+    {
+      "program_id": "hackerone:snapchat",
+      "approve": {
+        "status": 200,
+        "payload": {
+          "id": "hackerone:snapchat",
+          "name": "Snapchat Bug Bounty",
+          "organization": "Snap Inc.",
+          "platform": "hackerone",
+          "access_type": "public_bbp",
+          "program_url": "https://hackerone.com/snapchat",
+          "scope_url": "https://hackerone.com/snapchat#scope",
+          "scope_summary": "*.snapchat.com, *.snap.com, Snapchat mobile apps",
+          "scope_domains": [
+            "*.snapchat.com",
+            "*.snap.com",
+            "accounts.snapchat.com",
+            "snapchat-iOS",
+            "snapchat-android"
+          ],
+          "max_payout_usd": 15000,
+          "min_payout_usd": 200,
+          "vdp_only": false,
+          "response_sla_days": 30,
+          "tags": [
+            "web",
+            "api",
+            "mobile",
+            "social"
+          ],
+          "vuln_types": [
+            "xss",
+            "sqli",
+            "idor",
+            "auth_bypass",
+            "ssrf",
+            "oauth",
+            "logic"
+          ],
+          "priority_score": 0.85,
+          "is_public": true,
+          "payout_label": "Up to $15K",
+          "notes": "",
+          "credential_requirements": [
+            {
+              "kind": "signup",
+              "label": "Snapchat Account",
+              "signup_url": "https://accounts.snapchat.com/accounts/signup",
+              "notes": "Create a dedicated Snapchat account for testing in-scope user flows.",
+              "required": true
+            },
+            {
+              "kind": "api_key",
+              "label": "Snap Kit Developer Credentials",
+              "signup_url": "https://kit.snapchat.com/",
+              "notes": "Optional for API and integration endpoint testing where program scope allows.",
+              "required": false
+            }
+          ],
+          "needs_credentials": true,
+          "status": "approved",
+          "approval_state": "approved",
+          "approval_reason": "full_headless_validation_run",
+          "rejection_reason": null,
+          "execution_metadata": {
+            "mission_lineage": [],
+            "missions_launched": 0,
+            "missions_completed": 0,
+            "missions_failed": 0,
+            "findings_produced": 0,
+            "validated_findings_produced": 0,
+            "actual_yield_proxy": 0.0,
+            "report_ids": [],
+            "report_ids_by_mission": {},
+            "reports_generated": 0,
+            "reports_deduplicated": 0,
+            "last_error": null,
+            "target_review": {
+              "approved_targets": [
+                "*.snap.com",
+                "*.snapchat.com",
+                "accounts.snapchat.com",
+                "snapchat-android",
+                "snapchat-ios"
+              ],
+              "rejected_targets": [],
+              "batch_ids": [],
+              "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+              "reviewed_at": "2026-03-27T22:50:50.091891+00:00"
+            }
+          },
+          "source_memory_id": null,
+          "source_pattern_id": null,
+          "source_type": "catalog_program",
+          "source_object_id": "hackerone:snapchat",
+          "candidate_targets": [
+            "*.snapchat.com",
+            "*.snap.com",
+            "accounts.snapchat.com",
+            "snapchat-iOS",
+            "snapchat-android"
+          ],
+          "expansion_candidates": [],
+          "approved_targets": [
+            "*.snap.com",
+            "*.snapchat.com",
+            "accounts.snapchat.com",
+            "snapchat-android",
+            "snapchat-ios"
+          ],
+          "rejected_targets": [],
+          "target_batches": [],
+          "expansion_rationale": "",
+          "expansion_score": 0.0,
+          "expected_report_quality": 0.0,
+          "recommended_execution_order": [],
+          "linked_mission_count": 0,
+          "linked_report_count": 0,
+          "decision_summary": null,
+          "chain_summary": null,
+          "confidence_score": 0.85,
+          "estimated_yield": 2.55,
+          "expected_yield": 2.55,
+          "duplicate_risk": 0.0,
+          "created_at": "2026-03-27T22:50:50.078860+00:00",
+          "updated_at": "2026-03-27T22:50:50.091857+00:00",
+          "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+        }
+      },
+      "execute": {
+        "status": 200,
+        "payload": {
+          "id": "hackerone:snapchat",
+          "name": "Snapchat Bug Bounty",
+          "organization": "Snap Inc.",
+          "platform": "hackerone",
+          "access_type": "public_bbp",
+          "program_url": "https://hackerone.com/snapchat",
+          "scope_url": "https://hackerone.com/snapchat#scope",
+          "scope_summary": "*.snapchat.com, *.snap.com, Snapchat mobile apps",
+          "scope_domains": [
+            "*.snapchat.com",
+            "*.snap.com",
+            "accounts.snapchat.com",
+            "snapchat-iOS",
+            "snapchat-android"
+          ],
+          "max_payout_usd": 15000,
+          "min_payout_usd": 200,
+          "vdp_only": false,
+          "response_sla_days": 30,
+          "tags": [
+            "web",
+            "api",
+            "mobile",
+            "social"
+          ],
+          "vuln_types": [
+            "xss",
+            "sqli",
+            "idor",
+            "auth_bypass",
+            "ssrf",
+            "oauth",
+            "logic"
+          ],
+          "priority_score": 0.85,
+          "is_public": true,
+          "payout_label": "Up to $15K",
+          "notes": "",
+          "credential_requirements": [
+            {
+              "kind": "signup",
+              "label": "Snapchat Account",
+              "signup_url": "https://accounts.snapchat.com/accounts/signup",
+              "notes": "Create a dedicated Snapchat account for testing in-scope user flows.",
+              "required": true
+            },
+            {
+              "kind": "api_key",
+              "label": "Snap Kit Developer Credentials",
+              "signup_url": "https://kit.snapchat.com/",
+              "notes": "Optional for API and integration endpoint testing where program scope allows.",
+              "required": false
+            }
+          ],
+          "needs_credentials": true,
+          "status": "executing",
+          "approval_state": "approved",
+          "approval_reason": "full_headless_validation_run",
+          "rejection_reason": null,
+          "execution_metadata": {
+            "mission_lineage": [
+              {
+                "mission_id": "3eca09a0-6bd9-4b34-980e-064973ca6405",
+                "target": "snap.com",
+                "workflow_id": "opportunity-hackerone:snapchat-1",
+                "program_id": "snap.com"
+              },
+              {
+                "mission_id": "a2eb7f94-a7e8-4b06-9190-561321e00217",
+                "target": "snapchat.com",
+                "workflow_id": "opportunity-hackerone:snapchat-2",
+                "program_id": "snapchat.com"
+              },
+              {
+                "mission_id": "45113c41-0125-4287-8718-b038cbce46cb",
+                "target": "accounts.snapchat.com",
+                "workflow_id": "opportunity-hackerone:snapchat-3",
+                "program_id": "accounts.snapchat.com"
+              }
+            ],
+            "missions_launched": 3,
+            "missions_completed": 0,
+            "missions_failed": 0,
+            "findings_produced": 0,
+            "validated_findings_produced": 0,
+            "actual_yield_proxy": 0.0,
+            "report_ids": [],
+            "report_ids_by_mission": {},
+            "reports_generated": 0,
+            "reports_deduplicated": 0,
+            "last_error": null,
+            "target_review": {
+              "approved_targets": [
+                "*.snap.com",
+                "*.snapchat.com",
+                "accounts.snapchat.com",
+                "snapchat-android",
+                "snapchat-ios"
+              ],
+              "rejected_targets": [],
+              "batch_ids": [],
+              "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+              "reviewed_at": "2026-03-27T22:50:50.091891+00:00"
+            },
+            "requested_target_count": 5,
+            "valid_targets": [
+              "snap.com",
+              "snapchat.com",
+              "accounts.snapchat.com"
+            ],
+            "blocked_targets": [
+              {
+                "target": "snapchat-android",
+                "reason": "non_network_target"
+              },
+              {
+                "target": "snapchat-ios",
+                "reason": "non_network_target"
+              }
+            ],
+            "selected_targets": [
+              "snap.com",
+              "snapchat.com",
+              "accounts.snapchat.com"
+            ],
+            "target_cap": 3,
+            "mission_ids": [
+              "3eca09a0-6bd9-4b34-980e-064973ca6405",
+              "a2eb7f94-a7e8-4b06-9190-561321e00217",
+              "45113c41-0125-4287-8718-b038cbce46cb"
+            ],
+            "last_execution_started_at": "2026-03-27T22:50:50.415127+00:00",
+            "execution_reason": "full_headless_validation_run",
+            "completion_event_emitted": false
+          },
+          "source_memory_id": null,
+          "source_pattern_id": null,
+          "source_type": "catalog_program",
+          "source_object_id": "hackerone:snapchat",
+          "candidate_targets": [
+            "*.snapchat.com",
+            "*.snap.com",
+            "accounts.snapchat.com",
+            "snapchat-iOS",
+            "snapchat-android"
+          ],
+          "expansion_candidates": [],
+          "approved_targets": [
+            "*.snap.com",
+            "*.snapchat.com",
+            "accounts.snapchat.com",
+            "snapchat-android",
+            "snapchat-ios"
+          ],
+          "rejected_targets": [],
+          "target_batches": [],
+          "expansion_rationale": "",
+          "expansion_score": 0.0,
+          "expected_report_quality": 0.0,
+          "recommended_execution_order": [],
+          "linked_mission_count": 3,
+          "linked_report_count": 0,
+          "decision_summary": null,
+          "chain_summary": null,
+          "confidence_score": 0.85,
+          "estimated_yield": 2.55,
+          "expected_yield": 2.55,
+          "duplicate_risk": 0.0,
+          "created_at": "2026-03-27T22:50:50.078860+00:00",
+          "updated_at": "2026-03-27T22:50:50.415052+00:00",
+          "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+        }
+      },
+      "mission_ids": [
+        "3eca09a0-6bd9-4b34-980e-064973ca6405",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217",
+        "45113c41-0125-4287-8718-b038cbce46cb"
+      ]
+    },
+    {
+      "program_id": "hackerone:coinbase",
+      "approve": {
+        "status": 200,
+        "payload": {
+          "id": "hackerone:coinbase",
+          "name": "Coinbase Bug Bounty",
+          "organization": "Coinbase",
+          "platform": "hackerone",
+          "access_type": "public_bbp",
+          "program_url": "https://hackerone.com/coinbase",
+          "scope_url": "https://hackerone.com/coinbase#scope",
+          "scope_summary": "*.coinbase.com, *.cbhax.com, Coinbase mobile apps",
+          "scope_domains": [
+            "*.coinbase.com",
+            "*.cbhax.com",
+            "coinbase-iOS",
+            "coinbase-android"
+          ],
+          "max_payout_usd": 50000,
+          "min_payout_usd": 200,
+          "vdp_only": false,
+          "response_sla_days": 30,
+          "tags": [
+            "web",
+            "api",
+            "crypto",
+            "mobile",
+            "fintech"
+          ],
+          "vuln_types": [
+            "xss",
+            "sqli",
+            "idor",
+            "rce",
+            "auth_bypass",
+            "ssrf",
+            "oauth",
+            "logic"
+          ],
+          "priority_score": 0.9,
+          "is_public": true,
+          "payout_label": "Up to $50K",
+          "notes": "",
+          "credential_requirements": [
+            {
+              "kind": "signup",
+              "label": "Coinbase Account",
+              "signup_url": "https://www.coinbase.com/signup",
+              "notes": "Standard Coinbase account. Use a dedicated test account with no real funds.",
+              "required": true
+            }
+          ],
+          "needs_credentials": true,
+          "status": "approved",
+          "approval_state": "approved",
+          "approval_reason": "full_headless_validation_run",
+          "rejection_reason": null,
+          "execution_metadata": {
+            "mission_lineage": [],
+            "missions_launched": 0,
+            "missions_completed": 0,
+            "missions_failed": 0,
+            "findings_produced": 0,
+            "validated_findings_produced": 0,
+            "actual_yield_proxy": 0.0,
+            "report_ids": [],
+            "report_ids_by_mission": {},
+            "reports_generated": 0,
+            "reports_deduplicated": 0,
+            "last_error": null,
+            "target_review": {
+              "approved_targets": [
+                "*.cbhax.com",
+                "*.coinbase.com",
+                "coinbase-android",
+                "coinbase-ios"
+              ],
+              "rejected_targets": [],
+              "batch_ids": [],
+              "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+              "reviewed_at": "2026-03-27T22:50:50.499781+00:00"
+            }
+          },
+          "source_memory_id": null,
+          "source_pattern_id": null,
+          "source_type": "catalog_program",
+          "source_object_id": "hackerone:coinbase",
+          "candidate_targets": [
+            "*.coinbase.com",
+            "*.cbhax.com",
+            "coinbase-iOS",
+            "coinbase-android"
+          ],
+          "expansion_candidates": [],
+          "approved_targets": [
+            "*.cbhax.com",
+            "*.coinbase.com",
+            "coinbase-android",
+            "coinbase-ios"
+          ],
+          "rejected_targets": [],
+          "target_batches": [],
+          "expansion_rationale": "",
+          "expansion_score": 0.0,
+          "expected_report_quality": 0.0,
+          "recommended_execution_order": [],
+          "linked_mission_count": 0,
+          "linked_report_count": 0,
+          "decision_summary": null,
+          "chain_summary": null,
+          "confidence_score": 0.9,
+          "estimated_yield": 2.16,
+          "expected_yield": 2.16,
+          "duplicate_risk": 0.0,
+          "created_at": "2026-03-27T22:50:50.478887+00:00",
+          "updated_at": "2026-03-27T22:50:50.499743+00:00",
+          "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+        }
+      },
+      "execute": {
+        "status": 200,
+        "payload": {
+          "id": "hackerone:coinbase",
+          "name": "Coinbase Bug Bounty",
+          "organization": "Coinbase",
+          "platform": "hackerone",
+          "access_type": "public_bbp",
+          "program_url": "https://hackerone.com/coinbase",
+          "scope_url": "https://hackerone.com/coinbase#scope",
+          "scope_summary": "*.coinbase.com, *.cbhax.com, Coinbase mobile apps",
+          "scope_domains": [
+            "*.coinbase.com",
+            "*.cbhax.com",
+            "coinbase-iOS",
+            "coinbase-android"
+          ],
+          "max_payout_usd": 50000,
+          "min_payout_usd": 200,
+          "vdp_only": false,
+          "response_sla_days": 30,
+          "tags": [
+            "web",
+            "api",
+            "crypto",
+            "mobile",
+            "fintech"
+          ],
+          "vuln_types": [
+            "xss",
+            "sqli",
+            "idor",
+            "rce",
+            "auth_bypass",
+            "ssrf",
+            "oauth",
+            "logic"
+          ],
+          "priority_score": 0.9,
+          "is_public": true,
+          "payout_label": "Up to $50K",
+          "notes": "",
+          "credential_requirements": [
+            {
+              "kind": "signup",
+              "label": "Coinbase Account",
+              "signup_url": "https://www.coinbase.com/signup",
+              "notes": "Standard Coinbase account. Use a dedicated test account with no real funds.",
+              "required": true
+            }
+          ],
+          "needs_credentials": true,
+          "status": "executing",
+          "approval_state": "approved",
+          "approval_reason": "full_headless_validation_run",
+          "rejection_reason": null,
+          "execution_metadata": {
+            "mission_lineage": [
+              {
+                "mission_id": "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe",
+                "target": "cbhax.com",
+                "workflow_id": "opportunity-hackerone:coinbase-1",
+                "program_id": "cbhax.com"
+              },
+              {
+                "mission_id": "bd197b62-2592-4ebe-93ee-dce4e17537b0",
+                "target": "coinbase.com",
+                "workflow_id": "opportunity-hackerone:coinbase-2",
+                "program_id": "coinbase.com"
+              }
+            ],
+            "missions_launched": 2,
+            "missions_completed": 0,
+            "missions_failed": 0,
+            "findings_produced": 0,
+            "validated_findings_produced": 0,
+            "actual_yield_proxy": 0.0,
+            "report_ids": [],
+            "report_ids_by_mission": {},
+            "reports_generated": 0,
+            "reports_deduplicated": 0,
+            "last_error": null,
+            "target_review": {
+              "approved_targets": [
+                "*.cbhax.com",
+                "*.coinbase.com",
+                "coinbase-android",
+                "coinbase-ios"
+              ],
+              "rejected_targets": [],
+              "batch_ids": [],
+              "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+              "reviewed_at": "2026-03-27T22:50:50.499781+00:00"
+            },
+            "requested_target_count": 4,
+            "valid_targets": [
+              "cbhax.com",
+              "coinbase.com"
+            ],
+            "blocked_targets": [
+              {
+                "target": "coinbase-android",
+                "reason": "non_network_target"
+              },
+              {
+                "target": "coinbase-ios",
+                "reason": "non_network_target"
+              }
+            ],
+            "selected_targets": [
+              "cbhax.com",
+              "coinbase.com"
+            ],
+            "target_cap": 3,
+            "mission_ids": [
+              "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe",
+              "bd197b62-2592-4ebe-93ee-dce4e17537b0"
+            ],
+            "last_execution_started_at": "2026-03-27T22:50:50.662491+00:00",
+            "execution_reason": "full_headless_validation_run",
+            "completion_event_emitted": false
+          },
+          "source_memory_id": null,
+          "source_pattern_id": null,
+          "source_type": "catalog_program",
+          "source_object_id": "hackerone:coinbase",
+          "candidate_targets": [
+            "*.coinbase.com",
+            "*.cbhax.com",
+            "coinbase-iOS",
+            "coinbase-android"
+          ],
+          "expansion_candidates": [],
+          "approved_targets": [
+            "*.cbhax.com",
+            "*.coinbase.com",
+            "coinbase-android",
+            "coinbase-ios"
+          ],
+          "rejected_targets": [],
+          "target_batches": [],
+          "expansion_rationale": "",
+          "expansion_score": 0.0,
+          "expected_report_quality": 0.0,
+          "recommended_execution_order": [],
+          "linked_mission_count": 2,
+          "linked_report_count": 0,
+          "decision_summary": null,
+          "chain_summary": null,
+          "confidence_score": 0.9,
+          "estimated_yield": 2.16,
+          "expected_yield": 2.16,
+          "duplicate_risk": 0.0,
+          "created_at": "2026-03-27T22:50:50.478887+00:00",
+          "updated_at": "2026-03-27T22:50:50.662478+00:00",
+          "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+        }
+      },
+      "mission_ids": [
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0"
+      ]
+    }
+  ],
+  "mission_ids": [
+    "03dda148-de2b-46d8-b99e-bb065382496e",
+    "2ba98096-6597-462b-81c6-9b3eecd31863",
+    "36938ed3-5d98-477d-9d62-52902560f5ef",
+    "3eca09a0-6bd9-4b34-980e-064973ca6405",
+    "45113c41-0125-4287-8718-b038cbce46cb",
+    "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe",
+    "a2eb7f94-a7e8-4b06-9190-561321e00217",
+    "bd197b62-2592-4ebe-93ee-dce4e17537b0"
+  ],
+  "missions": {
+    "03dda148-de2b-46d8-b99e-bb065382496e": {
+      "status": 200,
+      "payload": {
+        "mission_id": "03dda148-de2b-46d8-b99e-bb065382496e",
+        "workflow_id": "opportunity-hackerone:twitter-2",
+        "program_id": "twitter.com",
+        "state": "completed",
+        "execution_mode": "live",
+        "phase": "recon",
+        "active_node": "handoff_liaison",
+        "progress": 1.0,
+        "error": null
+      }
+    },
+    "2ba98096-6597-462b-81c6-9b3eecd31863": {
+      "status": 200,
+      "payload": {
+        "mission_id": "2ba98096-6597-462b-81c6-9b3eecd31863",
+        "workflow_id": "opportunity-hackerone:twitter-3",
+        "program_id": "x.com",
+        "state": "running",
+        "execution_mode": "live",
+        "phase": "governance",
+        "active_node": "",
+        "progress": 0.0,
+        "error": null
+      }
+    },
+    "36938ed3-5d98-477d-9d62-52902560f5ef": {
+      "status": 200,
+      "payload": {
+        "mission_id": "36938ed3-5d98-477d-9d62-52902560f5ef",
+        "workflow_id": "opportunity-hackerone:twitter-1",
+        "program_id": "twimg.com",
+        "state": "completed",
+        "execution_mode": "live",
+        "phase": "recon",
+        "active_node": "handoff_liaison",
+        "progress": 1.0,
+        "error": null
+      }
+    },
+    "3eca09a0-6bd9-4b34-980e-064973ca6405": {
+      "status": 200,
+      "payload": {
+        "mission_id": "3eca09a0-6bd9-4b34-980e-064973ca6405",
+        "workflow_id": "opportunity-hackerone:snapchat-1",
+        "program_id": "snap.com",
+        "state": "completed",
+        "execution_mode": "live",
+        "phase": "recon",
+        "active_node": "handoff_liaison",
+        "progress": 1.0,
+        "error": null
+      }
+    },
+    "45113c41-0125-4287-8718-b038cbce46cb": {
+      "status": 200,
+      "payload": {
+        "mission_id": "45113c41-0125-4287-8718-b038cbce46cb",
+        "workflow_id": "opportunity-hackerone:snapchat-3",
+        "program_id": "accounts.snapchat.com",
+        "state": "running",
+        "execution_mode": "live",
+        "phase": "governance",
+        "active_node": "",
+        "progress": 0.0,
+        "error": null
+      }
+    },
+    "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": {
+      "status": 200,
+      "payload": {
+        "mission_id": "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe",
+        "workflow_id": "opportunity-hackerone:coinbase-1",
+        "program_id": "cbhax.com",
+        "state": "completed",
+        "execution_mode": "live",
+        "phase": "recon",
+        "active_node": "handoff_liaison",
+        "progress": 1.0,
+        "error": null
+      }
+    },
+    "a2eb7f94-a7e8-4b06-9190-561321e00217": {
+      "status": 200,
+      "payload": {
+        "mission_id": "a2eb7f94-a7e8-4b06-9190-561321e00217",
+        "workflow_id": "opportunity-hackerone:snapchat-2",
+        "program_id": "snapchat.com",
+        "state": "completed",
+        "execution_mode": "live",
+        "phase": "recon",
+        "active_node": "handoff_liaison",
+        "progress": 1.0,
+        "error": null
+      }
+    },
+    "bd197b62-2592-4ebe-93ee-dce4e17537b0": {
+      "status": 200,
+      "payload": {
+        "mission_id": "bd197b62-2592-4ebe-93ee-dce4e17537b0",
+        "workflow_id": "opportunity-hackerone:coinbase-2",
+        "program_id": "coinbase.com",
+        "state": "completed",
+        "execution_mode": "live",
+        "phase": "recon",
+        "active_node": "handoff_liaison",
+        "progress": 1.0,
+        "error": null
+      }
+    }
+  },
+  "poll": [
+    {
+      "at": "2026-03-27T22:50:51.208396+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:51:01.726338+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:51:12.042816+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:51:22.572275+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:51:33.237807+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:51:43.988226+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:51:54.756193+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:52:05.338412+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:52:15.809435+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:52:26.962883+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:52:38.208651+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:52:48.935524+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:52:59.943216+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:53:11.121197+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:53:22.745403+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:53:34.067027+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:53:44.415366+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:53:55.322074+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:54:06.150879+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:54:16.944720+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:54:27.089875+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:54:37.828250+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:54:48.650462+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:54:59.296469+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:55:10.247832+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:55:21.048690+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:55:31.333460+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:55:41.457558+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:55:51.556521+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:56:01.702119+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "running",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "created"
+      }
+    },
+    {
+      "at": "2026-03-27T22:56:11.960757+00:00",
+      "done": 1,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:56:22.177790+00:00",
+      "done": 1,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:56:32.340836+00:00",
+      "done": 1,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:56:43.109409+00:00",
+      "done": 1,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:56:53.909385+00:00",
+      "done": 1,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:57:04.174917+00:00",
+      "done": 1,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:57:15.202968+00:00",
+      "done": 1,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:57:25.441490+00:00",
+      "done": 1,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "created",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "running",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:57:36.091709+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:57:47.309112+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:57:58.343419+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:58:09.084006+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:58:19.824109+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:58:30.571369+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:58:41.130086+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:58:51.685945+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:59:02.360059+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:59:13.349577+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:59:24.105903+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:59:36.062145+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "http_500",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "http_500",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "http_500",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "http_500",
+        "45113c41-0125-4287-8718-b038cbce46cb": "http_500",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "http_500",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "http_500",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "http_500"
+      }
+    },
+    {
+      "at": "2026-03-27T22:59:48.218289+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T22:59:58.972967+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:00:10.071812+00:00",
+      "done": 2,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "running",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "created",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:00:21.470498+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:00:32.659416+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:00:43.787524+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:00:55.257152+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:01:06.805161+00:00",
+      "done": 0,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "http_500",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "http_500",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "http_500",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "http_500",
+        "45113c41-0125-4287-8718-b038cbce46cb": "http_500",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "http_500",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "http_500",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "http_500"
+      }
+    },
+    {
+      "at": "2026-03-27T23:01:18.489780+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:01:29.312868+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:01:39.787621+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:01:50.627475+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:02:01.405023+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:02:12.505557+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:02:23.888363+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:02:34.639735+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:02:45.465544+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:02:56.288325+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:03:06.897800+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:03:17.615520+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:03:28.223313+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:03:39.445529+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:03:50.436951+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:04:00.870522+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:04:11.067125+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:04:21.187937+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:04:32.087236+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:04:43.372166+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:04:54.006491+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:05:04.753066+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:05:15.787451+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:05:27.712345+00:00",
+      "done": 3,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "running"
+      }
+    },
+    {
+      "at": "2026-03-27T23:05:40.725197+00:00",
+      "done": 4,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:05:52.935760+00:00",
+      "done": 4,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:06:06.138028+00:00",
+      "done": 4,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:06:20.173469+00:00",
+      "done": 4,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:06:31.564950+00:00",
+      "done": 4,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:06:42.677157+00:00",
+      "done": 4,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:06:54.139298+00:00",
+      "done": 4,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "running",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "created",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:07:04.955008+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:07:15.760425+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:07:26.289701+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:07:37.005058+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:07:48.060473+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:07:59.476685+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:08:11.106787+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:08:21.698596+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:08:31.780966+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:08:41.916020+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:08:52.133367+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:09:02.297738+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:09:12.528552+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:09:22.692491+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:09:32.903292+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:09:43.131382+00:00",
+      "done": 5,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "created",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "running",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:09:53.670872+00:00",
+      "done": 6,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "running",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "completed",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:10:03.880485+00:00",
+      "done": 6,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "running",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "completed",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:10:14.171402+00:00",
+      "done": 6,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "running",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "completed",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:10:24.410873+00:00",
+      "done": 6,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "running",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "completed",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:10:34.878528+00:00",
+      "done": 6,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "running",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "completed",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    },
+    {
+      "at": "2026-03-27T23:10:45.140568+00:00",
+      "done": 6,
+      "total": 8,
+      "states": {
+        "03dda148-de2b-46d8-b99e-bb065382496e": "completed",
+        "2ba98096-6597-462b-81c6-9b3eecd31863": "running",
+        "36938ed3-5d98-477d-9d62-52902560f5ef": "completed",
+        "3eca09a0-6bd9-4b34-980e-064973ca6405": "completed",
+        "45113c41-0125-4287-8718-b038cbce46cb": "running",
+        "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": "completed",
+        "a2eb7f94-a7e8-4b06-9190-561321e00217": "completed",
+        "bd197b62-2592-4ebe-93ee-dce4e17537b0": "completed"
+      }
+    }
+  ],
+  "telemetry": {
+    "mission_event_counts": {
+      "03dda148-de2b-46d8-b99e-bb065382496e": 23,
+      "36938ed3-5d98-477d-9d62-52902560f5ef": 24,
+      "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": 25,
+      "45113c41-0125-4287-8718-b038cbce46cb": 9,
+      "a2eb7f94-a7e8-4b06-9190-561321e00217": 23,
+      "2ba98096-6597-462b-81c6-9b3eecd31863": 9,
+      "bd197b62-2592-4ebe-93ee-dce4e17537b0": 23,
+      "3eca09a0-6bd9-4b34-980e-064973ca6405": 24
+    },
+    "tool_hits": {
+      "36938ed3-5d98-477d-9d62-52902560f5ef": {
+        "subfinder": 1,
+        "amass_enum": 1,
+        "dnsx": 1,
+        "gau": 1
+      },
+      "3eca09a0-6bd9-4b34-980e-064973ca6405": {
+        "subfinder": 1,
+        "amass_enum": 1,
+        "dnsx": 1,
+        "gau": 1
+      },
+      "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": {
+        "subfinder": 1,
+        "amass_enum": 1,
+        "dnsx": 1,
+        "gau": 1
+      },
+      "bd197b62-2592-4ebe-93ee-dce4e17537b0": {
+        "subfinder": 1,
+        "amass_enum": 1,
+        "dnsx": 1,
+        "gau": 1
+      },
+      "03dda148-de2b-46d8-b99e-bb065382496e": {
+        "subfinder": 1,
+        "amass_enum": 1,
+        "dnsx": 1,
+        "gau": 1
+      },
+      "a2eb7f94-a7e8-4b06-9190-561321e00217": {
+        "subfinder": 1,
+        "amass_enum": 1,
+        "dnsx": 1,
+        "gau": 1
+      },
+      "2ba98096-6597-462b-81c6-9b3eecd31863": {
+        "subfinder": 1
+      },
+      "45113c41-0125-4287-8718-b038cbce46cb": {
+        "subfinder": 1
+      }
+    },
+    "mission_completed": {
+      "4a1da8f5-ff6e-4ad1-9112-1a1c99606abe": {
+        "success": true,
+        "final_report_id": ""
+      },
+      "36938ed3-5d98-477d-9d62-52902560f5ef": {
+        "success": true,
+        "final_report_id": ""
+      },
+      "3eca09a0-6bd9-4b34-980e-064973ca6405": {
+        "success": true,
+        "final_report_id": ""
+      },
+      "bd197b62-2592-4ebe-93ee-dce4e17537b0": {
+        "success": true,
+        "final_report_id": ""
+      },
+      "03dda148-de2b-46d8-b99e-bb065382496e": {
+        "success": true,
+        "final_report_id": ""
+      },
+      "a2eb7f94-a7e8-4b06-9190-561321e00217": {
+        "success": true,
+        "final_report_id": ""
+      }
+    }
+  },
+  "status": "partial",
+  "errors": [
+    {
+      "step": "mission_completion",
+      "incomplete_missions": [
+        "2ba98096-6597-462b-81c6-9b3eecd31863",
+        "45113c41-0125-4287-8718-b038cbce46cb"
+      ]
+    }
+  ],
+  "auth": {
+    "status": 200
+  },
+  "capabilities": {
+    "status": 200,
+    "payload": {
+      "approve": true,
+      "reject": true,
+      "execute": true,
+      "reason": "enabled",
+      "requires_role": "analyst"
+    }
+  },
+  "queue_settings": {
+    "status": 200,
+    "payload": {
+      "min_concurrent": 1,
+      "max_concurrent": 3
+    }
+  },
+  "finished_at": "2026-03-27T23:10:55.474660+00:00"
+}

@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-03-27T22:17:00.918057+00:00",
+  "status": "success",
+  "actions": [
+    {
+      "id": "hackerone:twitter",
+      "pre_get_status": 200,
+      "pre_status": "completed",
+      "pre_approval": "approved",
+      "reject_status": 200,
+      "approve_status": 200,
+      "execute_status": 200,
+      "mission_ids": [
+        "b860ab8f-39ee-4922-9e59-3883264d7fd0",
+        "e09f1885-72c8-4720-8055-117e4f36a43e",
+        "b25f7d7e-37e9-46d1-a07b-c7d40aa695ba"
+      ],
+      "missions_launched": 3,
+      "poll_status_code": 200,
+      "final_status": "failed",
+      "missions_completed": 0,
+      "missions_failed": 3,
+      "findings_produced": 0,
+      "validated_findings_produced": 0,
+      "reports_generated": 0
+    },
+    {
+      "id": "hackerone:snapchat",
+      "pre_get_status": 200,
+      "pre_status": "completed",
+      "pre_approval": "approved",
+      "reject_status": 200,
+      "approve_status": 200,
+      "execute_status": 200,
+      "mission_ids": [
+        "718702d3-5249-419c-aff8-aa7ac474a24e",
+        "adf232bf-cd0c-4b52-ba35-d9e0037f4743",
+        "a8dbf4f9-3bd2-4de9-ad9a-b2e12f1168e7"
+      ],
+      "missions_launched": 3,
+      "poll_status_code": 200,
+      "final_status": "failed",
+      "missions_completed": 0,
+      "missions_failed": 3,
+      "findings_produced": 0,
+      "validated_findings_produced": 0,
+      "reports_generated": 0
+    },
+    {
+      "id": "hackerone:coinbase",
+      "pre_get_status": 200,
+      "pre_status": "completed",
+      "pre_approval": "approved",
+      "reject_status": 200,
+      "approve_status": 200,
+      "execute_status": 200,
+      "mission_ids": [
+        "fd0dbffc-511c-43ce-8d31-30b4f669137a",
+        "c4a54c58-36ce-4758-9e5e-fdab0cc75bd1"
+      ],
+      "missions_launched": 2,
+      "poll_status_code": 200,
+      "final_status": "failed",
+      "missions_completed": 0,
+      "missions_failed": 2,
+      "findings_produced": 0,
+      "validated_findings_produced": 0,
+      "reports_generated": 0
+    }
+  ],
+  "errors": [],
+  "launched_mission_ids": [
+    "b860ab8f-39ee-4922-9e59-3883264d7fd0",
+    "e09f1885-72c8-4720-8055-117e4f36a43e",
+    "b25f7d7e-37e9-46d1-a07b-c7d40aa695ba",
+    "718702d3-5249-419c-aff8-aa7ac474a24e",
+    "adf232bf-cd0c-4b52-ba35-d9e0037f4743",
+    "a8dbf4f9-3bd2-4de9-ad9a-b2e12f1168e7",
+    "fd0dbffc-511c-43ce-8d31-30b4f669137a",
+    "c4a54c58-36ce-4758-9e5e-fdab0cc75bd1"
+  ]
+}

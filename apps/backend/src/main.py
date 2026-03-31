@@ -841,6 +841,8 @@ def _initialize_praison_governor():
             praison_agent_external_call_hook,
         )
         from apps.backend.src.core.praison_registry import initialize_agent_registry
+        from apps.backend.src.core.praison_agent_runtime import initialize_agent_runtime
+        from apps.backend.src.core.tools import get_registry, initialize_default_tools
         from apps.backend.src.core.hook_registry import get_hook_registry
 
         # 1. Initialize governor (sync fast-path governance)
@@ -852,6 +854,18 @@ def _initialize_praison_governor():
         # 2. Initialize agent registry (loads agents.yaml, validates all personas)
         registry = initialize_agent_registry()
         print(f"✓ PraisonAI Agent Registry initialized: {registry.agent_ids()}")
+
+        # 2.5. Initialize Praison agent runtime with real tool bindings so
+        # mission nodes execute platform tools in live mode.
+        initialize_default_tools()
+        tool_registry = get_registry()
+        tool_callables = {
+            tool.id: tool.execute
+            for tool in tool_registry.list_all()
+            if hasattr(tool, "id") and hasattr(tool, "execute")
+        }
+        initialize_agent_runtime(tool_registry=tool_callables)
+        print(f"✓ PraisonAgentRuntime initialized with {len(tool_callables)} tool bindings")
 
         # 3. Register all governance hooks
         hook_registry = get_hook_registry()

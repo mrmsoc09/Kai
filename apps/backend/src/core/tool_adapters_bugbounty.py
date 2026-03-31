@@ -8,6 +8,7 @@ global tool registry (`core.tools`) and worker execution path.
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 import time
@@ -46,6 +47,7 @@ REGISTRY_TOOL_ID_ALIASES: dict[str, str] = {
 
 
 DEFAULT_ARGS: dict[str, list[str]] = {
+    "nuclei": ["-jsonl", "-nt", "-u"],
     "assetfinder": [],
     "findomain": ["--quiet", "-t"],
     "puredns": ["resolve"],
@@ -75,6 +77,7 @@ DEFAULT_ARGS: dict[str, list[str]] = {
 
 
 TOOL_PARSE_MODE: dict[str, str] = {
+    "nuclei": "jsonl",
     "assetfinder": "lines",
     "findomain": "lines",
     "puredns": "lines",
@@ -186,8 +189,22 @@ class CatalogBackedCLITool(BaseTool):
     def _binary(self) -> str:
         return self.catalog_entry.binary_path or self.catalog_name
 
+    _EXTRA_SEARCH_DIRS = [
+        "/home/k1-admin/go/bin",
+        "/root/go/bin",
+        "/usr/local/go/bin",
+    ]
+
     def _which(self) -> str | None:
-        return shutil.which(self._binary())
+        binary = self._binary()
+        found = shutil.which(binary)
+        if found:
+            return found
+        for directory in self._EXTRA_SEARCH_DIRS:
+            candidate = os.path.join(directory, binary)
+            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                return candidate
+        return None
 
     def _docker_available(self) -> bool:
         return shutil.which("docker") is not None
@@ -435,7 +452,7 @@ class CatalogBackedCLITool(BaseTool):
         args, stdin_text = self._build_command(target, [str(arg) for arg in extra_args])
         if binary is None and self.catalog_entry.execution_mode in {"docker", "optional"}:
             if self._docker_available() and self.catalog_entry.container_image:
-                result = self._run_via_docker(args, timeout_seconds=timeout_seconds, stdin_text=stdin_text, headers=headers)
+                result = self._run_via_docker(args, timeout_seconds=timeout_seconds, stdin_text=stdin_text)
                 attempts = 1
                 command = result.command
             else:
@@ -462,7 +479,6 @@ class CatalogBackedCLITool(BaseTool):
                 retries=retries,
                 timeout_seconds=timeout_seconds,
                 stdin_text=stdin_text,
-                headers=headers,
             )
 
         parsed = self._parse_output(result.stdout)

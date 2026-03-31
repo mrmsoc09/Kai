@@ -7,7 +7,7 @@ tools:
     install_verification_cmd: ["amass", "-version"]
     input_schema: {"target": "domain"}
     output_schema: {"subdomains": "list[str]"}
-    timeout_seconds: 300
+    timeout_seconds: 900
     retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
     tags: ["recon", "subdomain"]
@@ -22,7 +22,7 @@ tools:
     install_verification_cmd: ["subfinder", "-version"]
     input_schema: {"target": "domain"}
     output_schema: {"subdomains": "list[str]"}
-    timeout_seconds: 240
+    timeout_seconds: 600
     retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
     tags: ["recon", "subdomain"]
@@ -97,7 +97,7 @@ tools:
     install_verification_cmd: ["gau", "--version"]
     input_schema: {"target": "domain"}
     output_schema: {"urls": "list[str]"}
-    timeout_seconds: 240
+    timeout_seconds: 900
     retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
     tags: ["urls", "archive"]

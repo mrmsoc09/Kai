@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -68,6 +69,141 @@ from apps.backend.src.core.praison_state import (
 from apps.backend.src.core.praison_topology import MissionGraphSpec, PraisonTopology
 
 logger = logging.getLogger(__name__)
+
+
+# -- DB persistence (fire-and-forget) -----------------------------------------
+
+def _get_db_url_sync() -> str | None:
+    """Resolve a synchronous (psycopg2) DATABASE_URL from environment. Returns None if unavailable."""
+    import os
+    raw = (os.getenv("DATABASE_URL") or "").strip()
+    if not raw:
+        return None
+    # Convert asyncpg URL to psycopg2 URL
+    if raw.startswith("postgresql+asyncpg://"):
+        raw = raw.replace("postgresql+asyncpg://", "postgresql://", 1)
+    return raw
+
+
+def _fire_and_forget_db(fn: Any, *args: Any, **kwargs: Any) -> None:
+    """Run a synchronous DB write in a daemon thread so it never blocks the caller."""
+    def _runner() -> None:
+        try:
+            fn(*args, **kwargs)
+        except Exception as exc:
+            logger.debug("praison DB persist error (non-fatal): %s", exc)
+
+    t = threading.Thread(target=_runner, daemon=True)
+    t.start()
+
+
+def _upsert_mission_row(
+    mission_id: str,
+    workflow_id: str,
+    program_id: str,
+    tenant_id: str,
+    mission_name: str,
+    execution_mode: str,
+    status: str,
+    started_at: datetime | None = None,
+    completed_at: datetime | None = None,
+    tools_executed: int = 0,
+    artifacts_written: int = 0,
+    final_state_summary: dict | None = None,
+    error: str | None = None,
+) -> None:
+    """Insert or update a praison_missions row using psycopg2. Swallows all errors."""
+    import json as _json
+    import uuid as _uuid
+
+    db_url = _get_db_url_sync()
+    if not db_url:
+        return
+    try:
+        import psycopg2
+        import psycopg2.extras
+
+        conn = psycopg2.connect(db_url)
+        conn.autocommit = False
+        cur = conn.cursor()
+        fss = _json.dumps(final_state_summary) if final_state_summary else None
+
+        cur.execute("SELECT id FROM praison_missions WHERE mission_id = %s", (mission_id,))
+        row = cur.fetchone()
+        if row:
+            cur.execute(
+                """UPDATE praison_missions
+                   SET status = %s,
+                       started_at = COALESCE(%s, started_at),
+                       completed_at = COALESCE(%s, completed_at),
+                       tools_executed = %s,
+                       artifacts_written = %s,
+                       final_state_summary = %s::jsonb,
+                       error = %s,
+                       updated_at = NOW()
+                 WHERE mission_id = %s""",
+                (status, started_at, completed_at, tools_executed, artifacts_written, fss, error, mission_id),
+            )
+        else:
+            cur.execute(
+                """INSERT INTO praison_missions
+                   (id, mission_id, tenant_id, workflow_id, program_id, mission_name,
+                    execution_mode, status, started_at, completed_at,
+                    tools_executed, artifacts_written, final_state_summary, error,
+                    created_at, updated_at)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,NOW(),NOW())""",
+                (
+                    str(_uuid.uuid4()), mission_id, tenant_id, workflow_id, program_id, mission_name,
+                    execution_mode, status, started_at, completed_at,
+                    tools_executed, artifacts_written, fss, error,
+                ),
+            )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as exc:
+        logger.debug("_upsert_mission_row failed (non-fatal): %s", exc)
+
+
+def _insert_tool_run_row(
+    mission_id: str,
+    agent_id: str,
+    tool_id: str,
+    target: str | None,
+    status: str,
+    execution_time_ms: float | None,
+    result_summary: dict | None,
+    error: str | None,
+) -> None:
+    """Append a praison_tool_runs row using psycopg2. Swallows all errors."""
+    import json as _json
+    import uuid as _uuid
+
+    db_url = _get_db_url_sync()
+    if not db_url:
+        return
+    try:
+        import psycopg2
+
+        conn = psycopg2.connect(db_url)
+        conn.autocommit = False
+        cur = conn.cursor()
+        rs = _json.dumps(result_summary) if result_summary else None
+        cur.execute(
+            """INSERT INTO praison_tool_runs
+               (id, mission_id, agent_id, tool_id, target, status,
+                execution_time_ms, result_summary, error, created_at, updated_at)
+               VALUES (%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s,NOW(),NOW())""",
+            (
+                str(_uuid.uuid4()), mission_id, agent_id, tool_id, target, status,
+                execution_time_ms, rs, error,
+            ),
+        )
+        conn.commit()
+        cur.close()
+        conn.close()
+    except Exception as exc:
+        logger.debug("_insert_tool_run_row failed (non-fatal): %s", exc)
 
 
 # -- Mission handle ------------------------------------------------------------
@@ -216,9 +352,10 @@ class MissionRuntime:
         provided_callable_keys = set(agent_callables.keys()) if agent_callables else set()
 
         # Build node callables
-        # If a custom graph_spec was provided with custom callables, use them directly
-        # rather than wrapping through the standard builder (which maps standard node IDs).
-        if graph_spec is not None and agent_callables:
+        # For default topology, always wrap through the standard node executor
+        # layer so node telemetry/events/artifact IDs are emitted consistently.
+        # For explicit custom graph specs, preserve direct callables as provided.
+        if custom_graph_spec_supplied and agent_callables:
             node_callables = dict(agent_callables)
         else:
             node_callables = build_standard_node_callables(agent_callables)
@@ -266,6 +403,19 @@ class MissionRuntime:
             "Mission created: id=%s workflow=%s mode=%s executable=%s",
             mission_id, workflow_id, execution_mode, handle.is_executable,
         )
+
+        # Persist mission row (non-blocking)
+        _fire_and_forget_db(
+            _upsert_mission_row,
+            mission_id=mission_id,
+            workflow_id=workflow_id,
+            program_id=program_id,
+            tenant_id=str(resolved_tenant_id),
+            mission_name=mission_name,
+            execution_mode=execution_mode,
+            status="created",
+        )
+
         return handle
 
     # -- Start -----------------------------------------------------------------
@@ -297,7 +447,8 @@ class MissionRuntime:
 
             self._states[mission_id] = final_state
             success = not final_state.get("error")
-            self._statuses[mission_id] = "completed" if success else "failed"
+            terminal_status = "completed" if success else "failed"
+            self._statuses[mission_id] = terminal_status
 
             emit(mission_completed_event(
                 mission_id=mission_id,
@@ -307,6 +458,30 @@ class MissionRuntime:
                 final_report_id=final_state.get("final_report_id", ""),
             ))
 
+            # Persist completion (non-blocking)
+            tools_run = len(final_state.get("tool_results", []))
+            artifacts_count = len(final_state.get("artifacts", []))
+            _fire_and_forget_db(
+                _upsert_mission_row,
+                mission_id=mission_id,
+                workflow_id=handle.workflow_id,
+                program_id=handle.program_id,
+                tenant_id=str(handle.tenant_id),
+                mission_name=handle.initial_state.get("mission_name", ""),
+                execution_mode=handle.execution_mode,
+                status=terminal_status,
+                completed_at=datetime.now(timezone.utc),
+                tools_executed=tools_run,
+                artifacts_written=artifacts_count,
+                final_state_summary={
+                    "phase": final_state.get("phase", ""),
+                    "final_report_id": final_state.get("final_report_id", ""),
+                    "summary": final_state.get("summary", ""),
+                    "error": final_state.get("error", ""),
+                },
+                error=final_state.get("error") or None,
+            )
+
             return final_state
 
         except Exception as exc:
@@ -315,6 +490,21 @@ class MissionRuntime:
             state = dict(self._states.get(mission_id, {}))
             state["error"] = str(exc)
             self._states[mission_id] = state
+
+            # Persist failure (non-blocking)
+            _fire_and_forget_db(
+                _upsert_mission_row,
+                mission_id=mission_id,
+                workflow_id=handle.workflow_id,
+                program_id=handle.program_id,
+                tenant_id=str(handle.tenant_id),
+                mission_name=handle.initial_state.get("mission_name", ""),
+                execution_mode=handle.execution_mode,
+                status="failed",
+                completed_at=datetime.now(timezone.utc),
+                error=str(exc),
+            )
+
             return state
 
     # -- Resume ----------------------------------------------------------------
@@ -694,8 +884,7 @@ def _make_minimal_agent_specs() -> dict[str, dict[str, Any]]:
     agents = [
         "GovernanceDirector", "MissionDirector", "PhaseCoordinator",
         "SurfaceMapper", "ReconSpecialist", "EvidenceAnalyst",
-        "SecurityGovernorAgent", "ScanningCoordinator",
-        "ReportSynthesisAgent", "HandoffLiaison", "TriageAnalyst",
+        "ReportSynthesisAgent", "HandoffLiaison",
     ]
     specs = {}
     for agent_id in agents:
@@ -710,7 +899,7 @@ def _make_minimal_agent_specs() -> dict[str, dict[str, Any]]:
             "system_prompt": f"Agent {agent_id}",
         }
     # Governance nodes
-    for gid in ("GovernanceDirector", "SecurityGovernorAgent"):
+    for gid in ("GovernanceDirector",):
         specs[gid]["node_type"] = "governance"
         specs[gid]["agent_class"] = "governor"
     specs["MissionDirector"]["node_type"] = "coordinator"

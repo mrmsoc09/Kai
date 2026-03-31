@@ -1,0 +1,529 @@
+{
+  "timestamp": 1774646352,
+  "targets": [
+    "hackerone:twitter",
+    "hackerone:snapchat",
+    "hackerone:coinbase"
+  ],
+  "opportunities": [
+    {
+      "id": "hackerone:twitter",
+      "status_code": 200,
+      "payload": {
+        "id": "hackerone:twitter",
+        "name": "X (Twitter) Bug Bounty",
+        "organization": "X Corp",
+        "platform": "hackerone",
+        "access_type": "public_bbp",
+        "program_url": "https://hackerone.com/twitter",
+        "scope_url": "https://hackerone.com/twitter#scope",
+        "scope_summary": "*.twitter.com, *.x.com, *.twimg.com, mobile apps",
+        "scope_domains": [
+          "*.twitter.com",
+          "*.x.com",
+          "*.twimg.com",
+          "twitter-iOS",
+          "twitter-android"
+        ],
+        "max_payout_usd": 15000,
+        "min_payout_usd": 140,
+        "vdp_only": false,
+        "response_sla_days": 30,
+        "tags": [
+          "web",
+          "api",
+          "mobile",
+          "social"
+        ],
+        "vuln_types": [
+          "xss",
+          "sqli",
+          "idor",
+          "auth_bypass",
+          "ssrf",
+          "oauth",
+          "logic"
+        ],
+        "priority_score": 0.85,
+        "is_public": true,
+        "payout_label": "Up to $15K",
+        "notes": "",
+        "credential_requirements": [
+          {
+            "kind": "signup",
+            "label": "X / Twitter Account",
+            "signup_url": "https://x.com/i/flow/signup",
+            "notes": "Create a dedicated test account. Do not use your personal Twitter account for testing.",
+            "required": true
+          },
+          {
+            "kind": "api_key",
+            "label": "X Developer API v2 Credentials",
+            "signup_url": "https://developer.x.com/en/portal/dashboard",
+            "notes": "Apply for developer access to test API endpoints. Free Basic tier is sufficient.",
+            "required": false
+          }
+        ],
+        "needs_credentials": true,
+        "status": "completed",
+        "approval_state": "approved",
+        "approval_reason": "Headless passive-first dispatch for authorized H1 target.",
+        "rejection_reason": null,
+        "execution_metadata": {
+          "mission_lineage": [
+            {
+              "mission_id": "4b0ae8a8-6a2a-4abe-ab7f-7bcb330cc1e3",
+              "target": "twimg.com",
+              "workflow_id": "opportunity-hackerone:twitter-1",
+              "program_id": "twimg.com"
+            },
+            {
+              "mission_id": "a49ba460-5775-4863-992b-10c74cf68313",
+              "target": "twitter.com",
+              "workflow_id": "opportunity-hackerone:twitter-2",
+              "program_id": "twitter.com"
+            },
+            {
+              "mission_id": "8d667f74-89e6-414d-b430-adb0c8bf787f",
+              "target": "x.com",
+              "workflow_id": "opportunity-hackerone:twitter-3",
+              "program_id": "x.com"
+            }
+          ],
+          "missions_launched": 3,
+          "missions_completed": 3,
+          "missions_failed": 0,
+          "findings_produced": 0,
+          "validated_findings_produced": 0,
+          "actual_yield_proxy": 0.0,
+          "report_ids": [],
+          "report_ids_by_mission": {},
+          "reports_generated": 0,
+          "reports_deduplicated": 0,
+          "last_error": null,
+          "target_review": {
+            "approved_targets": [
+              "*.twimg.com",
+              "*.twitter.com",
+              "*.x.com",
+              "twitter-android",
+              "twitter-ios"
+            ],
+            "rejected_targets": [],
+            "batch_ids": [],
+            "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+            "reviewed_at": "2026-03-27T08:51:07.797275+00:00"
+          },
+          "requested_target_count": 5,
+          "valid_targets": [
+            "twimg.com",
+            "twitter.com",
+            "x.com"
+          ],
+          "blocked_targets": [
+            {
+              "target": "twitter-android",
+              "reason": "non_network_target"
+            },
+            {
+              "target": "twitter-ios",
+              "reason": "non_network_target"
+            }
+          ],
+          "selected_targets": [
+            "twimg.com",
+            "twitter.com",
+            "x.com"
+          ],
+          "target_cap": 5,
+          "mission_ids": [
+            "4b0ae8a8-6a2a-4abe-ab7f-7bcb330cc1e3",
+            "a49ba460-5775-4863-992b-10c74cf68313",
+            "8d667f74-89e6-414d-b430-adb0c8bf787f"
+          ],
+          "last_execution_started_at": "2026-03-27T08:51:08.000322+00:00",
+          "execution_reason": "Headless dispatch through Kai control plane.",
+          "completion_event_emitted": true,
+          "execution_success_rate": 1.0,
+          "last_execution_completed_at": "2026-03-27T08:52:08.430487+00:00"
+        },
+        "source_memory_id": null,
+        "source_pattern_id": null,
+        "source_type": "catalog_program",
+        "source_object_id": "hackerone:twitter",
+        "candidate_targets": [
+          "*.twitter.com",
+          "*.x.com",
+          "*.twimg.com",
+          "twitter-iOS",
+          "twitter-android"
+        ],
+        "expansion_candidates": [],
+        "approved_targets": [
+          "*.twimg.com",
+          "*.twitter.com",
+          "*.x.com",
+          "twitter-android",
+          "twitter-ios"
+        ],
+        "rejected_targets": [],
+        "target_batches": [],
+        "expansion_rationale": "",
+        "expansion_score": 0.0,
+        "expected_report_quality": 0.0,
+        "recommended_execution_order": [],
+        "linked_mission_count": 3,
+        "linked_report_count": 0,
+        "decision_summary": null,
+        "chain_summary": null,
+        "confidence_score": 0.85,
+        "estimated_yield": 2.55,
+        "expected_yield": 2.55,
+        "duplicate_risk": 0.0,
+        "created_at": "2026-03-23T05:02:20.357371+00:00",
+        "updated_at": "2026-03-27T08:52:08.430464+00:00",
+        "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+      }
+    },
+    {
+      "id": "hackerone:snapchat",
+      "status_code": 200,
+      "payload": {
+        "id": "hackerone:snapchat",
+        "name": "Snapchat Bug Bounty",
+        "organization": "Snap Inc.",
+        "platform": "hackerone",
+        "access_type": "public_bbp",
+        "program_url": "https://hackerone.com/snapchat",
+        "scope_url": "https://hackerone.com/snapchat#scope",
+        "scope_summary": "*.snapchat.com, *.snap.com, Snapchat mobile apps",
+        "scope_domains": [
+          "*.snapchat.com",
+          "*.snap.com",
+          "accounts.snapchat.com",
+          "snapchat-iOS",
+          "snapchat-android"
+        ],
+        "max_payout_usd": 15000,
+        "min_payout_usd": 200,
+        "vdp_only": false,
+        "response_sla_days": 30,
+        "tags": [
+          "web",
+          "api",
+          "mobile",
+          "social"
+        ],
+        "vuln_types": [
+          "xss",
+          "sqli",
+          "idor",
+          "auth_bypass",
+          "ssrf",
+          "oauth",
+          "logic"
+        ],
+        "priority_score": 0.85,
+        "is_public": true,
+        "payout_label": "Up to $15K",
+        "notes": "",
+        "credential_requirements": [
+          {
+            "kind": "signup",
+            "label": "Snapchat Account",
+            "signup_url": "https://accounts.snapchat.com/accounts/signup",
+            "notes": "Create a dedicated Snapchat account for testing in-scope user flows.",
+            "required": true
+          },
+          {
+            "kind": "api_key",
+            "label": "Snap Kit Developer Credentials",
+            "signup_url": "https://kit.snapchat.com/",
+            "notes": "Optional for API and integration endpoint testing where program scope allows.",
+            "required": false
+          }
+        ],
+        "needs_credentials": true,
+        "status": "completed",
+        "approval_state": "approved",
+        "approval_reason": "Headless passive-first dispatch for authorized H1 target.",
+        "rejection_reason": null,
+        "execution_metadata": {
+          "mission_lineage": [
+            {
+              "mission_id": "b7e196a5-d6f9-499b-89bd-686ecd473b9e",
+              "target": "snap.com",
+              "workflow_id": "opportunity-hackerone:snapchat-1",
+              "program_id": "snap.com"
+            },
+            {
+              "mission_id": "f72130a7-a93c-44f1-af60-1078566c570e",
+              "target": "snapchat.com",
+              "workflow_id": "opportunity-hackerone:snapchat-2",
+              "program_id": "snapchat.com"
+            },
+            {
+              "mission_id": "b432723e-4b1e-403d-90f6-c9ae04ca4f32",
+              "target": "accounts.snapchat.com",
+              "workflow_id": "opportunity-hackerone:snapchat-3",
+              "program_id": "accounts.snapchat.com"
+            }
+          ],
+          "missions_launched": 3,
+          "missions_completed": 3,
+          "missions_failed": 0,
+          "findings_produced": 0,
+          "validated_findings_produced": 0,
+          "actual_yield_proxy": 0.0,
+          "report_ids": [],
+          "report_ids_by_mission": {},
+          "reports_generated": 0,
+          "reports_deduplicated": 0,
+          "last_error": null,
+          "target_review": {
+            "approved_targets": [
+              "*.snap.com",
+              "*.snapchat.com",
+              "accounts.snapchat.com",
+              "snapchat-android",
+              "snapchat-ios"
+            ],
+            "rejected_targets": [],
+            "batch_ids": [],
+            "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+            "reviewed_at": "2026-03-27T08:51:08.111369+00:00"
+          },
+          "requested_target_count": 5,
+          "valid_targets": [
+            "snap.com",
+            "snapchat.com",
+            "accounts.snapchat.com"
+          ],
+          "blocked_targets": [
+            {
+              "target": "snapchat-android",
+              "reason": "non_network_target"
+            },
+            {
+              "target": "snapchat-ios",
+              "reason": "non_network_target"
+            }
+          ],
+          "selected_targets": [
+            "snap.com",
+            "snapchat.com",
+            "accounts.snapchat.com"
+          ],
+          "target_cap": 5,
+          "mission_ids": [
+            "b7e196a5-d6f9-499b-89bd-686ecd473b9e",
+            "f72130a7-a93c-44f1-af60-1078566c570e",
+            "b432723e-4b1e-403d-90f6-c9ae04ca4f32"
+          ],
+          "last_execution_started_at": "2026-03-27T08:51:08.481710+00:00",
+          "execution_reason": "Headless dispatch through Kai control plane.",
+          "completion_event_emitted": true,
+          "execution_success_rate": 1.0,
+          "last_execution_completed_at": "2026-03-27T08:52:08.479093+00:00"
+        },
+        "source_memory_id": null,
+        "source_pattern_id": null,
+        "source_type": "catalog_program",
+        "source_object_id": "hackerone:snapchat",
+        "candidate_targets": [
+          "*.snapchat.com",
+          "*.snap.com",
+          "accounts.snapchat.com",
+          "snapchat-iOS",
+          "snapchat-android"
+        ],
+        "expansion_candidates": [],
+        "approved_targets": [
+          "*.snap.com",
+          "*.snapchat.com",
+          "accounts.snapchat.com",
+          "snapchat-android",
+          "snapchat-ios"
+        ],
+        "rejected_targets": [],
+        "target_batches": [],
+        "expansion_rationale": "",
+        "expansion_score": 0.0,
+        "expected_report_quality": 0.0,
+        "recommended_execution_order": [],
+        "linked_mission_count": 3,
+        "linked_report_count": 0,
+        "decision_summary": null,
+        "chain_summary": null,
+        "confidence_score": 0.85,
+        "estimated_yield": 2.55,
+        "expected_yield": 2.55,
+        "duplicate_risk": 0.0,
+        "created_at": "2026-03-27T08:48:01.098176+00:00",
+        "updated_at": "2026-03-27T08:52:08.479065+00:00",
+        "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+      }
+    },
+    {
+      "id": "hackerone:coinbase",
+      "status_code": 200,
+      "payload": {
+        "id": "hackerone:coinbase",
+        "name": "Coinbase Bug Bounty",
+        "organization": "Coinbase",
+        "platform": "hackerone",
+        "access_type": "public_bbp",
+        "program_url": "https://hackerone.com/coinbase",
+        "scope_url": "https://hackerone.com/coinbase#scope",
+        "scope_summary": "*.coinbase.com, *.cbhax.com, Coinbase mobile apps",
+        "scope_domains": [
+          "*.coinbase.com",
+          "*.cbhax.com",
+          "coinbase-iOS",
+          "coinbase-android"
+        ],
+        "max_payout_usd": 50000,
+        "min_payout_usd": 200,
+        "vdp_only": false,
+        "response_sla_days": 30,
+        "tags": [
+          "web",
+          "api",
+          "crypto",
+          "mobile",
+          "fintech"
+        ],
+        "vuln_types": [
+          "xss",
+          "sqli",
+          "idor",
+          "rce",
+          "auth_bypass",
+          "ssrf",
+          "oauth",
+          "logic"
+        ],
+        "priority_score": 0.9,
+        "is_public": true,
+        "payout_label": "Up to $50K",
+        "notes": "",
+        "credential_requirements": [
+          {
+            "kind": "signup",
+            "label": "Coinbase Account",
+            "signup_url": "https://www.coinbase.com/signup",
+            "notes": "Standard Coinbase account. Use a dedicated test account with no real funds.",
+            "required": true
+          }
+        ],
+        "needs_credentials": true,
+        "status": "completed",
+        "approval_state": "approved",
+        "approval_reason": "Approved for controlled execution.",
+        "rejection_reason": null,
+        "execution_metadata": {
+          "mission_lineage": [
+            {
+              "mission_id": "8b1e5091-273e-461b-a0b7-c19e7f05bd7f",
+              "target": "cbhax.com",
+              "workflow_id": "opportunity-hackerone:coinbase-1",
+              "program_id": "cbhax.com"
+            },
+            {
+              "mission_id": "87c30e2e-030d-4dff-b09f-a30a89bebe55",
+              "target": "coinbase.com",
+              "workflow_id": "opportunity-hackerone:coinbase-2",
+              "program_id": "coinbase.com"
+            }
+          ],
+          "missions_launched": 2,
+          "missions_completed": 2,
+          "missions_failed": 0,
+          "findings_produced": 0,
+          "validated_findings_produced": 0,
+          "actual_yield_proxy": 0.0,
+          "report_ids": [],
+          "report_ids_by_mission": {},
+          "reports_generated": 0,
+          "reports_deduplicated": 0,
+          "last_error": null,
+          "target_review": {
+            "approved_targets": [
+              "*.cbhax.com",
+              "*.coinbase.com",
+              "coinbase-android",
+              "coinbase-ios"
+            ],
+            "rejected_targets": [],
+            "batch_ids": [],
+            "reviewed_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b",
+            "reviewed_at": "2026-03-23T05:13:25.077000+00:00"
+          },
+          "blocked_targets": [
+            {
+              "target": "coinbase-android",
+              "reason": "non_network_target"
+            },
+            {
+              "target": "coinbase-ios",
+              "reason": "non_network_target"
+            }
+          ],
+          "requested_target_count": 4,
+          "valid_targets": [
+            "cbhax.com",
+            "coinbase.com"
+          ],
+          "selected_targets": [
+            "cbhax.com",
+            "coinbase.com"
+          ],
+          "target_cap": 5,
+          "mission_ids": [
+            "8b1e5091-273e-461b-a0b7-c19e7f05bd7f",
+            "87c30e2e-030d-4dff-b09f-a30a89bebe55"
+          ],
+          "last_execution_started_at": "2026-03-27T08:51:08.784126+00:00",
+          "execution_reason": "Headless dispatch through Kai control plane.",
+          "completion_event_emitted": true,
+          "execution_success_rate": 1.0,
+          "last_execution_completed_at": "2026-03-27T08:52:08.513286+00:00"
+        },
+        "source_memory_id": null,
+        "source_pattern_id": null,
+        "source_type": "catalog_program",
+        "source_object_id": "hackerone:coinbase",
+        "candidate_targets": [
+          "*.coinbase.com",
+          "*.cbhax.com",
+          "coinbase-iOS",
+          "coinbase-android"
+        ],
+        "expansion_candidates": [],
+        "approved_targets": [
+          "*.cbhax.com",
+          "*.coinbase.com",
+          "coinbase-android",
+          "coinbase-ios"
+        ],
+        "rejected_targets": [],
+        "target_batches": [],
+        "expansion_rationale": "",
+        "expansion_score": 0.0,
+        "expected_report_quality": 0.0,
+        "recommended_execution_order": [],
+        "linked_mission_count": 2,
+        "linked_report_count": 0,
+        "decision_summary": null,
+        "chain_summary": null,
+        "confidence_score": 0.9,
+        "estimated_yield": 2.16,
+        "expected_yield": 2.16,
+        "duplicate_risk": 0.0,
+        "created_at": "2026-03-23T05:02:20.323187+00:00",
+        "updated_at": "2026-03-27T08:52:08.513263+00:00",
+        "created_by": "38b8bc0a-6d26-4921-86e0-4237574b2c8b"
+      }
+    }
+  ]
+}

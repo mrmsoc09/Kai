@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import os
 import threading
+import logging
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from fnmatch import fnmatchcase
@@ -36,6 +37,19 @@ from .prometheus_metrics import (
     record_opportunity_rejected,
 )
 
+logger = logging.getLogger(__name__)
+
+_LIVE_MISSION_AGENT_IDS: tuple[str, ...] = (
+    "GovernanceDirector",
+    "MissionDirector",
+    "PhaseCoordinator",
+    "SurfaceMapper",
+    "ReconSpecialist",
+    "EvidenceAnalyst",
+    "ReportSynthesisAgent",
+    "HandoffLiaison",
+)
+
 
 def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -67,6 +81,55 @@ def _default_runtime_provider():
     from apps.backend.src.core.praison_mission_runtime import get_mission_runtime
 
     return get_mission_runtime()
+
+
+def _build_live_agent_callables() -> dict[str, Callable[[dict[str, Any]], dict[str, Any]]] | None:
+    """
+    Build Praison-backed node callables with real tool bindings.
+
+    Returns None if live callables cannot be built; caller can choose a
+    safer fallback behavior instead of silently running graph-only stubs.
+    """
+    try:
+        from apps.backend.src.core.tools import get_registry, initialize_default_tools
+        from apps.backend.src.core.praison_registry import get_agent_registry, initialize_agent_registry
+        from apps.backend.src.core.praison_agent_runtime import (
+            build_praison_agent_callables,
+            initialize_agent_runtime,
+        )
+
+        initialize_default_tools()
+        tool_registry = get_registry()
+        tool_callables = {
+            tool.id: tool.execute
+            for tool in tool_registry.list_all()
+            if hasattr(tool, "id") and hasattr(tool, "execute")
+        }
+        if not tool_callables:
+            logger.warning("Live mission callables unavailable: no tool bindings loaded.")
+            return None
+
+        runtime = initialize_agent_runtime(tool_registry=tool_callables)
+        try:
+            registry = get_agent_registry()
+        except Exception:
+            registry = initialize_agent_registry()
+
+        identities = {}
+        missing: list[str] = []
+        for agent_id in _LIVE_MISSION_AGENT_IDS:
+            try:
+                identities[agent_id] = registry.get_agent(agent_id)
+            except Exception:
+                missing.append(agent_id)
+        if missing:
+            logger.warning("Live mission callables unavailable: missing agent identities: %s", ", ".join(missing))
+            return None
+
+        return build_praison_agent_callables(identities, runtime)
+    except Exception as exc:
+        logger.warning("Failed to build live mission callables: %s", exc)
+        return None
 
 
 def _default_target_cap() -> int:
@@ -601,6 +664,45 @@ class OpportunityActionService:
         record_opportunity_rejected()
         return self._persist(record)
 
+    def reset(
+        self,
+        opportunity: Opportunity,
+        *,
+        tenant_id: str,
+        actor: str,
+        reason: str | None = None,
+    ) -> OpportunityActionRecord:
+        """Reset a completed/rejected opportunity back to 'pending' for re-execution.
+
+        Only terminal states (completed, rejected, failed) can be reset.
+        If status is 'executing', refresh_execution is called first to reconcile stale state.
+        An actively-running opportunity cannot be reset.
+        """
+        record = self.ensure_state(opportunity, tenant_id=tenant_id, created_by=actor)
+        # Reconcile stale mission metadata the same way execute() does
+        if record.status == "executing":
+            record = self.refresh_execution(record)
+        if record.status == "executing":
+            raise ValueError("invalid_state:executing — cannot reset an actively running opportunity")
+        if record.status not in {"completed", "rejected", "failed", "pending"}:
+            raise ValueError(f"invalid_state:{record.status} — only completed/rejected/failed may be reset")
+
+        record.status = "pending"
+        record.approval_state = "pending"
+        record.approval_reason = None
+        record.rejection_reason = None
+        record.approved_by = None
+        record.rejected_by = None
+        record.missions_launched = []
+        record.missions_completed = 0
+        record.missions_failed = 0
+        record.updated_at = _utcnow_iso()
+        reset_reason = reason or "Re-queued for fresh execution run."
+        self._append_history(record, "reset", actor, reset_reason)
+        self._audit("opportunity.reset", record, actor, reset_reason)
+        self._emit_opportunity_event("opportunity_reset", record, detail={"reason": reset_reason})
+        return self._persist(record)
+
     def execute(
         self,
         opportunity: Opportunity,
@@ -612,6 +714,11 @@ class OpportunityActionService:
         max_targets: int | None = None,
     ) -> OpportunityActionRecord:
         record = self.ensure_state(opportunity, tenant_id=tenant_id, created_by=actor)
+        # Reconcile stale mission metadata before applying state guards so
+        # follow-up headless dispatch requests do not remain stuck in
+        # invalid_state:executing after terminal telemetry has landed.
+        if record.status == "executing":
+            record = self.refresh_execution(record)
         if record.approval_state != "approved":
             raise ValueError("approval_required")
         if record.status in {"executing", "completed"}:
@@ -650,6 +757,9 @@ class OpportunityActionService:
         selected_targets = valid_targets[:target_limit]
         tenant_uuid = self._parse_tenant_uuid(tenant_id)
         runtime = self._runtime_provider()
+        live_agent_callables = _build_live_agent_callables()
+        if not live_agent_callables:
+            raise ValueError("live_agent_callables_unavailable")
 
         mission_lineage: list[dict[str, str]] = []
         for index, target in enumerate(selected_targets, start=1):
@@ -660,6 +770,7 @@ class OpportunityActionService:
                 program_id=target,
                 mission_name=f"Opportunity {record.opportunity_id} target {target}",
                 execution_mode=execution_mode,
+                agent_callables=live_agent_callables,
             )
             mission_lineage.append(
                 {
@@ -729,6 +840,58 @@ class OpportunityActionService:
 
     def _is_terminal_mission_state(self, value: str) -> bool:
         return value in {"completed", "failed", "cancelled", "paused"}
+
+    def _mission_terminal_states_from_telemetry(self, mission_ids: list[str]) -> dict[str, str]:
+        """
+        Best-effort mission terminal-state recovery when runtime state is missing
+        (for example after backend restarts that clear in-memory mission handles).
+        """
+        if not mission_ids:
+            return {}
+
+        telemetry_path = Path("artifacts/telemetry/mission_events.jsonl")
+        if not telemetry_path.exists():
+            return {}
+
+        mission_set = {str(value) for value in mission_ids if str(value)}
+        states: dict[str, str] = {}
+        try:
+            for raw in telemetry_path.read_text(encoding="utf-8").splitlines():
+                line = raw.strip()
+                if not line:
+                    continue
+                try:
+                    event = json.loads(line)
+                except Exception:
+                    continue
+                mission_id = str(event.get("mission_id", "")).strip()
+                if mission_id not in mission_set:
+                    continue
+                event_type = str(event.get("event_type", "")).strip().lower()
+                detail = event.get("detail")
+                detail_dict = detail if isinstance(detail, dict) else {}
+                if event_type == "mission_completed":
+                    success = bool(detail_dict.get("success", True))
+                    states[mission_id] = "completed" if success else "failed"
+                elif event_type in {"mission_failed", "mission_cancelled"}:
+                    states[mission_id] = "failed"
+        except Exception:
+            return states
+
+        return states
+
+    def _execution_appears_stale(self, record: OpportunityActionRecord, *, minutes: int = 10) -> bool:
+        started_at_raw = str(record.execution_metadata.get("last_execution_started_at", "")).strip()
+        if not started_at_raw:
+            return False
+        try:
+            started_at = datetime.fromisoformat(started_at_raw.replace("Z", "+00:00"))
+        except ValueError:
+            return False
+        if started_at.tzinfo is None:
+            started_at = started_at.replace(tzinfo=timezone.utc)
+        age_seconds = (datetime.now(timezone.utc) - started_at).total_seconds()
+        return age_seconds >= max(60, int(minutes) * 60)
 
     def _pick_chain_for_finding(self, finding: dict[str, Any], chains: list[dict[str, Any]]) -> dict[str, Any] | None:
         finding_id = str(finding.get("finding_id") or finding.get("id") or "").strip()
@@ -882,37 +1045,57 @@ class OpportunityActionService:
         if not mission_ids:
             return record
 
+        telemetry_terminal_states = self._mission_terminal_states_from_telemetry(mission_ids)
+
         try:
             runtime = self._runtime_provider()
             tenant_uuid = self._parse_tenant_uuid(record.tenant_id)
         except Exception:
-            return record
+            runtime = None
+            tenant_uuid = None
 
         completed = 0
         failed = 0
         findings = 0
         validated = 0
         all_terminal = True
+        unresolved_missions = 0
         mission_states: dict[str, dict[str, Any]] = {}
 
         for mission_id in mission_ids:
-            try:
-                status = runtime.get_status(mission_id, tenant_id=tenant_uuid)
-                state_value = str(status.state)
-                if state_value == "completed":
-                    completed += 1
-                elif state_value in {"failed", "cancelled"}:
-                    failed += 1
-                else:
-                    all_terminal = False
-                mission_state = runtime.get_state(mission_id)
-                if isinstance(mission_state, dict):
-                    mission_states[mission_id] = mission_state
-                findings += len(mission_state.get("findings", [])) if isinstance(mission_state.get("findings"), list) else 0
-                findings += len(mission_state.get("vuln_candidates", [])) if isinstance(mission_state.get("vuln_candidates"), list) else 0
-                validated += len(mission_state.get("validated_findings", [])) if isinstance(mission_state.get("validated_findings"), list) else 0
-            except Exception:
+            if runtime is not None and tenant_uuid is not None:
+                try:
+                    status = runtime.get_status(mission_id, tenant_id=tenant_uuid)
+                    state_value = str(status.state)
+                    if state_value == "completed":
+                        completed += 1
+                    elif state_value in {"failed", "cancelled"}:
+                        failed += 1
+                    else:
+                        all_terminal = False
+                    mission_state = runtime.get_state(mission_id)
+                    if isinstance(mission_state, dict):
+                        mission_states[mission_id] = mission_state
+                    findings += len(mission_state.get("findings", [])) if isinstance(mission_state.get("findings"), list) else 0
+                    findings += len(mission_state.get("vuln_candidates", [])) if isinstance(mission_state.get("vuln_candidates"), list) else 0
+                    validated += len(mission_state.get("validated_findings", [])) if isinstance(mission_state.get("validated_findings"), list) else 0
+                    continue
+                except Exception:
+                    pass
+
+            recovered = telemetry_terminal_states.get(mission_id)
+            if recovered == "completed":
+                completed += 1
+            elif recovered == "failed":
+                failed += 1
+            else:
                 all_terminal = False
+                unresolved_missions += 1
+
+        if unresolved_missions > 0 and self._execution_appears_stale(record):
+            failed += unresolved_missions
+            all_terminal = True
+            record.execution_metadata["stale_unresolved_missions"] = unresolved_missions
 
         record.execution_metadata["missions_completed"] = completed
         record.execution_metadata["missions_failed"] = failed
