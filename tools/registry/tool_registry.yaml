@@ -178,6 +178,22 @@ tools:
     api_keys_required: []
     enabled_by_default: true
 
+  - name: nikto
+    agent_class: NiktoAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: nikto
+    install_verification_cmd: ["nikto", "-h"]
+    input_schema: {"target": "url_or_host"}
+    output_schema: {"findings": "list[json_or_lines]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["web", "vuln", "baseline"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
   - name: nmap
     agent_class: NmapAgent
     category: network_service_scanning
@@ -713,6 +729,342 @@ tools:
     retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
     tags: ["secrets", "recon"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: torbot
+    category: dark_web
+    agent_class: apps.backend.src.agents.tools.torbot.agent.TorbotAgent
+    timeout_seconds: 300
+    safety_classification: passive
+    api_keys_required: false
+    enabled: true
+
+  - name: onionsearch
+    category: dark_web
+    agent_class: apps.backend.src.agents.tools.onionsearch.agent.OnionsearchAgent
+    timeout_seconds: 180
+    safety_classification: passive
+    api_keys_required: false
+    enabled: true
+
+  - name: ahmia-client
+    category: dark_web
+    agent_class: apps.backend.src.agents.tools.ahmia-client.agent.AhmiaClientAgent
+    timeout_seconds: 60
+    safety_classification: passive
+    api_keys_required: false
+    enabled: true
+
+  - name: trufflehog
+    category: secret_scanning
+    agent_class: apps.backend.src.agents.tools.trufflehog.agent.TrufflehogAgent
+    timeout_seconds: 600
+    safety_classification: passive
+    api_keys_required: false
+    enabled: true
+
+  - name: gitleaks
+    category: secret_scanning
+    agent_class: apps.backend.src.agents.tools.gitleaks.agent.GitleaksAgent
+    timeout_seconds: 300
+    safety_classification: passive
+    api_keys_required: false
+    enabled: true
+
+  - name: nikto
+    category: vulnerability_scanning
+    agent_class: apps.backend.src.agents.tools.nikto.agent.NiktoAgent
+    timeout_seconds: 300
+    safety_classification: active
+    api_keys_required: false
+    enabled: true
+
+  - name: testssl
+    category: vulnerability_scanning
+    agent_class: apps.backend.src.agents.tools.testssl.agent.TestsslAgent
+    timeout_seconds: 300
+    safety_classification: passive
+    api_keys_required: false
+    enabled: true
+
+  - name: smuggler
+    category: vulnerability_scanning
+    agent_class: apps.backend.src.agents.tools.smuggler.agent.SmugglerAgent
+    timeout_seconds: 300
+    safety_classification: active
+    api_keys_required: false
+    enabled: true
+
+  - name: searchsploit
+    category: vulnerability_scanning
+    agent_class: apps.backend.src.agents.tools.searchsploit.agent.SearchsploitAgent
+    timeout_seconds: 30
+    safety_classification: passive
+    api_keys_required: false
+    enabled: true
+
+  - name: graphql-cop
+    category: api_testing
+    agent_class: apps.backend.src.agents.tools.graphql-cop.agent.GraphqlCopAgent
+    timeout_seconds: 180
+    safety_classification: intrusive
+    api_keys_required: false
+    enabled: true
+
+  - name: clairvoyance
+    category: api_testing
+    agent_class: apps.backend.src.agents.tools.clairvoyance.agent.ClairvoyanceAgent
+    timeout_seconds: 600
+    safety_classification: intrusive
+    api_keys_required: false
+    enabled: true
+
+  - name: owasp-zap
+    category: api_testing
+    agent_class: apps.backend.src.agents.tools.owasp-zap.agent.OwaspZapAgent
+    timeout_seconds: 1800
+    safety_classification: intrusive
+    api_keys_required: false
+    enabled: true
+
+  - name: caido
+    category: api_testing
+    agent_class: apps.backend.src.agents.tools.caido.agent.CaidoAgent
+    timeout_seconds: 300
+    safety_classification: active
+    api_keys_required: false
+    enabled: true
+
+  - name: faraday-community
+    category: aggregation
+    agent_class: apps.backend.src.agents.tools.faraday-community.agent.FaradaycommunityAgent
+    timeout_seconds: 60
+    safety_classification: passive
+    api_keys_required: false
+    enabled: true
+
+  - name: torbot
+    agent_class: TorbotAgent
+    category: dark_web_intelligence
+    execution_mode: native
+    binary_path: torbot
+    install_verification_cmd: ["torbot", "--help"]
+    input_schema: {"target": "url_or_domain"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["dark_web", "reconnaissance"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: onionsearch
+    agent_class: OnionsearchAgent
+    category: dark_web_intelligence
+    execution_mode: native
+    binary_path: onionsearch
+    install_verification_cmd: ["onionsearch", "--help"]
+    input_schema: {"target": "url_or_domain"}
+    output_schema: {"results": "list[dict]"}
+    timeout_seconds: 180
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["dark_web", "search"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: ahmia-client
+    agent_class: AhmiaClientAgent
+    category: dark_web_intelligence
+    execution_mode: native
+    binary_path: ahmia
+    install_verification_cmd: ["ahmia", "--help"]
+    input_schema: {"target": "url_or_domain"}
+    output_schema: {"indexed_results": "list[dict]"}
+    timeout_seconds: 60
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["dark_web", "index"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: trufflehog
+    agent_class: TrufflehogAgent
+    category: secret_scanning
+    execution_mode: native
+    binary_path: trufflehog
+    install_verification_cmd: ["trufflehog", "version"]
+    input_schema: {"target": "git_repo_url"}
+    output_schema: {"secrets": "list[dict]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["secrets", "git", "credentials"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: gitleaks
+    agent_class: GitleaksAgent
+    category: secret_scanning
+    execution_mode: native
+    binary_path: gitleaks
+    install_verification_cmd: ["gitleaks", "version"]
+    input_schema: {"target": "git_repo_url_or_path"}
+    output_schema: {"secrets": "list[dict]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["secrets", "git", "regex"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: nikto
+    agent_class: NiktoAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: nikto
+    install_verification_cmd: ["nikto", "-version"]
+    input_schema: {"target": "url"}
+    output_schema: {"vulnerabilities": "list[dict]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["web_server", "vulnerability"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: testssl
+    agent_class: TestsslAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: testssl.sh
+    install_verification_cmd: ["testssl.sh", "--version"]
+    input_schema: {"target": "url_https"}
+    output_schema: {"ssl_findings": "list[dict]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["ssl", "tls", "certificate"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: smuggler
+    agent_class: SmugglerAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: smuggler
+    install_verification_cmd: ["smuggler", "--help"]
+    input_schema: {"target": "url"}
+    output_schema: {"smuggling_variants": "list[dict]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["http_smuggling", "web"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: searchsploit
+    agent_class: SearchsploitAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: searchsploit
+    install_verification_cmd: ["searchsploit", "--version"]
+    input_schema: {"target": "software_version"}
+    output_schema: {"cve_matches": "list[dict]"}
+    timeout_seconds: 30
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["cve", "exploitdb", "offline"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: graphql-cop
+    agent_class: GraphqlCopAgent
+    category: api_security
+    execution_mode: native
+    binary_path: graphql-cop
+    install_verification_cmd: ["graphql-cop", "--help"]
+    input_schema: {"target": "graphql_endpoint"}
+    output_schema: {"test_results": "list[dict]"}
+    timeout_seconds: 180
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["graphql", "api", "security"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: clairvoyance
+    agent_class: ClairvoyanceAgent
+    category: api_security
+    execution_mode: native
+    binary_path: clairvoyance
+    install_verification_cmd: ["clairvoyance", "--help"]
+    input_schema: {"target": "graphql_endpoint"}
+    output_schema: {"recovered_schema": "list[dict]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["graphql", "schema_recovery"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: owasp-zap
+    agent_class: OwaspZapAgent
+    category: api_security
+    execution_mode: native
+    binary_path: zap-cli
+    install_verification_cmd: ["zap-cli", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"vulnerabilities": "list[dict]"}
+    timeout_seconds: 1800
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["web", "active_scanning"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: caido
+    agent_class: CaidoAgent
+    category: api_security
+    execution_mode: native
+    binary_path: caido
+    install_verification_cmd: ["caido", "--help"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["api", "proxy", "modern"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: faraday-community
+    agent_class: FaradaycommunityAgent
+    category: aggregation
+    execution_mode: native
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "any"}
+    output_schema: {"master_findings": "list[dict]"}
+    timeout_seconds: 60
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["aggregation", "deduplication"]
     dependencies: []
     api_keys_required: []
     enabled_by_default: true
