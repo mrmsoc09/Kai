@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-const apiBase = import.meta.env.VITE_API_BASE || '';
+import { api } from '../lib/api';
 
 type Msg = { role: 'user'|'assistant', text: string };
 
@@ -10,9 +10,8 @@ export default function WizardChat(){
   const send = async ()=>{
     const t = input.trim(); if(!t||busy) return; setInput(''); setMsgs(m=>[...m,{role:'user', text:t}]); setBusy(true);
     try{
-      const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN');
-      const r = await fetch(apiBase + '/agent0/chat', { method:'POST', headers:{'Content-Type':'application/json', ...(tok? { Authorization: 'Bearer ' + tok } : {})}, body: JSON.stringify({text: t})});
-      const j = await r.json();
+      const r = await api.post('/agent0/chat', { text: t });
+      const j = r.data || {};
       const reply = j.reply || '...';
       setMsgs(m=>[...m,{role:'assistant', text: reply}]);
     }catch(err){

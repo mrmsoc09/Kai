@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-const apiBase = import.meta.env.VITE_API_BASE || '';
+import { api } from '../lib/api';
 
 type Chain = { name: string, steps: { query: string }[] };
 export default function Recon(){
@@ -10,20 +10,16 @@ export default function Recon(){
   const [busy, setBusy] = useState(false);
 
   useEffect(()=>{
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN');
-    fetch(apiBase + '/dorks/chains', { headers: { ...(tok? { Authorization: 'Bearer ' + tok } : {}) } })
-      .then(r=>r.json())
-      .then(j=> setChains(j.chains||[]))
+    api.get('/dorks/chains')
+      .then(r=> setChains(r.data.chains||[]))
       .catch(()=> setChains([]));
   },[]);
 
   const runPlan = async ()=>{
     setBusy(true); setResult(null);
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN');
     try{
-      const r = await fetch(apiBase + '/dorks/run', { method:'POST', headers: { 'Content-Type':'application/json', ...(tok? { Authorization: 'Bearer ' + tok } : {}) }, body: JSON.stringify({ target, chain: selected, mode: 'plan', limit: 5 })});
-      const j = await r.json();
-      setResult(j);
+      const r = await api.post('/dorks/run', { target, chain: selected, mode: 'plan', limit: 5 });
+      setResult(r.data);
     }catch(err){ setResult({ error: 'failed' }); }
     finally{ setBusy(false); }
   };

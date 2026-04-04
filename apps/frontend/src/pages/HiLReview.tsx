@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { listRuns, finalize, submitHiL, packageReport, dispatchReport, listRecording } from '../api/reports';
 import { checklist, decisionTrace } from '../api/ops';
-import { useStore } from '../store/system';
 import StatusChip from '../components/StatusChip';
 import LogList from '../components/LogList';
 
@@ -14,15 +12,12 @@ export default function HiLReview() {
   const [sel, setSel] = useState<string | null>(null);
   const [chk, setChk] = useState<any | null>(null);
   const [logs, setLogs] = useState<any[]>([]);
-  const token = useStore(state => state.auth.token);
-  const navigate = useNavigate();
 
   async function refresh() {
-    if (!token) { navigate('/login'); return; }
-    const j = await listRuns(token);
+    const j = await listRuns();
     const arr: RunRow[] = await Promise.all((j.runs || []).map(async (id: string) => {
       try {
-        const rec = await listRecording(id, token);
+        const rec = await listRecording(id);
         return { id, recCount: (rec.segments || []).length, status: rec.archive ? 'archived' : 'segments' };
       } catch {
         return { id };
@@ -34,9 +29,9 @@ export default function HiLReview() {
   async function loadSel(id: string) {
     setSel(id);
     try {
-      const c = await checklist(id, token, { finding: {}, evidence: {}, mitigation: {} });
+      const c = await checklist(id, undefined, { finding: {}, evidence: {}, mitigation: {} });
       setChk(c);
-      const dl = await decisionTrace(id, token);
+      const dl = await decisionTrace(id);
       setLogs(dl.decision_trace || []);
     } catch(e) {
       setChk(null);
@@ -44,18 +39,17 @@ export default function HiLReview() {
   }
 
   useEffect(() => {
-    if (!token) { navigate('/login'); return; }
     void refresh();
-  }, [token]);
+  }, []);
 
   async function doFlow(id: string) {
     setBusy(id);
     try {
-      const fin = await finalize(id, token);
+      const fin = await finalize(id);
       if (!fin.ok && (fin as any).reason) { alert(`Finalize blocked: ${(fin as any).reason}`); return; }
-      await submitHiL(id, token);
-      await packageReport(id, token);
-      const disp = await dispatchReport(id, token);
+      await submitHiL(id);
+      await packageReport(id);
+      const disp = await dispatchReport(id);
       alert(`Dispatched: ${disp.eml || disp.status}`);
     } catch (e: any) {
       alert(`Error: ${e.message}`);

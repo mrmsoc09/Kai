@@ -23,7 +23,7 @@ export default function TopHUD(){
   useEffect(()=>{
     // Lightweight WS probe if backend exposes /ws (will noop otherwise)
     try{
-      const wsurl = API.replace('http','ws') + '/ws?token=dev'
+      const wsurl = API.replace('http','ws') + '/ws'
       const w = new WebSocket(wsurl)
       w.onopen = ()=> setWs('ON')
       w.onclose = ()=> setWs('OFF')

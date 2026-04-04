@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-const apiBase = import.meta.env.VITE_API_BASE || '';
+import { api } from '../lib/api';
 
 const examples = ['TA0043:T1593','TA0043:T1595','TA0005:T1562.001','TA0010:T1048.003'];
 
@@ -9,16 +9,12 @@ export default function Plans(){
   const [plan, setPlan] = useState<any>(null);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
-  const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN');
-  const headers:any = tok? { Authorization: 'Bearer ' + tok } : {};
 
   const runPlan = async ()=>{
     setErr(''); setBusy(true);
     try{
-      const r = await fetch(apiBase + '/planner/plan', { method:'POST', headers: { 'Content-Type':'application/json', ...headers }, body: JSON.stringify({ technique_id: technique }) });
-      if(!r.ok) throw new Error(String(r.status));
-      const j = await r.json();
-      setPlan(j.plan);
+      const r = await api.post('/planner/plan', { technique_id: technique });
+      setPlan(r.data.plan);
     }catch(e:any){ setErr(String(e)); }
     finally{ setBusy(false); }
   };

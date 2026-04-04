@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import List, Optional
 from uuid import uuid4
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 
@@ -20,7 +20,8 @@ except ModuleNotFoundError:  # pragma: no cover - environment/bootstrap safeguar
 
     jwt = None  # type: ignore[assignment]
 
-security = HTTPBearer(auto_error=True)
+AUTH_COOKIE_NAME = "k1_token"
+security = HTTPBearer(auto_error=False)
 
 
 class User(BaseModel):
@@ -81,7 +82,7 @@ def assert_bootstrap_auth_safe() -> None:
     Call at application startup. Raises AuthConfigError if bootstrap auth is
     enabled in a production environment — prevents accidental production backdoor.
     """
-    bootstrap_enabled = os.getenv("K1_ENABLE_BOOTSTRAP_AUTH", "false").lower() == "true"
+    bootstrap_enabled = _bootstrap_auth_enabled()
     is_production = not _is_non_production()
     if bootstrap_enabled and is_production:
         raise AuthConfigError(
@@ -233,8 +234,17 @@ def extract_jti_and_exp(token: str) -> tuple[Optional[str], int]:
         return None, 0
 
 
-def get_current_user(creds: HTTPAuthorizationCredentials = Depends(security)) -> User:
-    token = creds.credentials or ""
+def get_current_user(
+    request: Request,
+    creds: HTTPAuthorizationCredentials | None = Depends(security),
+) -> User:
+    token = ""
+    if creds is not None and isinstance(getattr(creds, "credentials", None), str):
+        token = creds.credentials.strip()
+    if not token:
+        token = str(request.cookies.get(AUTH_COOKIE_NAME) or "").strip()
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="invalid_token")
     return decode_access_token(token)
 
 

@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { api } from '../lib/api'
 export type ChatMsg = { role: 'user'|'assistant'|'system'; text: string; ts: string }
 
 type WizardState = {
@@ -20,16 +21,9 @@ export const useWizard = create<WizardState>((set,get)=>({
     const ts = new Date().toISOString()
     set(s=> ({...s, msgs: [...s.msgs, {role:'user', text, ts}], busy: true}))
     try{
-      // Try backend proxy first
-      const base = (localStorage.getItem('API_BASE') || 'http://localhost:8080')
-      const r = await fetch(base + '/agent0/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text }) })
-      if(r.ok){
-        const j = await r.json()
-        set(s=> ({...s, msgs: [...s.msgs, {role:'assistant', text: (j.reply || 'Acknowledged.'), ts: new Date().toISOString()}]}))
-      } else {
-        // fallback
-        set(s=> ({...s, msgs: [...s.msgs, {role:'assistant', text: 'Kaison Composer relay offline. Using local hint: HiL gate enforces evidence and scope. Proceed to Operations.', ts: new Date().toISOString()}]}))
-      }
+      const r = await api.post('/agent0/chat', { text })
+      const j = r.data || {}
+      set(s=> ({...s, msgs: [...s.msgs, {role:'assistant', text: (j.reply || 'Acknowledged.'), ts: new Date().toISOString()}]}))
     }catch(e){
       set(s=> ({...s, msgs: [...s.msgs, {role:'assistant', text: 'Kaison Composer relay unreachable. Check backend /agent0/chat.', ts: new Date().toISOString()}]}))
     }finally{

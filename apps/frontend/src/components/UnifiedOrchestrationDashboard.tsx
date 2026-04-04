@@ -14,7 +14,6 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react'
-import { useAuth } from '../store/system'
 import axios from 'axios'
 
 interface Agent {
@@ -51,6 +50,7 @@ interface Workflow {
 }
 
 const ORCHESTRATION_API_BASE = '/api/v1/orchestration'
+const http = axios.create({ withCredentials: true })
 
 // ---------------------------------------------------------------------------
 // Quota types and indicator
@@ -201,28 +201,23 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
   })
 
   const wsRef = useRef<WebSocket | null>(null)
-  const token = useAuth().getState().token
   const API_URL = `http://localhost:8000${ORCHESTRATION_API_BASE}`
 
   // Q1: Standalone quota fetch — callable on demand (retry button) or on interval.
   const fetchQuota = React.useCallback(async () => {
     try {
-      const r = await axios.get(`${API_URL}/quota`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      const r = await http.get(`${API_URL}/quota`)
       setQuota(r.data as QuotaData)
     } catch {
       // Leave existing quota data in place; null means never loaded.
     }
-  }, [API_URL, token])
+  }, [API_URL])
 
   // Q6: Poll health endpoint every 10 seconds.
   useEffect(() => {
     const pollHealth = async () => {
       try {
-        const r = await axios.get(`${API_URL}/health`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        const r = await http.get(`${API_URL}/health`)
         const sys = r.data.systems ?? {}
         setOrchestrationConnected(sys.orchestration?.status === 'operational')
         setSystemHealth({
@@ -239,28 +234,22 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
     pollHealth()
     const healthInterval = setInterval(pollHealth, 10_000)
     return () => clearInterval(healthInterval)
-  }, [API_URL, token])
+  }, [API_URL])
 
   // Initialize dashboard
   useEffect(() => {
     const initializeDashboard = async () => {
       try {
         // Get agent status
-        const agentsResponse = await axios.get(`${API_URL}/agents`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const agentsResponse = await http.get(`${API_URL}/agents`)
         setAgents(agentsResponse.data.agents || [])
 
         // Get MCP servers
-        const mcpResponse = await axios.get(`${API_URL}/mcp/registry`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const mcpResponse = await http.get(`${API_URL}/mcp/registry`)
         setMCPServers(mcpResponse.data.servers || [])
 
         // Get LLM stats
-        const llmResponse = await axios.get(`${API_URL}/llm/providers`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
+        const llmResponse = await http.get(`${API_URL}/llm/providers`)
         setLLMStats(llmResponse.data)
 
         // Quota fetched separately so it can be retried independently (Q1).
@@ -291,20 +280,19 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
     return () => {
       ws.close()
     }
-  }, [token])
+  }, [])
 
   // Handle natural language command
   const handleCommand = async () => {
     if (!command.trim()) return
 
     try {
-      const response = await axios.post(
+      const response = await http.post(
         `${API_URL}/commands/natural-language`,
         {
           query: command,
           context: { user_id: 'current_user', timestamp: new Date().toISOString() }
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
+        }
       )
 
       console.log('[Orchestration] Command executed:', response.data)
@@ -325,11 +313,7 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
     try {
       setIsHunting(true)
 
-      const response = await axios.post(
-        `${API_URL}/workflows/hunt?target=${target}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
+      const response = await http.post(`${API_URL}/workflows/hunt?target=${target}`, {})
 
       const workflowId = response.data.workflow_id
       setCurrentWorkflow(response.data)
@@ -352,10 +336,7 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
       // Auto-refresh workflow status
       const interval = setInterval(async () => {
         try {
-          const statusResponse = await axios.get(
-            `${API_URL}/workflows/${workflowId}`,
-            { headers: { Authorization: `Bearer ${token}` } }
-          )
+          const statusResponse = await http.get(`${API_URL}/workflows/${workflowId}`)
 
           setCurrentWorkflow(statusResponse.data)
 
@@ -378,9 +359,7 @@ export const UnifiedOrchestrationDashboard: React.FC = () => {
   // Refresh workflows
   const refreshWorkflows = async () => {
     try {
-      const response = await axios.get(`${API_URL}/workflows`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
+      const response = await http.get(`${API_URL}/workflows`)
 
       setWorkflows(response.data.workflows || [])
 

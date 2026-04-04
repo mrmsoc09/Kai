@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import HTTPException
 from fastapi.security import HTTPAuthorizationCredentials
 import pytest
+from starlette.requests import Request
 
 from apps.backend.src.core import auth as auth_mod
 from apps.backend.src.core import key_manager as key_manager_mod
@@ -26,6 +27,19 @@ class _DummyVaultClient:
         return bool(self.token)
 
 
+def _build_request(cookie: str | None = None) -> Request:
+    headers: list[tuple[bytes, bytes]] = []
+    if cookie:
+        headers.append((b"cookie", cookie.encode("utf-8")))
+    scope = {
+        "type": "http",
+        "method": "GET",
+        "path": "/",
+        "headers": headers,
+    }
+    return Request(scope)
+
+
 def test_decode_access_token_missing_jose_returns_controlled_http_error(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(auth_mod, "jwt", None)
 
@@ -42,7 +56,19 @@ def test_get_current_user_dev_token_fallback_survives_missing_jose(monkeypatch: 
     monkeypatch.setenv("K1_DEV_TOKEN", "dev-token")
 
     creds = HTTPAuthorizationCredentials(scheme="Bearer", credentials="dev-token")
-    user = auth_mod.get_current_user(creds)
+    user = auth_mod.get_current_user(_build_request(), creds)
+
+    assert user.id == "dev"
+    assert auth_mod.ROLE_ADMIN in user.roles
+
+
+def test_get_current_user_falls_back_to_cookie_token(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(auth_mod, "jwt", None)
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.setenv("K1_DEV_TOKEN", "dev-token")
+
+    request = _build_request(f"{auth_mod.AUTH_COOKIE_NAME}=dev-token")
+    user = auth_mod.get_current_user(request, None)
 
     assert user.id == "dev"
     assert auth_mod.ROLE_ADMIN in user.roles

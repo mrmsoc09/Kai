@@ -1,17 +1,21 @@
 import React, { useEffect, useState } from 'react';
-const apiBase = import.meta.env.VITE_API_BASE || '';
+import { api } from '../lib/api';
 
 export default function Recordings(){
   const [runId, setRunId] = useState('demo-run-001');
   const [list, setList] = useState<any[]>([]);
-  const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN');
-  const headers:any = tok? { Authorization: 'Bearer ' + tok } : {};
   const load = async()=>{
-    const r = await fetch(apiBase + '/recordings/list?run_id=' + encodeURIComponent(runId), { headers });
-    const j = await r.json(); setList(j.segments||[]);
+    const r = await api.get('/recordings/list', { params: { run_id: runId } });
+    setList(r.data.segments||[]);
   };
-  const start = async()=>{ await fetch(apiBase + '/recordings/start', { method:'POST', headers: { 'Content-Type':'application/json', ...headers }, body: JSON.stringify({ run_id: runId })}); load(); };
-  const stop = async()=>{ await fetch(apiBase + '/recordings/stop', { method:'POST', headers: { 'Content-Type':'application/json', ...headers }, body: JSON.stringify({ run_id: runId })}); load(); };
+  const start = async()=>{
+    await api.post('/recordings/start', { run_id: runId });
+    load();
+  };
+  const stop = async()=>{
+    await api.post('/recordings/stop', { run_id: runId });
+    load();
+  };
   useEffect(()=>{ load(); },[]);
   return (
     <div className='space-y-3'>

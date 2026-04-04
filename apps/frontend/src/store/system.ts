@@ -11,6 +11,8 @@ export type UserProfile = {
 type AuthState = {
   token: string | null
   user: UserProfile | null
+  authenticated: boolean
+  checked: boolean
 }
 
 type K1Store = {
@@ -18,17 +20,36 @@ type K1Store = {
   system: SystemState | null
   llmConfig: any | null
   login: (token: string, user: UserProfile) => void
+  bootstrapSession: (user: UserProfile | null) => void
+  markAuthChecked: () => void
   logout: () => void
   setSystem: (s: SystemState) => void
   setLLMConfig: (config: any) => void
 }
 
 export const useStore = create<K1Store>()((set) => ({
-  auth: { token: null, user: null },
+  auth: { token: null, user: null, authenticated: false, checked: false },
   system: null,
   llmConfig: null,
-  login: (token, user) => set((s) => ({ ...s, auth: { token, user } })),
-  logout: () => set((s) => ({ ...s, auth: { token: null, user: null }, llmConfig: null })),
+  login: (_token, user) => set((s) => ({ ...s, auth: { token: null, user, authenticated: true, checked: true } })),
+  bootstrapSession: (user) =>
+    set((s) => ({
+      ...s,
+      auth: {
+        token: s.auth.token,
+        user,
+        authenticated: Boolean(user),
+        checked: true,
+      },
+    })),
+  markAuthChecked: () =>
+    set((s) => ({ ...s, auth: { ...s.auth, checked: true } })),
+  logout: () =>
+    set((s) => ({
+      ...s,
+      auth: { token: null, user: null, authenticated: false, checked: true },
+      llmConfig: null,
+    })),
   setSystem: (s) => set(() => ({ system: s })),
   setLLMConfig: (config) => set(() => ({ llmConfig: config })),
 }))

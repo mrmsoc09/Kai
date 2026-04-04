@@ -2,8 +2,13 @@
  * HiL Approval API Client
  * Manages Human-in-the-Loop approval workflow for reports and emails
  */
+import { api } from '../lib/api'
 
 const BASE_URL = '/api/v1/approval';
+
+function authConfig(token?: string) {
+  return token ? { headers: { Authorization: `Bearer ${token}` } } : undefined
+}
 
 export interface ApprovalRequest {
   approval_id: string;
@@ -63,19 +68,16 @@ export interface ApprovalStats {
 /**
  * List pending approval requests
  */
-export async function listPendingApprovals(token: string): Promise<ApprovalListResponse> {
-  const resp = await fetch(`${BASE_URL}/pending`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!resp.ok) throw new Error(`Failed to fetch pending approvals: ${resp.statusText}`);
-  return resp.json();
+export async function listPendingApprovals(token?: string): Promise<ApprovalListResponse> {
+  const resp = await api.get(`${BASE_URL}/pending`, authConfig(token))
+  return resp.data
 }
 
 /**
  * List all approval requests with filters
  */
 export async function listAllApprovals(
-  token: string,
+  token?: string,
   filters?: {
     status?: string;
     approval_type?: string;
@@ -88,22 +90,16 @@ export async function listAllApprovals(
   if (filters?.limit) params.set('limit', String(filters.limit));
 
   const url = `${BASE_URL}/all?${params}`;
-  const resp = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!resp.ok) throw new Error(`Failed to fetch approvals: ${resp.statusText}`);
-  return resp.json();
+  const resp = await api.get(url, authConfig(token))
+  return resp.data
 }
 
 /**
  * Get specific approval request
  */
-export async function getApproval(approvalId: string, token: string): Promise<ApprovalRequest> {
-  const resp = await fetch(`${BASE_URL}/${approvalId}`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!resp.ok) throw new Error(`Failed to fetch approval: ${resp.statusText}`);
-  return resp.json();
+export async function getApproval(approvalId: string, token?: string): Promise<ApprovalRequest> {
+  const resp = await api.get(`${BASE_URL}/${approvalId}`, authConfig(token))
+  return resp.data
 }
 
 /**
@@ -113,18 +109,14 @@ export async function approveRequest(
   approvalId: string,
   userId: string,
   notes: string | undefined,
-  token: string
+  token?: string
 ): Promise<ApprovalRequest> {
-  const resp = await fetch(`${BASE_URL}/${approvalId}/approve`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ user_id: userId, notes })
-  });
-  if (!resp.ok) throw new Error(`Failed to approve request: ${resp.statusText}`);
-  return resp.json();
+  const resp = await api.post(
+    `${BASE_URL}/${approvalId}/approve`,
+    { user_id: userId, notes },
+    authConfig(token),
+  )
+  return resp.data
 }
 
 /**
@@ -134,18 +126,14 @@ export async function rejectRequest(
   approvalId: string,
   userId: string,
   reason: string,
-  token: string
+  token?: string
 ): Promise<ApprovalRequest> {
-  const resp = await fetch(`${BASE_URL}/${approvalId}/reject`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ user_id: userId, reason })
-  });
-  if (!resp.ok) throw new Error(`Failed to reject request: ${resp.statusText}`);
-  return resp.json();
+  const resp = await api.post(
+    `${BASE_URL}/${approvalId}/reject`,
+    { user_id: userId, reason },
+    authConfig(token),
+  )
+  return resp.data
 }
 
 /**
@@ -155,38 +143,27 @@ export async function updateDraft(
   approvalId: string,
   content: any,
   notes: string | undefined,
-  token: string
+  token?: string
 ): Promise<ApprovalRequest> {
-  const resp = await fetch(`${BASE_URL}/${approvalId}/update`, {
-    method: 'PUT',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ content, notes })
-  });
-  if (!resp.ok) throw new Error(`Failed to update draft: ${resp.statusText}`);
-  return resp.json();
+  const resp = await api.put(
+    `${BASE_URL}/${approvalId}/update`,
+    { content, notes },
+    authConfig(token),
+  )
+  return resp.data
 }
 
 /**
  * Cancel approval request
  */
-export async function cancelApproval(approvalId: string, token: string): Promise<void> {
-  const resp = await fetch(`${BASE_URL}/${approvalId}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!resp.ok) throw new Error(`Failed to cancel approval: ${resp.statusText}`);
+export async function cancelApproval(approvalId: string, token?: string): Promise<void> {
+  await api.delete(`${BASE_URL}/${approvalId}`, authConfig(token))
 }
 
 /**
  * Get approval statistics
  */
-export async function getApprovalStats(token: string): Promise<ApprovalStats> {
-  const resp = await fetch(`${BASE_URL}/stats/summary`, {
-    headers: { Authorization: `Bearer ${token}` }
-  });
-  if (!resp.ok) throw new Error(`Failed to fetch stats: ${resp.statusText}`);
-  return resp.json();
+export async function getApprovalStats(token?: string): Promise<ApprovalStats> {
+  const resp = await api.get(`${BASE_URL}/stats/summary`, authConfig(token))
+  return resp.data
 }

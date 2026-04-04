@@ -1,9 +1,10 @@
 from __future__ import annotations
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -27,6 +28,7 @@ from apps.backend.src.auth.dependencies import (
 )
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+AUTH_COOKIE_NAME = "k1_token"
 
 # -- Tenant Management --------------------------------------------------------
 
@@ -109,6 +111,7 @@ async def read_users_me(current_user: Annotated[CurrentUser, Depends(get_current
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
     request: Request,
+    response: Response,
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -159,6 +162,16 @@ async def login_for_access_token(
             "rol": user.role.value
         },
         expires_delta=access_token_expires
+    )
+    secure_cookie = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    response.set_cookie(
+        key=AUTH_COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        max_age=int(access_token_expires.total_seconds()),
+        path="/",
     )
     return Token(
         access_token=access_token,

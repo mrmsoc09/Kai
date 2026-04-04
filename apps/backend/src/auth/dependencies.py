@@ -27,6 +27,7 @@ from apps.backend.src.auth.utils import decode_access_token, hash_api_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
 api_key_scheme = APIKeyHeader(name="X-API-Key", auto_error=False)
+AUTH_COOKIE_NAME = "k1_token"
 
 # ---------------------------------------------------------------------------
 # Role hierarchy (ADMIN > ANALYST > OPERATOR > VIEWER)
@@ -173,9 +174,10 @@ async def get_current_active_user(
             _enforce_password_setup_gate(user, request)
             return user
 
-    # 2. Try JWT Bearer
-    if jwt_token:
-        user = await _resolve_from_jwt(jwt_token, db)
+    # 2. Try JWT Bearer, then cookie-backed session token
+    candidate_token = jwt_token or request.cookies.get(AUTH_COOKIE_NAME)
+    if candidate_token:
+        user = await _resolve_from_jwt(candidate_token, db)
         if user:
             _enforce_password_setup_gate(user, request)
             return user

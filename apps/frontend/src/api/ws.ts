@@ -1,7 +1,8 @@
 
-export function connectWS(token: string){
+export function connectWS(token?: string){
   const base = window.location.origin.replace('http', 'ws')
-  const url = `${base}/ws?token=${encodeURIComponent(token)}`
+  const query = token ? `?token=${encodeURIComponent(token)}` : ''
+  const url = `${base}/ws${query}`
   const ws = new WebSocket(url)
   return ws
 }

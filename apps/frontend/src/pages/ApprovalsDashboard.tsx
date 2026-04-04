@@ -27,16 +27,14 @@ export default function ApprovalsDashboard() {
   const [actionInProgress, setActionInProgress] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
-  const authToken = useStore((s) => s.auth.token) || '';
   const userId = useStore((s) => s.auth.user?.id) || 'user1';
-  const token = authToken;
 
   async function loadData() {
     setLoading(true);
     try {
       const [approvalsResp, statsResp] = await Promise.all([
-        listPendingApprovals(token),
-        getApprovalStats(token)
+        listPendingApprovals(),
+        getApprovalStats()
       ]);
       setApprovals(approvalsResp.approvals);
       setStats(statsResp);
@@ -58,7 +56,7 @@ export default function ApprovalsDashboard() {
     setSelected(approval);
     // Load full details
     try {
-      const full = await getApproval(approval.approval_id, token);
+      const full = await getApproval(approval.approval_id);
       setSelected(full);
     } catch (e: any) {
       console.error('Failed to load approval details:', e);
@@ -70,7 +68,7 @@ export default function ApprovalsDashboard() {
 
     setActionInProgress(true);
     try {
-      await approveRequest(selected.approval_id, userId, undefined, token);
+      await approveRequest(selected.approval_id, userId, undefined);
       toast.success('Draft approved! You can now manually send the email.');
       setSelected(null);
       void loadData();
@@ -90,7 +88,7 @@ export default function ApprovalsDashboard() {
 
     setActionInProgress(true);
     try {
-      await rejectRequest(selected.approval_id, userId, rejectReason, token);
+      await rejectRequest(selected.approval_id, userId, rejectReason);
       toast.info('Draft rejected.');
       setSelected(null);
       setShowRejectModal(false);

@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-const apiBase = import.meta.env.VITE_API_BASE || '';
+import { api } from '../lib/api';
 export default function Chains(){
   const [findingsJson, setFindingsJson] = useState('[\n  {"id":"F1","assets":["app"],"severity_score":2},\n  {"id":"F2","assets":["app"],"severity_score":3},\n  {"id":"F3","assets":["api"],"severity_score":2}\n]');
   const [chains, setChains] = useState<any[]>([]);
-  const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN');
-  const headers:any = tok? { Authorization: 'Bearer ' + tok } : {};
   const propose = async()=>{
-    const r = await fetch(apiBase + '/chains/propose', { method:'POST', headers: { 'Content-Type':'application/json', ...headers }, body: JSON.stringify({ findings: JSON.parse(findingsJson) })});
-    const j = await r.json(); setChains(j.chains||[]);
+    const r = await api.post('/chains/propose', { findings: JSON.parse(findingsJson) });
+    setChains(r.data.chains||[]);
   };
   return (
     <div className='space-y-3'>

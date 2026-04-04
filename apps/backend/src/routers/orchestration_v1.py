@@ -18,10 +18,17 @@ from typing import Any
 from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 
-from ..core.auth import decode_access_token
+from ..core.auth import AUTH_COOKIE_NAME, decode_access_token
 from ..core.gemini_orchestrator import get_gemini_orchestrator
 
 router = APIRouter(prefix="/api/v1/orchestration", tags=["orchestration_v1"])
+
+
+def _resolve_ws_token(websocket: WebSocket) -> str | None:
+    token = websocket.query_params.get("token")
+    if token:
+        return token
+    return websocket.cookies.get(AUTH_COOKIE_NAME)
 
 
 # ---------------------------------------------------------------------------
@@ -249,9 +256,10 @@ async def natural_language_command(payload: dict[str, Any]) -> dict[str, Any]:
 async def ws_chat(websocket: WebSocket) -> None:
     """Streaming chat relay backed by the primary LLM provider.
 
-    Auth: Bearer token in ?token= query param.  Closes 1008 on auth failure.
+    Auth: Bearer token in ?token= query param or k1_token cookie.
+    Closes 1008 on auth failure.
     """
-    token = websocket.query_params.get("token")
+    token = _resolve_ws_token(websocket)
     if not token:
         await websocket.close(code=1008)
         return
@@ -311,10 +319,11 @@ async def ws_chat(websocket: WebSocket) -> None:
 async def ws_agents(websocket: WebSocket) -> None:
     """Push provider/agent status updates every 5 seconds.
 
-    Auth: Bearer token in ?token= query param.  Closes 1008 on auth failure.
+    Auth: Bearer token in ?token= query param or k1_token cookie.
+    Closes 1008 on auth failure.
     Payload also includes QuotaStatus for the dashboard quota indicator.
     """
-    token = websocket.query_params.get("token")
+    token = _resolve_ws_token(websocket)
     if not token:
         await websocket.close(code=1008)
         return

@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSock
 from pydantic import BaseModel, Field
 
 from ..core.auth import (
+    AUTH_COOKIE_NAME,
     ROLE_ADMIN,
     ROLE_ANALYST,
     ROLE_OPERATOR,
@@ -92,6 +93,8 @@ async def _start_realtime_bridge() -> None:
 @router.websocket("/ws")
 async def ws(websocket: WebSocket):
     token = websocket.query_params.get("token") if hasattr(websocket, "query_params") else None
+    if not token:
+        token = websocket.cookies.get(AUTH_COOKIE_NAME)
     if not token:
         await websocket.close(code=1008)
         return

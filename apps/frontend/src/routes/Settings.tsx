@@ -4,14 +4,12 @@ import { COLORS } from '@/theme/branding';
 
 export default function Settings(){
   const [api, setApi] = useState('');
-  const [tok, setTok] = useState('');
   const [logoData, setLogoData] = useState<string>(() => localStorage.getItem('k1_logo_dataurl') || '');
   const [iconData, setIconData] = useState<string>(() => localStorage.getItem('k1_icon_dataurl') || '');
   const [brandError, setBrandError] = useState<string>('');
-  useEffect(()=>{ setApi(localStorage.getItem('api_base')||''); setTok(localStorage.getItem('k1_token')||localStorage.getItem('K1_DEV_TOKEN')||''); },[]);
+  useEffect(()=>{ setApi(localStorage.getItem('api_base')||''); },[]);
   const save = ()=>{
     if(api) localStorage.setItem('api_base', api);
-    if(tok) { localStorage.setItem('k1_token', tok); localStorage.setItem('K1_DEV_TOKEN', tok); }
     alert('Saved. Refresh the app to apply API base env if needed.');
   };
   const panelStyle: React.CSSProperties = {
@@ -127,8 +125,6 @@ export default function Settings(){
         <div style={panelStyle}>
           <label style={labelStyle}>API Base</label>
           <input value={api} onChange={e=>setApi(e.target.value)} placeholder='http://localhost:8080' style={inputStyle}/>
-          <label style={{ ...labelStyle, marginTop: 12 }}>Bearer Token</label>
-          <input value={tok} onChange={e=>setTok(e.target.value)} placeholder='devtoken123' style={inputStyle}/>
           <button onClick={save} style={{
             marginTop: 12, padding: '8px 12px', borderRadius: 6,
             background: COLORS.secondary.main, color: COLORS.textInverse,
@@ -137,7 +133,7 @@ export default function Settings(){
             Save
           </button>
           <p style={{ fontSize: '0.7rem', color: COLORS.textSecondary, marginTop: 8 }}>
-            Token is used in Authorization header for protected endpoints.
+            Authentication now uses secure session cookies. No bearer token is stored in browser storage.
           </p>
         </div>
 
@@ -208,8 +204,7 @@ function ProviderDiagnostics(){
   const [cfg, setCfg] = React.useState<any>(null);
   const [err, setErr] = React.useState<string>('');
   React.useEffect(()=>{
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || '';
-    fetch('/state/config', { headers: { 'Authorization': tok? ('Bearer ' + tok): '' }})
+    fetch('/state/config', { credentials: 'include' })
       .then(r=>{ if(!r.ok) throw new Error(String(r.status)); return r.json(); })
       .then(setCfg)
       .catch(e=> setErr(String(e)));

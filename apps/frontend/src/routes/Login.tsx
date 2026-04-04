@@ -43,6 +43,7 @@ export default function Login() {
 
       const res = await axios.post(`${API_BASE}/auth/token`, params, {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        withCredentials: true,
       })
 
       const { access_token, user_id, tenant_id, role } = res.data

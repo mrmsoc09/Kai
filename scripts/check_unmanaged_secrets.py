@@ -13,6 +13,9 @@ PYTHON_FILES = list(ROOT.glob("apps/backend/src/**/*.py"))
 ALLOW_FILES = {
     Path("apps/backend/src/core/secret_manager.py"),
     Path("apps/backend/src/core/hil_vault_client.py"),
+    # mailer reads SMTP credentials from env by design: prevents SSRF via
+    # caller-injected credentials. See docstring in _send_via_smtp.
+    Path("apps/backend/src/routers/mailer.py"),
 }
 
 SECRET_ENV_RE = re.compile(

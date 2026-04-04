@@ -6,8 +6,11 @@ type Graph = { nodes: any[], edges: any[] };
 export default function AttackGraph(){
   const [g, setG] = useState<Graph>({nodes:[], edges:[]});
   const load = async()=>{
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN');
-    try{ const r = await fetch(apiBase + '/graph', { headers: { ...(tok? { Authorization: 'Bearer ' + tok } : {}) } }); const j = await r.json(); setG(j); }catch{}
+    try{
+      const r = await fetch(apiBase + '/graph', { credentials: 'include' });
+      const j = await r.json();
+      setG(j);
+    }catch{}
   };
   useEffect(()=>{ load(); },[]);
   return (

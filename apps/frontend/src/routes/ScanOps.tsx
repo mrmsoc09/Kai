@@ -61,8 +61,7 @@ function Arsenal() {
   const [newTool, setNewTool] = useState({ name: '', category: '', description: '', tags: '' })
 
   useEffect(() => {
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || ''
-    fetch('/api/v1/tools', { headers: { Authorization: `Bearer ${tok}` } })
+    fetch('/api/v1/tools', { credentials: 'include' })
       .then(r => r.json())
       .then(d => setTools(Array.isArray(d) ? d : d.tools ?? []))
       .catch(() => setTools([]))
@@ -244,8 +243,7 @@ function RunHistory() {
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
   useEffect(() => {
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || ''
-    fetch('/api/v1/runs?limit=50', { headers: { Authorization: `Bearer ${tok}` } })
+    fetch('/api/v1/runs?limit=50', { credentials: 'include' })
       .then(r => r.json())
       .then(d => {
         const next = Array.isArray(d?.runs) ? d.runs : Array.isArray(d) ? d : []
@@ -474,8 +472,7 @@ function LiveLogs() {
 
   const load = useCallback(() => {
     setError('')
-    const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || ''
-    fetch('/api/v1/logs?limit=200', { headers: { Authorization: `Bearer ${tok}` } })
+    fetch('/api/v1/logs?limit=200', { credentials: 'include' })
       .then(async r => {
         if (!r.ok) {
           throw new Error(`HTTP ${r.status}`)

@@ -9,7 +9,7 @@
  *   • Per-entry pause / manual-advance controls
  */
 import React, { useCallback, useEffect, useState } from 'react'
-import axios from 'axios'
+import { api } from '../lib/api'
 
 const API_BASE = '/api/v1/scan-pool'
 
@@ -67,11 +67,6 @@ interface PoolStatus {
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem('k1_token') || sessionStorage.getItem('k1_token') || ''
-  return token ? { Authorization: `Bearer ${token}` } : {}
-}
 
 function fmtDate(iso: string | null): string {
   if (!iso) return '—'
@@ -238,7 +233,7 @@ export default function ScanPoolDashboard() {
 
   // Load pool list on mount
   useEffect(() => {
-    axios.get(`${API_BASE}/pools`, { headers: authHeaders() })
+    api.get(`${API_BASE}/pools`)
       .then(r => {
         const list: Pool[] = r.data.pools ?? []
         setPools(list)
@@ -251,10 +246,10 @@ export default function ScanPoolDashboard() {
   // Poll selected pool status + entries every 5s
   const refreshPool = useCallback(() => {
     if (!selectedPoolId) return
-    axios.get(`${API_BASE}/${selectedPoolId}/status`, { headers: authHeaders() })
+    api.get(`${API_BASE}/${selectedPoolId}/status`)
       .then(r => setStatus(r.data))
       .catch(() => {})
-    axios.get(`${API_BASE}/${selectedPoolId}/entries`, { headers: authHeaders() })
+    api.get(`${API_BASE}/${selectedPoolId}/entries`)
       .then(r => setEntries(r.data.entries ?? []))
       .catch(() => {})
   }, [selectedPoolId])
@@ -273,7 +268,7 @@ export default function ScanPoolDashboard() {
   const setPoolLifecycle = async (action: 'pause' | 'resume' | 'stop') => {
     if (!selectedPoolId) return
     try {
-      await axios.post(`${API_BASE}/${selectedPoolId}/${action}`, {}, { headers: authHeaders() })
+      await api.post(`${API_BASE}/${selectedPoolId}/${action}`, {})
       flash(`Pool ${action}d.`)
       refreshPool()
     } catch (e: any) { flash(`Error: ${e.message}`) }
@@ -282,7 +277,7 @@ export default function ScanPoolDashboard() {
   const pauseEntry = async (entryId: string) => {
     if (!selectedPoolId) return
     try {
-      await axios.post(`${API_BASE}/${selectedPoolId}/entries/${entryId}/pause`, {}, { headers: authHeaders() })
+      await api.post(`${API_BASE}/${selectedPoolId}/entries/${entryId}/pause`, {})
       flash('Entry paused.')
       refreshPool()
     } catch (e: any) { flash(`Error: ${e.message}`) }
@@ -291,7 +286,7 @@ export default function ScanPoolDashboard() {
   const resumeEntry = async (entryId: string) => {
     if (!selectedPoolId) return
     try {
-      await axios.post(`${API_BASE}/${selectedPoolId}/entries/${entryId}/resume`, {}, { headers: authHeaders() })
+      await api.post(`${API_BASE}/${selectedPoolId}/entries/${entryId}/resume`, {})
       flash('Entry resumed.')
       refreshPool()
     } catch (e: any) { flash(`Error: ${e.message}`) }
@@ -300,7 +295,7 @@ export default function ScanPoolDashboard() {
   const saveConcurrency = async (min: number, max: number) => {
     if (!selectedPoolId) return
     try {
-      await axios.put(`${API_BASE}/${selectedPoolId}/concurrency`, { min_concurrent: min, max_concurrent: max }, { headers: authHeaders() })
+      await api.put(`${API_BASE}/${selectedPoolId}/concurrency`, { min_concurrent: min, max_concurrent: max })
       flash('Concurrency updated.')
       refreshPool()
     } catch (e: any) { flash(`Error: ${e.message}`) }
@@ -309,7 +304,7 @@ export default function ScanPoolDashboard() {
   const manualAdvance = async () => {
     if (!selectedPoolId) return
     try {
-      await axios.post(`${API_BASE}/${selectedPoolId}/advance`, {}, { headers: authHeaders() })
+      await api.post(`${API_BASE}/${selectedPoolId}/advance`, {})
       flash('Queue advanced.')
       refreshPool()
     } catch (e: any) { flash(`Error: ${e.message}`) }

@@ -109,8 +109,8 @@ export function upsertScope(program: string, body: any) { return api.post(`/scop
 
 // Legacy compat shims (referenced by older components)
 export function getApiKeyStatus() {
-  const token = useStore.getState().auth.token
-  return { userKeySet: !!token, adminKeySet: !!token }
+  const auth = useStore.getState().auth
+  return { userKeySet: !!auth.user, adminKeySet: !!auth.user }
 }
 /** @deprecated Use useStore.getState().auth.token instead */
 export function setApiKeys(_userKey: string, _adminKey: string) { /* no-op */ }

@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { COLORS } from '@/theme/branding';
-import { useStore } from '@/store/system';
 
 export default function KeyManagement() {
-  const storeToken = useStore((s) => s.auth.token) || '';
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ message: string, keys_processed: string[] } | null>(null);
@@ -33,18 +31,13 @@ export default function KeyManagement() {
     const formData = new FormData();
     formData.append('file', file);
 
-    const token = storeToken || localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || '';
     const headers: Record<string, string> = {};
-    if (token) {
-      headers.Authorization = `Bearer ${token}`;
-    } else {
-      try {
-        const csrfRes = await fetch('/auth/csrf-token', { credentials: 'include' });
-        const csrfData = await csrfRes.json();
-        if (csrfData?.csrf_token) headers['X-CSRF-Token'] = csrfData.csrf_token;
-      } catch {
-        /* ignore */
-      }
+    try {
+      const csrfRes = await fetch('/auth/csrf-token', { credentials: 'include' });
+      const csrfData = await csrfRes.json();
+      if (csrfData?.csrf_token) headers['X-CSRF-Token'] = csrfData.csrf_token;
+    } catch {
+      /* ignore */
     }
 
     try {

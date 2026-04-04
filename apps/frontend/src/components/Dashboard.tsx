@@ -67,18 +67,16 @@ const Dashboard: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN') || '';
-      const headers = tok ? { Authorization: `Bearer ${tok}` } : undefined;
       // Fetch tools
-      const toolsRes = await fetch('/api/v1/tools', { headers });
+      const toolsRes = await fetch('/api/v1/tools', { credentials: 'include' });
       const toolsData = await toolsRes.json();
 
       // Fetch programs
-      const programsRes = await fetch('/api/v1/programs', { headers });
+      const programsRes = await fetch('/api/v1/programs', { credentials: 'include' });
       const programsData = await programsRes.json();
 
       // Fetch Kai authorizations
-      const authRes = await fetch('/api/v1/kai/authorizations', { headers });
+      const authRes = await fetch('/api/v1/kai/authorizations', { credentials: 'include' });
       const authData = await authRes.json();
 
       // Update state

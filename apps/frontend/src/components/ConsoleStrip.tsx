@@ -4,18 +4,18 @@ import { useStore } from '../store/system'
 import { connectWS } from '../api/ws'
 
 export default function ConsoleStrip(){
-  const token = useStore(s=> s.auth.token)
+  const authenticated = useStore(s=> s.auth.authenticated)
   const [lines, setLines] = useState<{ts:string,msg:string}[]>([])
   const ref = useRef<HTMLDivElement>(null)
   useEffect(()=>{
-    if(!token) { setLines([]); return }
-    const ws = connectWS(token)
+    if(!authenticated) { setLines([]); return }
+    const ws = connectWS()
     ws.onmessage = (ev)=>{
       const ts = new Date().toISOString()
       setLines(prev=> [...prev.slice(-49), {ts, msg: typeof ev.data==='string'? ev.data : '[event]'}])
     }
     return ()=> { try{ws.close()}catch(e){} }
-  }, [token])
+  }, [authenticated])
   useEffect(()=>{
     if(ref.current){ ref.current.scrollTop = ref.current.scrollHeight }
   }, [lines])

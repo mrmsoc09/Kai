@@ -9,8 +9,20 @@ export default function Docs(){
   const [current, setCurrent] = useState<string>('');
   const [content, setContent] = useState<string>('Select a doc on the left');
 
-  useEffect(()=>{ const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN'); fetch(apiBase + '/docs/index', { headers: { ...(tok? { Authorization: 'Bearer ' + tok } : {}) } }).then(r=>r.json()).then(setList).catch(()=>setList([])); },[]);
-  useEffect(()=>{ if(!current) return; { const tok = localStorage.getItem('k1_token') || localStorage.getItem('K1_DEV_TOKEN'); fetch(apiBase + '/docs/get?path=' + encodeURIComponent(current), { headers: { ...(tok? { Authorization: 'Bearer ' + tok } : {}) } }).then(r=> r.ok ? r.text() : Promise.resolve('# Not found')).then(setContent); } },[current]);
+  useEffect(()=>{
+    fetch(apiBase + '/docs/index', { credentials: 'include' })
+      .then(r=>r.json())
+      .then(setList)
+      .catch(()=>setList([]));
+  },[]);
+  useEffect(()=>{
+    if(!current) return;
+    fetch(apiBase + '/docs/get?path=' + encodeURIComponent(current), {
+      credentials: 'include',
+    })
+      .then(r=> r.ok ? r.text() : Promise.resolve('# Not found'))
+      .then(setContent);
+  },[current]);
 
   return (
     <div className='grid grid-cols-12 gap-4 h-full'>
