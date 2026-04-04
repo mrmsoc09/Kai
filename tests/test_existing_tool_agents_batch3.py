@@ -67,8 +67,11 @@ def test_kiterunner_output_parsing():
     raw = "[GET] [200] [1234] http://example.com/api/v1/users\n[POST] [403] [567] http://example.com/api/v1/admin\n"
     findings = agent.parse_output(raw, "example.com")
     assert len(findings) == 2
-    assert findings[0]["status_code"] == "200"
-    assert findings[1]["method"] == "POST"
+    # status_code and method are in context dict (standardized schema)
+    status = findings[0].get("status_code") or findings[0].get("context", {}).get("status_code")
+    assert status == "200", f"Expected status 200, got: {findings[0]}"
+    method = findings[1].get("method") or findings[1].get("context", {}).get("method")
+    assert method == "POST", f"Expected method POST, got: {findings[1]}"
     
     signal, noise = agent.filter_noise(findings)
     assert len(signal) == 2
