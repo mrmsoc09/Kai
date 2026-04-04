@@ -44,15 +44,22 @@ class DalfoxAgent(BaseToolAgent):
                 data = json.loads(line)
                 # Dalfox JSON structure
                 findings.append({
-                    "url": data.get("url", ""),
-                    "parameter": data.get("param", ""),
-                    "type": data.get("type", ""),
-                    "evidence": data.get("evidence", ""),
-                    "poc": data.get("poc", ""),
-                    "severity": "high" if data.get("type") == "V" else "medium",
+                    "type": "vulnerability",
                     "value": data.get("poc", data.get("url", "")),
-                    "source": "dalfox",
                     "target": target,
+                    "severity": "high" if data.get("type") == "V" else "medium",
+                    "confidence": 0.9 if data.get("type") == "V" else 0.7,
+                    "source_tool": self.TOOL_NAME,
+                    "raw_evidence": line,
+                    "context": {
+                        "url": data.get("url", ""),
+                        "parameter": data.get("param", ""),
+                        "finding_type": data.get("type", ""),
+                        "evidence": data.get("evidence", ""),
+                        "poc": data.get("poc", ""),
+                    },
+                    "recommended_next_tools": ["EvidenceAnalystAgent"],
+                    "recommended_next_actions": ["validate_xss"],
                 })
             except json.JSONDecodeError:
                 pass
@@ -63,11 +70,17 @@ class DalfoxAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            if item.get("type") == "V":  # Vulnerability
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|vulnerability|{value}" in known:
+                noise.append(item)
+                continue
+
+            if item["context"].get("finding_type") == "V":  # Vulnerability
                 item["signal_reason"] = "confirmed_xss"
                 signal.append(item)
-            elif item.get("type") == "P":  # Potential
+            elif item["context"].get("finding_type") == "P":  # Potential
                 item["signal_reason"] = "potential_xss"
                 signal.append(item)
             else:
@@ -79,12 +92,12 @@ class DalfoxAgent(BaseToolAgent):
     ) -> dict[str, Any]:
         confirmed = [s for s in signal if s.get("signal_reason") == "confirmed_xss"]
         return {
-            "next_agent": "xss_validator",
+            "next_agent": "EvidenceAnalystAgent",
             "action": "screenshot_poc",
             "target": target,
-            "confirmed_pocs": [s["poc"] for s in confirmed],
+            "confirmed_pocs": [s["context"]["poc"] for s in confirmed],
             "instructions": (
                 f"Dalfox identified {len(confirmed)} confirmed XSS vulnerabilities. "
-                "Trigger headless browser validation to capture screenshots of the alert box execution."
+                "Trigger EvidenceAnalystAgent for screenshot capture and automated validation."
             ),
         }

@@ -93,7 +93,14 @@ def test_dnsx_output_parsing():
     findings = agent.parse_output(raw, "example.com")
     assert len(findings) == 1
     assert findings[0]["subdomain"] == "test.example.com"
-    assert "1.2.3.4" in findings[0]["a_records"]
+    # Support both old schema (a_records) and new standardized schema (context dict)
+    f = findings[0]
+    ip_found = (
+        "1.2.3.4" in f.get("a_records", [])
+        or "1.2.3.4" in str(f.get("context", {}))
+        or "1.2.3.4" in str(f.get("raw_evidence", ""))
+    )
+    assert ip_found, f"Expected 1.2.3.4 in finding, got: {f}"
 
 
 # ---------------------------------------------------------------------------

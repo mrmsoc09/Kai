@@ -38,13 +38,19 @@ class SqlmapAgent(BaseToolAgent):
         findings: list[dict[str, Any]] = []
         if "is vulnerable" in raw_output or "Payload:" in raw_output:
             findings.append({
-                "url": target,
+                "type": "vulnerability",
                 "value": target,
-                "type": "sql_injection",
-                "severity": "critical",
-                "evidence": "Boolean-based blind / Time-based blind detected",
-                "source": "sqlmap",
                 "target": target,
+                "severity": "critical",
+                "confidence": 0.9,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": raw_output[:2000],
+                "context": {
+                    "vulnerability_type": "sql_injection",
+                    "evidence": "Boolean-based blind / Time-based blind detected",
+                },
+                "recommended_next_tools": ["EvidenceAnalystAgent"],
+                "recommended_next_actions": ["validate_sqli"],
             })
         return findings
 
@@ -53,8 +59,14 @@ class SqlmapAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            if item.get("type") == "sql_injection":
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|vulnerability|{value}" in known:
+                noise.append(item)
+                continue
+
+            if item["context"].get("vulnerability_type") == "sql_injection":
                 item["signal_reason"] = "confirmed_sqli"
                 signal.append(item)
             else:
@@ -65,12 +77,12 @@ class SqlmapAgent(BaseToolAgent):
         self, signal: list[dict[str, Any]], target: str
     ) -> dict[str, Any]:
         return {
-            "next_agent": "vulnerability_validator",
+            "next_agent": "EvidenceAnalystAgent",
             "action": "confirm_sqli_blind",
             "target": target,
             "instructions": (
                 "SQLMap detected a potential blind SQL injection. "
-                "Trigger manual validation with a security researcher to avoid false positives "
-                "or unintended database impact."
+                "Trigger EvidenceAnalystAgent for further automated confirmation "
+                "or manual human review if confidence is high."
             ),
         }

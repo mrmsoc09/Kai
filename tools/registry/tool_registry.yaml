@@ -1,6 +1,7 @@
 version: "1.0"
 tools:
   - name: amass
+    agent_class: AmassAgent
     category: recon_asset_discovery
     execution_mode: native
     binary_path: amass
@@ -16,6 +17,7 @@ tools:
     enabled_by_default: true
 
   - name: subfinder
+    agent_class: SubfinderAgent
     category: recon_asset_discovery
     execution_mode: native
     binary_path: subfinder
@@ -31,6 +33,7 @@ tools:
     enabled_by_default: true
 
   - name: assetfinder
+    agent_class: AssetfinderAgent
     category: recon_asset_discovery
     execution_mode: native
     binary_path: assetfinder
@@ -46,6 +49,7 @@ tools:
     enabled_by_default: true
 
   - name: findomain
+    agent_class: FindomainAgent
     category: recon_asset_discovery
     execution_mode: native
     binary_path: findomain
@@ -61,6 +65,7 @@ tools:
     enabled_by_default: true
 
   - name: dnsx
+    agent_class: DnsxAgent
     category: recon_asset_discovery
     execution_mode: native
     binary_path: dnsx
@@ -75,22 +80,8 @@ tools:
     api_keys_required: []
     enabled_by_default: true
 
-  - name: puredns
-    category: recon_asset_discovery
-    execution_mode: native
-    binary_path: puredns
-    install_verification_cmd: ["puredns", "--help"]
-    input_schema: {"target": "domain"}
-    output_schema: {"resolved": "list[str]"}
-    timeout_seconds: 240
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["dns", "bruteforce"]
-    dependencies: ["resolvers_file"]
-    api_keys_required: []
-    enabled_by_default: false
-
   - name: gau
+    agent_class: GauAgent
     category: recon_asset_discovery
     execution_mode: native
     binary_path: gau
@@ -106,6 +97,7 @@ tools:
     enabled_by_default: true
 
   - name: waybackurls
+    agent_class: WaybackurlsAgent
     category: recon_asset_discovery
     execution_mode: native
     binary_path: waybackurls
@@ -120,7 +112,8 @@ tools:
     api_keys_required: []
     enabled_by_default: true
 
-  - name: httpx
+  - name: httpx_probe
+    agent_class: HttpxProbeAgent
     category: http_live_host
     execution_mode: native
     binary_path: httpx
@@ -135,22 +128,8 @@ tools:
     api_keys_required: []
     enabled_by_default: true
 
-  - name: httprobe
-    category: http_live_host
-    execution_mode: native
-    binary_path: httprobe
-    install_verification_cmd: ["httprobe", "--help"]
-    input_schema: {"target": "host"}
-    output_schema: {"urls": "list[str]"}
-    timeout_seconds: 120
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["http", "probe"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
   - name: naabu
+    agent_class: NaabuAgent
     category: http_live_host
     execution_mode: native
     binary_path: naabu
@@ -161,6 +140,489 @@ tools:
     retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
     tags: ["portscan"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: nuclei_scan
+    agent_class: NucleiScanAgent
+    category: vulnerability_scanning
+    execution_mode: docker
+    binary_path: nuclei
+    container_image: projectdiscovery/nuclei:latest
+    install_verification_cmd: ["nuclei", "-version"]
+    input_schema: {"target": "url_or_host"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["vuln", "templates"]
+    dependencies: ["nuclei_templates"]
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: dalfox
+    agent_class: DalfoxAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: dalfox
+    install_verification_cmd: ["dalfox", "version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    allowed_extra_args: ["--p", "--header", "--cookie", "--user-agent", "--delay"]
+    tags: ["xss", "vuln"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: nmap
+    agent_class: NmapAgent
+    category: network_service_scanning
+    execution_mode: native
+    binary_path: nmap
+    install_verification_cmd: ["nmap", "--version"]
+    input_schema: {"target": "host_or_cidr"}
+    output_schema: {"services": "list[json]"}
+    timeout_seconds: 900
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["network", "portscan"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: masscan
+    agent_class: MasscanAgent
+    category: network_service_scanning
+    execution_mode: native
+    binary_path: masscan
+    install_verification_cmd: ["masscan", "--version"]
+    input_schema: {"target": "host_or_cidr"}
+    output_schema: {"open_ports": "list[json]"}
+    timeout_seconds: 360
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["network", "portscan"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: sqlmap
+    agent_class: SqlmapAgent
+    category: validation_support
+    execution_mode: native
+    binary_path: sqlmap
+    install_verification_cmd: ["sqlmap", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"result": "json_or_text"}
+    timeout_seconds: 900
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    allowed_extra_args: ["--risk", "--level", "--technique", "-p", "--dbms", "--batch", "--random-agent"]
+    tags: ["validation", "sqli"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: ssrfmap
+    agent_class: SsrfmapAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: ssrfmap
+    install_verification_cmd: ["ssrfmap", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["ssrf", "vuln"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: corsy
+    agent_class: CorsyAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: corsy
+    install_verification_cmd: ["corsy", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["cors", "vuln"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: crlfuzz
+    agent_class: CrlfuzzAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: crlfuzz
+    install_verification_cmd: ["crlfuzz", "-version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["crlf", "vuln"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: jwt_tool
+    agent_class: JwtToolAgent
+    category: api_auth_testing
+    execution_mode: native
+    binary_path: jwt_tool
+    install_verification_cmd: ["jwt_tool", "-h"]
+    input_schema: {"target": "token"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["jwt", "auth"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: kiterunner
+    agent_class: KiterunnerAgent
+    category: api_auth_testing
+    execution_mode: native
+    binary_path: kr
+    install_verification_cmd: ["kr", "version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["api", "fuzz"]
+    dependencies: ["wordlist"]
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: chaos
+    agent_class: ChaosAgent
+    category: recon_asset_discovery
+    execution_mode: native
+    binary_path: chaos
+    install_verification_cmd: ["chaos", "-version"]
+    input_schema: {"target": "domain"}
+    output_schema: {"subdomains": "list[str]"}
+    timeout_seconds: 180
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["recon", "subdomain"]
+    dependencies: []
+    api_keys_required: ["CHAOS_KEY"]
+    enabled_by_default: true
+
+  - name: github-subdomains
+    agent_class: GithubSubdomainsAgent
+    category: recon_asset_discovery
+    execution_mode: native
+    binary_path: github-subdomains
+    install_verification_cmd: ["github-subdomains", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"subdomains": "list[str]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["recon", "subdomain", "github"]
+    dependencies: []
+    api_keys_required: ["GITHUB_TOKEN"]
+    enabled_by_default: true
+
+  - name: wafw00f
+    agent_class: Wafw00fAgent
+    category: http_live_host
+    execution_mode: native
+    binary_path: wafw00f
+    install_verification_cmd: ["wafw00f", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"waf_fingerprint": "list[json]"}
+    timeout_seconds: 180
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["waf", "fingerprint"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: gowitness
+    agent_class: GoWitnessAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: gowitness
+    install_verification_cmd: ["gowitness", "version"]
+    input_schema: {"target": "url_or_file"}
+    output_schema: {"screenshots": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["screenshot", "web"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: eyewitness
+    agent_class: EyewitnessAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: eyewitness
+    install_verification_cmd: ["eyewitness", "--version"]
+    input_schema: {"target": "url_or_file"}
+    output_schema: {"screenshots": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["screenshot", "web"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: whatweb
+    agent_class: WhatwebAgent
+    category: http_live_host
+    execution_mode: native
+    binary_path: whatweb
+    install_verification_cmd: ["whatweb", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"fingerprint": "list[json]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["fingerprint", "tech"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: arjun
+    agent_class: ArjunAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: arjun
+    install_verification_cmd: ["arjun", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"parameters": "list[str]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["parameters", "fuzz"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: caido_cli
+    agent_class: CaidoCliAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: caido-cli
+    install_verification_cmd: ["caido-cli", "--help"]
+    input_schema: {"target": "url"}
+    output_schema: {"endpoints": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["crawl", "proxy"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: feroxbuster
+    agent_class: FeroxbusterAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: feroxbuster
+    install_verification_cmd: ["feroxbuster", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["fuzz", "discovery"]
+    dependencies: ["wordlist"]
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: ffuf
+    agent_class: FfufAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: ffuf
+    install_verification_cmd: ["ffuf", "-V"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["fuzz", "discovery"]
+    dependencies: ["wordlist"]
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: gf
+    agent_class: GfAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: gf
+    install_verification_cmd: ["gf", "-h"]
+    input_schema: {"target": "file"}
+    output_schema: {"findings": "list[str]"}
+    timeout_seconds: 60
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["filtering", "patterns"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: hakrawler
+    agent_class: HakrawlerAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: hakrawler
+    install_verification_cmd: ["hakrawler", "--help"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[str]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["crawl", "discovery"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: katana
+    agent_class: KatanaAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: katana
+    install_verification_cmd: ["katana", "-version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["crawl", "discovery"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: nuclei_export
+    agent_class: NucleiExportAgent
+    category: reporting
+    execution_mode: native
+    binary_path: echo
+    install_verification_cmd: ["echo", "ready"]
+    input_schema: {"target": "json"}
+    output_schema: {"artifact": "file"}
+    timeout_seconds: 60
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: safe
+    tags: ["report", "export"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: paramspider
+    agent_class: ParamspiderAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: paramspider
+    install_verification_cmd: ["paramspider", "--help"]
+    input_schema: {"target": "domain"}
+    output_schema: {"findings": "list[str]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["parameters", "discovery"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: phoneinfoga
+    agent_class: PhoneinfogaAgent
+    category: intelligence_osint
+    execution_mode: native
+    binary_path: phoneinfoga
+    install_verification_cmd: ["phoneinfoga", "version"]
+    input_schema: {"target": "phone"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["osint", "phone"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: reconftw
+    agent_class: ReconftfwAgent
+    category: recon_asset_discovery
+    execution_mode: native
+    binary_path: reconftw.sh
+    install_verification_cmd: ["reconftw.sh", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"findings": "list[str]"}
+    timeout_seconds: 1800
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["recon", "automation"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: sherlock
+    agent_class: SherlockAgent
+    category: intelligence_osint
+    execution_mode: native
+    binary_path: sherlock
+    install_verification_cmd: ["sherlock", "--version"]
+    input_schema: {"target": "username"}
+    output_schema: {"findings": "list[str]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["osint", "social"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: social-analyzer
+    agent_class: SocialAnalyzerAgent
+    category: intelligence_osint
+    execution_mode: native
+    binary_path: social-analyzer
+    install_verification_cmd: ["social-analyzer", "--version"]
+    input_schema: {"target": "username"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["osint", "social"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: spiderfoot
+    agent_class: SpiderfootAgent
+    category: intelligence_osint
+    execution_mode: native
+    binary_path: sf
+    install_verification_cmd: ["sf", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 900
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["osint", "recon"]
     dependencies: []
     api_keys_required: []
     enabled_by_default: true
@@ -180,505 +642,6 @@ tools:
     api_keys_required: []
     enabled_by_default: true
 
-  - name: katana
-    category: crawling_url_discovery
-    execution_mode: docker
-    binary_path: katana
-    container_image: projectdiscovery/katana:latest
-    install_verification_cmd: ["katana", "-version"]
-    input_schema: {"target": "url"}
-    output_schema: {"urls": "list[str]"}
-    timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["crawl"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: hakrawler
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: hakrawler
-    install_verification_cmd: ["hakrawler", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"urls": "list[str]"}
-    timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["crawl"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: gospider
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: gospider
-    install_verification_cmd: ["gospider", "-h"]
-    input_schema: {"target": "url"}
-    output_schema: {"urls": "list[str]"}
-    timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["crawl"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: waymore
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: waymore
-    install_verification_cmd: ["waymore", "-h"]
-    input_schema: {"target": "domain_or_url"}
-    output_schema: {"urls": "list[str]"}
-    timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["archive", "crawl"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: ffuf
-    category: fuzzing_content_discovery
-    execution_mode: docker
-    binary_path: ffuf
-    container_image: ghcr.io/ffuf/ffuf:latest
-    install_verification_cmd: ["ffuf", "-V"]
-    input_schema: {"target": "url_with_fuzz"}
-    output_schema: {"results": "list[json]"}
-    timeout_seconds: 420
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["fuzz"]
-    dependencies: ["wordlist"]
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: dirsearch
-    category: fuzzing_content_discovery
-    execution_mode: native
-    binary_path: dirsearch
-    install_verification_cmd: ["dirsearch", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"results": "list[json]"}
-    timeout_seconds: 420
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["fuzz"]
-    dependencies: ["wordlist"]
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: gobuster
-    category: fuzzing_content_discovery
-    execution_mode: native
-    binary_path: gobuster
-    install_verification_cmd: ["gobuster", "version"]
-    input_schema: {"target": "url"}
-    output_schema: {"results": "list[str]"}
-    timeout_seconds: 420
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["fuzz"]
-    dependencies: ["wordlist"]
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: wfuzz
-    category: fuzzing_content_discovery
-    execution_mode: native
-    binary_path: wfuzz
-    install_verification_cmd: ["wfuzz", "--help"]
-    input_schema: {"target": "url_with_fuzz"}
-    output_schema: {"results": "list[str]"}
-    timeout_seconds: 420
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["fuzz"]
-    dependencies: ["wordlist"]
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: nuclei
-    category: vulnerability_scanning
-    execution_mode: docker
-    binary_path: nuclei
-    container_image: projectdiscovery/nuclei:latest
-    install_verification_cmd: ["nuclei", "-version"]
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["vuln", "templates"]
-    dependencies: ["nuclei_templates"]
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: nikto
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: nikto
-    install_verification_cmd: ["nikto", "-Version"]
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"findings": "list[str]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["vuln", "web"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: wpscan
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: wpscan
-    install_verification_cmd: ["wpscan", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["vuln", "wordpress"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: dalfox
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: dalfox
-    install_verification_cmd: ["dalfox", "version"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    allowed_extra_args: ["--p", "--header", "--cookie", "--user-agent", "--delay"]
-    tags: ["xss", "vuln"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: jaeles
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: jaeles
-    install_verification_cmd: ["jaeles", "-v"]
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["vuln", "template"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: nmap
-    category: network_service_scanning
-    execution_mode: native
-    binary_path: nmap
-    install_verification_cmd: ["nmap", "--version"]
-    input_schema: {"target": "host_or_cidr"}
-    output_schema: {"services": "list[json]"}
-    timeout_seconds: 900
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["network", "portscan"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: rustscan
-    category: network_service_scanning
-    execution_mode: native
-    binary_path: rustscan
-    install_verification_cmd: ["rustscan", "--version"]
-    input_schema: {"target": "host"}
-    output_schema: {"open_ports": "list[str]"}
-    timeout_seconds: 360
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["network", "portscan"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: masscan
-    category: network_service_scanning
-    execution_mode: native
-    binary_path: masscan
-    install_verification_cmd: ["masscan", "--version"]
-    input_schema: {"target": "host_or_cidr"}
-    output_schema: {"open_ports": "list[json]"}
-    timeout_seconds: 360
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["network", "portscan"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: zmap
-    category: network_service_scanning
-    execution_mode: native
-    binary_path: zmap
-    install_verification_cmd: ["zmap", "--version"]
-    input_schema: {"target": "cidr"}
-    output_schema: {"responses": "list[str]"}
-    timeout_seconds: 360
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["network", "scan"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: sqlmap
-    category: validation_support
-    execution_mode: native
-    binary_path: sqlmap
-    install_verification_cmd: ["sqlmap", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"result": "json_or_text"}
-    timeout_seconds: 900
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    allowed_extra_args: ["--risk", "--level", "--technique", "-p", "--dbms", "--batch", "--random-agent"]
-    tags: ["validation", "sqli"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: xsstrike
-    category: validation_support
-    execution_mode: native
-    binary_path: xsstrike
-    install_verification_cmd: ["xsstrike", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"result": "json_or_text"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["validation", "xss"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: commix
-    category: validation_support
-    execution_mode: native
-    binary_path: commix
-    install_verification_cmd: ["commix", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"result": "json_or_text"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["validation", "command_injection"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: tplmap
-    category: validation_support
-    execution_mode: native
-    binary_path: tplmap
-    install_verification_cmd: ["tplmap", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"result": "json_or_text"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["validation", "ssti"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: searchsploit
-    category: validation_support
-    execution_mode: native
-    binary_path: searchsploit
-    install_verification_cmd: ["python3", "-c", "import shutil,sys; sys.exit(0 if shutil.which('searchsploit') else 1)"]
-    input_schema: {"target": "query"}
-    output_schema: {"results": "list[str]"}
-    timeout_seconds: 120
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["intel", "exploitdb"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: metasploit_hook
-    category: validation_support
-    execution_mode: optional
-    binary_path: msfconsole
-    install_verification_cmd: ["msfconsole", "--version"]
-    input_schema: {"target": "host_or_url"}
-    output_schema: {"status": "hook_only"}
-    timeout_seconds: 120
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: manual_only
-    tags: ["integration_hook", "manual_validation"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: trufflehog
-    category: secret_leak_detection
-    execution_mode: docker
-    binary_path: trufflehog
-    container_image: trufflesecurity/trufflehog:latest
-    install_verification_cmd: ["trufflehog", "--version"]
-    input_schema: {"target": "repo_or_path"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: safe
-    tags: ["secrets"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: gitleaks
-    category: secret_leak_detection
-    execution_mode: native
-    binary_path: gitleaks
-    install_verification_cmd: ["gitleaks", "version"]
-    input_schema: {"target": "repo_or_path"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: safe
-    tags: ["secrets"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: git-secrets
-    category: secret_leak_detection
-    execution_mode: native
-    binary_path: git-secrets
-    install_verification_cmd: ["git-secrets", "--help"]
-    input_schema: {"target": "repo_or_path"}
-    output_schema: {"findings": "list[str]"}
-    timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: safe
-    tags: ["secrets"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: gitrob_alt
-    category: secret_leak_detection
-    execution_mode: optional
-    binary_path: trufflehog
-    install_verification_cmd: ["trufflehog", "--version"]
-    input_schema: {"target": "repo_or_org"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: safe
-    tags: ["secrets", "git"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: theharvester
-    category: intelligence_osint
-    execution_mode: native
-    binary_path: theHarvester
-    install_verification_cmd: ["theHarvester", "--help"]
-    input_schema: {"target": "domain"}
-    output_schema: {"emails_hosts": "list[str]"}
-    timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["osint"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: spiderfoot_hook
-    category: intelligence_osint
-    execution_mode: optional
-    binary_path: spiderfoot
-    install_verification_cmd: ["spiderfoot", "--help"]
-    input_schema: {"target": "domain_or_ip"}
-    output_schema: {"status": "hook_only"}
-    timeout_seconds: 120
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: manual_only
-    tags: ["integration_hook", "osint"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: shodan
-    category: intelligence_osint
-    execution_mode: optional
-    install_verification_cmd: ["python", "-c", "print('shodan_api')"]
-    input_schema: {"target": "ip"}
-    output_schema: {"host_intel": "json"}
-    timeout_seconds: 120
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["api", "intel"]
-    dependencies: []
-    api_keys_required: ["SHODAN_API_KEY"]
-    enabled_by_default: true
-
-  - name: censys
-    category: intelligence_osint
-    execution_mode: optional
-    install_verification_cmd: ["python", "-c", "print('censys_api')"]
-    input_schema: {"target": "ip"}
-    output_schema: {"host_intel": "json"}
-    timeout_seconds: 120
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["api", "intel"]
-    dependencies: []
-    api_keys_required: ["CENSYS_API_ID", "CENSYS_API_SECRET"]
-    enabled_by_default: true
-
-  - name: burp_launcher
-    category: manual_hil_integrations
-    execution_mode: optional
-    binary_path: burpsuite
-    install_verification_cmd: ["burpsuite", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"status": "launcher"}
-    timeout_seconds: 120
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: manual_only
-    tags: ["hil", "manual"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: zap_launcher
-    category: manual_hil_integrations
-    execution_mode: optional
-    binary_path: zap.sh
-    install_verification_cmd: ["zap.sh", "-version"]
-    input_schema: {"target": "url"}
-    output_schema: {"status": "launcher"}
-    timeout_seconds: 120
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: manual_only
-    tags: ["hil", "manual"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
   - name: postman_collection_export
     category: manual_hil_integrations
     execution_mode: optional
@@ -691,7 +654,7 @@ tools:
     tags: ["hil", "export"]
     dependencies: []
     api_keys_required: []
-    enabled_by_default: true
+    enabled_by_default: false
 
   - name: insomnia_collection_export
     category: manual_hil_integrations
@@ -703,6 +666,53 @@ tools:
     retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: safe
     tags: ["hil", "export"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: false
+
+  # Legacy name aliases — preserved for backward compatibility with existing tests
+  - name: httpx
+    category: http_live_host
+    execution_mode: native
+    binary_path: httpx
+    install_verification_cmd: ["httpx", "-version"]
+    input_schema: {"target": "host"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 300
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: active
+    tags: ["http", "probe"]
+    dependencies: []
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: nuclei
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: nuclei
+    container_image: projectdiscovery/nuclei:latest
+    install_verification_cmd: ["nuclei", "-version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 1800
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+    tags: ["scan", "vulnerability"]
+    dependencies: ["nuclei_templates"]
+    api_keys_required: []
+    enabled_by_default: true
+
+  - name: trufflehog
+    category: secret_scanning
+    execution_mode: native
+    binary_path: trufflehog
+    install_verification_cmd: ["trufflehog", "--version"]
+    input_schema: {"target": "url_or_path"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 600
+    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: passive
+    tags: ["secrets", "recon"]
     dependencies: []
     api_keys_required: []
     enabled_by_default: true

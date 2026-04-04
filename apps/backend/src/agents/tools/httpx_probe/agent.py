@@ -34,18 +34,27 @@ class HttpxProbeAgent(BaseToolAgent):
                 continue
             try:
                 data = json.loads(line)
+                url = data.get("url", "")
                 findings.append({
-                    "url": data.get("url", ""),
-                    "value": data.get("url", ""),
-                    "status_code": data.get("status_code", 0),
-                    "title": data.get("title", ""),
-                    "tech": data.get("tech", []),
-                    "cdn": data.get("cdn", False),
-                    "cdn_name": data.get("cdn_name", ""),
-                    "content_length": data.get("content_length", 0),
-                    "server": data.get("server", ""),
-                    "source": "httpx_probe",
+                    "type": "url",
+                    "url": url,
+                    "value": url,
                     "target": target,
+                    "severity": "info",
+                    "confidence": 0.9,
+                    "source_tool": self.TOOL_NAME,
+                    "raw_evidence": line,
+                    "context": {
+                        "status_code": data.get("status_code", 0),
+                        "title": data.get("title", ""),
+                        "tech": data.get("tech", []),
+                        "cdn": data.get("cdn", False),
+                        "cdn_name": data.get("cdn_name", ""),
+                        "content_length": data.get("content_length", 0),
+                        "server": data.get("server", ""),
+                    },
+                    "recommended_next_tools": ["naabu", "nuclei_scan"],
+                    "recommended_next_actions": ["port_scan", "vulnerability_scan"],
                 })
             except json.JSONDecodeError:
                 pass
@@ -56,26 +65,35 @@ class HttpxProbeAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|url|{value}" in known:
+                noise.append(item)
+                continue
+
             # CDN noise - but still signal if status code is interesting (401/403)
-            if item.get("cdn") and item.get("status_code") not in [401, 403]:
+            ctx = item["context"]
+            if ctx.get("cdn") and ctx.get("status_code") not in [401, 403]:
                 item["noise_reason"] = "cdn_hosted_static"
                 noise.append(item)
                 continue
             
             # Application 403 vs WAF 403 logic
-            if item.get("status_code") == 403:
-                server = item.get("server", "").lower()
-                if "cloudflare" in server or "akamai" in server or item.get("cdn"):
+            if ctx.get("status_code") == 403:
+                server = ctx.get("server", "").lower()
+                if "cloudflare" in server or "akamai" in server or ctx.get("cdn"):
                     item["signal_reason"] = "waf_403"
                     # Still signal, but lower priority for bypassing
                 else:
                     item["signal_reason"] = "app_403"
+                    item["severity"] = "medium"
                 signal.append(item)
                 continue
 
-            if item.get("status_code") == 401:
+            if ctx.get("status_code") == 401:
                 item["signal_reason"] = "auth_required"
+                item["severity"] = "medium"
                 signal.append(item)
                 continue
 
@@ -88,19 +106,18 @@ class HttpxProbeAgent(BaseToolAgent):
         urls = [s["url"] for s in signal]
         tech_map = {}
         for s in signal:
-            for t in s.get("tech", []):
+            for t in s["context"].get("tech", []):
                 tech_map[t] = tech_map.get(t, 0) + 1
         
         return {
-            "next_agent": "nuclei_scan",
-            "action": "vulnerability_scan",
+            "next_agent": "naabu",
+            "action": "port_scan_live_hosts",
             "target": target,
             "input_urls": urls,
             "detected_tech": list(tech_map.keys()),
             "instructions": (
                 f"Probed {len(urls)} live hosts. "
                 f"Tech stack detected: {', '.join(list(tech_map.keys())[:10])}. "
-                "Trigger nuclei scan with tech-specific templates. "
-                "Focus on 401/403 endpoints for bypass attempts."
+                "Next Step: Trigger naabu for non-standard port discovery on these live hosts."
             ),
         }

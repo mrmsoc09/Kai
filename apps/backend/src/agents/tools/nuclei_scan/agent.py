@@ -67,17 +67,23 @@ class NucleiScanAgent(BaseToolAgent):
                 data = json.loads(line)
                 info = data.get("info", {})
                 findings.append({
+                    "type": "vulnerability",
                     "template_id": data.get("template-id", ""),
                     "vuln_name": info.get("name", ""),
-                    "severity": info.get("severity", ""),
-                    "matched_at": data.get("matched-at", ""),
-                    "description": info.get("description", ""),
-                    "reference": info.get("reference", []),
-                    "type": data.get("type", ""),
-                    "curl_command": data.get("curl-command", ""),
+                    "severity": info.get("severity", "info"),
                     "value": data.get("matched-at", ""),
-                    "source": "nuclei",
                     "target": target,
+                    "confidence": 0.95,
+                    "source_tool": self.TOOL_NAME,
+                    "raw_evidence": line,
+                    "context": {
+                        "description": info.get("description", ""),
+                        "reference": info.get("reference", []),
+                        "type": data.get("type", ""),
+                        "curl_command": data.get("curl-command", ""),
+                    },
+                    "recommended_next_tools": ["EvidenceAnalystAgent"],
+                    "recommended_next_actions": ["validate_finding"],
                 })
             except json.JSONDecodeError:
                 pass
@@ -88,8 +94,14 @@ class NucleiScanAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            severity = item.get("severity", "").lower()
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|vulnerability|{value}" in known:
+                noise.append(item)
+                continue
+
+            severity = item.get("severity", "info").lower()
             if severity in ["critical", "high"]:
                 item["signal_reason"] = "high_severity_vulnerability"
                 signal.append(item)
@@ -110,7 +122,7 @@ class NucleiScanAgent(BaseToolAgent):
         high = [s for s in signal if s.get("severity", "").lower() == "high"]
         
         return {
-            "next_agent": "vulnerability_validator",
+            "next_agent": "EvidenceAnalystAgent",
             "action": "validate_findings",
             "target": target,
             "critical_findings": critical[:10],
