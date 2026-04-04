@@ -554,6 +554,27 @@ class VisionValidationService:
                         row["severity"] = "medium"
                     elif _sev == "medium":
                         row["severity"] = "high"
+                    # Notify source tool agent memory so it learns from confirmed findings.
+                    try:
+                        import logging as _logging
+                        _log = _logging.getLogger(__name__)
+                        source_tool = row.get("source_tool")
+                        if source_tool:
+                            from agents.tools.agent_memory import AgentMemory
+                            _mem = AgentMemory(source_tool)
+                            _mem.record_confirmed_finding({
+                                "finding_type": row.get("type"),
+                                "value": row.get("value"),
+                                "target": row.get("target"),
+                                "confidence": float(analysis.confidence),
+                                "raw_evidence": str(row.get("raw_evidence", ""))[:500],
+                                "target_type": row.get("context", {}).get(
+                                    "target_type", "unknown"
+                                ),
+                            })
+                    except Exception as _e:
+                        _log = __import__("logging").getLogger(__name__)
+                        _log.warning("Failed to update agent memory for %s: %s", source_tool, _e)
                 elif analysis.verdict == "false_positive" and analysis.confidence >= 0.85:
                     row["suppressed"] = True
                     row["requires_human_review"] = True
