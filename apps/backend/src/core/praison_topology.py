@@ -160,6 +160,49 @@ class MissionGraphSpec:
         return self
 
 
+# ── Execution order resolution ────────────────────────────────────────────────
+
+def resolve_execution_order(graph_spec: "MissionGraphSpec") -> list[str]:
+    """
+    Resolve execution order for the mission graph using topological sort.
+
+    Returns a list of node IDs in valid execution order, starting from entry_node
+    and ending at exit_node, respecting edge constraints.
+    """
+    if not graph_spec.nodes:
+        return []
+
+    # Build adjacency list
+    graph: dict[str, list[str]] = {node_id: [] for node_id in graph_spec.nodes}
+    in_degree: dict[str, int] = {node_id: 0 for node_id in graph_spec.nodes}
+
+    for edge in graph_spec.edges:
+        if edge.source in graph_spec.nodes and edge.target in graph_spec.nodes:
+            graph[edge.source].append(edge.target)
+            in_degree[edge.target] += 1
+
+    # Topological sort (Kahn's algorithm)
+    queue: list[str] = [node_id for node_id in graph_spec.nodes if in_degree[node_id] == 0]
+    order: list[str] = []
+
+    while queue:
+        # Prefer entry node first if available
+        if graph_spec.entry_node in queue:
+            current = graph_spec.entry_node
+            queue.remove(current)
+        else:
+            current = queue.pop(0)
+
+        order.append(current)
+
+        for neighbor in graph[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+
+    return order
+
+
 # ── PraisonTopology ───────────────────────────────────────────────────────────
 
 class PraisonTopology:
@@ -183,9 +226,38 @@ class PraisonTopology:
             node.is_entry = is_entry
             node.is_exit = is_exit
             graph.add_node(node)
-        
+
+        # Core orchestration flow: governance → mission direction → phase coordination
         graph.add_edge("GovernanceDirector", "MissionDirector", EdgeCondition.ON_SUCCESS)
         graph.add_edge("MissionDirector", "PhaseCoordinator", EdgeCondition.ON_SUCCESS)
+
+        # Phase Group A (parallel from PhaseCoordinator: surface mapping + OSINT + dark web + secrets)
+        graph.add_edge("PhaseCoordinator", "SurfaceMapper", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("PhaseCoordinator", "OSINTIntelligenceAgent", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("PhaseCoordinator", "DarkWebIntelAgent", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("PhaseCoordinator", "SecretScannerAgent", EdgeCondition.ON_SUCCESS)
+
+        # Phase Group B (content discovery after Phase 1-2: depends on SurfaceMapper completion)
+        graph.add_edge("SurfaceMapper", "ContentDiscoveryAgent", EdgeCondition.ON_SUCCESS)
+
+        # Phase Group C (vulnerability & API testing after content discovery)
+        graph.add_edge("ContentDiscoveryAgent", "VulnerabilityAgent", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("ContentDiscoveryAgent", "APISecurityAgent", EdgeCondition.ON_SUCCESS)
+
+        # Phase Group D (aggregation & evidence analysis after all scanning complete)
+        # All scanning agents converge into faraday coordinator
+        graph.add_edge("VulnerabilityAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("APISecurityAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        # Parallel agents (OSINT, dark web, secrets) also feed to faraday
+        graph.add_edge("OSINTIntelligenceAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("DarkWebIntelAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("SecretScannerAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+
+        # Evidence analysis → reporting → handoff (final convergence)
+        graph.add_edge("FaradayCoordinatorAgent", "EvidenceAnalyst", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("EvidenceAnalyst", "ReportSynthesisAgent", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("ReportSynthesisAgent", "HandoffLiaison", EdgeCondition.ON_SUCCESS)
+
         return graph
 
 

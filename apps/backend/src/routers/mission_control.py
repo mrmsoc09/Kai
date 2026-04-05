@@ -40,6 +40,7 @@ class MissionCreateRequest(BaseModel):
     execution_mode: str = "live"
     run_config: dict[str, Any] = Field(default_factory=dict)
     graph_spec: dict[str, Any] | None = None
+    enable_crew_agents: bool = False
 
 
 class MissionResponse(BaseModel):
@@ -224,6 +225,17 @@ async def create_mission(
             default_program_id=payload.program_id,
             mission_name=payload.mission_name,
         ) if payload.graph_spec else None
+
+        # Optionally instantiate crew agents for real execution
+        agent_callables = None
+        if payload.enable_crew_agents:
+            try:
+                from apps.backend.src.core.crew_agent_factory import instantiate_crew_agents
+                agent_callables = instantiate_crew_agents()
+                logger.info(f"Instantiated {len(agent_callables)} crew agents for mission {payload.program_id}")
+            except Exception as e:
+                logger.warning(f"Failed to instantiate crew agents: {e}. Mission will run in graph_only mode.")
+
         handle = runtime.create_mission(
             tenant_id=current_user.tenant_id,
             workflow_id=payload.workflow_id,
@@ -231,6 +243,7 @@ async def create_mission(
             mission_name=payload.mission_name,
             execution_mode=payload.execution_mode,
             graph_spec=graph_spec,
+            agent_callables=agent_callables,
         )
         return MissionResponse(
             mission_id=handle.mission_id,

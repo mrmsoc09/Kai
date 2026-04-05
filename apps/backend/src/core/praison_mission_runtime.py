@@ -882,8 +882,18 @@ _merge_state = merge_state  # re-export from praison_state (imported above)
 def _make_minimal_agent_specs() -> dict[str, dict[str, Any]]:
     """Minimal agent specs for graph_only execution."""
     agents = [
+        # Governance & coordination
         "GovernanceDirector", "MissionDirector", "PhaseCoordinator",
-        "SurfaceMapper", "ReconSpecialist", "EvidenceAnalyst",
+        # Wave 4 crew agents (parallel from start)
+        "SurfaceMapper", "OSINTIntelligenceAgent", "DarkWebIntelAgent", "SecretScannerAgent",
+        # Wave 4 content discovery (after phase 1-2)
+        "ContentDiscoveryAgent",
+        # Wave 4 vulnerability & API testing (after content discovery)
+        "VulnerabilityAgent", "APISecurityAgent",
+        # Wave 4 aggregation & analysis (final)
+        "FaradayCoordinatorAgent",
+        # Standard agents (existing)
+        "ReconSpecialist", "EvidenceAnalyst",
         "ReportSynthesisAgent", "HandoffLiaison",
     ]
     specs = {}

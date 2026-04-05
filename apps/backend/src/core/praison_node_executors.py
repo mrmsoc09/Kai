@@ -1195,7 +1195,7 @@ def build_standard_node_callables(
     """
     ac = agent_callables or {}
 
-    return {
+    callables = {
         "GovernanceDirector": make_governance_admission_executor(ac.get("GovernanceDirector")),
         "MissionDirector": make_mission_director_executor(ac.get("MissionDirector")),
         "PhaseCoordinator": make_phase_coordinator_executor("recon", ac.get("PhaseCoordinator")),
@@ -1209,3 +1209,20 @@ def build_standard_node_callables(
         "ReportSynthesisAgent": make_report_synthesis_executor(ac.get("ReportSynthesisAgent")),
         "HandoffLiaison": make_handoff_liaison_executor(ac.get("HandoffLiaison")),
     }
+
+    # Wave 4 crew agents (use specialist cluster executor for all)
+    wave4_agents = [
+        "OSINTIntelligenceAgent",
+        "DarkWebIntelAgent",
+        "SecretScannerAgent",
+        "ContentDiscoveryAgent",
+        "VulnerabilityAgent",
+        "APISecurityAgent",
+        "FaradayCoordinatorAgent",
+    ]
+    for agent_id in wave4_agents:
+        callables[agent_id] = make_specialist_cluster_executor(
+            agent_id.lower(), ac.get(agent_id), simulation_artifact_type="crew_findings"
+        )
+
+    return callables
