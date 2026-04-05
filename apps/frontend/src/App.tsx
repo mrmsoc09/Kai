@@ -56,6 +56,12 @@ import AIEngine from './routes/AIEngine'
 import ScanOps from './routes/ScanOps'
 import ScanPoolDashboard from './routes/ScanPoolDashboard'
 
+// Wave 6D Frontend — Tool and Crew Agents
+import ToolAgentDashboard from './components/ToolAgentDashboard'
+import CrewAgentMonitor from './components/CrewAgentMonitor'
+import OrchestratorPanel from './components/OrchestratorPanel'
+import MasterFindingsView from './components/MasterFindingsView'
+
 function NotFound() {
   return (
     <div style={{ padding: '3rem', textAlign: 'center', fontFamily: 'monospace' }}>
@@ -130,6 +136,12 @@ export default function App() {
                 <Route path='/scan-pool' element={<ScanPoolDashboard />} />
                 <Route path='/intel' element={<Intelligence />} />
                 <Route path='/reports' element={<KPI />} />
+
+                {/* Wave 6D Frontend — Tool and Crew Agents */}
+                <Route path='/agents' element={<ToolAgentDashboard />} />
+                <Route path='/crew' element={<CrewAgentMonitor />} />
+                <Route path='/orchestrator' element={<OrchestratorPanel />} />
+                <Route path='/master-findings' element={<MasterFindingsView />} />
 
                 {/* Legacy routes — keep for deep-link compatibility */}
                 <Route path='/opportunities' element={<Opportunities />} />
