@@ -26,6 +26,8 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
+import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -83,6 +85,40 @@ class ToolScopeViolationError(PermissionError):
     """Raised when the target fails scope validation via scope_validator."""
 
 
+class ToolWrapperBypassError(PermissionError):
+    """Raised when a caller attempts to bypass wrapper-only execution policy."""
+
+
+# Explicitly blocked argument keys that imply direct substrate execution
+_BYPASS_ARG_KEYS: frozenset[str] = frozenset({
+    "bypass_wrappers",
+    "bypass_governance",
+    "direct_execute",
+    "raw_command",
+    "shell_command",
+    "subprocess_cmd",
+    "execution_backend",
+    "execution_substrate",
+})
+
+
+def _contains_wrapper_bypass(args: dict[str, Any]) -> bool:
+    if not isinstance(args, dict):
+        return False
+    for key in _BYPASS_ARG_KEYS:
+        if key not in args:
+            continue
+        value = args.get(key)
+        if value in (None, False, "", 0):
+            continue
+        if key in {"execution_backend", "execution_substrate"}:
+            normalized = str(value).strip().lower()
+            if normalized in {"wrapper", "celery", "celery_dispatch", "governed"}:
+                continue
+        return True
+    return False
+
+
 # ---------------------------------------------------------------------------
 # K1ToolContext — immutable per-invocation governance context
 # ---------------------------------------------------------------------------
@@ -107,6 +143,11 @@ class K1ToolContext:
     phase: str
     execution_mode: str  # "live" | "graph_only" | "tool_mock"
     allowed_tool_ids: frozenset[str]  # tools explicitly allowed for this agent
+    node_id: str = ""
+    stage_id: str = ""
+    selected_substrate: str = ""
+    risk_band: str = ""
+    tenant_id: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +263,7 @@ def _tool_invocation_started_event(
     context: K1ToolContext,
     tool_id: str,
     target: str,
+    tool_execution_id: str = "",
 ) -> MissionEvent:
     """Create a tool_invocation_started MissionEvent from the current K1ToolContext."""
     return MissionEvent(
@@ -236,6 +278,12 @@ def _tool_invocation_started_event(
             "tool_id": tool_id,
             "target": target,
             "execution_mode": context.execution_mode,
+            "tool_execution_id": tool_execution_id,
+            "node_id": context.node_id,
+            "stage_id": context.stage_id,
+            "selected_substrate": context.selected_substrate,
+            "risk_band": context.risk_band,
+            "tenant_id": context.tenant_id,
         },
     )
 
@@ -244,6 +292,11 @@ def _tool_invocation_completed_event(
     context: K1ToolContext,
     tool_id: str,
     status: str,
+    tool_execution_id: str = "",
+    duration_ms: float = 0.0,
+    estimated_tokens: int = 0,
+    estimated_cost_cents: float = 0.0,
+    retry_count: int = 0,
 ) -> MissionEvent:
     """Create a tool_invocation_completed MissionEvent from the current K1ToolContext."""
     return MissionEvent(
@@ -258,8 +311,70 @@ def _tool_invocation_completed_event(
             "tool_id": tool_id,
             "status": status,
             "execution_mode": context.execution_mode,
+            "tool_execution_id": tool_execution_id,
+            "duration_ms": round(float(duration_ms), 2),
+            "estimated_tokens": int(estimated_tokens),
+            "estimated_cost_cents": round(float(estimated_cost_cents), 6),
+            "retry_count": int(retry_count),
+            "node_id": context.node_id,
+            "stage_id": context.stage_id,
+            "selected_substrate": context.selected_substrate,
+            "risk_band": context.risk_band,
+            "tenant_id": context.tenant_id,
         },
     )
+
+
+def _extract_dispatch_usage(args: dict[str, Any]) -> tuple[int, float, int]:
+    """
+    Extract optional usage/cost/retry metadata from dispatch args.
+
+    Keys are best-effort and remain backward-compatible with existing callers.
+    """
+    if not isinstance(args, dict):
+        return 0, 0.0, 0
+
+    estimated_tokens = 0
+    estimated_cost_cents = 0.0
+    retry_count = 0
+
+    for token_key in ("estimated_tokens", "total_tokens", "tokens"):
+        try:
+            estimated_tokens = int(args.get(token_key, 0) or 0)
+        except (TypeError, ValueError):
+            estimated_tokens = 0
+        if estimated_tokens > 0:
+            break
+
+    try:
+        token_usage = args.get("token_usage", {})
+        if estimated_tokens <= 0 and isinstance(token_usage, dict):
+            estimated_tokens = int(
+                token_usage.get("total_tokens")
+                or token_usage.get("total")
+                or token_usage.get("tokens")
+                or 0
+            )
+    except (TypeError, ValueError):
+        estimated_tokens = 0
+
+    for cost_key in ("estimated_cost_cents", "cost_cents"):
+        try:
+            estimated_cost_cents = float(args.get(cost_key, 0.0) or 0.0)
+        except (TypeError, ValueError):
+            estimated_cost_cents = 0.0
+        if estimated_cost_cents > 0.0:
+            break
+
+    for retry_key in ("retry_count", "retries", "attempt"):
+        try:
+            retry_count = int(args.get(retry_key, 0) or 0)
+        except (TypeError, ValueError):
+            retry_count = 0
+        if retry_count > 0:
+            break
+
+    return max(0, estimated_tokens), max(0.0, estimated_cost_cents), max(0, retry_count)
 
 
 # ---------------------------------------------------------------------------
@@ -341,6 +456,13 @@ if _LANGCHAIN_AVAILABLE:
                     }
                 )
 
+            # Step 1b: explicit wrapper-bypass attempts are blocked.
+            if _contains_wrapper_bypass(args):
+                raise ToolWrapperBypassError(
+                    "Tool invocation attempted direct substrate execution. "
+                    "Wrapper-only execution is mandatory."
+                )
+
             # Step 2: allowlist check
             if self.context.allowed_tool_ids and self.name not in self.context.allowed_tool_ids:
                 raise ToolNotPermittedError(
@@ -416,13 +538,17 @@ if _LANGCHAIN_AVAILABLE:
             telemetry (no real work is implied).
             """
             resolved_args = args or {}
+            dispatch_started = time.monotonic()
 
             fast_path_result = self._enforce_governance(target, resolved_args)
             if fast_path_result is not None:
                 return fast_path_result
 
             # Telemetry: invocation started
-            emit(_tool_invocation_started_event(self.context, self.name, target))
+            tool_execution_id = str(uuid.uuid4())
+            emit(_tool_invocation_started_event(
+                self.context, self.name, target, tool_execution_id=tool_execution_id
+            ))
 
             # Build dispatch signal — real execution goes through Celery worker
             result_payload: dict[str, Any] = {
@@ -433,9 +559,20 @@ if _LANGCHAIN_AVAILABLE:
                 "validation": "passed",
             }
             result_str = json.dumps(result_payload)
+            duration_ms = (time.monotonic() - dispatch_started) * 1000.0
+            estimated_tokens, estimated_cost_cents, retry_count = _extract_dispatch_usage(resolved_args)
 
             # Telemetry: invocation completed
-            emit(_tool_invocation_completed_event(self.context, self.name, "dispatched"))
+            emit(_tool_invocation_completed_event(
+                self.context,
+                self.name,
+                "dispatched",
+                tool_execution_id=tool_execution_id,
+                duration_ms=duration_ms,
+                estimated_tokens=estimated_tokens,
+                estimated_cost_cents=estimated_cost_cents,
+                retry_count=retry_count,
+            ))
 
             return result_str
 
@@ -454,6 +591,7 @@ if _LANGCHAIN_AVAILABLE:
             keep the event loop unblocked for IO-heavy orchestration pipelines.
             """
             resolved_args = args or {}
+            dispatch_started = time.monotonic()
 
             # Fast-path checks are CPU-bound and synchronous — run inline since
             # they are sub-millisecond and safe from blocking concerns.
@@ -462,7 +600,10 @@ if _LANGCHAIN_AVAILABLE:
                 return fast_path_result
 
             # Telemetry: invocation started (synchronous emit is thread-safe)
-            emit(_tool_invocation_started_event(self.context, self.name, target))
+            tool_execution_id = str(uuid.uuid4())
+            emit(_tool_invocation_started_event(
+                self.context, self.name, target, tool_execution_id=tool_execution_id
+            ))
 
             result_payload: dict[str, Any] = {
                 "status": "dispatched",
@@ -472,8 +613,19 @@ if _LANGCHAIN_AVAILABLE:
                 "validation": "passed",
             }
             result_str = json.dumps(result_payload)
+            duration_ms = (time.monotonic() - dispatch_started) * 1000.0
+            estimated_tokens, estimated_cost_cents, retry_count = _extract_dispatch_usage(resolved_args)
 
-            emit(_tool_invocation_completed_event(self.context, self.name, "dispatched"))
+            emit(_tool_invocation_completed_event(
+                self.context,
+                self.name,
+                "dispatched",
+                tool_execution_id=tool_execution_id,
+                duration_ms=duration_ms,
+                estimated_tokens=estimated_tokens,
+                estimated_cost_cents=estimated_cost_cents,
+                retry_count=retry_count,
+            ))
 
             return result_str
 

@@ -29,6 +29,7 @@ Required identifiers on every exported span/run:
 
 Correlation hierarchy:
 - mission run -> phase span -> node span -> tool/specialist span -> model spans
+- mission run -> stage execution timing spans (start/end, substrate, duration)
 
 ## Redaction and Privacy Rules
 
@@ -82,6 +83,7 @@ Rules:
 ## Governance Fusion With Runtime Layers
 
 - Selector policy output is attached as audit metadata at stage start.
+- Runtime emits `stage_execution_started` and `stage_execution_completed` for per-stage latency profiling.
 - Every external substrate call (Praison, DeepAgents, provider SDK) emits:
   - pre-dispatch policy check event
   - execution start/finish/failure event

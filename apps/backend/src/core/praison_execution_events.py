@@ -143,22 +143,30 @@ def _make_event(
 def mission_started_event(
     mission_id: str, workflow_id: str, program_id: str,
     execution_mode: str = "live", mission_name: str = "",
+    correlation: dict[str, Any] | None = None,
 ) -> MissionEvent:
+    detail = {"execution_mode": execution_mode, "mission_name": mission_name}
+    if correlation:
+        detail.update(correlation)
     return _make_event(
         EventType.MISSION_STARTED,
         mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,
-        detail={"execution_mode": execution_mode, "mission_name": mission_name},
+        detail=detail,
     )
 
 
 def mission_completed_event(
     mission_id: str, workflow_id: str, program_id: str,
     success: bool = True, final_report_id: str = "",
+    metrics: dict[str, Any] | None = None,
 ) -> MissionEvent:
+    detail = {"success": success, "final_report_id": final_report_id}
+    if metrics:
+        detail["runtime_metrics_summary"] = metrics
     return _make_event(
         EventType.MISSION_COMPLETED,
         mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,
-        detail={"success": success, "final_report_id": final_report_id},
+        detail=detail,
     )
 
 

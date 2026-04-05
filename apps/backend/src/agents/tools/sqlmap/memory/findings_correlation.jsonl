@@ -1,0 +1,1 @@
+{"finding_id": "3951c04e-eb6c-4fe9-ba85-cb30e4d15124", "tool": "sqlmap", "target": "https://example.com", "value": "sqlmap:telemetry:failure", "first_seen": "2026-04-05T09:45:09.697461+00:00", "last_seen": "2026-04-05T09:45:09.697461+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}

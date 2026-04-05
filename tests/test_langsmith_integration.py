@@ -321,6 +321,23 @@ class TestTraceCorrelation:
         child = sample_correlation.child(phase="scanning")
         assert child.phase == "scanning"
 
+    def test_to_metadata_includes_audit_primacy_flags(self):
+        corr = TraceCorrelation(
+            mission_id="m-1",
+            workflow_id="wf-1",
+            program_id="prog-1",
+            stage_id="stage-1",
+            selected_substrate="LANGGRAPH_PRIMARY",
+            risk_band="2",
+            tenant_id="tenant-1",
+            tool_execution_id="tool-exec-1",
+        )
+        meta = corr.to_metadata()
+        assert meta["kai_audit_primary"] == "true"
+        assert meta["kai_telemetry_plane"] == "secondary"
+        assert meta["kai_selected_substrate"] == "LANGGRAPH_PRIMARY"
+        assert meta["kai_tool_execution_id"] == "tool-exec-1"
+
 
 # ===========================================================================
 # Test LangSmithBridge
@@ -417,9 +434,12 @@ class TestLangSmithBridge:
 
     def test_end_run_handles_client_error(self, operational_bridge):
         """end_run handles client errors gracefully."""
+        if not _LANGSMITH_AVAILABLE:
+            pytest.skip("langsmith package not available")
         operational_bridge._client.update_run.side_effect = RuntimeError("API error")
         # Should not raise
         operational_bridge.end_run("run-123", outputs={"x": 1})
+        assert operational_bridge.degraded_export_failures >= 1
 
     def test_traceable_decorator_returns_original_when_disabled(self, disabled_config):
         """traceable decorator returns original function when disabled."""
@@ -441,6 +461,32 @@ class TestLangSmithBridge:
         inputs = call_kwargs.kwargs["inputs"]
         assert inputs.get("api_key") == "[REDACTED]"
         assert inputs.get("task") == "do stuff"
+
+    def test_evaluation_hook_runs_observationally(self, operational_bridge):
+        """Evaluation hooks run without affecting run lifecycle decisions."""
+        if not _LANGSMITH_AVAILABLE:
+            pytest.skip("langsmith package not available")
+        captured: list[dict[str, Any]] = []
+
+        def _hook(payload: dict[str, Any]) -> None:
+            captured.append(payload)
+
+        operational_bridge.register_evaluation_hook("unit_hook", _hook)
+        subscriber = operational_bridge.create_event_subscriber()
+
+        event = MagicMock()
+        event.event_type = "mission_completed"
+        event.mission_id = "m-eval-1"
+        event.workflow_id = "wf-eval-1"
+        event.program_id = "prog-eval-1"
+        event.phase = "report"
+        event.node_id = "n1"
+        event.agent_id = "a1"
+        event.detail = {"success": True}
+
+        subscriber(event)
+        assert captured
+        assert captured[0]["audit_source_of_truth"] == "kai"
 
 
 # ===========================================================================
@@ -560,6 +606,66 @@ class TestEventBusSubscriber:
             subscriber(event)
             # No client calls since sampling is disabled
 
+    def test_subscriber_correlation_bridge_for_tool_events(self, operational_bridge):
+        """Tool events preserve stage/substrate/tool correlation in metadata."""
+        if not _LANGSMITH_AVAILABLE:
+            pytest.skip("langsmith package not available")
+        subscriber = operational_bridge.create_event_subscriber()
+
+        mission_started = MagicMock()
+        mission_started.event_type = "mission_started"
+        mission_started.mission_id = "m-tool-1"
+        mission_started.workflow_id = "wf-tool-1"
+        mission_started.program_id = "prog-tool-1"
+        mission_started.node_id = ""
+        mission_started.agent_id = ""
+        mission_started.detail = {"execution_mode": "live"}
+        subscriber(mission_started)
+
+        tool_started = MagicMock()
+        tool_started.event_type = "tool_invocation_started"
+        tool_started.mission_id = "m-tool-1"
+        tool_started.workflow_id = "wf-tool-1"
+        tool_started.program_id = "prog-tool-1"
+        tool_started.node_id = "node-recon"
+        tool_started.agent_id = "agent-recon"
+        tool_started.detail = {
+            "tool_id": "subfinder",
+            "tool_execution_id": "te-123",
+            "stage_id": "recon",
+            "selected_substrate": "LANGGRAPH_PRIMARY",
+            "risk_band": "1",
+            "tenant_id": "tenant-a",
+        }
+        subscriber(tool_started)
+
+        call_kwargs = operational_bridge._client.create_run.call_args
+        metadata = call_kwargs.kwargs["extra"]["metadata"]
+        assert metadata["kai_stage_id"] == "recon"
+        assert metadata["kai_selected_substrate"] == "LANGGRAPH_PRIMARY"
+        assert metadata["kai_tool_execution_id"] == "te-123"
+        assert metadata["kai_audit_primary"] is True
+
+    def test_subscriber_degradation_does_not_raise(self, operational_bridge):
+        """LangSmith failures are absorbed and tracked as degraded exports."""
+        if not _LANGSMITH_AVAILABLE:
+            pytest.skip("langsmith package not available")
+        operational_bridge._client.create_run.side_effect = RuntimeError("LangSmith down")
+        subscriber = operational_bridge.create_event_subscriber()
+
+        event = MagicMock()
+        event.event_type = "mission_started"
+        event.mission_id = "m-down"
+        event.workflow_id = "wf-down"
+        event.program_id = "prog-down"
+        event.node_id = ""
+        event.agent_id = ""
+        event.detail = {"execution_mode": "live"}
+
+        # Must not raise (Kai audit plane remains primary and operational)
+        subscriber(event)
+        assert operational_bridge.degraded_export_failures >= 1
+
 
 # ===========================================================================
 # Test Redaction
@@ -594,6 +700,22 @@ class TestRedaction:
             data = {key: "hunter2"}
             result = redact_for_langsmith(data, mode="strict")
             assert result[key] == "[REDACTED]", f"Failed for key: {key}"
+
+    def test_strict_redacts_governance_fields(self):
+        """Governance-sensitive fields are redacted before external export."""
+        data = {
+            "governance_decision": "approved",
+            "approval_id": "ap-123",
+            "contract_id": "ct-001",
+            "scope_decision_id": "sd-1",
+            "task": "safe",
+        }
+        result = redact_for_langsmith(data, mode="strict")
+        assert result["governance_decision"] == "[REDACTED:GOVERNANCE]"
+        assert result["approval_id"] == "[REDACTED:GOVERNANCE]"
+        assert result["contract_id"] == "[REDACTED:GOVERNANCE]"
+        assert result["scope_decision_id"] == "[REDACTED:GOVERNANCE]"
+        assert result["task"] == "safe"
 
     def test_strict_redacts_bearer_tokens_in_values(self):
         """Strict mode redacts Bearer tokens embedded in string values."""

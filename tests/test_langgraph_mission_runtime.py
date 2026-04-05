@@ -237,6 +237,7 @@ class TestStateReducers:
         assert initial_state["errors"] == []
         assert initial_state["strategy_profiles_used"] == []
         assert initial_state["knowledge_lessons_generated"] == []
+        assert initial_state["selector_policy_artifacts"] == []
         assert initial_state["runtime_metrics"] == {}
 
     def test_merge_accumulative_appends(self):
@@ -289,6 +290,7 @@ class TestStateReducers:
             "approvals_required", "approvals_resolved",
             "adaptive_plan_patches_applied", "adaptive_plan_patches_rejected",
             "errors", "strategy_profiles_used", "knowledge_lessons_generated",
+            "selector_policy_artifacts",
         }
         assert _ACCUMULATIVE_FIELDS == expected_accum
 
@@ -297,8 +299,15 @@ class TestStateReducers:
         assert "profiles_used_count" in snap
         assert "lessons_generated_count" in snap
         assert "runtime_metrics" in snap
+        assert "selector_policy_artifact_count" in snap
         assert snap["profiles_used_count"] == 0
         assert snap["lessons_generated_count"] == 0
+
+    def test_selector_artifacts_accumulate(self):
+        base = {"selector_policy_artifacts": [{"selected_substrate": "LANGGRAPH_PRIMARY"}]}
+        update = {"selector_policy_artifacts": [{"selected_substrate": "MISSIONRUNTIME_CUSTOM"}]}
+        merged = _merge_state(base, update)
+        assert len(merged["selector_policy_artifacts"]) == 2
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -666,6 +675,65 @@ class TestMissionLifecycle:
         assert len(history) > 0
         node_ids = [h["node_id"] for h in history]
         assert "governance_admission" in node_ids
+
+    def test_start_mission_emits_selector_policy_artifacts(self, runtime, minimal_specs):
+        handle = runtime.create_mission(
+            workflow_id="wf-selector",
+            program_id="prog-selector",
+            execution_mode="graph_only",
+            agent_specs=minimal_specs,
+        )
+        final = runtime.start_mission(handle.mission_id)
+        artifacts = final.get("selector_policy_artifacts", [])
+        assert artifacts
+        assert artifacts[0]["type"] == "execution_selector_policy"
+
+    def test_start_mission_collects_runtime_performance_metrics(self, runtime, minimal_specs, monkeypatch):
+        monkeypatch.setattr(
+            "apps.backend.src.core.praison_mission_runtime.persist_benchmark_run",
+            lambda _record: {"ok": True},
+        )
+        handle = runtime.create_mission(
+            workflow_id="wf-metrics",
+            program_id="prog-metrics",
+            execution_mode="graph_only",
+            agent_specs=minimal_specs,
+        )
+        final = runtime.start_mission(handle.mission_id)
+        metrics = final.get("runtime_metrics", {})
+        assert metrics.get("selector_decision_latency_ms", 0.0) >= 0.0
+        assert metrics.get("total_mission_ms", 0.0) >= 0.0
+        assert metrics.get("stage_count", 0) >= 1
+        assert isinstance(metrics.get("stage_timings", []), list)
+
+    def test_start_mission_blocks_invalid_persona_contract(self, runtime, minimal_specs):
+        handle = runtime.create_mission(
+            workflow_id="wf-contract",
+            program_id="prog-contract",
+            execution_mode="graph_only",
+            agent_specs=minimal_specs,
+            persona_contract={"class": "governor"},
+        )
+        final = runtime.start_mission(handle.mission_id)
+        assert "contract validation blocked" in final.get("error", "").lower()
+        status = runtime.get_status(handle.mission_id)
+        assert status.state == "failed"
+
+    def test_start_mission_selector_denies_unsafe_backend(self, runtime, minimal_specs):
+        handle = runtime.create_mission(
+            workflow_id="wf-deny",
+            program_id="prog-deny",
+            execution_mode="live",
+            agent_specs=minimal_specs,
+            selector_inputs={
+                "tenant_mode": "multi",
+                "requested_backend": "host_shell",
+            },
+        )
+        final = runtime.start_mission(handle.mission_id)
+        assert "selector denied" in final.get("error", "").lower()
+        status = runtime.get_status(handle.mission_id)
+        assert status.state == "failed"
 
     def test_get_status(self, runtime, minimal_specs):
         handle = runtime.create_mission(

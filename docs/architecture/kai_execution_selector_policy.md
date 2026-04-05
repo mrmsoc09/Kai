@@ -26,6 +26,7 @@ Deterministically choose the execution substrate per mission stage while preserv
 | `tool_privilege_level` | enum (`read`, `write`, `intrusive`) | Tool action severity |
 | `tenant_mode` | enum (`single`, `multi`) | Isolation model |
 | `telemetry_required` | enum (`standard`, `strict`) | Audit/trace obligations |
+| `performance_profile` | map | Benchmark-derived substrate reliability/latency profile |
 
 ## Hard Guards (Applied First)
 
@@ -43,6 +44,14 @@ Deterministically choose the execution substrate per mission stage while preserv
 4. Else choose `LANGGRAPH_PRIMARY`.
 
 Tie-breaker: prefer `LANGGRAPH_PRIMARY` when two candidates satisfy requirements.
+
+## Performance Overrides (Deterministic)
+
+After base selection, Kai may apply a deterministic override when a benchmark profile is provided:
+
+1. If selected substrate `failure_rate >= 0.20` or `retry_frequency >= 0.20`, fail over to configured fallback substrate.
+2. If selected substrate is `DEEPAGENTS_SPECIALIST` or `PRAISON_EXTERNAL` and `p95_latency_ms > 2 * latency_slo_ms`, fail over.
+3. Every override is emitted in selector audit tags (`selector:perf_reliability_override` or `selector:perf_latency_override`) and required guards.
 
 ## Do-Not-Use Conditions
 

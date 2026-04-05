@@ -55,6 +55,7 @@ class K1GraphState(TypedDict, total=False):
     # "live" = real execution, "graph_only" = topology validation only,
     # "tool_mock" = agents run with mock tool results, "replay" = checkpoint replay
     execution_mode: str
+    selector_inputs: dict[str, Any]  # optional policy hints for substrate selector
 
     # -- Execution state ----------------------------------------------------------
     phase: str               # current execution phase (e.g. "governance", "recon")
@@ -108,8 +109,11 @@ class K1GraphState(TypedDict, total=False):
     strategy_profiles_used: Annotated[list[dict[str, Any]], operator.add]
     # Knowledge lessons produced during this mission — {lesson_id, lesson_type, confidence}
     knowledge_lessons_generated: Annotated[list[dict[str, Any]], operator.add]
+    selector_policy_artifacts: Annotated[list[dict[str, Any]], operator.add]
     # Runtime performance counters (last-write-wins, aggregated at mission level)
     runtime_metrics: dict[str, Any]
+    persona_contract: dict[str, Any]
+    persona_contract_validation: dict[str, Any]
 
 
 def make_initial_state(
@@ -173,6 +177,10 @@ def make_initial_state(
         strategy_profiles_used=[],
         knowledge_lessons_generated=[],
         runtime_metrics={},
+        selector_inputs={},
+        selector_policy_artifacts=[],
+        persona_contract={},
+        persona_contract_validation={},
     )
 
 
@@ -186,6 +194,7 @@ ACCUMULATIVE_FIELDS: frozenset[str] = frozenset({
     "approvals_required", "approvals_resolved",
     "adaptive_plan_patches_applied", "adaptive_plan_patches_rejected",
     "errors", "strategy_profiles_used", "knowledge_lessons_generated",
+    "selector_policy_artifacts",
 })
 
 
@@ -243,4 +252,10 @@ def state_snapshot(state: K1GraphState) -> dict[str, Any]:
         "profiles_used_count": len(state.get("strategy_profiles_used", [])),
         "lessons_generated_count": len(state.get("knowledge_lessons_generated", [])),
         "runtime_metrics":     state.get("runtime_metrics", {}),
+        "selector_policy_artifact_count": len(state.get("selector_policy_artifacts", [])),
+        "selected_substrate": (
+            state.get("selector_policy_artifacts", [{}])[-1].get("selected_substrate", "")
+            if isinstance(state.get("selector_policy_artifacts", []), list) and state.get("selector_policy_artifacts")
+            else ""
+        ),
     }

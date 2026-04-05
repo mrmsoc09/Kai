@@ -1,0 +1,1 @@
+{"finding_id": "7f922f8b-2a08-4566-a1dd-e330e9b0fe62", "tool": "nikto", "target": "https://example.com", "value": "nikto:telemetry:failure", "first_seen": "2026-04-05T09:45:09.688728+00:00", "last_seen": "2026-04-05T09:45:09.688728+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}

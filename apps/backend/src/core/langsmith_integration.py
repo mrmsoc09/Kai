@@ -37,6 +37,7 @@ import os
 import random
 import time
 import uuid
+from collections import deque
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -177,8 +178,10 @@ class TraceCorrelation:
     workflow_id: str = ""
     program_id: str = ""
     phase: str = ""
+    stage_id: str = ""
     node_id: str = ""
     agent_id: str = ""
+    tenant_id: str = ""
 
     # LangSmith run hierarchy
     trace_id: str = field(default_factory=lambda: str(uuid.uuid4()))
@@ -188,6 +191,14 @@ class TraceCorrelation:
     # Metadata carried on every span
     execution_mode: str = "live"
     specialist_type: str = ""
+    selected_substrate: str = ""
+    fallback_substrate: str = ""
+    risk_band: str = ""
+    thread_id: str = ""
+    checkpoint_id: str = ""
+    tool_execution_id: str = ""
+    report_id: str = ""
+    scope_decision_id: str = ""
 
     def to_metadata(self) -> dict[str, Any]:
         """Build LangSmith metadata dict from correlation context."""
@@ -196,9 +207,21 @@ class TraceCorrelation:
             "kai_workflow_id": self.workflow_id,
             "kai_program_id": self.program_id,
             "kai_phase": self.phase,
+            "kai_stage_id": self.stage_id,
             "kai_node_id": self.node_id,
             "kai_agent_id": self.agent_id,
             "kai_execution_mode": self.execution_mode,
+            "kai_tenant_id": self.tenant_id,
+            "kai_selected_substrate": self.selected_substrate,
+            "kai_fallback_substrate": self.fallback_substrate,
+            "kai_risk_band": self.risk_band,
+            "kai_thread_id": self.thread_id,
+            "kai_checkpoint_id": self.checkpoint_id,
+            "kai_tool_execution_id": self.tool_execution_id,
+            "kai_report_id": self.report_id,
+            "kai_scope_decision_id": self.scope_decision_id,
+            "kai_audit_primary": "true",
+            "kai_telemetry_plane": "secondary",
         }
         if self.specialist_type:
             meta["kai_specialist_type"] = self.specialist_type
@@ -213,6 +236,12 @@ class TraceCorrelation:
             tags.append(f"phase:{self.phase}")
         if self.execution_mode:
             tags.append(f"mode:{self.execution_mode}")
+        tags.append("audit:primary_kai")
+        tags.append("telemetry:secondary_langsmith")
+        if self.selected_substrate:
+            tags.append(f"substrate:{self.selected_substrate.lower()}")
+        if self.risk_band:
+            tags.append(f"risk:{self.risk_band}")
         if self.specialist_type:
             tags.append(f"specialist:{self.specialist_type}")
         return tags
@@ -231,13 +260,21 @@ class TraceCorrelation:
             workflow_id=self.workflow_id,
             program_id=self.program_id,
             phase=phase or self.phase,
+            stage_id=self.stage_id,
             node_id=node_id or self.node_id,
             agent_id=agent_id or self.agent_id,
+            tenant_id=self.tenant_id,
             trace_id=self.trace_id,
             parent_run_id=self.run_id,
             run_id=str(uuid.uuid4()),
             execution_mode=self.execution_mode,
             specialist_type=specialist_type or self.specialist_type,
+            selected_substrate=self.selected_substrate,
+            fallback_substrate=self.fallback_substrate,
+            risk_band=self.risk_band,
+            thread_id=self.thread_id,
+            checkpoint_id=self.checkpoint_id,
+            scope_decision_id=self.scope_decision_id,
         )
 
 
@@ -264,6 +301,9 @@ class LangSmithBridge:
         self._config = config or load_langsmith_config()
         self._client: _LangSmithClient | None = None  # type: ignore[assignment]
         self._initialized = False
+        self._degraded_export_failures: int = 0
+        self._recent_export_failures: deque[dict[str, Any]] = deque(maxlen=200)
+        self._evaluation_hooks: dict[str, Callable[[dict[str, Any]], None]] = {}
 
     @property
     def config(self) -> LangSmithConfig:
@@ -273,6 +313,71 @@ class LangSmithBridge:
     def is_operational(self) -> bool:
         """True if LangSmith is enabled, available, and configured."""
         return self._config.is_operational()
+
+    @property
+    def degraded_export_failures(self) -> int:
+        return self._degraded_export_failures
+
+    def register_evaluation_hook(
+        self,
+        hook_name: str,
+        callback: Callable[[dict[str, Any]], None],
+    ) -> None:
+        """
+        Register a best-effort evaluation hook.
+
+        Hooks are observational only and must not alter Kai decisions.
+        """
+        self._evaluation_hooks[hook_name] = callback
+
+    def unregister_evaluation_hook(self, hook_name: str) -> None:
+        self._evaluation_hooks.pop(hook_name, None)
+
+    def _record_export_failure(self, *, reason: str, context: dict[str, Any] | None = None) -> None:
+        self._degraded_export_failures += 1
+        self._recent_export_failures.append({
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "reason": reason,
+            "context": context or {},
+        })
+        logger.warning("LangSmithBridge degraded export: %s", reason)
+
+    def _emit_kai_security_event(self, *, event_type: str, detail: dict[str, Any]) -> None:
+        """
+        Emit internal telemetry security/degradation events into Kai audit plane.
+        """
+        try:
+            from apps.backend.src.core.praison_execution_events import MissionEvent, emit
+
+            emit(MissionEvent(event_type=event_type, detail=detail))
+        except Exception:
+            logger.debug("LangSmithBridge: failed to emit internal Kai event %s", event_type)
+
+    def _run_evaluation_hooks(
+        self,
+        *,
+        event_type: str,
+        correlation: TraceCorrelation | None,
+        payload: dict[str, Any],
+    ) -> None:
+        if not self._evaluation_hooks:
+            return
+        hook_payload = {
+            "event_type": event_type,
+            "correlation": correlation.to_metadata() if correlation else {},
+            "payload": payload,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "observability_plane": "langsmith_secondary",
+            "audit_source_of_truth": "kai",
+        }
+        for hook_name, hook in list(self._evaluation_hooks.items()):
+            try:
+                hook(hook_payload)
+            except Exception as exc:
+                self._record_export_failure(
+                    reason=f"evaluation_hook_failed:{hook_name}",
+                    context={"error": str(exc), "event_type": event_type},
+                )
 
     # -- Client lifecycle ------------------------------------------------------
 
@@ -348,7 +453,11 @@ class LangSmithBridge:
             return None
 
         # Build metadata
-        metadata = {}
+        metadata = {
+            "kai_audit_primary": True,
+            "telemetry_plane": "secondary",
+            "governance_authority": "kai",
+        }
         tags = list(self._config.tags)
         parent_run_id = None
         run_id = str(uuid.uuid4())
@@ -364,6 +473,16 @@ class LangSmithBridge:
 
         # Apply redaction to inputs
         safe_inputs = self._redact(inputs or {})
+        if safe_inputs is None:
+            self._record_export_failure(
+                reason="redaction_failed_on_create_run",
+                context={"run_name": name, "run_type": run_type},
+            )
+            self._emit_kai_security_event(
+                event_type="telemetry_redaction_failure",
+                detail={"run_name": name, "run_type": run_type, "action": "drop_export"},
+            )
+            return None
 
         try:
             client.create_run(
@@ -379,6 +498,14 @@ class LangSmithBridge:
             )
             return run_id
         except Exception as exc:
+            self._record_export_failure(
+                reason="create_run_failed",
+                context={"run_name": name, "error": str(exc)},
+            )
+            self._emit_kai_security_event(
+                event_type="telemetry_export_degraded",
+                detail={"operation": "create_run", "error": str(exc)},
+            )
             logger.warning("LangSmithBridge: create_run failed: %s", exc)
             return None
 
@@ -404,6 +531,16 @@ class LangSmithBridge:
             return
 
         safe_outputs = self._redact(outputs or {})
+        if safe_outputs is None:
+            self._record_export_failure(
+                reason="redaction_failed_on_end_run",
+                context={"run_id": run_id},
+            )
+            self._emit_kai_security_event(
+                event_type="telemetry_redaction_failure",
+                detail={"run_id": run_id, "action": "drop_export"},
+            )
+            return
 
         try:
             client.update_run(
@@ -413,6 +550,14 @@ class LangSmithBridge:
                 end_time=datetime.now(timezone.utc),
             )
         except Exception as exc:
+            self._record_export_failure(
+                reason="end_run_failed",
+                context={"run_id": run_id, "error": str(exc)},
+            )
+            self._emit_kai_security_event(
+                event_type="telemetry_export_degraded",
+                detail={"operation": "end_run", "run_id": run_id, "error": str(exc)},
+            )
             logger.warning("LangSmithBridge: end_run failed for %s: %s", run_id, exc)
 
     # -- Context manager for run lifecycle ------------------------------------
@@ -494,6 +639,48 @@ class LangSmithBridge:
 
         return decorator
 
+    # -- Correlation extraction -------------------------------------------------
+
+    @staticmethod
+    def _event_correlation(
+        event: Any,
+        *,
+        parent_run_id: str = "",
+    ) -> TraceCorrelation:
+        raw_detail = getattr(event, "detail", {}) or {}
+        detail = raw_detail if isinstance(raw_detail, dict) else {}
+        mission_id = str(getattr(event, "mission_id", "") or detail.get("mission_id", ""))
+        workflow_id = str(getattr(event, "workflow_id", "") or detail.get("workflow_id", ""))
+        program_id = str(getattr(event, "program_id", "") or detail.get("program_id", ""))
+        phase = str(getattr(event, "phase", "") or detail.get("phase", ""))
+        node_id = str(getattr(event, "node_id", "") or detail.get("node_id", ""))
+        agent_id = str(getattr(event, "agent_id", "") or detail.get("agent_id", ""))
+        contract_id = str(getattr(event, "contract_id", "") or detail.get("contract_id", ""))
+        artifact_id = str(getattr(event, "artifact_id", "") or detail.get("artifact_id", ""))
+        stage_id = str(detail.get("stage_id") or phase or "mission")
+        report_id = str(detail.get("final_report_id") or detail.get("report_id") or artifact_id)
+        return TraceCorrelation(
+            mission_id=mission_id,
+            workflow_id=workflow_id,
+            program_id=program_id,
+            phase=phase,
+            stage_id=stage_id,
+            node_id=node_id,
+            agent_id=agent_id,
+            tenant_id=str(detail.get("tenant_id") or ""),
+            parent_run_id=parent_run_id,
+            execution_mode=str(detail.get("execution_mode") or ""),
+            selected_substrate=str(detail.get("selected_substrate") or ""),
+            fallback_substrate=str(detail.get("fallback_substrate") or ""),
+            risk_band=str(detail.get("risk_band") or ""),
+            thread_id=str(detail.get("thread_id") or mission_id),
+            checkpoint_id=str(detail.get("checkpoint_id") or ""),
+            tool_execution_id=str(detail.get("tool_execution_id") or ""),
+            report_id=report_id,
+            scope_decision_id=str(detail.get("scope_decision_id") or ""),
+            specialist_type=str(detail.get("specialist_type") or contract_id),
+        )
+
     # -- EventBus integration --------------------------------------------------
 
     def create_event_subscriber(self) -> Callable:
@@ -503,6 +690,8 @@ class LangSmithBridge:
         The subscriber converts MissionEvents to LangSmith run updates,
         mapping event_type to run operations:
           - mission_started → create top-level chain run
+          - stage_execution_started → create stage chain run
+          - stage_execution_completed → end stage chain run
           - node_entered → create child chain run
           - node_completed → end chain run
           - llm_invocation_started → create child llm run
@@ -514,21 +703,27 @@ class LangSmithBridge:
         active_runs: dict[str, str] = {}  # key → run_id
 
         def _subscriber(event: Any) -> None:
-            if not self.should_trace():
+            event_type = getattr(event, "event_type", "")
+            critical_events = {
+                "policy_decision",
+                "approval_requested",
+                "approval_resolved",
+                "node_failed",
+                "mission_completed",
+            }
+            if event_type in critical_events:
+                if not self.is_operational:
+                    return
+            elif not self.should_trace():
                 return
 
-            event_type = getattr(event, "event_type", "")
             mission_id = getattr(event, "mission_id", "")
             node_id = getattr(event, "node_id", "")
             agent_id = getattr(event, "agent_id", "")
             detail = getattr(event, "detail", {})
 
             if event_type == "mission_started":
-                correlation = TraceCorrelation(
-                    mission_id=mission_id,
-                    workflow_id=getattr(event, "workflow_id", ""),
-                    program_id=getattr(event, "program_id", ""),
-                )
+                correlation = self._event_correlation(event)
                 run_id = self.create_run(
                     name=mission_run_name(mission_id),
                     run_type="chain",
@@ -547,17 +742,16 @@ class LangSmithBridge:
                         outputs=detail,
                         error=detail.get("error"),
                     )
+                self._run_evaluation_hooks(
+                    event_type=event_type,
+                    correlation=self._event_correlation(event),
+                    payload=detail or {},
+                )
 
             elif event_type == "node_entered":
                 parent_key = f"mission:{mission_id}"
                 parent_run_id = active_runs.get(parent_key, "")
-                correlation = TraceCorrelation(
-                    mission_id=mission_id,
-                    node_id=node_id,
-                    agent_id=agent_id,
-                    parent_run_id=parent_run_id,
-                    phase=getattr(event, "phase", ""),
-                )
+                correlation = self._event_correlation(event, parent_run_id=parent_run_id)
                 run_id = self.create_run(
                     name=node_run_name(node_id, agent_id),
                     run_type="chain",
@@ -567,11 +761,44 @@ class LangSmithBridge:
                 if run_id:
                     active_runs[f"node:{mission_id}:{node_id}"] = run_id
 
+            elif event_type == "stage_execution_started":
+                stage_id = str(detail.get("stage_id") or getattr(event, "phase", "") or "mission")
+                stage_node = str(detail.get("node_id") or node_id or "stage")
+                parent_key = f"node:{mission_id}:{stage_node}"
+                parent_run_id = active_runs.get(parent_key) or active_runs.get(f"mission:{mission_id}", "")
+                correlation = self._event_correlation(event, parent_run_id=parent_run_id)
+                run_id = self.create_run(
+                    name=f"stage:{stage_id}:{stage_node}",
+                    run_type="chain",
+                    correlation=correlation,
+                    inputs=detail or {},
+                )
+                if run_id:
+                    active_runs[f"stage:{mission_id}:{stage_id}:{stage_node}"] = run_id
+
+            elif event_type == "stage_execution_completed":
+                stage_id = str(detail.get("stage_id") or getattr(event, "phase", "") or "mission")
+                stage_node = str(detail.get("node_id") or node_id or "stage")
+                key = f"stage:{mission_id}:{stage_id}:{stage_node}"
+                run_id = active_runs.pop(key, None)
+                if run_id:
+                    self.end_run(run_id, outputs=detail or {})
+                self._run_evaluation_hooks(
+                    event_type=event_type,
+                    correlation=self._event_correlation(event),
+                    payload=detail or {},
+                )
+
             elif event_type == "node_completed":
                 key = f"node:{mission_id}:{node_id}"
                 run_id = active_runs.pop(key, None)
                 if run_id:
                     self.end_run(run_id, outputs=detail)
+                self._run_evaluation_hooks(
+                    event_type=event_type,
+                    correlation=self._event_correlation(event),
+                    payload=detail or {},
+                )
 
             elif event_type == "node_failed":
                 key = f"node:{mission_id}:{node_id}"
@@ -581,12 +808,49 @@ class LangSmithBridge:
                         run_id,
                         error=detail.get("error", "unknown error"),
                     )
+            elif event_type == "tool_invocation_started":
+                parent_key = f"node:{mission_id}:{detail.get('node_id', node_id)}"
+                parent_run_id = active_runs.get(parent_key) or active_runs.get(f"mission:{mission_id}", "")
+                correlation = self._event_correlation(event, parent_run_id=parent_run_id)
+                tool_name = str(detail.get("tool_id") or "unknown_tool")
+                tool_exec = str(detail.get("tool_execution_id") or getattr(event, "event_id", ""))
+                run_id = self.create_run(
+                    name=tool_run_name(tool_name, str(correlation.risk_band or "")),
+                    run_type="tool",
+                    correlation=correlation,
+                    inputs=detail or {},
+                )
+                if run_id:
+                    active_runs[f"tool:{mission_id}:{tool_exec}"] = run_id
+            elif event_type == "tool_invocation_completed":
+                tool_exec = str(detail.get("tool_execution_id") or "")
+                key = f"tool:{mission_id}:{tool_exec}"
+                run_id = active_runs.pop(key, None)
+                if run_id:
+                    self.end_run(run_id, outputs=detail or {})
+                self._run_evaluation_hooks(
+                    event_type=event_type,
+                    correlation=self._event_correlation(event),
+                    payload=detail or {},
+                )
+            elif event_type == "policy_decision":
+                # Policy events are sampled at 100% when tracing is active.
+                parent_key = f"node:{mission_id}:{detail.get('node_id', node_id)}"
+                parent_run_id = active_runs.get(parent_key) or active_runs.get(f"mission:{mission_id}", "")
+                correlation = self._event_correlation(event, parent_run_id=parent_run_id)
+                self.create_run(
+                    name="policy:decision",
+                    run_type="chain",
+                    correlation=correlation,
+                    inputs=detail or {},
+                    extra={"policy_event": True},
+                )
 
         return _subscriber
 
     # -- Redaction pipeline ----------------------------------------------------
 
-    def _redact(self, data: dict[str, Any]) -> dict[str, Any]:
+    def _redact(self, data: dict[str, Any]) -> dict[str, Any] | None:
         """Apply redaction policy to data before sending to LangSmith."""
         if self._config.redact_mode == "none":
             return data
@@ -598,6 +862,9 @@ class LangSmithBridge:
         except ImportError:
             # Redaction module not available — apply basic redaction
             return _basic_redact(data)
+        except Exception as exc:
+            logger.warning("LangSmithBridge: redaction failed: %s", exc)
+            return None
 
     # -- Mission trace helpers -------------------------------------------------
 

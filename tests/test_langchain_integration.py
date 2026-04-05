@@ -83,6 +83,7 @@ from apps.backend.src.core.langchain_tool_registry import (
     ToolBandViolationError,
     ToolNotPermittedError,
     ToolScopeViolationError,
+    ToolWrapperBypassError,
     get_tool_registry,
 )
 from apps.backend.src.core.langchain_middleware import (
@@ -731,6 +732,50 @@ class TestK1ToolRegistryGovernance:
         call_args = mock_sv.call_args
         assert call_args[0][0] == "scope-checked.example.com"  # positional target
         assert call_args[0][1] == "test_program"               # positional program_id
+
+    def test_governed_tool_blocks_wrapper_bypass_args(self) -> None:
+        """Direct substrate bypass fields are blocked by wrapper-only policy."""
+        import apps.backend.src.core.langchain_tool_registry as tr
+        if not getattr(tr, "_LANGCHAIN_AVAILABLE", False):
+            pytest.skip("langchain_core not available in this environment")
+        ctx = _make_tool_context(execution_mode="live", allowed_tool_ids=frozenset())
+        entry = _make_entry("passive_tool", "recon", "passive")
+        tool = K1GovernedTool(name="passive_tool", description="desc", catalog_entry=entry, context=ctx)
+
+        with pytest.raises(ToolWrapperBypassError):
+            tool._run("example.com", args={"bypass_wrappers": True})
+
+    def test_governed_tool_emits_performance_usage_metadata(self) -> None:
+        """Completed telemetry includes duration/usage metadata for benchmarking."""
+        import apps.backend.src.core.langchain_tool_registry as tr
+        if not getattr(tr, "_LANGCHAIN_AVAILABLE", False):
+            pytest.skip("langchain_core not available in this environment")
+        ctx = _make_tool_context(execution_mode="live", allowed_tool_ids=frozenset())
+        entry = _make_entry("passive_tool", "recon", "passive")
+        tool = K1GovernedTool(name="passive_tool", description="desc", catalog_entry=entry, context=ctx)
+
+        with patch("apps.backend.src.core.langchain_tool_registry.scope_validator", return_value=True):
+            with patch("apps.backend.src.core.langchain_tool_registry.emit") as mock_emit:
+                tool._run(
+                    "example.com",
+                    args={
+                        "estimated_tokens": 42,
+                        "estimated_cost_cents": 0.12,
+                        "retry_count": 2,
+                    },
+                )
+
+        completed = [
+            call.args[0]
+            for call in mock_emit.call_args_list
+            if call.args and getattr(call.args[0], "event_type", "") == "tool_invocation_completed"
+        ]
+        assert completed, "tool_invocation_completed event not emitted"
+        detail = completed[-1].detail
+        assert detail["estimated_tokens"] == 42
+        assert detail["estimated_cost_cents"] == pytest.approx(0.12)
+        assert detail["retry_count"] == 2
+        assert detail["duration_ms"] >= 0.0
 
     def test_get_tools_for_phase_recon(self) -> None:
         """get_tools_for_phase('recon') returns only recon/osint category tools."""

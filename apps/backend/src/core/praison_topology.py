@@ -21,7 +21,10 @@ from apps.backend.src.core.trilium.session_manager import SessionManager
 from apps.backend.src.core.trilium.exploit_coordinator import ExploitCoordinator
 from apps.backend.src.core.trilium.vulnerability_chainer import VulnerabilityChainer
 from apps.backend.src.core.trilium.handoff import StateHandoffSystem
-from apps.backend.src.core.governance.governor import Governor 
+try:
+    from apps.backend.src.core.governance.governor import Governor  # type: ignore
+except Exception:  # pragma: no cover - compatibility shim for renamed governor classes
+    Governor = Any  # type: ignore[misc,assignment]
 
 logger = logging.getLogger(__name__)
 

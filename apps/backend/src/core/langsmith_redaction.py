@@ -47,6 +47,18 @@ _SECRET_KEY_PATTERNS: frozenset[str] = frozenset({
     "smtp_password", "mail_password",
 })
 
+# Governance-sensitive fields that should not be exported in clear text.
+_GOVERNANCE_KEY_PATTERNS: frozenset[str] = frozenset({
+    "governance_decision",
+    "approval_id",
+    "approval_requirements",
+    "scope_decision",
+    "scope_decision_id",
+    "policy_manifest",
+    "contract_id",
+    "delegation_scope",
+})
+
 # Regex patterns for value-level redaction
 _VALUE_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     # API keys (various formats)
@@ -157,6 +169,8 @@ def _redact_value(
     # 1. Key-based redaction (always, regardless of mode)
     if _is_secret_key(key_lower):
         return "[REDACTED]"
+    if _is_governance_key(key_lower):
+        return "[REDACTED:GOVERNANCE]"
 
     # 2. Handle nested dicts
     if isinstance(value, dict):
@@ -181,6 +195,11 @@ def _redact_value(
 def _is_secret_key(key_lower: str) -> bool:
     """Check if a key name matches known secret patterns."""
     return any(pattern in key_lower for pattern in _SECRET_KEY_PATTERNS)
+
+
+def _is_governance_key(key_lower: str) -> bool:
+    """Check if a key name is governance-sensitive."""
+    return any(pattern in key_lower for pattern in _GOVERNANCE_KEY_PATTERNS)
 
 
 def _redact_string_entry(key_lower: str, value: str, *, mode: str) -> str:

@@ -74,6 +74,31 @@ from apps.backend.src.core.praison_execution_events import (
 
 logger = logging.getLogger(__name__)
 
+_WRAPPER_BYPASS_KEYS = frozenset({
+    "bypass_wrappers",
+    "bypass_governance",
+    "direct_execute",
+    "raw_command",
+    "shell_command",
+    "subprocess_cmd",
+    "execution_backend",
+    "execution_substrate",
+})
+
+
+def _wrapper_bypass_requested(kwargs: dict[str, Any]) -> bool:
+    for key in _WRAPPER_BYPASS_KEYS:
+        if key not in kwargs:
+            continue
+        value = kwargs.get(key)
+        if value in (None, False, "", 0):
+            continue
+        if key in {"execution_backend", "execution_substrate"}:
+            if str(value).strip().lower() in {"wrapper", "governed", "celery", "celery_dispatch"}:
+                continue
+        return True
+    return False
+
 
 # -- Fire-and-forget tool run persistence -------------------------------------
 
@@ -196,6 +221,22 @@ class GovernedToolWrapper:
 
     def __call__(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         """Execute tool with governance validation."""
+        if _wrapper_bypass_requested(kwargs):
+            msg = "Wrapper-only enforcement blocked direct substrate/tool bypass request."
+            emit(policy_decision_event(
+                mission_id=self._mission_id,
+                workflow_id=self._workflow_id,
+                program_id=self._program_id,
+                decision="blocked",
+                reason=msg,
+                agent_id=self._identity.agent_id,
+            ))
+            return {
+                "tool_id": self.tool_id,
+                "status": "blocked",
+                "reason": msg,
+            }
+
         # Step 1: Governance check
         try:
             from apps.backend.src.core.praison_governor import get_governor

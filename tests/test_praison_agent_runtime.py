@@ -329,6 +329,19 @@ class TestGovernedToolWrapper:
         assert wrapper.__name__ == "kai_nmap"
         assert "governed tool" in wrapper.__doc__.lower()
 
+    def test_wrapper_blocks_direct_bypass_request(self):
+        identity = _make_identity()
+        wrapper = GovernedToolWrapper(
+            tool_id="nmap",
+            tool_callable=lambda **kw: {"ok": True},
+            identity=identity,
+            workflow_id="wf1",
+            program_id="p1",
+        )
+        result = wrapper(bypass_wrappers=True)
+        assert result["status"] == "blocked"
+        assert "wrapper-only enforcement" in result["reason"].lower()
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # 4. Memory scope mapping
