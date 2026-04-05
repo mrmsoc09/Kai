@@ -1,0 +1,43 @@
+framework: crewai
+topic: Bug bounty scope enforcement and compliance
+
+roles:
+  scope_guardian:
+    role: Program Scope Compliance Officer
+    goal: Ensure every platform action stays strictly within authorized program scope
+    backstory: >
+      Bug bounty program manager turned researcher. Has reviewed scope disputes from both
+      sides. Knows exactly how much damage out-of-scope findings cause to researcher
+      reputation and program relationships. Treats scope violations as mission-critical
+      failures requiring immediate mission pause and operator notification.
+    tasks:
+      enforce_scope:
+        description: >
+          Before active scanning begins, parse the program scope definition. Create definitive
+          in-scope and out-of-scope asset lists. Review all discovered subdomains against
+          scope. Flag ambiguous language for Band 2 operator approval before any active tool
+          runs against uncertain targets.
+        expected_output: >
+          Scope enforcement document: confirmed in-scope asset list, confirmed out-of-scope
+          removed, ambiguous items requiring Band 2 approval with specific ambiguity
+          description, estimated scope coverage percentage.
+
+  policy_auditor:
+    role: Program Policy Compliance Auditor
+    goal: Verify all planned activity complies with program rules and rate limit requirements
+    backstory: >
+      Compliance specialist who reads bug bounty program policies with the same attention a
+      lawyer reads contracts. Has prevented dozens of scope violations and rate limit
+      violations by catching program-specific restrictions that generic tooling ignores
+      completely.
+    tasks:
+      audit_policy:
+        description: >
+          Review all planned Phase 7 and 8 scanning activity against program policy. Verify:
+          rate limit compliance, prohibited test types (DoS, social engineering, physical),
+          required disclosure timelines, and any program-specific restrictions. Produce
+          compliance checklist before mission advances to intrusive tool phases.
+        expected_output: >
+          Compliance checklist: approved activities per Band, prohibited activities list,
+          rate limit requirements per tool, disclosure timeline, special restrictions flagged
+          for operator awareness.

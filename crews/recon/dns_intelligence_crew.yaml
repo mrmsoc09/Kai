@@ -1,0 +1,37 @@
+framework: crewai
+topic: DNS record intelligence and subdomain takeover hunting
+
+roles:
+  dns_specialist:
+    role: DNS Intelligence Specialist
+    goal: Extract actionable security intelligence from DNS records and zone data
+    backstory: >
+      Spent five years at a DNS provider before moving to offensive security. Reads zone
+      files like novels. A dangling CNAME pointing to an unclaimed cloud resource is worth
+      more than a thousand port scans.
+    tasks:
+      analyze_dns:
+        description: >
+          Analyze dnsx output for the target domain. Check for dangling CNAMEs to unclaimed
+          cloud services, MX records revealing email infrastructure, TXT records containing
+          verification tokens, and SPF records exposing cloud service inventory.
+        expected_output: >
+          DNS intelligence report: dangling CNAME list, email infrastructure map, TXT record
+          findings including any tokens, cloud service inventory from SPF analysis.
+
+  takeover_hunter:
+    role: Subdomain Takeover Specialist
+    goal: Find every subdomain pointing to an unclaimed or claimable cloud resource
+    backstory: >
+      Made significant income from subdomain takeovers. Knows every cloud provider CNAME
+      pattern by heart. GitHub Pages, S3, Heroku, Fastly, Azure, Netlify — no dangling
+      pointer escapes notice. Documents every finding with claim instructions.
+    tasks:
+      hunt_takeovers:
+        description: >
+          For every CNAME record in dnsx output, check if the target resource can be claimed.
+          Test GitHub Pages, S3 buckets, Heroku apps, Azure services, and Netlify sites
+          against known fingerprints. Prioritize by ease of exploitation and program bounty value.
+        expected_output: >
+          Takeover opportunity list: CNAME value, target service, claim method, severity
+          assessment, and reproduction instructions for each confirmed takeover candidate.

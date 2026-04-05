@@ -1,0 +1,32 @@
+# KAISON AI Crew Registry
+# Maps hunt phases to primary and alternative crews
+# Format: PraisonAI documented roles YAML
+
+phase_crews:
+  phase_1_2_recon:
+    primary: crews/recon/primary_recon_crew.yaml
+    alternatives:
+      - crews/recon/certificate_intel_crew.yaml
+      - crews/recon/dns_intelligence_crew.yaml
+
+  phase_4_osint:
+    primary: crews/osint/organization_intel_crew.yaml
+    alternatives: []
+
+  phase_7_vulnerability:
+    primary: crews/vulnerability/primary_vuln_crew.yaml
+    alternatives:
+      - crews/vulnerability/business_logic_crew.yaml
+
+  phase_8_api:
+    primary: crews/api_testing/rest_api_crew.yaml
+    alternatives:
+      - crews/api_testing/graphql_specialist_crew.yaml
+
+governance_crews:
+  - crews/governance/scope_guardian_crew.yaml
+
+validation_crews:
+  autogen:
+    finding_review: crews/autogen/finding_review_conversation.yaml
+    severity_consensus: crews/autogen/severity_consensus.yaml
