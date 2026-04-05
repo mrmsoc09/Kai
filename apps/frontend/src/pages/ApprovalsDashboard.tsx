@@ -1,6 +1,7 @@
 /**
  * HiL Approvals Dashboard
  * Human-in-the-Loop approval workflow for email drafts and reports
+ * Plus Band 2+ tool execution approvals
  */
 
 import React, { useEffect, useState } from 'react';
@@ -15,29 +16,39 @@ import {
   ApprovalListResponse,
   ApprovalStats
 } from '../api/approvals';
+import {
+  orchestratorApi,
+  PendingApprovals,
+  ApprovalDecision,
+} from '../api/orchestrator';
 import StatusChip from '../components/StatusChip';
 import { useStore } from '../store/system';
 import { toast } from '../store/toasts';
 
 export default function ApprovalsDashboard() {
   const [approvals, setApprovals] = useState<ApprovalRequest[]>([]);
+  const [bandApprovals, setBandApprovals] = useState<any[]>([]);
   const [stats, setStats] = useState<ApprovalStats | null>(null);
   const [selected, setSelected] = useState<ApprovalRequest | null>(null);
+  const [selectedBand, setSelectedBand] = useState<any | null>(null);
   const [loading, setLoading] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
+  const [approvalType, setApprovalType] = useState<'email' | 'band'>('email');
   const userId = useStore((s) => s.auth.user?.id) || 'user1';
 
   async function loadData() {
     setLoading(true);
     try {
-      const [approvalsResp, statsResp] = await Promise.all([
+      const [approvalsResp, statsResp, bandApprovalsResp] = await Promise.all([
         listPendingApprovals(),
-        getApprovalStats()
+        getApprovalStats(),
+        orchestratorApi.getPendingApprovals()
       ]);
       setApprovals(approvalsResp.approvals);
       setStats(statsResp);
+      setBandApprovals(bandApprovalsResp.data.items || []);
     } catch (e: any) {
       toast.error(`Error loading approvals: ${e.message}`);
     } finally {
@@ -101,6 +112,55 @@ export default function ApprovalsDashboard() {
     }
   }
 
+  async function handleBandApprove() {
+    if (!selectedBand) return;
+    setActionInProgress(true);
+    try {
+      const decision: ApprovalDecision = {
+        approval_id: selectedBand.approval_id,
+        decision: 'approve',
+        decided_by: userId,
+        decided_at: new Date().toISOString(),
+      };
+      await orchestratorApi.submitApproval(decision);
+      toast.success('Tool execution approved!');
+      setSelectedBand(null);
+      void loadData();
+    } catch (e: any) {
+      toast.error(`Failed to approve: ${e.message}`);
+    } finally {
+      setActionInProgress(false);
+    }
+  }
+
+  async function handleBandReject() {
+    if (!selectedBand) return;
+    if (!rejectReason.trim()) {
+      toast.warning('Please provide a rejection reason');
+      return;
+    }
+    setActionInProgress(true);
+    try {
+      const decision: ApprovalDecision = {
+        approval_id: selectedBand.approval_id,
+        decision: 'reject',
+        reason: rejectReason,
+        decided_by: userId,
+        decided_at: new Date().toISOString(),
+      };
+      await orchestratorApi.submitApproval(decision);
+      toast.info('Tool execution rejected.');
+      setSelectedBand(null);
+      setShowRejectModal(false);
+      setRejectReason('');
+      void loadData();
+    } catch (e: any) {
+      toast.error(`Failed to reject: ${e.message}`);
+    } finally {
+      setActionInProgress(false);
+    }
+  }
+
   function copyEmailToClipboard() {
     if (!selected?.content?.email_draft) return;
 
@@ -134,11 +194,45 @@ export default function ApprovalsDashboard() {
       {/* Header */}
       <div style={{ marginBottom: '24px' }}>
         <h1 style={{ color: '#355E3B', marginBottom: '8px', fontSize: '28px' }}>
-          📋 HiL Approvals Dashboard
+          📋 Approvals Dashboard
         </h1>
         <p style={{ color: '#9CA3AF', fontSize: '14px' }}>
-          Review and approve email drafts before sending
+          Review and approve email drafts and tool execution requests
         </p>
+      </div>
+
+      {/* Approval Type Tabs */}
+      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid #2A2A2A', paddingBottom: '12px' }}>
+        <button
+          onClick={() => setApprovalType('email')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: approvalType === 'email' ? '#355E3B' : '#6B7280',
+            fontSize: '14px',
+            fontWeight: approvalType === 'email' ? 'bold' : 'normal',
+            cursor: 'pointer',
+            paddingBottom: '12px',
+            borderBottom: approvalType === 'email' ? '2px solid #355E3B' : 'none',
+          }}
+        >
+          Email Drafts ({approvals.length})
+        </button>
+        <button
+          onClick={() => setApprovalType('band')}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: approvalType === 'band' ? '#355E3B' : '#6B7280',
+            fontSize: '14px',
+            fontWeight: approvalType === 'band' ? 'bold' : 'normal',
+            cursor: 'pointer',
+            paddingBottom: '12px',
+            borderBottom: approvalType === 'band' ? '2px solid #355E3B' : 'none',
+          }}
+        >
+          Band 2+ Tool Execution ({bandApprovals.length})
+        </button>
       </div>
 
       {/* Stats Bar */}
@@ -169,7 +263,7 @@ export default function ApprovalsDashboard() {
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
             <h2 style={{ fontSize: '18px', color: '#355E3B' }}>
-              Pending Approvals ({approvals.length})
+              {approvalType === 'email' ? 'Email Drafts' : 'Band 2+ Requests'} ({approvalType === 'email' ? approvals.length : bandApprovals.length})
             </h2>
             <button
               onClick={() => loadData()}
@@ -191,54 +285,97 @@ export default function ApprovalsDashboard() {
             <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
               Loading...
             </div>
-          ) : approvals.length === 0 ? (
+          ) : approvalType === 'email' && approvals.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
-              ✅ No pending approvals
+              ✅ No pending email approvals
+            </div>
+          ) : approvalType === 'band' && bandApprovals.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#9CA3AF' }}>
+              ✅ No pending Band 2+ approvals
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {approvals.map(approval => (
-                <div
-                  key={approval.approval_id}
-                  onClick={() => selectApproval(approval)}
-                  style={{
-                    background: selected?.approval_id === approval.approval_id ? '#2A2A2A' : '#111111',
-                    border: selected?.approval_id === approval.approval_id ? '1px solid #355E3B' : '1px solid #1A1A1A',
-                    borderRadius: '8px',
-                    padding: '12px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{
-                      background: getSeverityColor(approval.approval_type),
-                      color: '#c7d2e0',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      fontSize: '11px',
-                      fontWeight: 'bold'
-                    }}>
-                      {approval.approval_type.replace('_', ' ').toUpperCase()}
-                    </span>
-                    <span style={{ fontSize: '11px', color: '#6B7280' }}>
-                      {formatDate(approval.created_at)}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#E5E7EB', marginBottom: '4px' }}>
-                    {approval.title}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>
-                    {approval.program_name || 'Unknown Program'}
-                  </div>
-                  {approval.content.findings_count !== undefined && (
-                    <div style={{ fontSize: '11px', color: '#D97706', marginTop: '4px' }}>
-                      {approval.content.findings_count} findings
-                      {approval.content.critical_count ? ` (${approval.content.critical_count} critical)` : ''}
+              {approvalType === 'email' ? (
+                approvals.map(approval => (
+                  <div
+                    key={approval.approval_id}
+                    onClick={() => selectApproval(approval)}
+                    style={{
+                      background: selected?.approval_id === approval.approval_id ? '#2A2A2A' : '#111111',
+                      border: selected?.approval_id === approval.approval_id ? '1px solid #355E3B' : '1px solid #1A1A1A',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{
+                        background: getSeverityColor(approval.approval_type),
+                        color: '#c7d2e0',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 'bold'
+                      }}>
+                        {approval.approval_type.replace('_', ' ').toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#6B7280' }}>
+                        {formatDate(approval.created_at)}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))}
+                    <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#E5E7EB', marginBottom: '4px' }}>
+                      {approval.title}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                      {approval.program_name || 'Unknown Program'}
+                    </div>
+                    {approval.content.findings_count !== undefined && (
+                      <div style={{ fontSize: '11px', color: '#D97706', marginTop: '4px' }}>
+                        {approval.content.findings_count} findings
+                        {approval.content.critical_count ? ` (${approval.content.critical_count} critical)` : ''}
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                bandApprovals.map((approval: any) => (
+                  <div
+                    key={approval.approval_id}
+                    onClick={() => setSelectedBand(approval)}
+                    style={{
+                      background: selectedBand?.approval_id === approval.approval_id ? '#2A2A2A' : '#111111',
+                      border: selectedBand?.approval_id === approval.approval_id ? '1px solid #355E3B' : '1px solid #1A1A1A',
+                      borderRadius: '8px',
+                      padding: '12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                      <span style={{
+                        background: approval.risk_level === 'critical' ? '#f44336' : approval.risk_level === 'high' ? '#ff9800' : '#2196f3',
+                        color: '#c7d2e0',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '11px',
+                        fontWeight: 'bold'
+                      }}>
+                        Band {approval.band} - {approval.risk_level.toUpperCase()}
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#6B7280' }}>
+                        {formatDate(approval.requested_at)}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: '14px', fontWeight: 'bold', color: '#E5E7EB', marginBottom: '4px' }}>
+                      {approval.tool_name}
+                    </div>
+                    <div style={{ fontSize: '12px', color: '#9CA3AF' }}>
+                      Target: {approval.target}
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
         </div>
@@ -252,9 +389,97 @@ export default function ApprovalsDashboard() {
           maxHeight: '700px',
           overflowY: 'auto'
         }}>
-          {!selected ? (
+          {approvalType === 'email' && !selected ? (
             <div style={{ textAlign: 'center', padding: '80px', color: '#9CA3AF' }}>
               ← Select an approval request to review
+            </div>
+          ) : approvalType === 'band' && !selectedBand ? (
+            <div style={{ textAlign: 'center', padding: '80px', color: '#9CA3AF' }}>
+              ← Select a Band 2+ approval to review
+            </div>
+          ) : approvalType === 'band' && selectedBand ? (
+            <div>
+              {/* Band Approval Details */}
+              <div style={{ marginBottom: '24px' }}>
+                <h2 style={{ fontSize: '20px', color: '#355E3B', marginBottom: '8px' }}>
+                  {selectedBand.tool_name}
+                </h2>
+                <p style={{ color: '#9CA3AF', fontSize: '14px' }}>
+                  {selectedBand.action_description}
+                </p>
+              </div>
+
+              {/* Approval Info */}
+              <div style={{
+                background: '#0F0F0F',
+                border: '1px solid #2A2A2A',
+                borderRadius: '8px',
+                padding: '16px',
+                marginBottom: '24px'
+              }}>
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Band</div>
+                  <div style={{ fontSize: '14px', color: '#E5E7EB', fontWeight: 'bold' }}>
+                    Band {selectedBand.band} - {selectedBand.risk_level.toUpperCase()}
+                  </div>
+                </div>
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Target</div>
+                  <div style={{ fontSize: '14px', color: '#E5E7EB' }}>
+                    {selectedBand.target}
+                  </div>
+                </div>
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Mission ID</div>
+                  <div style={{ fontSize: '12px', color: '#E5E7EB', fontFamily: 'monospace' }}>
+                    {selectedBand.mission_id}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '12px', color: '#9CA3AF' }}>Scan ID</div>
+                  <div style={{ fontSize: '12px', color: '#E5E7EB', fontFamily: 'monospace' }}>
+                    {selectedBand.scan_id}
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: 'flex', gap: '12px' }}>
+                <button
+                  onClick={handleBandApprove}
+                  disabled={actionInProgress}
+                  style={{
+                    flex: 1,
+                    background: '#10B981',
+                    color: '#c7d2e0',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    cursor: actionInProgress ? 'not-allowed' : 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                  }}
+                >
+                  {actionInProgress ? 'Processing...' : '✅ Approve'}
+                </button>
+                <button
+                  onClick={() => setShowRejectModal(true)}
+                  disabled={actionInProgress}
+                  style={{
+                    flex: 1,
+                    background: '#EF4444',
+                    color: '#c7d2e0',
+                    border: 'none',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    cursor: actionInProgress ? 'not-allowed' : 'pointer',
+                    fontWeight: 'bold',
+                    fontSize: '14px'
+                  }}
+                >
+                  {actionInProgress ? 'Processing...' : '❌ Reject'}
+                </button>
+              </div>
             </div>
           ) : (
             <div>
@@ -413,10 +638,10 @@ export default function ApprovalsDashboard() {
             width: '90%'
           }}>
             <h3 style={{ color: '#EF4444', marginBottom: '16px' }}>
-              Reject Draft
+              Reject {approvalType === 'email' ? 'Draft' : 'Tool Execution'}
             </h3>
             <p style={{ color: '#9CA3AF', fontSize: '14px', marginBottom: '16px' }}>
-              Please provide a reason for rejecting this draft:
+              Please provide a reason for rejecting this {approvalType === 'email' ? 'draft' : 'tool execution request'}:
             </p>
             <textarea
               value={rejectReason}
@@ -437,7 +662,7 @@ export default function ApprovalsDashboard() {
             />
             <div style={{ display: 'flex', gap: '12px' }}>
               <button
-                onClick={handleReject}
+                onClick={approvalType === 'email' ? handleReject : handleBandReject}
                 disabled={!rejectReason.trim() || actionInProgress}
                 style={{
                   flex: 1,

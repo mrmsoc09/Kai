@@ -61,6 +61,8 @@ import ToolAgentDashboard from './components/ToolAgentDashboard'
 import CrewAgentMonitor from './components/CrewAgentMonitor'
 import OrchestratorPanel from './components/OrchestratorPanel'
 import MasterFindingsView from './components/MasterFindingsView'
+import CommandConsole from './components/CommandConsole'
+import LLMProviderDashboard from './components/LLMProviderDashboard'
 
 function NotFound() {
   return (
@@ -142,6 +144,8 @@ export default function App() {
                 <Route path='/crew' element={<CrewAgentMonitor />} />
                 <Route path='/orchestrator' element={<OrchestratorPanel />} />
                 <Route path='/master-findings' element={<MasterFindingsView />} />
+                <Route path='/console' element={<CommandConsole />} />
+                <Route path='/providers' element={<LLMProviderDashboard />} />
 
                 {/* Legacy routes — keep for deep-link compatibility */}
                 <Route path='/opportunities' element={<Opportunities />} />
