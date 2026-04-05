@@ -63,6 +63,9 @@ import OrchestratorPanel from './components/OrchestratorPanel'
 import MasterFindingsView from './components/MasterFindingsView'
 import CommandConsole from './components/CommandConsole'
 import LLMProviderDashboard from './components/LLMProviderDashboard'
+import ToolRegistryBrowser from './components/ToolRegistryBrowser'
+import CrewYAMLBrowser from './components/CrewYAMLBrowser'
+import PlatformStatus from './components/PlatformStatus'
 
 function NotFound() {
   return (
@@ -146,6 +149,9 @@ export default function App() {
                 <Route path='/master-findings' element={<MasterFindingsView />} />
                 <Route path='/console' element={<CommandConsole />} />
                 <Route path='/providers' element={<LLMProviderDashboard />} />
+                <Route path='/registry' element={<ToolRegistryBrowser />} />
+                <Route path='/crews' element={<CrewYAMLBrowser />} />
+                <Route path='/status' element={<PlatformStatus />} />
 
                 {/* Legacy routes — keep for deep-link compatibility */}
                 <Route path='/opportunities' element={<Opportunities />} />

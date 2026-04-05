@@ -98,6 +98,17 @@ export interface LLMProvider {
   spent_today_usd?: number
 }
 
+export interface PlatformHealth {
+  overall: 'healthy' | 'degraded' | 'critical'
+  ready_to_hunt: boolean
+  services: Array<{
+    name: string
+    status: 'up' | 'down' | 'degraded'
+    detail: string
+    last_checked: string
+  }>
+}
+
 export const orchestratorApi = {
   getStatus: () =>
     apiClient.get<OrchestratorStatus>(
@@ -155,5 +166,10 @@ export const orchestratorApi = {
     apiClient.post<ChatMessage>(
       '/orchestrator/chat/message',
       { message }
+    ),
+
+  getPlatformHealth: () =>
+    apiClient.get<PlatformHealth>(
+      '/orchestrator/health/full'
     ),
 }

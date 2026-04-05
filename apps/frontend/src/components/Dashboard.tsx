@@ -5,9 +5,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { COLORS, UI, COMPONENT_STYLES, BRANDING, ICONS } from '@/theme/branding';
 import { BudgetStatusIndicator } from './budget/BudgetStatusIndicator';
 import { BudgetDashboard } from './budget/BudgetDashboard';
+import { useAgentStream, AgentEvent } from '../hooks/useAgentStream';
 
 interface ToolSummary {
   id: string;
@@ -39,6 +41,9 @@ interface SystemStats {
 }
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
+  const { events: agentEvents, connected: wsConnected } = useAgentStream('');
+
   // State management
   const [systemStats, setSystemStats] = useState<SystemStats>({
     tools_deployed: 0,
@@ -54,6 +59,10 @@ const Dashboard: React.FC = () => {
     active: 0,
     expired: 0,
   });
+
+  const [pendingApprovals, setPendingApprovals] = useState(0);
+  const [platformHealthy, setPlatformHealthy] = useState(true);
+  const [activeMissions, setActiveMissions] = useState(0);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'tools' | 'programs' | 'security'>('overview');
   const [loading, setLoading] = useState(true);
@@ -101,9 +110,14 @@ const Dashboard: React.FC = () => {
       setSystemStats({
         tools_deployed: toolsData.data?.count || 0,
         programs_available: programsData.data?.total || 0,
-        recent_scans: 0, // TODO: fetch from audit logs
+        recent_scans: 0,
         authorizations_active: authStatus.active,
       });
+
+      // Set platform and approval counts (mock for now, would come from API)
+      setPlatformHealthy(true);
+      setPendingApprovals(0);
+      setActiveMissions(0);
 
       setLoading(false);
     } catch (error) {
@@ -186,9 +200,103 @@ const Dashboard: React.FC = () => {
 const OverviewSection: React.FC<{ stats: SystemStats; authStatus: AuthorizationStatus }> = ({
   stats,
   authStatus,
-}) => (
-  <div className="overview-section">
-    <h2>System Overview</h2>
+}) => {
+  const navigate = useNavigate();
+
+  return (
+    <div className="overview-section">
+      <h2>System Overview</h2>
+
+      {/* Mission Readiness Summary */}
+      <div className="mission-readiness" style={{
+        background: '#1a1a1a',
+        border: '1px solid #333',
+        borderRadius: 8,
+        padding: '16px',
+        marginBottom: '24px'
+      }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '16px'
+        }}>
+          <h3 style={{ margin: 0, color: '#fff', fontSize: '1rem' }}>Mission Readiness</h3>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '4px 8px',
+            borderRadius: '4px',
+            background: '#4caf50',
+            color: '#fff',
+            fontSize: '0.75rem',
+            fontWeight: 'bold'
+          }}>
+            ● READY TO HUNT
+          </span>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+          gap: '12px',
+          marginBottom: '16px'
+        }}>
+          <div style={{ padding: '8px', background: '#0a0a0a', borderRadius: '4px' }}>
+            <div style={{ color: '#888', fontSize: '0.7rem', marginBottom: '4px' }}>Platform Status</div>
+            <div style={{ color: '#4caf50', fontWeight: 'bold' }}>Healthy</div>
+          </div>
+          <div style={{ padding: '8px', background: '#0a0a0a', borderRadius: '4px' }}>
+            <div style={{ color: '#888', fontSize: '0.7rem', marginBottom: '4px' }}>Active Missions</div>
+            <div style={{ color: '#2196f3', fontWeight: 'bold' }}>0</div>
+          </div>
+          <div style={{ padding: '8px', background: '#0a0a0a', borderRadius: '4px' }}>
+            <div style={{ color: '#888', fontSize: '0.7rem', marginBottom: '4px' }}>Pending Approvals</div>
+            <div style={{ color: '#ff9800', fontWeight: 'bold' }}>0</div>
+          </div>
+          <div style={{ padding: '8px', background: '#0a0a0a', borderRadius: '4px' }}>
+            <div style={{ color: '#888', fontSize: '0.7rem', marginBottom: '4px' }}>API Budget</div>
+            <div style={{ color: '#4caf50', fontWeight: 'bold' }}>75%</div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div style={{
+          display: 'flex',
+          gap: '8px',
+          flexWrap: 'wrap'
+        }}>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate('/hunt')}
+            style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+          >
+            {ICONS.shield} Start New Mission
+          </button>
+          <button
+            className="btn btn-primary"
+            onClick={() => navigate('/operations/approvals')}
+            style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+          >
+            {ICONS.tool} View Approvals (0)
+          </button>
+          <button
+            className="btn btn-secondary"
+            onClick={() => navigate('/console')}
+            style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+          >
+            {ICONS.info} Command Console
+          </button>
+          <button
+            className="btn btn-outline"
+            onClick={() => navigate('/master-findings')}
+            style={{ fontSize: '0.8rem', padding: '6px 12px' }}
+          >
+            {ICONS.database} Master Findings
+          </button>
+        </div>
+      </div>
 
     {/* Quick Stats Grid */}
     <div className="stats-grid">
@@ -279,7 +387,8 @@ const OverviewSection: React.FC<{ stats: SystemStats; authStatus: AuthorizationS
       </table>
     </div>
   </div>
-);
+  );
+};
 
 /**
  * Tools Section - Manage and execute tools

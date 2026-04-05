@@ -48,6 +48,37 @@ export interface CrewAgent {
   errors: string[]
 }
 
+export interface ToolRegistryEntry {
+  name: string
+  display_name: string
+  description: string
+  category: string
+  safety_classification: 'passive' | 'active' | 'intrusive'
+  phase: number
+  timeout_seconds: number
+  requires_auth: boolean
+  api_keys_required: boolean
+  enabled: boolean
+  knowledge_files?: string[]
+  memory_files?: string[]
+}
+
+export interface CrewYAMLDefinition {
+  name: string
+  framework: 'crewai' | 'autogen' | 'praisonai'
+  phase: string
+  topic: string
+  roles: Array<{
+    key: string
+    role: string
+    goal: string
+    backstory: string
+    task_count: number
+  }>
+  file_path: string
+  is_primary: boolean
+}
+
 export const agentsApi = {
   listAgents: () =>
     apiClient.get<ToolAgent[]>('/orchestrator/agents'),
@@ -68,5 +99,21 @@ export const agentsApi = {
   getCrewExecution: (missionId: string) =>
     apiClient.get<CrewAgent[]>(
       `/orchestrator/missions/${missionId}/crew-status`
+    ),
+
+  getToolRegistry: () =>
+    apiClient.get<ToolRegistryEntry[]>(
+      '/orchestrator/agents/registry'
+    ),
+
+  listCrewYAMLs: () =>
+    apiClient.get<CrewYAMLDefinition[]>(
+      '/orchestrator/crews/registry'
+    ),
+
+  runCrewYAML: (filePath: string) =>
+    apiClient.post<{ job_id: string }>(
+      '/orchestrator/crews/run',
+      { file_path: filePath }
     ),
 }

@@ -3,17 +3,80 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/system'
 import { authLogout, getLLMConfig } from '../lib/api'
 
-// ─── 8-page nav structure ─────────────────────────────────────────────────────
+// ─── 8-page nav structure with submenu ────────────────────────────────────────
 
-const NAV = [
-  { to: '/dashboard', icon: '◉', label: 'COMMAND CTR',  sub: 'Mission Control' },
-  { to: '/hunt',      icon: '◈', label: 'HUNT OPS',     sub: 'Programs & Workflows' },
-  { to: '/findings',  icon: '⬡', label: 'FINDINGS',     sub: 'Vulnerability Hub' },
-  { to: '/intel',     icon: '◎', label: 'INTELLIGENCE', sub: 'Recon & Threat Intel' },
-  { to: '/ai',        icon: '✦', label: 'AI ENGINE',    sub: 'Kaison Composer & LLM' },
-  { to: '/scans',     icon: '▷', label: 'SCAN OPS',     sub: 'Tools & Execution' },
-  { to: '/reports',   icon: '▦', label: 'ANALYTICS',    sub: 'Reports & Payouts' },
-  { to: '/settings',  icon: '⚙', label: 'SETTINGS',     sub: 'Platform Config' },
+interface NavItem {
+  to?: string
+  icon?: string
+  label: string
+  sub?: string
+  children?: NavItem[]
+}
+
+const NAV: NavItem[] = [
+  { to: '/dashboard', icon: '◉', label: 'COMMAND CTR', sub: 'Mission Control' },
+  {
+    icon: '◈',
+    label: 'HUNT OPS',
+    sub: 'Programs & Workflows',
+    children: [
+      { to: '/hunt', label: 'Workflow Manager' },
+      { to: '/scan-pool', label: 'Scan Queue' },
+    ],
+  },
+  {
+    icon: '⬡',
+    label: 'FINDINGS',
+    sub: 'Vulnerability Hub',
+    children: [
+      { to: '/findings', label: 'All Findings' },
+      { to: '/master-findings', label: 'Master Findings' },
+      { to: '/operations/approvals', label: 'Approvals' },
+    ],
+  },
+  {
+    icon: '◎',
+    label: 'INTELLIGENCE',
+    sub: 'Recon & Threat Intel',
+    children: [
+      { to: '/intel', label: 'Threat Intel' },
+      { to: '/recon', label: 'Reconnaissance' },
+      { to: '/attack-graph', label: 'Attack Surface' },
+    ],
+  },
+  {
+    icon: '✦',
+    label: 'AI ENGINE',
+    sub: 'Kaison Composer & LLM',
+    children: [
+      { to: '/ai', label: 'Composer' },
+      { to: '/providers', label: 'LLM Providers' },
+      { to: '/console', label: 'Command Console' },
+    ],
+  },
+  {
+    icon: '▷',
+    label: 'AGENTS',
+    sub: 'Tool Agents & Crew',
+    children: [
+      { to: '/agents', label: 'Tool Agents' },
+      { to: '/crew', label: 'Crew Monitor' },
+      { to: '/registry', label: 'Tool Registry' },
+      { to: '/crews', label: 'Crew Library' },
+    ],
+  },
+  {
+    icon: '▦',
+    label: 'PLATFORM',
+    sub: 'Operations & Config',
+    children: [
+      { to: '/status', label: 'Platform Health' },
+      { to: '/orchestrator', label: 'Orchestrator' },
+      { to: '/scans', label: 'Scan Operations' },
+      { to: '/reports', label: 'Analytics' },
+    ],
+  },
+  { to: '/settings', icon: '⚙', label: 'SETTINGS', sub: 'Platform Config' },
 ]
 
 export default function Sidebar() {
@@ -118,29 +181,148 @@ export default function Sidebar() {
         <div style={{ padding: '5px 14px 3px', color: P.muted, fontSize: '0.5rem', fontWeight: 700, letterSpacing: '0.24em' }}>
           NAVIGATION
         </div>
-        {NAV.map(item => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            style={({ isActive }) => ({
-              ...linkBase,
-              color: P.text,
-              background: isActive ? 'rgba(53,94,59,0.12)' : 'transparent',
-              borderLeft: `2px solid ${isActive ? P.green : 'transparent'}`,
-            })}
-          >
-            <span style={{ fontSize: '0.9rem', width: 18, textAlign: 'center', flexShrink: 0 }}>
-              {item.icon}
-            </span>
-            <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <span style={{ fontSize: '0.62rem', fontWeight: 700, letterSpacing: '0.1em', lineHeight: 1 }}>
-                {item.label}
-              </span>
-              <span style={{ fontSize: '0.51rem', fontWeight: 400, opacity: 0.5, letterSpacing: '0.03em', lineHeight: 1 }}>
-                {item.sub}
-              </span>
-            </span>
-          </NavLink>
+        {NAV.map((item) => (
+          <div key={item.label}>
+            {item.to ? (
+              <NavLink
+                to={item.to}
+                style={({ isActive }) => ({
+                  ...linkBase,
+                  color: P.text,
+                  background: isActive
+                    ? 'rgba(53,94,59,0.12)'
+                    : 'transparent',
+                  borderLeft: `2px solid ${
+                    isActive ? P.green : 'transparent'
+                  }`,
+                })}
+              >
+                <span
+                  style={{
+                    fontSize: '0.9rem',
+                    width: 18,
+                    textAlign: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {item.icon}
+                </span>
+                <span
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '0.62rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.1em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.51rem',
+                      fontWeight: 400,
+                      opacity: 0.5,
+                      letterSpacing: '0.03em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {item.sub}
+                  </span>
+                </span>
+              </NavLink>
+            ) : (
+              <div
+                style={{
+                  ...linkBase,
+                  background: 'transparent',
+                  borderLeft: '2px solid transparent',
+                  cursor: 'default',
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: '0.9rem',
+                    width: 18,
+                    textAlign: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {item.icon}
+                </span>
+                <span
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '0.62rem',
+                      fontWeight: 700,
+                      letterSpacing: '0.1em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {item.label}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.51rem',
+                      fontWeight: 400,
+                      opacity: 0.5,
+                      letterSpacing: '0.03em',
+                      lineHeight: 1,
+                    }}
+                  >
+                    {item.sub}
+                  </span>
+                </span>
+              </div>
+            )}
+
+            {/* Submenu */}
+            {item.children && (
+              <div style={{ paddingLeft: 24, borderLeft: `1px solid ${P.border}` }}>
+                {item.children.map((child) => (
+                  <NavLink
+                    key={child.to}
+                    to={child.to!}
+                    style={({ isActive }) => ({
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '6px 12px',
+                      margin: '1px 6px',
+                      borderRadius: 3,
+                      textDecoration: 'none',
+                      color: isActive ? P.green : P.text,
+                      fontFamily:
+                        "'JetBrains Mono','Fira Code','Courier New',monospace",
+                      fontSize: '0.59rem',
+                      fontWeight: 500,
+                      letterSpacing: '0.06em',
+                      transition: 'all 0.12s ease',
+                      background: isActive
+                        ? 'rgba(53,94,59,0.08)'
+                        : 'transparent',
+                      borderLeft: `1px solid ${
+                        isActive ? P.green : 'transparent'
+                      }`,
+                    })}
+                  >
+                    ▸ {child.label}
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
         ))}
       </nav>
 
