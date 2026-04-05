@@ -8,12 +8,15 @@ from ..base_tool_agent import BaseToolAgent
 
 _PHASE7_AGENTS = [
     "nuclei_scan",
+    "nikto",
+    "testssl",
     "dalfox",
     "sqlmap",
     "ssrfmap",
     "corsy",
     "crlfuzz",
-    # nikto and searchsploit added in Wave 3
+    "smuggler",
+    "searchsploit",
 ]
 
 

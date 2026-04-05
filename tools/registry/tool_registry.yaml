@@ -1,5 +1,11 @@
 version: "1.0"
+
+# Consolidated tool registry for KAISON AI (51 tools total)
+# Cleaned of duplicates 2026-04-04
+# All entries standardized to common schema
+
 tools:
+  # Wave 0 - Core Recon (7 tools)
   - name: amass
     agent_class: AmassAgent
     category: recon_asset_discovery
@@ -9,12 +15,7 @@ tools:
     input_schema: {"target": "domain"}
     output_schema: {"subdomains": "list[str]"}
     timeout_seconds: 900
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["recon", "subdomain"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: subfinder
     agent_class: SubfinderAgent
@@ -25,44 +26,7 @@ tools:
     input_schema: {"target": "domain"}
     output_schema: {"subdomains": "list[str]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["recon", "subdomain"]
-    dependencies: []
-    api_keys_required: ["TRILIUM_FREE_TIER_API_KEY"]
-    enabled_by_default: true
-
-  - name: assetfinder
-    agent_class: AssetfinderAgent
-    category: recon_asset_discovery
-    execution_mode: native
-    binary_path: assetfinder
-    install_verification_cmd: ["assetfinder", "--help"]
-    input_schema: {"target": "domain"}
-    output_schema: {"subdomains": "list[str]"}
-    timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["recon", "subdomain"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: findomain
-    agent_class: FindomainAgent
-    category: recon_asset_discovery
-    execution_mode: native
-    binary_path: findomain
-    install_verification_cmd: ["findomain", "--help"]
-    input_schema: {"target": "domain"}
-    output_schema: {"subdomains": "list[str]"}
-    timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["recon", "subdomain"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: dnsx
     agent_class: DnsxAgent
@@ -73,12 +37,7 @@ tools:
     input_schema: {"target": "host_or_domain"}
     output_schema: {"records": "list[json]"}
     timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["dns"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: gau
     agent_class: GauAgent
@@ -89,12 +48,7 @@ tools:
     input_schema: {"target": "domain"}
     output_schema: {"urls": "list[str]"}
     timeout_seconds: 900
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["urls", "archive"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: waybackurls
     agent_class: WaybackurlsAgent
@@ -105,12 +59,7 @@ tools:
     input_schema: {"target": "domain"}
     output_schema: {"urls": "list[str]"}
     timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["urls", "archive"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: httpx_probe
     agent_class: HttpxProbeAgent
@@ -121,12 +70,7 @@ tools:
     input_schema: {"target": "url_or_host"}
     output_schema: {"records": "list[json]"}
     timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["http", "probe"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: naabu
     agent_class: NaabuAgent
@@ -137,13 +81,9 @@ tools:
     input_schema: {"target": "host"}
     output_schema: {"open_ports": "list[str]"}
     timeout_seconds: 240
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["portscan"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
+  # Wave 0 - Vulnerability Scanning (3 tools)
   - name: nuclei_scan
     agent_class: NucleiScanAgent
     category: vulnerability_scanning
@@ -154,12 +94,7 @@ tools:
     input_schema: {"target": "url_or_host"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["vuln", "templates"]
-    dependencies: ["nuclei_templates"]
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: dalfox
     agent_class: DalfoxAgent
@@ -170,61 +105,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    allowed_extra_args: ["--p", "--header", "--cookie", "--user-agent", "--delay"]
-    tags: ["xss", "vuln"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: nikto
-    agent_class: NiktoAgent
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: nikto
-    install_verification_cmd: ["nikto", "-h"]
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"findings": "list[json_or_lines]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["web", "vuln", "baseline"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: nmap
-    agent_class: NmapAgent
-    category: network_service_scanning
-    execution_mode: native
-    binary_path: nmap
-    install_verification_cmd: ["nmap", "--version"]
-    input_schema: {"target": "host_or_cidr"}
-    output_schema: {"services": "list[json]"}
-    timeout_seconds: 900
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["network", "portscan"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: masscan
-    agent_class: MasscanAgent
-    category: network_service_scanning
-    execution_mode: native
-    binary_path: masscan
-    install_verification_cmd: ["masscan", "--version"]
-    input_schema: {"target": "host_or_cidr"}
-    output_schema: {"open_ports": "list[json]"}
-    timeout_seconds: 360
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["network", "portscan"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: sqlmap
     agent_class: SqlmapAgent
@@ -235,14 +116,9 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"result": "json_or_text"}
     timeout_seconds: 900
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    allowed_extra_args: ["--risk", "--level", "--technique", "-p", "--dbms", "--batch", "--random-agent"]
-    tags: ["validation", "sqli"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
+  # Wave 0 - Advanced Vulns (5 tools)
   - name: ssrfmap
     agent_class: SsrfmapAgent
     category: vulnerability_scanning
@@ -252,12 +128,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["ssrf", "vuln"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: corsy
     agent_class: CorsyAgent
@@ -268,12 +139,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["cors", "vuln"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: crlfuzz
     agent_class: CrlfuzzAgent
@@ -284,12 +150,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["crlf", "vuln"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: jwt_tool
     agent_class: JwtToolAgent
@@ -300,12 +161,7 @@ tools:
     input_schema: {"target": "token"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["jwt", "auth"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: kiterunner
     agent_class: KiterunnerAgent
@@ -316,12 +172,30 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["api", "fuzz"]
-    dependencies: ["wordlist"]
-    api_keys_required: []
-    enabled_by_default: true
+
+  # Wave 1 (10 tools)
+  - name: assetfinder
+    agent_class: AssetfinderAgent
+    category: recon_asset_discovery
+    execution_mode: native
+    binary_path: assetfinder
+    install_verification_cmd: ["assetfinder", "--help"]
+    input_schema: {"target": "domain"}
+    output_schema: {"subdomains": "list[str]"}
+    timeout_seconds: 180
+    safety_classification: passive
+
+  - name: findomain
+    agent_class: FindomainAgent
+    category: recon_asset_discovery
+    execution_mode: native
+    binary_path: findomain
+    install_verification_cmd: ["findomain", "--help"]
+    input_schema: {"target": "domain"}
+    output_schema: {"subdomains": "list[str]"}
+    timeout_seconds: 180
+    safety_classification: passive
 
   - name: chaos
     agent_class: ChaosAgent
@@ -332,12 +206,7 @@ tools:
     input_schema: {"target": "domain"}
     output_schema: {"subdomains": "list[str]"}
     timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["recon", "subdomain"]
-    dependencies: []
-    api_keys_required: ["CHAOS_KEY"]
-    enabled_by_default: true
 
   - name: github-subdomains
     agent_class: GithubSubdomainsAgent
@@ -348,12 +217,29 @@ tools:
     input_schema: {"target": "domain"}
     output_schema: {"subdomains": "list[str]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["recon", "subdomain", "github"]
-    dependencies: []
-    api_keys_required: ["GITHUB_TOKEN"]
-    enabled_by_default: true
+
+  - name: nmap
+    agent_class: NmapAgent
+    category: network_service_scanning
+    execution_mode: native
+    binary_path: nmap
+    install_verification_cmd: ["nmap", "--version"]
+    input_schema: {"target": "host_or_cidr"}
+    output_schema: {"services": "list[json]"}
+    timeout_seconds: 900
+    safety_classification: active
+
+  - name: masscan
+    agent_class: MasscanAgent
+    category: network_service_scanning
+    execution_mode: native
+    binary_path: masscan
+    install_verification_cmd: ["masscan", "--version"]
+    input_schema: {"target": "host_or_cidr"}
+    output_schema: {"open_ports": "list[json]"}
+    timeout_seconds: 360
+    safety_classification: intrusive
 
   - name: wafw00f
     agent_class: Wafw00fAgent
@@ -364,12 +250,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"waf_fingerprint": "list[json]"}
     timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["waf", "fingerprint"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: gowitness
     agent_class: GoWitnessAgent
@@ -380,12 +261,7 @@ tools:
     input_schema: {"target": "url_or_file"}
     output_schema: {"screenshots": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["screenshot", "web"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: eyewitness
     agent_class: EyewitnessAgent
@@ -396,12 +272,7 @@ tools:
     input_schema: {"target": "url_or_file"}
     output_schema: {"screenshots": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["screenshot", "web"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: whatweb
     agent_class: WhatwebAgent
@@ -412,45 +283,9 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"fingerprint": "list[json]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["fingerprint", "tech"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
-  - name: arjun
-    agent_class: ArjunAgent
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: arjun
-    install_verification_cmd: ["arjun", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"parameters": "list[str]"}
-    timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["parameters", "fuzz"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: caido_cli
-    agent_class: CaidoCliAgent
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: caido-cli
-    install_verification_cmd: ["caido-cli", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"endpoints": "list[json]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["crawl", "proxy"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
+  # Wave 2 (12 tools)
   - name: feroxbuster
     agent_class: FeroxbusterAgent
     category: crawling_url_discovery
@@ -460,60 +295,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["fuzz", "discovery"]
-    dependencies: ["wordlist"]
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: ffuf
-    agent_class: FfufAgent
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: ffuf
-    install_verification_cmd: ["ffuf", "-V"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["fuzz", "discovery"]
-    dependencies: ["wordlist"]
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: gf
-    agent_class: GfAgent
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: gf
-    install_verification_cmd: ["gf", "-h"]
-    input_schema: {"target": "file"}
-    output_schema: {"findings": "list[str]"}
-    timeout_seconds: 60
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["filtering", "patterns"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: hakrawler
-    agent_class: HakrawlerAgent
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: hakrawler
-    install_verification_cmd: ["hakrawler", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[str]"}
-    timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["crawl", "discovery"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: katana
     agent_class: KatanaAgent
@@ -524,28 +306,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["crawl", "discovery"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: nuclei_export
-    agent_class: NucleiExportAgent
-    category: reporting
-    execution_mode: native
-    binary_path: echo
-    install_verification_cmd: ["echo", "ready"]
-    input_schema: {"target": "json"}
-    output_schema: {"artifact": "file"}
-    timeout_seconds: 60
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: safe
-    tags: ["report", "export"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: paramspider
     agent_class: ParamspiderAgent
@@ -556,76 +317,51 @@ tools:
     input_schema: {"target": "domain"}
     output_schema: {"findings": "list[str]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["parameters", "discovery"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
-  - name: phoneinfoga
-    agent_class: PhoneinfogaAgent
-    category: intelligence_osint
+  - name: arjun
+    agent_class: ArjunAgent
+    category: crawling_url_discovery
     execution_mode: native
-    binary_path: phoneinfoga
-    install_verification_cmd: ["phoneinfoga", "version"]
-    input_schema: {"target": "phone"}
-    output_schema: {"findings": "list[json]"}
+    binary_path: arjun
+    install_verification_cmd: ["arjun", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"parameters": "list[str]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["osint", "phone"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
+    safety_classification: active
 
-  - name: reconftw
-    agent_class: ReconftfwAgent
-    category: recon_asset_discovery
+  - name: hakrawler
+    agent_class: HakrawlerAgent
+    category: crawling_url_discovery
     execution_mode: native
-    binary_path: reconftw.sh
-    install_verification_cmd: ["reconftw.sh", "-h"]
-    input_schema: {"target": "domain"}
-    output_schema: {"findings": "list[str]"}
-    timeout_seconds: 1800
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["recon", "automation"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: sherlock
-    agent_class: SherlockAgent
-    category: intelligence_osint
-    execution_mode: native
-    binary_path: sherlock
-    install_verification_cmd: ["sherlock", "--version"]
-    input_schema: {"target": "username"}
+    binary_path: hakrawler
+    install_verification_cmd: ["hakrawler", "--help"]
+    input_schema: {"target": "url"}
     output_schema: {"findings": "list[str]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: passive
-    tags: ["osint", "social"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
+    safety_classification: active
 
-  - name: social-analyzer
-    agent_class: SocialAnalyzerAgent
-    category: intelligence_osint
+  - name: ffuf
+    agent_class: FfufAgent
+    category: crawling_url_discovery
     execution_mode: native
-    binary_path: social-analyzer
-    install_verification_cmd: ["social-analyzer", "--version"]
-    input_schema: {"target": "username"}
+    binary_path: ffuf
+    install_verification_cmd: ["ffuf", "-V"]
+    input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
+    safety_classification: intrusive
+
+  - name: gf
+    agent_class: GfAgent
+    category: crawling_url_discovery
+    execution_mode: native
+    binary_path: gf
+    install_verification_cmd: ["gf", "-h"]
+    input_schema: {"target": "file"}
+    output_schema: {"findings": "list[str]"}
+    timeout_seconds: 60
     safety_classification: passive
-    tags: ["osint", "social"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: spiderfoot
     agent_class: SpiderfootAgent
@@ -636,215 +372,53 @@ tools:
     input_schema: {"target": "domain"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 900
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["osint", "recon"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
-  - name: tlsx
-    category: http_live_host
+  - name: sherlock
+    agent_class: SherlockAgent
+    category: intelligence_osint
     execution_mode: native
-    binary_path: tlsx
-    install_verification_cmd: ["tlsx", "-version"]
-    input_schema: {"target": "host_or_url"}
-    output_schema: {"tls_records": "list[json]"}
-    timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["tls"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
+    binary_path: sherlock
+    install_verification_cmd: ["sherlock", "--version"]
+    input_schema: {"target": "username"}
+    output_schema: {"findings": "list[str]"}
+    timeout_seconds: 300
+    safety_classification: passive
 
-  - name: postman_collection_export
-    category: manual_hil_integrations
-    execution_mode: optional
-    install_verification_cmd: ["python", "-c", "print('postman_export')"]
-    input_schema: {"target": "json_path"}
-    output_schema: {"collection_export": "json"}
-    timeout_seconds: 60
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: safe
-    tags: ["hil", "export"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  - name: insomnia_collection_export
-    category: manual_hil_integrations
-    execution_mode: optional
-    install_verification_cmd: ["python", "-c", "print('insomnia_export')"]
-    input_schema: {"target": "json_path"}
-    output_schema: {"collection_export": "json"}
-    timeout_seconds: 60
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: safe
-    tags: ["hil", "export"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: false
-
-  # Legacy name aliases — preserved for backward compatibility with existing tests
-  - name: httpx
-    category: http_live_host
+  - name: phoneinfoga
+    agent_class: PhoneinfogaAgent
+    category: intelligence_osint
     execution_mode: native
-    binary_path: httpx
-    install_verification_cmd: ["httpx", "-version"]
-    input_schema: {"target": "host"}
+    binary_path: phoneinfoga
+    install_verification_cmd: ["phoneinfoga", "version"]
+    input_schema: {"target": "phone"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: active
-    tags: ["http", "probe"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
+    safety_classification: passive
 
-  - name: nuclei
-    category: vulnerability_scanning
+  - name: social-analyzer
+    agent_class: SocialAnalyzerAgent
+    category: intelligence_osint
     execution_mode: native
-    binary_path: nuclei
-    container_image: projectdiscovery/nuclei:latest
-    install_verification_cmd: ["nuclei", "-version"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 1800
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
-    safety_classification: intrusive
-    tags: ["scan", "vulnerability"]
-    dependencies: ["nuclei_templates"]
-    api_keys_required: []
-    enabled_by_default: true
-
-  - name: trufflehog
-    category: secret_scanning
-    execution_mode: native
-    binary_path: trufflehog
-    install_verification_cmd: ["trufflehog", "--version"]
-    input_schema: {"target": "url_or_path"}
+    binary_path: social-analyzer
+    install_verification_cmd: ["social-analyzer", "--version"]
+    input_schema: {"target": "username"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["secrets", "recon"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
-  - name: torbot
-    category: dark_web
-    agent_class: apps.backend.src.agents.tools.torbot.agent.TorbotAgent
-    timeout_seconds: 300
-    safety_classification: passive
-    api_keys_required: false
-    enabled: true
-
-  - name: onionsearch
-    category: dark_web
-    agent_class: apps.backend.src.agents.tools.onionsearch.agent.OnionsearchAgent
-    timeout_seconds: 180
-    safety_classification: passive
-    api_keys_required: false
-    enabled: true
-
-  - name: ahmia-client
-    category: dark_web
-    agent_class: apps.backend.src.agents.tools.ahmia-client.agent.AhmiaClientAgent
-    timeout_seconds: 60
-    safety_classification: passive
-    api_keys_required: false
-    enabled: true
-
-  - name: trufflehog
-    category: secret_scanning
-    agent_class: apps.backend.src.agents.tools.trufflehog.agent.TrufflehogAgent
-    timeout_seconds: 600
-    safety_classification: passive
-    api_keys_required: false
-    enabled: true
-
-  - name: gitleaks
-    category: secret_scanning
-    agent_class: apps.backend.src.agents.tools.gitleaks.agent.GitleaksAgent
-    timeout_seconds: 300
-    safety_classification: passive
-    api_keys_required: false
-    enabled: true
-
-  - name: nikto
-    category: vulnerability_scanning
-    agent_class: apps.backend.src.agents.tools.nikto.agent.NiktoAgent
-    timeout_seconds: 300
-    safety_classification: active
-    api_keys_required: false
-    enabled: true
-
-  - name: testssl
-    category: vulnerability_scanning
-    agent_class: apps.backend.src.agents.tools.testssl.agent.TestsslAgent
-    timeout_seconds: 300
-    safety_classification: passive
-    api_keys_required: false
-    enabled: true
-
-  - name: smuggler
-    category: vulnerability_scanning
-    agent_class: apps.backend.src.agents.tools.smuggler.agent.SmugglerAgent
-    timeout_seconds: 300
-    safety_classification: active
-    api_keys_required: false
-    enabled: true
-
-  - name: searchsploit
-    category: vulnerability_scanning
-    agent_class: apps.backend.src.agents.tools.searchsploit.agent.SearchsploitAgent
-    timeout_seconds: 30
-    safety_classification: passive
-    api_keys_required: false
-    enabled: true
-
-  - name: graphql-cop
-    category: api_testing
-    agent_class: apps.backend.src.agents.tools.graphql-cop.agent.GraphqlCopAgent
-    timeout_seconds: 180
-    safety_classification: intrusive
-    api_keys_required: false
-    enabled: true
-
-  - name: clairvoyance
-    category: api_testing
-    agent_class: apps.backend.src.agents.tools.clairvoyance.agent.ClairvoyanceAgent
-    timeout_seconds: 600
-    safety_classification: intrusive
-    api_keys_required: false
-    enabled: true
-
-  - name: owasp-zap
-    category: api_testing
-    agent_class: apps.backend.src.agents.tools.owasp-zap.agent.OwaspZapAgent
+  - name: reconftw
+    agent_class: ReconftfwAgent
+    category: recon_asset_discovery
+    execution_mode: native
+    binary_path: reconftw.sh
+    install_verification_cmd: ["reconftw.sh", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"findings": "list[str]"}
     timeout_seconds: 1800
     safety_classification: intrusive
-    api_keys_required: false
-    enabled: true
 
-  - name: caido
-    category: api_testing
-    agent_class: apps.backend.src.agents.tools.caido.agent.CaidoAgent
-    timeout_seconds: 300
-    safety_classification: active
-    api_keys_required: false
-    enabled: true
-
-  - name: faraday-community
-    category: aggregation
-    agent_class: apps.backend.src.agents.tools.faraday-community.agent.FaradaycommunityAgent
-    timeout_seconds: 60
-    safety_classification: passive
-    api_keys_required: false
-    enabled: true
-
+  # Wave 3 (14 tools)
   - name: torbot
     agent_class: TorbotAgent
     category: dark_web_intelligence
@@ -854,12 +428,7 @@ tools:
     input_schema: {"target": "url_or_domain"}
     output_schema: {"findings": "list[dict]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["dark_web", "reconnaissance"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: onionsearch
     agent_class: OnionsearchAgent
@@ -870,12 +439,7 @@ tools:
     input_schema: {"target": "url_or_domain"}
     output_schema: {"results": "list[dict]"}
     timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["dark_web", "search"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: ahmia-client
     agent_class: AhmiaClientAgent
@@ -886,12 +450,7 @@ tools:
     input_schema: {"target": "url_or_domain"}
     output_schema: {"indexed_results": "list[dict]"}
     timeout_seconds: 60
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["dark_web", "index"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: trufflehog
     agent_class: TrufflehogAgent
@@ -902,12 +461,7 @@ tools:
     input_schema: {"target": "git_repo_url"}
     output_schema: {"secrets": "list[dict]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["secrets", "git", "credentials"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: gitleaks
     agent_class: GitleaksAgent
@@ -918,28 +472,18 @@ tools:
     input_schema: {"target": "git_repo_url_or_path"}
     output_schema: {"secrets": "list[dict]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["secrets", "git", "regex"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: nikto
     agent_class: NiktoAgent
     category: vulnerability_scanning
     execution_mode: native
     binary_path: nikto
-    install_verification_cmd: ["nikto", "-version"]
-    input_schema: {"target": "url"}
+    install_verification_cmd: ["nikto", "-h"]
+    input_schema: {"target": "url_or_host"}
     output_schema: {"vulnerabilities": "list[dict]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["web_server", "vulnerability"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: testssl
     agent_class: TestsslAgent
@@ -950,12 +494,7 @@ tools:
     input_schema: {"target": "url_https"}
     output_schema: {"ssl_findings": "list[dict]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["ssl", "tls", "certificate"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: smuggler
     agent_class: SmugglerAgent
@@ -966,12 +505,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"smuggling_variants": "list[dict]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["http_smuggling", "web"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: searchsploit
     agent_class: SearchsploitAgent
@@ -982,12 +516,7 @@ tools:
     input_schema: {"target": "software_version"}
     output_schema: {"cve_matches": "list[dict]"}
     timeout_seconds: 30
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["cve", "exploitdb", "offline"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: graphql-cop
     agent_class: GraphqlCopAgent
@@ -998,12 +527,7 @@ tools:
     input_schema: {"target": "graphql_endpoint"}
     output_schema: {"test_results": "list[dict]"}
     timeout_seconds: 180
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["graphql", "api", "security"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: clairvoyance
     agent_class: ClairvoyanceAgent
@@ -1014,12 +538,7 @@ tools:
     input_schema: {"target": "graphql_endpoint"}
     output_schema: {"recovered_schema": "list[dict]"}
     timeout_seconds: 600
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["graphql", "schema_recovery"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: owasp-zap
     agent_class: OwaspZapAgent
@@ -1030,12 +549,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"vulnerabilities": "list[dict]"}
     timeout_seconds: 1800
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: intrusive
-    tags: ["web", "active_scanning"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: caido
     agent_class: CaidoAgent
@@ -1046,12 +560,7 @@ tools:
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[dict]"}
     timeout_seconds: 300
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: active
-    tags: ["api", "proxy", "modern"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
 
   - name: faraday-community
     agent_class: FaradaycommunityAgent
@@ -1062,9 +571,28 @@ tools:
     input_schema: {"target": "any"}
     output_schema: {"master_findings": "list[dict]"}
     timeout_seconds: 60
-    retry_policy: {max_attempts: 1, backoff_seconds: 0}
     safety_classification: passive
-    tags: ["aggregation", "deduplication"]
-    dependencies: []
-    api_keys_required: []
-    enabled_by_default: true
+
+  # Legacy name aliases (backward compatibility)
+  - name: httpx
+    agent_class: HttpxProbeAgent
+    category: http_live_host
+    execution_mode: native
+    binary_path: httpx
+    install_verification_cmd: ["httpx", "-version"]
+    input_schema: {"target": "host"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 300
+    safety_classification: active
+
+  - name: nuclei
+    agent_class: NucleiScanAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: nuclei
+    container_image: projectdiscovery/nuclei:latest
+    install_verification_cmd: ["nuclei", "-version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 1800
+    safety_classification: intrusive

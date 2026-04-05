@@ -12,12 +12,15 @@ class GraphqlCopAgent(BaseToolAgent):
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
         opts = options or {}
         endpoint = str(opts.get("graphql_endpoint", target))
+        timeout = str(opts.get("timeout_seconds", 60))
         return [
             "graphql-cop",
             "-t",
             endpoint,
             "-o",
             "json",
+            "--timeout",
+            timeout,
         ]
 
     def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:

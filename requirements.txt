@@ -6,7 +6,7 @@
 # Core Web Framework
 fastapi>=0.115,<1.0
 uvicorn[standard]>=0.30,<1.0
-starlette>=0.38,<1.0
+starlette>=0.40.0,<1.0
 
 # Data Validation & Serialization
 pydantic>=2.8,<3.0
@@ -83,7 +83,7 @@ aiosmtplib==3.0.1
 
 # RSS Intelligence
 feedparser==6.0.11
-aiohttp==3.13.3
+aiohttp==3.11.13
 beautifulsoup4==4.12.2
 
 # LlamaIndex + RAG System

@@ -17,14 +17,26 @@ class DarkWebIntelAgent:
         prior_findings: dict,
     ) -> dict:
         """Execute dark web intelligence phase."""
-        tor_available = self.verify_tor_service()
-        if not tor_available:
-            logging.getLogger(__name__).warning(
-                "Tor unavailable on port 9050. "
-                "Running ahmia-client only."
+        try:
+            tor_available = self.verify_tor_service()
+            if not tor_available:
+                logging.getLogger(__name__).warning(
+                    "Tor unavailable on port 9050. "
+                    "Running ahmia-client only."
+                )
+            results = self.aggregate_tool_results([], mission_context)
+            return results
+        except Exception as e:
+            logging.getLogger(__name__).error(
+                f"DarkWebIntelAgent failed: {e}", exc_info=True
             )
-        results = self.aggregate_tool_results([], mission_context)
-        return results
+            return {
+                "dark_web_complete": False,
+                "error": str(e),
+                "credential_mentions": [],
+                "org_mentions": [],
+                "onion_urls": [],
+            }
 
     def verify_tor_service(self) -> bool:
         """Check if Tor service is available on port 9050."""

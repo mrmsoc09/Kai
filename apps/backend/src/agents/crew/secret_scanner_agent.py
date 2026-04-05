@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 
@@ -15,8 +16,20 @@ class SecretScannerAgent:
         prior_findings: dict,
     ) -> dict:
         """Execute secret scanning phase."""
-        results = self.aggregate_tool_results([], mission_context)
-        return results
+        try:
+            results = self.aggregate_tool_results([], mission_context)
+            return results
+        except Exception as e:
+            logging.getLogger(__name__).error(
+                f"SecretScannerAgent failed: {e}", exc_info=True
+            )
+            return {
+                "secret_scan_complete": False,
+                "error": str(e),
+                "verified_secrets": [],
+                "unverified_secrets": [],
+                "secret_count": 0,
+            }
 
     def get_tool_agents(self) -> list[str]:
         return ["trufflehog", "gitleaks"]

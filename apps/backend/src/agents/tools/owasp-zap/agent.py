@@ -12,10 +12,13 @@ class OwaspZapAgent(BaseToolAgent):
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
         opts = options or {}
         artifact_dir = str(opts.get("artifact_dir", "/tmp"))
+        timeout_secs = str(opts.get("timeout_seconds", 600))
         return [
             "zap-cli",
             "quick-scan",
             "--self-contained",
+            "--timeout",
+            timeout_secs,
             "--start-options",
             "-config api.disablekey=true",
             "-u",
