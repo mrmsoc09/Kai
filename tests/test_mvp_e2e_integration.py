@@ -435,3 +435,137 @@ def test_mvp_api_e2e_chain(client, monkeypatch: pytest.MonkeyPatch, isolated_mvp
     assert state["queue_item"] is not None
     assert state["alert_count"] >= 1
     assert state["draft_count"] >= 1
+
+
+def test_osint_crew_dispatches_tool_agents():
+    """
+    OSINTIntelligenceAgent.execute() should
+    attempt to load and run its tool agents.
+    With tools not installed, it should return
+    partial results with errors listed —
+    not raise an exception.
+    """
+    from apps.backend.src.agents.crew.osint_intelligence_agent import (
+        OSINTIntelligenceAgent,
+    )
+
+    agent = OSINTIntelligenceAgent()
+    mission_context = {
+        "scan_id": "test-scan-001",
+        "mission_id": "test-mission-001",
+        "target": "example.com",
+        "artifact_dir": "/tmp/test_artifacts",
+        "rate_limit": 5,
+        "timeout": 30,
+    }
+    result = _run(agent.execute(mission_context, {}))
+    # Should return dict, not raise
+    assert isinstance(result, dict)
+    assert "osint_complete" in result
+    # May have errors if tools not installed
+    # but should never raise
+    assert "errors" in result
+    assert "tools_executed" in result
+
+
+def test_vulnerability_crew_dispatches_tools():
+    from apps.backend.src.agents.crew.vulnerability_agent import (
+        VulnerabilityAgent,
+    )
+
+    agent = VulnerabilityAgent()
+    mission_context = {
+        "scan_id": "test-scan-001",
+        "mission_id": "test-mission-001",
+        "target": "https://example.com",
+        "artifact_dir": "/tmp/test_artifacts",
+        "rate_limit": 5,
+        "timeout": 30,
+    }
+    result = _run(agent.execute(mission_context, {}))
+    assert isinstance(result, dict)
+    assert "vulnerability_scan_complete" in result
+    assert "errors" in result
+
+
+def test_dark_web_crew_handles_no_tor():
+    from apps.backend.src.agents.crew.dark_web_intel_agent import (
+        DarkWebIntelAgent,
+    )
+
+    agent = DarkWebIntelAgent()
+    # Tor almost certainly not running in test env
+    mission_context = {
+        "scan_id": "test-scan-001",
+        "mission_id": "test-mission-001",
+        "target": "example.com",
+        "artifact_dir": "/tmp/test_artifacts",
+        "timeout": 10,
+    }
+    result = _run(agent.execute(mission_context, {}))
+    # Must not raise even without Tor
+    assert isinstance(result, dict)
+    assert "dark_web_complete" in result
+
+
+def test_api_crew_skips_graphql_when_not_found():
+    from apps.backend.src.agents.crew.api_security_agent import (
+        APISecurityAgent,
+    )
+
+    agent = APISecurityAgent()
+    mission_context = {
+        "scan_id": "test-scan-001",
+        "mission_id": "test-mission-001",
+        "target": "https://example.com",
+        "artifact_dir": "/tmp/test_artifacts",
+        "timeout": 30,
+    }
+    # No graphql_endpoints in prior_findings
+    result = _run(agent.execute(mission_context, {}))
+    assert isinstance(result, dict)
+    # graphql-cop and clairvoyance should be skipped
+    executed = result.get("tools_executed", [])
+    assert "graphql-cop" not in executed
+    assert "clairvoyance" not in executed
+
+
+def test_faraday_coordinator_aggregates():
+    from apps.backend.src.agents.crew.faraday_coordinator_agent import (
+        FaradayCoordinatorAgent,
+    )
+
+    agent = FaradayCoordinatorAgent()
+    mission_context = {
+        "scan_id": "test-scan-001",
+        "mission_id": "test-mission-001",
+        "target": "example.com",
+        "artifact_dir": "/tmp/test_artifacts",
+        "timeout": 30,
+    }
+    # Empty prior findings — should handle gracefully
+    result = _run(agent.execute(mission_context, {}))
+    assert isinstance(result, dict)
+    assert "aggregation_complete" in result
+
+
+def test_load_tool_agent_returns_none_for_missing():
+    from apps.backend.src.agents.crew.osint_intelligence_agent import (
+        OSINTIntelligenceAgent,
+    )
+
+    agent = OSINTIntelligenceAgent()
+    result = agent._load_tool_agent("nonexistent-tool-xyz")
+    assert result is None
+
+
+def test_load_tool_agent_loads_existing_tool():
+    from apps.backend.src.agents.crew.osint_intelligence_agent import (
+        OSINTIntelligenceAgent,
+    )
+
+    agent = OSINTIntelligenceAgent()
+    # Try to load a tool that should exist
+    result = agent._load_tool_agent("spiderfoot")
+    # Should load successfully
+    assert result is not None
