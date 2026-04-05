@@ -3,7 +3,7 @@ Kaison K1 - Ollama API Router
 Local AI model management and inference
 """
 
-from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, Query
+from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, Query
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any
 import logging
@@ -11,10 +11,16 @@ import json
 import asyncio
 
 from ..integrations.ollama_manager import get_ollama_manager, HardwareSpec, ModelRecommendation
+from apps.backend.src.auth.dependencies import require_roles
+from apps.backend.src.auth.models import UserRole
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/ollama", tags=["ollama"])
+router = APIRouter(
+    prefix="/api/v1/ollama",
+    tags=["ollama"],
+    dependencies=[Depends(require_roles(UserRole.OPERATOR, UserRole.ADMIN))],
+)
 
 
 # Pydantic Models

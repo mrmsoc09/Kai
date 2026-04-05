@@ -48,15 +48,23 @@ class DnsxAgent(BaseToolAgent):
                     data = json.loads(line)
                     subdomain = data.get("host", "")
                     findings.append({
+                        "type": "subdomain",
                         "subdomain": subdomain,
                         "value": subdomain,
-                        "a_records": data.get("a", []),
-                        "cname_records": data.get("cname", []),
-                        "aaaa_records": data.get("aaaa", []),
-                        "mx_records": data.get("mx", []),
-                        "status_code": data.get("status_code", ""),
-                        "source": "dnsx",
                         "target": target,
+                        "severity": "info",
+                        "confidence": 0.9,
+                        "source_tool": self.TOOL_NAME,
+                        "raw_evidence": line,
+                        "context": {
+                            "a_records": data.get("a", []),
+                            "cname_records": data.get("cname", []),
+                            "aaaa_records": data.get("aaaa", []),
+                            "mx_records": data.get("mx", []),
+                            "status_code": data.get("status_code", ""),
+                        },
+                        "recommended_next_tools": ["httpx_probe"],
+                        "recommended_next_actions": ["probe_http"],
                     })
                     continue
                 except json.JSONDecodeError:
@@ -72,12 +80,20 @@ class DnsxAgent(BaseToolAgent):
                 if part:
                     ips.append(part)
             findings.append({
+                "type": "subdomain",
                 "subdomain": subdomain,
                 "value": subdomain,
-                "a_records": ips,
-                "cname_records": [],
-                "source": "dnsx",
                 "target": target,
+                "severity": "info",
+                "confidence": 0.85,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": line,
+                "context": {
+                    "a_records": ips,
+                    "cname_records": [],
+                },
+                "recommended_next_tools": ["httpx_probe"],
+                "recommended_next_actions": ["probe_http"],
             })
         return findings
 
@@ -86,9 +102,15 @@ class DnsxAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            cnames = item.get("cname_records", [])
-            ips = item.get("a_records", [])
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|subdomain|{value}" in known:
+                noise.append(item)
+                continue
+
+            cnames = item["context"].get("cname_records", [])
+            ips = item["context"].get("a_records", [])
             # Takeover candidate is always signal
             takeover_cname = next(
                 (c for c in cnames if any(p in c for p in _TAKEOVER_CNAME_PATTERNS)),
@@ -96,7 +118,8 @@ class DnsxAgent(BaseToolAgent):
             )
             if takeover_cname:
                 item["signal_reason"] = "subdomain_takeover_candidate"
-                item["takeover_cname"] = takeover_cname
+                item["severity"] = "high"
+                item["context"]["takeover_cname"] = takeover_cname
                 signal.append(item)
                 continue
             # CDN-only IPs → noise

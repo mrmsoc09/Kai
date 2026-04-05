@@ -2,52 +2,41 @@
 Praison Orchestration Topology
 ================================
 Graph topology model for K1's hybrid orchestration system.
-
-Defines the static structure of the mission execution graph:
-  - NodeSpec: a single agent node with all policy metadata
-  - EdgeSpec: a directed edge between nodes with routing condition
-  - ClusterSpec: a bounded group of nodes (phase cluster)
-  - MissionGraphSpec: the complete graph for a campaign mission
-
-This module is STRUCTURAL ONLY — it defines graph shape.
-  - PraisonLangGraphBuilder converts this into an executable LangGraph StateGraph
-  - PraisonClusterRuntime executes clusters against this topology
-
-Standard topology for a K1 bug bounty mission:
-  GovernanceDirector
-       ↓ delegates to
-  MissionDirector ─────────────────────────────────┐
-       ↓ delegates to                               ↓
-  PhaseCoordinator (recon)   PhaseCoordinator (scanning)
-       ↓ delegates to               ↓ delegates to
-  SurfaceMapper               ReconSpecialist
-  (specialist)                (specialist)
-       ↓ artifacts ──→ EvidenceAnalyst ──→ ReportSynthesisAgent
-                             ↓ artifacts
-                        GovernanceDirector (approval gate)
-                             ↓ approved
-                        HandoffLiaison ──→ SUBMITTED
 """
 
 from __future__ import annotations
 
+import os
 import uuid
+import asyncio
+import logging
+import json
 from dataclasses import dataclass, field
-from typing import Any
+from datetime import datetime, UTC
+from typing import Any, Dict, Optional
+
+from apps.backend.src.core.trilium.client import TriliumClient
+from apps.backend.src.core.trilium.query import OrchestrationQueryLayer
+from apps.backend.src.core.trilium.session_manager import SessionManager
+from apps.backend.src.core.trilium.exploit_coordinator import ExploitCoordinator
+from apps.backend.src.core.trilium.vulnerability_chainer import VulnerabilityChainer
+from apps.backend.src.core.trilium.handoff import StateHandoffSystem
+from apps.backend.src.core.governance.governor import Governor 
+
+logger = logging.getLogger(__name__)
 
 
 # ── Edge routing conditions ───────────────────────────────────────────────────
 
 class EdgeCondition(str):
-    """String constants for conditional edge routing in LangGraph."""
-    ALWAYS          = "always"           # unconditional
-    ON_SUCCESS      = "on_success"       # previous node completed without error
-    ON_FAILURE      = "on_failure"       # previous node errored
-    ON_APPROVAL     = "on_approval"      # HIL or governance approved
-    ON_REJECTION    = "on_rejection"     # HIL or governance rejected
-    ON_ARTIFACT     = "on_artifact"      # specific artifact type was produced
-    ON_HIGH_SIGNAL  = "on_high_signal"   # high-confidence vulnerability signal found
-    ON_LOW_SIGNAL   = "on_low_signal"    # no significant findings
+    ALWAYS          = "always"
+    ON_SUCCESS      = "on_success"
+    ON_FAILURE      = "on_failure"
+    ON_APPROVAL     = "on_approval"
+    ON_REJECTION    = "on_rejection"
+    ON_ARTIFACT     = "on_artifact"
+    ON_HIGH_SIGNAL  = "on_high_signal"
+    ON_LOW_SIGNAL   = "on_low_signal"
     ON_PHASE_COMPLETE = "on_phase_complete"
 
 
@@ -55,14 +44,10 @@ class EdgeCondition(str):
 
 @dataclass
 class NodeSpec:
-    """
-    Specification for a single agent node in the mission graph.
-    Derived from AgentIdentity + topology-specific metadata.
-    """
-    node_id: str           # unique in graph (= agent_id)
-    agent_id: str          # canonical agent_id from registry
-    node_type: str         # governance|coordinator|reporter|agent
-    cluster_id: str        = ""     # cluster this node belongs to
+    node_id: str
+    agent_id: str
+    node_type: str
+    cluster_id: str        = ""
     agent_class: str       = "specialist"
     risk_profile: str      = "standard"
     review_policy: str     = "standard"
@@ -70,15 +55,14 @@ class NodeSpec:
     allowed_tools: list[str] = field(default_factory=list)
     system_prompt: str     = ""
     litellm_model: str     = ""
-    interrupt_before: bool = False   # LangGraph interrupt_before=[node_id]
-    interrupt_after: bool  = False   # LangGraph interrupt_after=[node_id]
-    is_entry: bool         = False   # graph entry point
-    is_exit: bool          = False   # terminal node
+    interrupt_before: bool = False
+    interrupt_after: bool  = False
+    is_entry: bool         = False
+    is_exit: bool          = False
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
     def from_langgraph_spec(cls, spec: dict[str, Any], cluster_id: str = "") -> "NodeSpec":
-        """Build a NodeSpec from a LangGraph adapter spec dict."""
         interrupt_policy = spec.get("interrupt_policy", {})
         return cls(
             node_id=spec["node_id"],
@@ -99,19 +83,12 @@ class NodeSpec:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "node_id":         self.node_id,
-            "agent_id":        self.agent_id,
-            "node_type":       self.node_type,
-            "cluster_id":      self.cluster_id,
-            "agent_class":     self.agent_class,
-            "risk_profile":    self.risk_profile,
-            "review_policy":   self.review_policy,
-            "memory_scope":    self.memory_scope,
-            "allowed_tools":   self.allowed_tools,
-            "interrupt_before": self.interrupt_before,
-            "interrupt_after":  self.interrupt_after,
-            "is_entry":        self.is_entry,
-            "is_exit":         self.is_exit,
+            "node_id": self.node_id,
+            "agent_id": self.agent_id,
+            "node_type": self.node_type,
+            "cluster_id": self.cluster_id,
+            "is_entry": self.is_entry,
+            "is_exit": self.is_exit,
         }
 
 
@@ -119,22 +96,19 @@ class NodeSpec:
 
 @dataclass
 class EdgeSpec:
-    """Directed edge between two nodes in the mission graph."""
     edge_id: str      = field(default_factory=lambda: str(uuid.uuid4()))
-    source: str       = ""   # node_id
-    target: str       = ""   # node_id
+    source: str       = ""
+    target: str       = ""
     condition: str    = EdgeCondition.ALWAYS
-    artifact_type: str = ""  # required artifact type if condition=ON_ARTIFACT
-    label: str        = ""   # human-readable edge label for UI
+    artifact_type: str = ""
+    label: str        = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "edge_id":       self.edge_id,
-            "source":        self.source,
-            "target":        self.target,
-            "condition":     self.condition,
-            "artifact_type": self.artifact_type,
-            "label":         self.label,
+            "edge_id": self.edge_id,
+            "source": self.source,
+            "target": self.target,
+            "condition": self.condition,
         }
 
 
@@ -142,263 +116,176 @@ class EdgeSpec:
 
 @dataclass
 class ClusterSpec:
-    """
-    A bounded phase cluster — a group of agents that execute within
-    a single workflow phase under a coordinator's authority.
-
-    Cluster execution is decentralized: the coordinator delegates to
-    specialists independently. Cross-cluster communication goes through
-    the MissionDirector or GovernanceDirector.
-    """
     cluster_id: str         = field(default_factory=lambda: str(uuid.uuid4()))
-    cluster_name: str       = ""    # human-readable, e.g. "recon_cluster"
-    phase: str              = ""    # workflow phase this cluster executes in
-    coordinator_id: str     = ""    # node_id of the coordinator agent
-    specialist_ids: list[str] = field(default_factory=list)  # specialist node_ids
-    entry_node: str         = ""    # first node executed in this cluster
-    exit_node: str          = ""    # last node — signals cluster completion
-    parallel_execution: bool = True  # specialists can run in parallel
-
-    @property
-    def all_node_ids(self) -> list[str]:
-        ids = []
-        if self.coordinator_id:
-            ids.append(self.coordinator_id)
-        ids.extend(self.specialist_ids)
-        return ids
+    cluster_name: str       = ""
+    phase: str              = ""
+    coordinator_id: str     = ""
+    specialist_ids: list[str] = field(default_factory=list)
+    entry_node: str         = ""
+    exit_node: str          = ""
+    parallel_execution: bool = True
 
     def to_dict(self) -> dict[str, Any]:
-        return {
-            "cluster_id":         self.cluster_id,
-            "cluster_name":       self.cluster_name,
-            "phase":              self.phase,
-            "coordinator_id":     self.coordinator_id,
-            "specialist_ids":     self.specialist_ids,
-            "entry_node":         self.entry_node,
-            "exit_node":          self.exit_node,
-            "parallel_execution": self.parallel_execution,
-        }
+        return {"cluster_id": self.cluster_id, "cluster_name": self.cluster_name}
 
 
 # ── Mission graph spec ────────────────────────────────────────────────────────
 
 @dataclass
 class MissionGraphSpec:
-    """
-    Complete graph specification for a K1 campaign mission.
-
-    Contains:
-      - All node specs (one per agent instance)
-      - All edge specs (directed graph)
-      - All cluster specs (phase groupings)
-      - Entry/exit node IDs
-      - Global graph metadata
-    """
     graph_id: str           = field(default_factory=lambda: str(uuid.uuid4()))
     mission_name: str       = ""
     workflow_id: str        = ""
     program_id: str         = ""
-    nodes: dict[str, NodeSpec]   = field(default_factory=dict)    # node_id → NodeSpec
+    nodes: dict[str, NodeSpec]   = field(default_factory=dict)
     edges: list[EdgeSpec]        = field(default_factory=list)
-    clusters: dict[str, ClusterSpec] = field(default_factory=dict)  # cluster_id → ClusterSpec
+    clusters: dict[str, ClusterSpec] = field(default_factory=dict)
     entry_node: str         = ""
     exit_node: str          = ""
-    checkpointer_scope: str = "workflow"  # PostgreSQL checkpointer scope for LangGraph
-
-    # ── Mutation helpers ──────────────────────────────────────────────────────
+    checkpointer_scope: str = "workflow"
+    governor: Governor | None = None
 
     def add_node(self, node: NodeSpec) -> "MissionGraphSpec":
         self.nodes[node.node_id] = node
-        if node.is_entry:
-            self.entry_node = node.node_id
-        if node.is_exit:
-            self.exit_node = node.node_id
+        if node.is_entry: self.entry_node = node.node_id
+        if node.is_exit: self.exit_node = node.node_id
         return self
 
-    def add_edge(
-        self,
-        source: str,
-        target: str,
-        condition: str = EdgeCondition.ALWAYS,
-        artifact_type: str = "",
-        label: str = "",
-    ) -> "MissionGraphSpec":
-        self.edges.append(EdgeSpec(
-            source=source,
-            target=target,
-            condition=condition,
-            artifact_type=artifact_type,
-            label=label,
-        ))
+    def add_edge(self, source: str, target: str, condition: str = EdgeCondition.ALWAYS) -> "MissionGraphSpec":
+        self.edges.append(EdgeSpec(source=source, target=target, condition=condition))
         return self
 
     def add_cluster(self, cluster: ClusterSpec) -> "MissionGraphSpec":
         self.clusters[cluster.cluster_id] = cluster
         return self
 
-    # ── Queries ───────────────────────────────────────────────────────────────
-
-    def outgoing_edges(self, node_id: str) -> list[EdgeSpec]:
-        return [e for e in self.edges if e.source == node_id]
-
-    def incoming_edges(self, node_id: str) -> list[EdgeSpec]:
-        return [e for e in self.edges if e.target == node_id]
-
-    def cluster_for_node(self, node_id: str) -> ClusterSpec | None:
-        for cluster in self.clusters.values():
-            if node_id in cluster.all_node_ids:
-                return cluster
-        return None
-
-    def governance_nodes(self) -> list[NodeSpec]:
-        return [n for n in self.nodes.values() if n.node_type == "governance"]
-
-    def nodes_requiring_interrupt(self) -> list[NodeSpec]:
-        return [n for n in self.nodes.values() if n.interrupt_before or n.interrupt_after]
-
-    def to_dict(self) -> dict[str, Any]:
-        return {
-            "graph_id":           self.graph_id,
-            "mission_name":       self.mission_name,
-            "workflow_id":        self.workflow_id,
-            "program_id":         self.program_id,
-            "nodes":              {k: v.to_dict() for k, v in self.nodes.items()},
-            "edges":              [e.to_dict() for e in self.edges],
-            "clusters":           {k: v.to_dict() for k, v in self.clusters.items()},
-            "entry_node":         self.entry_node,
-            "exit_node":          self.exit_node,
-            "checkpointer_scope": self.checkpointer_scope,
-        }
-
 
 # ── PraisonTopology ───────────────────────────────────────────────────────────
 
 class PraisonTopology:
-    """
-    Builder for standard K1 mission graph topologies.
-
-    Provides pre-built topology patterns for common campaign shapes.
-    Custom topologies can be assembled directly via MissionGraphSpec.
-    """
-
     @staticmethod
     def build_standard_bug_bounty(
         workflow_id: str,
         program_id: str,
         agent_specs: dict[str, dict[str, Any]],
+        governor: Governor | None = None,
     ) -> MissionGraphSpec:
-        """
-        Build the standard K1 bug bounty mission graph topology.
-
-        Standard shape:
-          GovernanceDirector → MissionDirector → [recon cluster] → [scan cluster]
-          → EvidenceAnalyst → GovernanceDirector (approval) → ReportSynthesisAgent
-          → HandoffLiaison → EXIT
-
-        agent_specs: {agent_id: langgraph_node_spec_dict}
-        All 11 canonical agents should be present.
-        """
         graph = MissionGraphSpec(
             mission_name=f"bug_bounty_{program_id}",
             workflow_id=workflow_id,
             program_id=program_id,
-            checkpointer_scope="workflow",
+            governor=governor,
         )
-
-        # Add all nodes
         for agent_id, spec in agent_specs.items():
             node = NodeSpec.from_langgraph_spec(spec)
             is_entry = (agent_id == "GovernanceDirector")
             is_exit = (agent_id == "HandoffLiaison")
-            node = NodeSpec(
-                **{k: v for k, v in vars(node).items() if k not in ("is_entry", "is_exit")},
-                is_entry=is_entry,
-                is_exit=is_exit,
-            )
+            node.is_entry = is_entry
+            node.is_exit = is_exit
             graph.add_node(node)
-
-        # Governance → Mission direction
-        graph.add_edge("GovernanceDirector", "MissionDirector",
-                       condition=EdgeCondition.ON_APPROVAL, label="mission_approved")
-
-        # Mission → Phase coordinators
-        graph.add_edge("MissionDirector", "PhaseCoordinator",
-                       condition=EdgeCondition.ON_SUCCESS, label="recon_phase")
-
-        # Recon cluster: coordinator → specialists (deterministic sequence)
-        # NOTE: LangGraph conditional router returns a single branch target.
-        # Use explicit sequencing to ensure both specialist nodes execute.
-        graph.add_edge("PhaseCoordinator", "SurfaceMapper",
-                       condition=EdgeCondition.ON_SUCCESS, label="surface_scan")
-        graph.add_edge("SurfaceMapper", "ReconSpecialist",
-                       condition=EdgeCondition.ON_SUCCESS, label="active_recon")
-
-        # Specialists → analysis
-        graph.add_edge("ReconSpecialist", "EvidenceAnalyst",
-                       condition=EdgeCondition.ON_SUCCESS, label="evidence_ready")
-
-        # Analysis → governance gate
-        graph.add_edge("EvidenceAnalyst", "GovernanceDirector",
-                       condition=EdgeCondition.ON_HIGH_SIGNAL, label="requires_approval")
-        graph.add_edge("EvidenceAnalyst", "ReportSynthesisAgent",
-                       condition=EdgeCondition.ON_LOW_SIGNAL, label="direct_to_report")
-
-        # Governance → report (approved path)
-        graph.add_edge("GovernanceDirector", "ReportSynthesisAgent",
-                       condition=EdgeCondition.ON_APPROVAL, label="findings_approved")
-
-        # Report → handoff → exit
-        graph.add_edge("ReportSynthesisAgent", "HandoffLiaison",
-                       condition=EdgeCondition.ON_SUCCESS, label="report_ready")
-
-        # Build clusters
-        recon_cluster = ClusterSpec(
-            cluster_name="recon_cluster",
-            phase="recon",
-            coordinator_id="PhaseCoordinator",
-            specialist_ids=["SurfaceMapper", "ReconSpecialist"],
-            entry_node="PhaseCoordinator",
-            exit_node="EvidenceAnalyst",
-            parallel_execution=True,
-        )
-        graph.add_cluster(recon_cluster)
-
+        
+        graph.add_edge("GovernanceDirector", "MissionDirector", EdgeCondition.ON_SUCCESS)
+        graph.add_edge("MissionDirector", "PhaseCoordinator", EdgeCondition.ON_SUCCESS)
         return graph
 
 
-# ── Topological execution order ──────────────────────────────────────────────
+# ── Mission Orchestrator ──────────────────────────────
 
+@dataclass
+class MissionCheckpoint:
+    mission_id: str
+    target_id: str
+    last_processed_stage: str
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
 
-def resolve_execution_order(spec: MissionGraphSpec) -> list[str]:
-    """
-    Resolve topological execution order from graph topology.
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "mission_id": self.mission_id,
+            "target_id": self.target_id,
+            "last_processed_stage": self.last_processed_stage,
+            "timestamp": self.timestamp,
+        }
 
-    Starting from ``spec.entry_node``, performs a DFS traversal following
-    outgoing edges.  Any nodes not reachable from the entry are appended
-    at the end.  If there is no entry node, the dict-insertion order of
-    ``spec.nodes`` is returned.
-    """
-    if not spec.entry_node:
-        return list(spec.nodes.keys())
-    visited: list[str] = []
-    _topo_visit(spec.entry_node, spec, visited, set())
-    for nid in spec.nodes:
-        if nid not in visited:
-            visited.append(nid)
-    return visited
+class MissionOrchestrator:
+    def __init__(
+        self,
+        trilium_client: TriliumClient,
+        query_layer: OrchestrationQueryLayer,
+        session_manager: SessionManager,
+        exploit_coordinator: ExploitCoordinator,
+        vulnerability_chainer: VulnerabilityChainer,
+        state_handoff_system: StateHandoffSystem,
+        governor: Governor | None = None,
+    ):
+        self.trilium_client = trilium_client
+        self.query_layer = query_layer
+        self.session_manager = session_manager
+        self.exploit_coordinator = exploit_coordinator
+        self.vulnerability_chainer = vulnerability_chainer
+        self.state_handoff_system = state_handoff_system
+        self.governor = governor
+        self.operator_absent = os.environ.get("K1_OPERATOR", "true").lower() == "false"
+        self.checkpoint_root_id = os.environ.get("K1_CHECKPOINT_ROOT_ID", "checkpoints")
 
+    async def start_mission(self, mission_id: str, target_id: str):
+        logger.info(f"Orchestrator: Starting mission {mission_id} for {target_id}")
+        
+        last_checkpoint = await self._load_last_checkpoint(mission_id)
+        stages = ["recon", "scanning", "analysis", "chaining", "exploitation", "reporting", "handoff"]
+        start_idx = stages.index(last_checkpoint.last_processed_stage) + 1 if last_checkpoint else 0
 
-def _topo_visit(
-    node_id: str,
-    spec: MissionGraphSpec,
-    visited: list[str],
-    in_progress: set[str],
-) -> None:
-    """DFS helper for :func:`resolve_execution_order`."""
-    if node_id in visited or node_id in in_progress:
-        return
-    in_progress.add(node_id)
-    visited.append(node_id)
-    in_progress.discard(node_id)
-    for edge in spec.outgoing_edges(node_id):
-        _topo_visit(edge.target, spec, visited, in_progress)
+        for i in range(start_idx, len(stages)):
+            stage = stages[i]
+            
+            if self.governor and not await self.governor.request_token(f"orchestrator_{stage}"):
+                logger.error(f"Governor: Denied token for stage {stage}.")
+                break
+
+            if self.operator_absent:
+                logger.info(f"Orchestrator: K1_OPERATOR=False. Autonomous mode for {stage}.")
+
+            try:
+                await self._execute_stage(stage, target_id)
+                if stage in ["chaining", "exploitation"]:
+                    await self._save_checkpoint(mission_id, target_id, stage)
+            except Exception as e:
+                logger.error(f"Orchestrator: Stage {stage} failed: {str(e)}")
+                break
+
+    async def _execute_stage(self, stage: str, target_id: str):
+        logger.info(f"Orchestrator: Executing {stage}...")
+        await asyncio.sleep(1)
+        if stage == "chaining":
+            await self.vulnerability_chainer.scan_for_potential_chains(target_id)
+
+    async def _save_checkpoint(self, mission_id: str, target_id: str, stage: str):
+        checkpoint = MissionCheckpoint(mission_id, target_id, stage)
+        content = f"<pre><code>{json.dumps(checkpoint.to_dict(), indent=2)}</code></pre>"
+        title = f"Checkpoint:{mission_id}:{stage}"
+        new_note = await self.trilium_client.create_note(self.checkpoint_root_id, title, content)
+        note_id = new_note["note"]["noteId"]
+        await self.trilium_client.create_attribute(note_id, "label", "mission_id", mission_id)
+        await self.trilium_client.create_attribute(note_id, "label", "type", "checkpoint")
+        await self.trilium_client.create_attribute(note_id, "label", "stage", stage)
+
+    async def _load_last_checkpoint(self, mission_id: str) -> MissionCheckpoint | None:
+        query = f"note.labels.mission_id='{mission_id}' AND note.labels.type='checkpoint'"
+        results = await self.trilium_client.search_notes(query)
+        if not results: return None
+        
+        checkpoints = []
+        for r in results:
+            note = await self.trilium_client.get_note(r["noteId"])
+            try:
+                raw_json = re.sub(r"<.*?>", "", note.get("content", "{}")).strip()
+                data = json.loads(raw_json)
+                checkpoints.append(MissionCheckpoint(**data))
+            except Exception: continue
+        
+        if not checkpoints: return None
+        checkpoints.sort(key=lambda x: x.timestamp, reverse=True)
+        return checkpoints[0]
+
+    async def stop_all_components(self):
+        await self.session_manager.stop()
+        await self.state_handoff_system.stop()

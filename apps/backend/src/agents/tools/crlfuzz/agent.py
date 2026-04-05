@@ -30,13 +30,19 @@ class CrlfuzzAgent(BaseToolAgent):
             if not line:
                 continue
             findings.append({
-                "url": line,
+                "type": "vulnerability",
                 "value": line,
-                "type": "crlf_injection",
-                "severity": "medium",
-                "evidence": "Header injection / Response splitting detected",
-                "source": "crlfuzz",
                 "target": target,
+                "severity": "medium",
+                "confidence": 0.8,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": line,
+                "context": {
+                    "vulnerability_type": "crlf_injection",
+                    "evidence": "Header injection / Response splitting detected",
+                },
+                "recommended_next_tools": ["EvidenceAnalystAgent"],
+                "recommended_next_actions": ["validate_crlf"],
             })
         return findings
 
@@ -45,8 +51,14 @@ class CrlfuzzAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            if item.get("type") == "crlf_injection":
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|vulnerability|{value}" in known:
+                noise.append(item)
+                continue
+
+            if item["context"].get("vulnerability_type") == "crlf_injection":
                 item["signal_reason"] = "header_injection_confirmed"
                 signal.append(item)
             else:
@@ -57,12 +69,11 @@ class CrlfuzzAgent(BaseToolAgent):
         self, signal: list[dict[str, Any]], target: str
     ) -> dict[str, Any]:
         return {
-            "next_agent": "cache_poisoning_agent",
+            "next_agent": "EvidenceAnalystAgent",
             "action": "test_cache_poisoning",
             "target": target,
             "instructions": (
                 "CRLFuzz detected header injection. "
-                "Next: Check for cache poisoning or session fixation possibilities. "
-                "Try to inject 'Set-Cookie' header or 'X-Forwarded-Host' to poison cache."
+                "Trigger EvidenceAnalystAgent to check for cache poisoning or session fixation possibilities."
             ),
         }

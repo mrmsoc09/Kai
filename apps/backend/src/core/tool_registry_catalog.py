@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Lock
@@ -9,6 +10,8 @@ from typing import Any
 import yaml
 
 from .helpers import as_list_of_str, repo_root
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -70,14 +73,19 @@ def default_catalog_path() -> Path:
 def _load_from_payload(payload: dict[str, Any]) -> dict[str, ToolCatalogEntry]:
     entries: dict[str, ToolCatalogEntry] = {}
     raw_tools = payload.get("tools") or []
-    for item in raw_tools:
+    for index, item in enumerate(raw_tools):
         if not isinstance(item, dict):
             continue
         name = str(item.get("name") or "").strip().lower()
         if not name:
             continue
         if name in entries:
-            raise ValueError(f"Duplicate tool entry in catalog: {name}")
+            logger.warning(
+                "Duplicate tool entry in catalog for '%s' at index=%s; preserving first definition",
+                name,
+                index,
+            )
+            continue
 
         retry = item.get("retry_policy") if isinstance(item.get("retry_policy"), dict) else {}
         entry = ToolCatalogEntry(

@@ -83,6 +83,7 @@ WORKFLOW_TEMPLATES: dict[str, WorkflowTemplate] = {
             WorkflowStep("vuln_scan", "nikto"),
             WorkflowStep("vuln_scan", "dalfox", approval_required=True),
             WorkflowStep("prioritization_and_correlation", "k1_correlation"),
+            WorkflowStep("report_prep", "k1_sandbox_critic"),
             WorkflowStep("report_prep", "k1_priority_ranking"),
         ),
     ),

@@ -52,10 +52,17 @@ class SubfinderAgent(BaseToolAgent):
             if not (line.endswith(f".{target}") or line == target):
                 continue
             findings.append({
+                "type": "subdomain",
                 "subdomain": line,
                 "value": line,
-                "source": "subfinder",
                 "target": target,
+                "severity": "info",
+                "confidence": 0.85,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": line,
+                "context": {"source": "subfinder"},
+                "recommended_next_tools": ["dnsx"],
+                "recommended_next_actions": ["resolve_dns"],
             })
         return findings
 
@@ -64,11 +71,18 @@ class SubfinderAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|subdomain|{value}" in known:
+                noise.append(item)
+                continue
+
             sub = item["subdomain"].lower()
             label = sub.split(".")[0]  # leftmost label
             if any(kw in label for kw in _HIGH_SIGNAL_KEYWORDS):
                 item["signal_reason"] = "high_signal_keyword"
+                item["severity"] = "medium"
                 signal.append(item)
             elif any(kw in label for kw in _NOISE_KEYWORDS):
                 item["noise_reason"] = "low_signal_keyword"

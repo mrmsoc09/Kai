@@ -19,6 +19,7 @@ from apps.backend.src.core.protocol import (
     KaisonResultMetadata,
     Severity,
 )
+from apps.backend.src.agents.tools.handoff_report import HandoffReport
 
 
 @dataclass(slots=True)
@@ -87,6 +88,10 @@ class BaseToolAgent(ABC):
         self.memory_dir = Path(memory_root)
         self.memory_dir.mkdir(parents=True, exist_ok=True)
         self._memory_path = self.memory_dir / "known_assets.jsonl"
+        self._scan_history_path = self.memory_dir / "scan_history.jsonl"
+        self._findings_correlation_path = self.memory_dir / "findings_correlation.jsonl"
+        self._scan_history_path.touch(exist_ok=True)
+        self._findings_correlation_path.touch(exist_ok=True)
 
     @abstractmethod
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
@@ -120,7 +125,15 @@ class BaseToolAgent(ABC):
                 f"{self.__class__.__name__} must implement map_output() or legacy parse_output()"
             )
 
-        parsed = parser(stdout, target)
+        parser_input = stdout
+        output_recovered = False
+        if not parser_input.strip():
+            recovered_output = self._recover_output_from_artifacts(command=command, options=options)
+            if recovered_output:
+                parser_input = recovered_output
+                output_recovered = True
+
+        parsed = parser(parser_input, target)
         parsed_items = parsed if isinstance(parsed, list) else []
 
         signal_items = parsed_items
@@ -136,6 +149,14 @@ class BaseToolAgent(ABC):
             except Exception:
                 signal_items = parsed_items
                 noise_items = []
+
+        handoff_payload = self._build_handoff_report_payload(
+            target=target,
+            signal_items=signal_items,
+            noise_items=noise_items,
+            options=options,
+            started_at=started_at,
+        )
 
         findings = [self._legacy_item_to_finding(item, target) for item in signal_items]
         if status in {"failure", "timeout"} and not findings:
@@ -164,6 +185,8 @@ class BaseToolAgent(ABC):
             "legacy_parsed_count": len(parsed_items),
             "legacy_signal_count": len(signal_items),
             "legacy_noise_count": len(noise_items),
+            "output_recovered_from_artifact": output_recovered,
+            "handoff_report": handoff_payload,
         }
         if options:
             target_context["options"] = options
@@ -304,6 +327,16 @@ class BaseToolAgent(ABC):
                 }
             )
 
+        self._record_scan_history(
+            target=target,
+            command=command,
+            status=result.status,
+            findings=deduped_findings,
+            started_at=started_at,
+            runtime_ms=runtime_ms,
+            handoff_report=result.target_context.get("handoff_report"),
+        )
+        self._record_findings_correlation(target=target, findings=deduped_findings, started_at=started_at)
         self._persist_memory(target, deduped_findings)
         return result
 
@@ -362,6 +395,95 @@ class BaseToolAgent(ABC):
                 }
                 handle.write(json.dumps(record, ensure_ascii=True) + "\n")
 
+    def _record_scan_history(
+        self,
+        *,
+        target: str,
+        command: list[str],
+        status: str,
+        findings: list[KaisonFinding],
+        started_at: datetime,
+        runtime_ms: int,
+        handoff_report: Any,
+    ) -> None:
+        record = {
+            "scan_id": f"{self.TOOL_NAME}-{int(started_at.timestamp() * 1000)}",
+            "target": target,
+            "timestamp": started_at.isoformat(),
+            "command": command,
+            "result_count": len(findings),
+            "signal_count": len(findings),
+            "noise_count": 0,
+            "findings": [
+                {
+                    "finding_type": finding.finding_type.value,
+                    "value": finding.value,
+                    "severity": finding.severity.value,
+                    "confidence": finding.confidence,
+                }
+                for finding in findings
+            ],
+            "metadata": {
+                "tool": self.TOOL_NAME,
+                "status": status,
+                "runtime_ms": runtime_ms,
+                "handoff_report_present": isinstance(handoff_report, dict),
+            },
+        }
+        with self._scan_history_path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(record, ensure_ascii=True) + "\n")
+
+    def _record_findings_correlation(
+        self, *, target: str, findings: list[KaisonFinding], started_at: datetime
+    ) -> None:
+        if not findings:
+            return
+        timestamp = started_at.isoformat()
+        with self._findings_correlation_path.open("a", encoding="utf-8") as handle:
+            for finding in findings:
+                record = {
+                    "finding_id": str(finding.finding_id),
+                    "tool": self.TOOL_NAME,
+                    "target": target,
+                    "value": finding.value,
+                    "first_seen": timestamp,
+                    "last_seen": timestamp,
+                    "seen_count": 1,
+                    "confirmed": False,
+                    "tags": [finding.finding_type.value, finding.severity.value],
+                }
+                handle.write(json.dumps(record, ensure_ascii=True) + "\n")
+
+    def _build_handoff_report_payload(
+        self,
+        *,
+        target: str,
+        signal_items: list[dict[str, Any]],
+        noise_items: list[dict[str, Any]],
+        options: dict[str, Any] | None,
+        started_at: datetime,
+    ) -> dict[str, Any]:
+        generator = getattr(self, "_generate_next_agent_instructions", None)
+        next_agent_instructions: dict[str, Any] = {}
+        if callable(generator):
+            try:
+                generated = generator(signal_items, target)
+                if isinstance(generated, dict):
+                    next_agent_instructions = generated
+            except Exception as exc:
+                next_agent_instructions = {"generation_error": str(exc)}
+
+        report = HandoffReport(
+            tool=self.TOOL_NAME,
+            target=target,
+            scan_id=f"{self.TOOL_NAME}-{int(started_at.timestamp() * 1000)}",
+            signal_findings=signal_items,
+            noise_findings=noise_items,
+            next_agent_instructions=next_agent_instructions,
+            metadata={"options_supplied": bool(options)},
+        )
+        return report.to_dict()
+
     def _kill_process_group(self, process: subprocess.Popen[bytes] | None) -> dict[str, Any]:
         if process is None:
             return {}
@@ -408,6 +530,41 @@ class BaseToolAgent(ABC):
         if isinstance(value, bytes):
             return value.decode("utf-8", errors="replace")
         return value
+
+    def _recover_output_from_artifacts(
+        self, *, command: list[str], options: dict[str, Any] | None
+    ) -> str:
+        """
+        Recover tool output when commands write primarily to files (quiet/json modes).
+
+        This is a best-effort fallback used only when stdout is empty.
+        """
+        candidate_paths: list[str] = []
+        if options:
+            for key in ("output_file", "output_path", "artifact_path"):
+                value = options.get(key)
+                if isinstance(value, str) and value.strip():
+                    candidate_paths.append(value.strip())
+
+        for idx, token in enumerate(command):
+            if token in {"-o", "--output", "-oX", "--output-filename", "-l"}:
+                if idx + 1 < len(command):
+                    candidate_paths.append(command[idx + 1])
+            elif token.startswith("--log-json="):
+                candidate_paths.append(token.split("=", 1)[1])
+
+        for raw_path in candidate_paths:
+            path = Path(raw_path).expanduser()
+            if not path.exists() or not path.is_file():
+                continue
+            try:
+                content = path.read_text(encoding="utf-8", errors="replace")
+            except OSError:
+                continue
+            if content.strip():
+                return content[: self.MAX_STDIO_CHARS]
+
+        return ""
 
     @staticmethod
     def _dedupe_key(target: str, finding: KaisonFinding) -> str:

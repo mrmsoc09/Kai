@@ -44,13 +44,21 @@ class KiterunnerAgent(BaseToolAgent):
                 url = parts[3]
                 
                 findings.append({
+                    "type": "url",
                     "url": url,
                     "value": url,
-                    "method": method,
-                    "status_code": status,
-                    "content_length": length,
-                    "source": "kiterunner",
                     "target": target,
+                    "severity": "info",
+                    "confidence": 0.8,
+                    "source_tool": self.TOOL_NAME,
+                    "raw_evidence": line,
+                    "context": {
+                        "method": method,
+                        "status_code": status,
+                        "content_length": length,
+                    },
+                    "recommended_next_tools": ["nuclei_scan"],
+                    "recommended_next_actions": ["scan_api_endpoints"],
                 })
         return findings
 
@@ -59,11 +67,18 @@ class KiterunnerAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            status = item.get("status_code", "0")
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|url|{value}" in known:
+                noise.append(item)
+                continue
+
+            status = item["context"].get("status_code", "0")
             # 200, 401, 403, 405 are all interesting for API endpoints
             if status in ["200", "401", "403", "405"]:
                 item["signal_reason"] = "api_endpoint_discovered"
+                item["severity"] = "medium" if status in ["401", "403"] else "info"
                 signal.append(item)
             else:
                 noise.append(item)
@@ -74,13 +89,12 @@ class KiterunnerAgent(BaseToolAgent):
     ) -> dict[str, Any]:
         urls = [s["url"] for s in signal]
         return {
-            "next_agent": "vulnerability_scanner",
+            "next_agent": "nuclei_scan",
             "action": "scan_api_endpoints",
             "target": target,
             "input_urls": urls,
             "instructions": (
                 f"Kiterunner discovered {len(urls)} API endpoints. "
-                "Trigger specialized API scanning (e.g., using postman collections or specialized nuclei templates) "
-                "to find IDORs, mass assignment, or authentication bypasses."
+                "Trigger nuclei_scan with API-specific templates to find IDORs or auth bypasses."
             ),
         }

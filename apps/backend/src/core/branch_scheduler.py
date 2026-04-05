@@ -152,6 +152,14 @@ class PhaseDispatchAdapter:
                 tool_input.setdefault("intention_id", str(intention_id))
             if payload.get("target"):
                 tool_input.setdefault("target", payload.get("target"))
+            certificate_id = str(
+                dispatch.get("certificate_id")
+                or payload.get("certificate_id")
+                or tool_input.get("certificate_id")
+                or ""
+            ).strip()
+            if certificate_id:
+                tool_input.setdefault("certificate_id", certificate_id)
             async_result = run_tool_task.apply_async(
                 (tool_name, tool_input),
                 queue=queue,
@@ -159,6 +167,7 @@ class PhaseDispatchAdapter:
                 kwargs={
                     "user_id": campaign.initiated_by or "",
                     "program_id": str(campaign.program_id),
+                    "certificate_id": certificate_id,
                     "workflow_id": str(campaign.id),
                 },
             )

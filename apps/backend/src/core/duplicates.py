@@ -8,7 +8,10 @@ REPORTS = ROOT / 'artifacts' / 'reports'
 
 # Optional embeddings
 try:
-    from core.embeddings import search_similar  # type: ignore
+    try:
+        from apps.backend.src.core.embeddings import search_similar  # type: ignore
+    except Exception:  # pragma: no cover - compatibility fallback
+        from core.embeddings import search_similar  # type: ignore
     _EMB = True
 except Exception:
     _EMB = False

@@ -61,12 +61,20 @@ class NaabuAgent(BaseToolAgent):
             if len(parts) == 2:
                 host, port = parts
                 findings.append({
+                    "type": "port",
                     "host": host,
                     "port": port,
                     "value": f"{host}:{port}",
-                    "service": self.PORT_SERVICE_MAP.get(port, "unknown"),
-                    "source": "naabu",
                     "target": target,
+                    "severity": "info",
+                    "confidence": 0.9,
+                    "source_tool": self.TOOL_NAME,
+                    "raw_evidence": line,
+                    "context": {
+                        "service": self.PORT_SERVICE_MAP.get(port, "unknown"),
+                    },
+                    "recommended_next_tools": ["nmap"],
+                    "recommended_next_actions": ["service_enumeration"],
                 })
         return findings
 
@@ -75,10 +83,17 @@ class NaabuAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|port|{value}" in known:
+                noise.append(item)
+                continue
+
             # Common 80/443 are signal but high volume, separate if needed
-            if item.get("service") != "unknown":
+            if item["context"].get("service") != "unknown":
                 item["signal_reason"] = "high_risk_service"
+                item["severity"] = "medium"
                 signal.append(item)
             else:
                 signal.append(item)

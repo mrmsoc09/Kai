@@ -579,6 +579,10 @@ class WorkflowExecutor:
             params = dict(params)
             params.setdefault("target", target)
             params.setdefault("run_id", run_id)
+            if program_id is not None:
+                params.setdefault("program_id", str(program_id))
+            if db_workflow_run is not None:
+                params.setdefault("workflow_id", str(db_workflow_run.id))
 
             start_ts = datetime.now(timezone.utc)
             exec_id = f"{run_id}:{stage_name}:{tool_id or phase.phase_name}"

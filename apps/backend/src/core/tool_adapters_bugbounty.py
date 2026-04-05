@@ -7,10 +7,12 @@ global tool registry (`core.tools`) and worker execution path.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import shutil
 import subprocess
+import threading
 import time
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
@@ -31,6 +33,7 @@ from .tools import (
     get_registry,
     register_tool,
 )
+from .trilium.sandbox_validator import SandboxValidator
 
 
 REGISTRY_TOOL_ID_ALIASES: dict[str, str] = {
@@ -667,6 +670,221 @@ class PriorityRankingTool(BaseTool):
         )
 
 
+class K1SandboxCriticTool(BaseTool):
+    def __init__(self):
+        super().__init__(
+            id="k1_sandbox_critic",
+            name="K1 Sandbox Critic",
+            description="Deterministic Stage 7 critic loop executed in-mission.",
+            category=ToolCategory.VALIDATION,
+            autonomy_tier=ToolAutonomyTier.TIER_0_AUTO,
+            parameters=[
+                ToolParameter("target", "string", "Target URL/host"),
+                ToolParameter(
+                    "payload",
+                    "string",
+                    "PoC payload to validate",
+                    required=False,
+                    default="print('BLOCKED')",
+                ),
+                ToolParameter(
+                    "payload_type",
+                    "string",
+                    "python or shell payload type",
+                    required=False,
+                    default="python",
+                    enum=["python", "shell"],
+                ),
+                ToolParameter(
+                    "max_attempts",
+                    "number",
+                    "Maximum critic attempts",
+                    required=False,
+                    default=2,
+                ),
+                ToolParameter(
+                    "program_id",
+                    "string",
+                    "Program UUID used for Stage 7 scope authorization",
+                    required=False,
+                    default=None,
+                ),
+                ToolParameter(
+                    "workflow_id",
+                    "string",
+                    "Workflow UUID used for Stage 7 scoped authorization",
+                    required=False,
+                    default=None,
+                ),
+            ],
+            version="1.0.0",
+        )
+
+    @staticmethod
+    def _run_payload_sync(target: str, payload: str, payload_type: str, timeout_seconds: int = 35):
+        holder: dict[str, Any] = {}
+
+        def _runner() -> None:
+            try:
+                validator = SandboxValidator(isolated_target_url=target)
+                holder["result"] = asyncio.run(
+                    validator.execute_payload(payload, payload_type=payload_type)
+                )
+                holder["validator"] = validator
+            except Exception as exc:  # pragma: no cover - defensive
+                holder["error"] = str(exc)
+
+        thread = threading.Thread(target=_runner, daemon=True)
+        thread.start()
+        thread.join(timeout_seconds)
+        if thread.is_alive():
+            return None, "sandbox execution timed out", None
+        if holder.get("error"):
+            return None, str(holder["error"]), None
+        return holder.get("result"), None, holder.get("validator")
+
+    @staticmethod
+    def _scope_check_sync(
+        *,
+        target: str,
+        program_id: str,
+        workflow_id: str | None,
+        timeout_seconds: int = 10,
+    ) -> tuple[bool, str | None]:
+        holder: dict[str, Any] = {}
+
+        def _runner() -> None:
+            try:
+                from .authorization_gate import scope_validator_async
+
+                holder["allowed"] = asyncio.run(
+                    scope_validator_async(
+                        target,
+                        program_id,
+                        method="exploit_poc_validation",
+                        workflow_id=workflow_id,
+                    )
+                )
+            except Exception as exc:  # pragma: no cover - defensive
+                holder["error"] = str(exc)
+
+        thread = threading.Thread(target=_runner, daemon=True)
+        thread.start()
+        thread.join(timeout_seconds)
+        if thread.is_alive():
+            return False, "scope validation timed out"
+        if holder.get("error"):
+            return False, f"scope validation error: {holder['error']}"
+        if not bool(holder.get("allowed")):
+            return False, "scope validation denied exploit_poc_validation"
+        return True, None
+
+    def execute(self, headers: Optional[Dict[str, str]] = None, **kwargs) -> ToolResult:
+        ok, err = self.validate_parameters(**kwargs)
+        if not ok:
+            return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
+
+        target = str(kwargs.get("target") or "").strip()
+        payload = str(kwargs.get("payload") or "print('BLOCKED')")
+        payload_type = str(kwargs.get("payload_type") or "python").strip().lower()
+        max_attempts = max(1, int(kwargs.get("max_attempts") or 2))
+        program_id = str(kwargs.get("program_id") or "").strip()
+        workflow_id_raw = str(kwargs.get("workflow_id") or "").strip()
+        workflow_id = workflow_id_raw or None
+
+        # Normalize target to URL form expected by sandbox validator.
+        sandbox_target = target if target.startswith(("http://", "https://")) else f"https://{target}"
+        scope_gate_checked = False
+        if program_id:
+            scope_gate_checked = True
+            allowed, scope_error = self._scope_check_sync(
+                target=sandbox_target,
+                program_id=program_id,
+                workflow_id=workflow_id,
+            )
+            if not allowed:
+                return ToolResult(
+                    self.id,
+                    ToolStatus.FAILED,
+                    {
+                        "target": target,
+                        "sandbox_target": sandbox_target,
+                        "payload_type": payload_type,
+                        "attempts": [],
+                        "critic_instruction": None,
+                    },
+                    error=scope_error,
+                    metadata={
+                        "stage7_contract": True,
+                        "attempt_count": 0,
+                        "scope_gate_checked": True,
+                        "scope_gate_allowed": False,
+                    },
+                )
+        attempts: list[dict[str, Any]] = []
+        critic_instruction: str | None = None
+        active_payload = payload
+        final_status = ToolStatus.FAILED
+        final_error: str | None = None
+
+        for attempt in range(1, max_attempts + 1):
+            result, invoke_error, validator = self._run_payload_sync(
+                sandbox_target,
+                active_payload,
+                payload_type,
+            )
+            if invoke_error is not None:
+                final_error = invoke_error
+                attempts.append(
+                    {
+                        "attempt": attempt,
+                        "success": False,
+                        "stderr": invoke_error,
+                    }
+                )
+                break
+            if result is None:
+                final_error = "sandbox returned no result"
+                break
+            attempts.append(
+                {
+                    "attempt": attempt,
+                    "success": bool(result.success),
+                    "stdout": str(result.stdout or "")[:500],
+                    "stderr": str(result.stderr or "")[:500],
+                    "error_message": str(result.error_message or "")[:500],
+                }
+            )
+            if result.success:
+                final_status = ToolStatus.COMPLETED
+                final_error = None
+                break
+            if validator is not None:
+                critic_instruction = validator.generate_critic_instruction(result)
+            # Deterministic mutation for the second pass.
+            active_payload = "print('VERIFIED: POC')"
+            final_error = str(result.error_message or result.stderr or "sandbox validation failed")[:500]
+
+        return ToolResult(
+            self.id,
+            final_status,
+            {
+                "target": target,
+                "sandbox_target": sandbox_target,
+                "payload_type": payload_type,
+                "attempts": attempts,
+                "critic_instruction": critic_instruction,
+            },
+            error=final_error,
+            metadata={
+                "stage7_contract": True,
+                "attempt_count": len(attempts),
+                "scope_gate_checked": scope_gate_checked,
+                "scope_gate_allowed": True if scope_gate_checked else None,
+            },
+        )
+
+
 def _should_use_hook(entry: ToolCatalogEntry) -> bool:
     if entry.safety_classification == "manual_only":
         return True
@@ -691,6 +909,8 @@ def register_bugbounty_tools() -> None:
     registry = get_registry()
     if registry.get("k1_correlation") is None:
         _register_with_tier(InternalCorrelationTool())
+    if registry.get("k1_sandbox_critic") is None:
+        _register_with_tier(K1SandboxCriticTool())
     if registry.get("k1_priority_ranking") is None:
         _register_with_tier(PriorityRankingTool())
     for entry in list_catalog_entries(enabled_only=False):

@@ -3,12 +3,18 @@ Model Bidding API Router
 Exposes intelligent model selection and task routing endpoints
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Dict, List, Optional, Any
 import asyncio
+from apps.backend.src.auth.dependencies import require_roles
+from apps.backend.src.auth.models import UserRole
 
-router = APIRouter(prefix="/api/models", tags=["model-bidding"])
+router = APIRouter(
+    prefix="/api/models",
+    tags=["model-bidding"],
+    dependencies=[Depends(require_roles(UserRole.OPERATOR, UserRole.ANALYST, UserRole.ADMIN))],
+)
 
 # Module-level cache for systems
 _model_factory = None

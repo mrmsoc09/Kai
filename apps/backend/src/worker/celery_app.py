@@ -48,6 +48,7 @@ def run_tool_task(
     certificate_id: str = "",
     workflow_id: str = "",
     scope_policy_hash: str = "",
+    extra_headers: dict[str, str] | None = None,
 ) -> dict:
     """Invoke a registered tool adapter by ID.
 
@@ -122,6 +123,24 @@ def run_tool_task(
             actor="worker.celery.run_tool",
         )
 
+    def _sanitize_extra_headers(raw_headers: object) -> dict[str, str]:
+        if not isinstance(raw_headers, dict):
+            return {}
+        sanitized: dict[str, str] = {}
+        for key, value in raw_headers.items():
+            if not isinstance(key, str) or not isinstance(value, str):
+                continue
+            header_key = key.strip()
+            header_val = value.strip()
+            if not header_key or not header_val:
+                continue
+            if len(header_key) > 128 or len(header_val) > 8192:
+                continue
+            sanitized[header_key] = header_val
+        return sanitized
+
+    safe_extra_headers = _sanitize_extra_headers(extra_headers)
+
     initialize_default_tools()
     hooks = get_hook_registry()
     registry = get_registry()
@@ -175,7 +194,12 @@ def run_tool_task(
         try:
             from apps.backend.src.core.tool_registry_catalog import get_catalog_entry as _get_cat
             cat = _get_cat(tool_id)
-        except Exception: pass
+        except Exception as inner_exc:
+            logger.warning(
+                "Failed to resolve tool catalog entry during Vault fallback for tool=%s: %s",
+                tool_id,
+                inner_exc,
+            )
         if cat and cat.api_keys_required:
             err = f"Vault unavailable and tool '{tool_id}' requires credentials: {exc}"
             logger.error(err)
@@ -278,7 +302,7 @@ def run_tool_task(
         if "run_id" in allowed_param_names and "run_id" not in filtered_params:
             filtered_params["run_id"] = params.get("run_id") or workflow_id or task_id
 
-        result = tool.execute(headers=extra_headers, **filtered_params)
+        result = tool.execute(headers=safe_extra_headers, **filtered_params)
         elapsed = (time.time() - start) * 1000
         result.execution_time_ms = result.execution_time_ms or elapsed
         result_dict = result.to_dict()
@@ -384,13 +408,15 @@ def run_tool_task(
 # Register additional campaign tasks on worker startup.
 try:
     from apps.backend.src.worker import campaign_tasks as _campaign_tasks  # noqa: F401
-except Exception:
+except Exception as exc:
+    logger.warning("Failed to import campaign tasks: %s", exc)
     _campaign_tasks = None
 
 # Register scan pool tasks on worker startup.
 try:
     from apps.backend.src.worker import scan_pool_tasks as _scan_pool_tasks  # noqa: F401
-except Exception:
+except Exception as exc:
+    logger.warning("Failed to import scan pool tasks: %s", exc)
     _scan_pool_tasks = None
 
 # ---------------------------------------------------------------------------

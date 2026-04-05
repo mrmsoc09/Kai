@@ -28,13 +28,19 @@ class CorsyAgent(BaseToolAgent):
         # [!] Vulnerability: ... [Vulnerable Header: ...]
         if "[!]" in raw_output or "Vulnerability" in raw_output:
             findings.append({
-                "url": target,
+                "type": "vulnerability",
                 "value": target,
-                "type": "cors_misconfig",
-                "severity": "medium",
-                "evidence": "Arbitrary origin reflection detected",
-                "source": "corsy",
                 "target": target,
+                "severity": "medium",
+                "confidence": 0.75,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": raw_output[:2000],
+                "context": {
+                    "vulnerability_type": "cors_misconfig",
+                    "evidence": "Arbitrary origin reflection detected",
+                },
+                "recommended_next_tools": ["EvidenceAnalystAgent"],
+                "recommended_next_actions": ["check_cors_exploitability"],
             })
         return findings
 
@@ -43,8 +49,14 @@ class CorsyAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            if item.get("type") == "cors_misconfig":
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|vulnerability|{value}" in known:
+                noise.append(item)
+                continue
+
+            if item["context"].get("vulnerability_type") == "cors_misconfig":
                 item["signal_reason"] = "origin_reflection_with_credentials"
                 signal.append(item)
             else:
@@ -55,13 +67,12 @@ class CorsyAgent(BaseToolAgent):
         self, signal: list[dict[str, Any]], target: str
     ) -> dict[str, Any]:
         return {
-            "next_agent": "vulnerability_validator",
+            "next_agent": "EvidenceAnalystAgent",
             "action": "check_cors_exploitability",
             "target": target,
             "instructions": (
                 "CORSy identified origin reflection. "
-                "Check if the endpoint returns sensitive data (PII, tokens) "
-                "and if 'Access-Control-Allow-Credentials: true' is set. "
-                "Without credentials or sensitive data, this remains informational."
+                "Trigger EvidenceAnalystAgent to check if sensitive data is returned "
+                "with Access-Control-Allow-Credentials set to true."
             ),
         }

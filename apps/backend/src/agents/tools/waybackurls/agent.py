@@ -58,14 +58,22 @@ class WaybackurlsAgent(BaseToolAgent):
             if "." in path_no_qs.split("/")[-1]:
                 ext = "." + path_no_qs.rsplit(".", 1)[-1].lower()
             findings.append({
+                "type": "url",
                 "url": url,
                 "value": url,
-                "path": path,
-                "extension": ext,
-                "parameters": params,
-                "archived_date": date,
-                "source": "waybackurls",
                 "target": target,
+                "severity": "info",
+                "confidence": 0.8,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": line,
+                "context": {
+                    "path": path,
+                    "extension": ext,
+                    "parameters": params,
+                    "archived_date": date,
+                },
+                "recommended_next_tools": ["paramspider", "httpx_probe"],
+                "recommended_next_actions": ["extract_parameters", "probe_http"],
             })
         return findings
 
@@ -74,31 +82,41 @@ class WaybackurlsAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         seen_urls: set[str] = set()
         for item in findings:
             url = item["url"]
             if url in seen_urls:
                 continue
             seen_urls.add(url)
-            path = item["path"].lower()
-            ext = item["extension"]
-            params = item["parameters"]
+
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|url|{value}" in known:
+                noise.append(item)
+                continue
+
+            path = item["context"]["path"].lower()
+            ext = item["context"]["extension"]
+            params = item["context"]["parameters"]
             if ext in _NOISE_EXTENSIONS:
                 item["noise_reason"] = "static_asset"
                 noise.append(item)
                 continue
             if any(path.startswith(p) for p in _HIGH_SIGNAL_PATHS):
                 item["signal_reason"] = "high_signal_path"
+                item["severity"] = "medium"
                 signal.append(item)
                 continue
             injection_params = [p for p in params if p.lower() in _INJECTION_PARAMS]
             if injection_params:
                 item["signal_reason"] = "injection_parameter"
-                item["injection_params"] = injection_params
+                item["severity"] = "medium"
+                item["context"]["injection_params"] = injection_params
                 signal.append(item)
                 continue
             if ext in _HIGH_VALUE_EXTENSIONS:
                 item["signal_reason"] = "high_value_extension"
+                item["severity"] = "medium"
                 signal.append(item)
                 continue
             if not params:

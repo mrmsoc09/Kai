@@ -12,7 +12,10 @@ class VectorStore:
         dsn = os.environ.get('PGVECTOR_DSN')
         if dsn:
             try:
-                from core.vector_pg import PGVectorStore  # type: ignore
+                try:
+                    from apps.backend.src.core.vector_pg import PGVectorStore  # type: ignore
+                except Exception:  # pragma: no cover - compatibility fallback
+                    from core.vector_pg import PGVectorStore  # type: ignore
                 pg = PGVectorStore(dsn)
                 if getattr(pg, 'available', False):
                     self._pg = pg

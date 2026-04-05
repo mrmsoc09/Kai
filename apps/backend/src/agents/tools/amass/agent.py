@@ -47,10 +47,17 @@ class AmassAgent(BaseToolAgent):
             if "(" in line and ")" in line:
                 source = line[line.index("(") + 1:line.index(")")]
             findings.append({
+                "type": "subdomain",
                 "subdomain": subdomain,
                 "value": subdomain,
-                "source": source,
                 "target": target,
+                "severity": "info",
+                "confidence": 0.85,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": line,
+                "context": {"source": source},
+                "recommended_next_tools": ["dnsx"],
+                "recommended_next_actions": ["resolve_dns"],
             })
         return findings
 
@@ -59,10 +66,17 @@ class AmassAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|subdomain|{value}" in known:
+                noise.append(item)
+                continue
+
             label = item["subdomain"].lower().split(".")[0]
             if any(kw in label for kw in _HIGH_SIGNAL_KEYWORDS):
                 item["signal_reason"] = "high_signal_keyword"
+                item["severity"] = "medium"
                 signal.append(item)
             elif any(kw in label for kw in _NOISE_KEYWORDS):
                 item["noise_reason"] = "low_signal_keyword"

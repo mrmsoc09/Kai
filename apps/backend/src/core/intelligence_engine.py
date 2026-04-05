@@ -4,9 +4,10 @@ Automated threat intelligence processing with RSS feeds, EPSS scoring, and RAG i
 """
 
 import asyncio
+import hashlib
 import logging
 from typing import List, Dict, Optional, Any
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dataclasses import dataclass
 
 from ..integrations.rss_parser import get_rss_parser, RSSItem
@@ -69,11 +70,14 @@ class IntelligenceEngine:
 
             for feed_name, items in feed_items.items():
                 for item in items:
+                    published_at = self._normalize_datetime(item.published)
+                    if published_at is None:
+                        continue
                     all_items.append({
                         'feed': feed_name,
                         'title': item.title,
                         'link': item.link,
-                        'published': item.published.isoformat() if isinstance(item.published, datetime) else str(item.published),
+                        'published': published_at.isoformat(),
                         'content': item.content,
                         'summary': item.summary,
                         'cves': item.cves,
@@ -116,11 +120,11 @@ class IntelligenceEngine:
 
                 # Create intelligence item
                 intel_item = IntelligenceItem(
-                    id=f"{item_data['feed']}_{hash(item_data['link'])}",
+                    id=self._stable_item_id(item_data["feed"], item_data["link"]),
                     source=item_data['feed'],
                     title=item_data['title'],
                     link=item_data['link'],
-                    published=datetime.fromisoformat(item_data['published']) if isinstance(item_data['published'], str) else item_data['published'],
+                    published=self._normalize_datetime(item_data.get("published")) or datetime.now(timezone.utc),
                     cves=item_data['cves'],
                     max_epss_score=max_epss,
                     priority_score=priority_score,
@@ -133,7 +137,7 @@ class IntelligenceEngine:
             # Sort by priority score
             intelligence_items.sort(key=lambda x: x.priority_score, reverse=True)
 
-            self.last_scan_time = datetime.now()
+            self.last_scan_time = datetime.now(timezone.utc)
             logger.info(f"Intelligence scan completed. Found {len(intelligence_items)} items")
 
             return intelligence_items
@@ -159,10 +163,11 @@ class IntelligenceEngine:
         # Recency contributes 20%
         try:
             published = item.get('published')
-            if isinstance(published, str):
-                published = datetime.fromisoformat(published)
+            published = self._normalize_datetime(published)
+            if published is None:
+                raise ValueError("missing/invalid published timestamp")
 
-            age_hours = (datetime.now() - published).total_seconds() / 3600
+            age_hours = (datetime.now(timezone.utc) - published).total_seconds() / 3600
             recency_score = max(0, 1.0 - (age_hours / 168))  # Decay over 7 days
             score += recency_score * 0.2
         except Exception:
@@ -251,18 +256,23 @@ class IntelligenceEngine:
 
     async def start_background_scanner(self, interval_minutes: int = 60):
         """Start background intelligence scanner"""
-        self.scan_interval_minutes = interval_minutes
+        self.scan_interval_minutes = max(1, int(interval_minutes))
+        if self._background_task and not self._background_task.done():
+            logger.info("Background intelligence scanner already running")
+            return
         logger.info(f"Starting background intelligence scanner (interval: {interval_minutes}m)")
 
         async def scan_loop():
             while True:
                 try:
                     await self.scan_feeds()
+                except asyncio.CancelledError:
+                    raise
                 except Exception as e:
                     logger.error(f"Error in background scanner: {e}")
 
                 # Wait for next scan
-                await asyncio.sleep(interval_minutes * 60)
+                await asyncio.sleep(self.scan_interval_minutes * 60)
 
         # Create background task
         self._background_task = asyncio.create_task(scan_loop())
@@ -287,6 +297,29 @@ class IntelligenceEngine:
             "scan_interval_minutes": self.scan_interval_minutes,
             "background_scanner_active": self._background_task is not None and not self._background_task.done()
         }
+
+    @staticmethod
+    def _stable_item_id(feed: str, link: str) -> str:
+        payload = f"{feed.strip().lower()}|{link.strip()}"
+        digest = hashlib.sha256(payload.encode("utf-8", errors="replace")).hexdigest()
+        return f"{feed}_{digest[:16]}"
+
+    @staticmethod
+    def _normalize_datetime(value: Any) -> Optional[datetime]:
+        if isinstance(value, datetime):
+            return value.astimezone(timezone.utc) if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        if isinstance(value, str):
+            token = value.strip()
+            if not token:
+                return None
+            if token.endswith("Z"):
+                token = token[:-1] + "+00:00"
+            try:
+                parsed = datetime.fromisoformat(token)
+            except ValueError:
+                return None
+            return parsed.astimezone(timezone.utc) if parsed.tzinfo else parsed.replace(tzinfo=timezone.utc)
+        return None
 
 
 # Singleton pattern

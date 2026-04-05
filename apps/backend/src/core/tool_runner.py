@@ -26,6 +26,23 @@ class ToolRunner:
     def __init__(self, default_queue: str = "tools"):
         self.default_queue = default_queue
 
+    @staticmethod
+    def _sanitize_headers(headers: Optional[Dict[str, str]]) -> Dict[str, str]:
+        if not isinstance(headers, dict):
+            return {}
+        sanitized: Dict[str, str] = {}
+        for key, value in headers.items():
+            if not isinstance(key, str) or not isinstance(value, str):
+                continue
+            k = key.strip()
+            v = value.strip()
+            if not k or not v:
+                continue
+            if len(k) > 128 or len(v) > 8192:
+                continue
+            sanitized[k] = v
+        return sanitized
+
     def _get_scope_hash(self) -> str:
         """Get SHA-256 hash of the current scope policy file."""
         from apps.backend.src.core.scope_guardrails import default_scope_policy_path
@@ -152,6 +169,8 @@ class ToolRunner:
         if risk_tier == ToolRiskTier.TIER_2_INTRUSIVE:
             queue = "intrusive"
 
+        safe_headers = self._sanitize_headers(headers)
+
         async_result = run_tool_task.apply_async(
             (tool_id, params),
             queue=queue,
@@ -161,11 +180,10 @@ class ToolRunner:
                 "certificate_id": certificate_id or "",
                 "workflow_id": workflow_id or "",
                 "scope_policy_hash": self._get_scope_hash(),
-                "extra_headers": headers or {}, # Pass headers to the Celery task
+                "extra_headers": safe_headers, # Pass headers to the Celery task
             },
         )
         return async_result.id
 
 
 tool_runner = ToolRunner()
-

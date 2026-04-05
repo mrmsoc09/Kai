@@ -56,6 +56,7 @@ _DEFAULT_MAX_CONCURRENT: int = 5
 _DEFAULT_MAX_MEMORY_MB: int = 256
 _DEFAULT_MAX_OUTPUT_BYTES: int = 1_048_576  # 1 MB
 _DEFAULT_EXECUTION_TTL: int = 300  # per-sandbox default TTL
+_DEFAULT_MAX_CODE_CHARS: int = 100_000
 _CONTENT_PREVIEW_MAX: int = 500
 
 
@@ -369,17 +370,44 @@ class SandboxHandle:
         5. Truncate output to max_output_bytes
         6. Return SandboxResult
         """
-        # Build restricted builtins: copy builtins and remove __import__ override
+        if len(code) > _DEFAULT_MAX_CODE_CHARS:
+            return SandboxResult(
+                sandbox_id=self._config.sandbox_id,
+                success=False,
+                stdout="",
+                stderr="",
+                exit_code=1,
+                execution_time_ms=0.0,
+                truncated=False,
+                error=f"Code exceeds maximum length ({len(code)} > {_DEFAULT_MAX_CODE_CHARS})",
+            )
+
+        # Build restricted builtins from an explicit allowlist.
+        # This removes powerful primitives such as open/eval/exec/compile/input.
         import builtins as _builtins
 
-        safe_builtins = {
-            k: v for k, v in vars(_builtins).items()
-            if not k.startswith("_") or k in ("__name__", "__doc__")
+        allowed_builtin_names = {
+            "abs", "all", "any", "bool", "bytes", "dict", "enumerate", "filter",
+            "float", "frozenset", "int", "isinstance", "issubclass", "len", "list",
+            "map", "max", "min", "pow", "print", "range", "repr", "reversed",
+            "round", "set", "sorted", "str", "sum", "tuple", "type", "zip",
+            "object", "__build_class__",
+            "Exception", "RuntimeError", "ValueError", "TypeError", "KeyError",
+            "IndexError", "AssertionError", "ZeroDivisionError",
         }
+        safe_builtins: dict[str, Any] = {}
+        for name in allowed_builtin_names:
+            value = getattr(_builtins, name, None)
+            if value is not None:
+                safe_builtins[name] = value
 
         # Create a restricted __import__ that blocks dangerous modules
         blocked = self._config.blocked_modules
-        original_import = __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__  # type: ignore[union-attr]
+        allowed_modules = set(self._config.allowed_modules)
+        if isinstance(__builtins__, dict):
+            original_import = __builtins__.get("__import__", __import__)
+        else:
+            original_import = getattr(__builtins__, "__import__", __import__)
 
         def restricted_import(name: str, *args: Any, **kwargs: Any) -> Any:
             # Check if the top-level module name is blocked
@@ -388,12 +416,16 @@ class SandboxHandle:
                 raise ImportError(
                     f"Module '{name}' is blocked in sandbox (blocked: {top_module})"
                 )
+            if allowed_modules and top_module not in allowed_modules:
+                raise ImportError(
+                    f"Module '{name}' is not allowlisted in sandbox"
+                )
             return original_import(name, *args, **kwargs)
 
         safe_builtins["__import__"] = restricted_import
         safe_builtins["__builtins__"] = safe_builtins
 
-        namespace: dict[str, Any] = {"__builtins__": safe_builtins}
+        namespace: dict[str, Any] = {"__builtins__": safe_builtins, "__name__": "__sandbox__"}
 
         # Capture stdout and stderr
         stdout_capture = io.StringIO()

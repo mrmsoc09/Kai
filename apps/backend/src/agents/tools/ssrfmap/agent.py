@@ -40,13 +40,19 @@ class SsrfmapAgent(BaseToolAgent):
         # Parse for successful SSRF indicators in output
         if "[+]" in raw_output or "Vulnerable" in raw_output or "200 OK" in raw_output:
             findings.append({
-                "url": target,
+                "type": "vulnerability",
                 "value": target,
-                "type": "ssrf",
-                "severity": "high",
-                "evidence": "Cloud metadata or internal resource accessible",
-                "source": "ssrfmap",
                 "target": target,
+                "severity": "high",
+                "confidence": 0.8,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": raw_output[:2000],
+                "context": {
+                    "vulnerability_type": "ssrf",
+                    "evidence": "Cloud metadata or internal resource accessible",
+                },
+                "recommended_next_tools": ["EvidenceAnalystAgent"],
+                "recommended_next_actions": ["validate_ssrf"],
             })
         return findings
 
@@ -55,8 +61,14 @@ class SsrfmapAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            if item.get("type") == "ssrf":
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|vulnerability|{value}" in known:
+                noise.append(item)
+                continue
+
+            if item["context"].get("vulnerability_type") == "ssrf":
                 item["signal_reason"] = "potential_ssrf_leaking_metadata"
                 signal.append(item)
             else:
@@ -67,12 +79,11 @@ class SsrfmapAgent(BaseToolAgent):
         self, signal: list[dict[str, Any]], target: str
     ) -> dict[str, Any]:
         return {
-            "next_agent": "vulnerability_validator",
+            "next_agent": "EvidenceAnalystAgent",
             "action": "confirm_ssrf_oob",
             "target": target,
             "instructions": (
                 "SSRFMap identified a potential metadata leak. "
-                "Trigger an out-of-band (OOB) confirmation using Interactsh to verify full SSRF. "
-                "Check for IAM credential exfiltration from AWS/GCP/Azure endpoints."
+                "Trigger EvidenceAnalystAgent for out-of-band (OOB) confirmation using Interactsh."
             ),
         }

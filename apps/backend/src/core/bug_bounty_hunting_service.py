@@ -66,6 +66,10 @@ def _coalesce_json(value: Any) -> dict[str, Any]:
     return dict(value) if isinstance(value, dict) else {}
 
 
+async def _run_in_thread(func, /, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
+    return await asyncio.to_thread(func, *args, **kwargs)
+
+
 @dataclass
 class _ReadinessDecision:
     status: str
@@ -603,7 +607,7 @@ class BugBountyHuntingService:
             }
         )
         if tool_names:
-            dashboard = await asyncio.to_thread(
+            dashboard = await _run_in_thread(
                 build_dashboard,
                 tool_names=tool_names,
                 enabled_only=False,

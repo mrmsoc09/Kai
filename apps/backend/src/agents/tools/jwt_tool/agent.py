@@ -33,13 +33,20 @@ class JwtToolAgent(BaseToolAgent):
         # Parse for successful attack indicators
         if "[+]" in raw_output or "VULNERABILITY" in raw_output:
             findings.append({
-                "token": target,
+                "type": "vulnerability",
                 "value": target,
-                "type": "jwt_vulnerability",
-                "severity": "high",
-                "evidence": "Token manipulation successful (e.g., none alg, key confusion)",
-                "source": "jwt_tool",
                 "target": target,
+                "severity": "high",
+                "confidence": 0.85,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": raw_output[:2000],
+                "context": {
+                    "vulnerability_type": "jwt_vulnerability",
+                    "evidence": "Token manipulation successful (e.g., none alg, key confusion)",
+                    "token": target,
+                },
+                "recommended_next_tools": ["EvidenceAnalystAgent"],
+                "recommended_next_actions": ["validate_jwt"],
             })
         return findings
 
@@ -48,8 +55,14 @@ class JwtToolAgent(BaseToolAgent):
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         signal: list[dict[str, Any]] = []
         noise: list[dict[str, Any]] = []
+        known = self.load_memory()
         for item in findings:
-            if item.get("type") == "jwt_vulnerability":
+            value = item["value"].lower()
+            if f"{item['target'].lower()}|vulnerability|{value}" in known:
+                noise.append(item)
+                continue
+
+            if item["context"].get("vulnerability_type") == "jwt_vulnerability":
                 item["signal_reason"] = "token_manipulation_vulnerability"
                 signal.append(item)
             else:
@@ -60,12 +73,11 @@ class JwtToolAgent(BaseToolAgent):
         self, signal: list[dict[str, Any]], target: str
     ) -> dict[str, Any]:
         return {
-            "next_agent": "privilege_escalation_agent",
+            "next_agent": "EvidenceAnalystAgent",
             "action": "test_privilege_escalation",
             "target": target,
             "instructions": (
                 "JWT_Tool identified a vulnerability in token handling. "
-                "Attempt to modify 'role' or 'user_id' claims in the JWT "
-                "to escalate privileges horizontally or vertically."
+                "Trigger EvidenceAnalystAgent to test for horizontal or vertical privilege escalation."
             ),
         }

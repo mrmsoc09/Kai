@@ -160,7 +160,10 @@ if _LANGCHAIN_AVAILABLE:
                 return None
             try:
                 # Lazy import to avoid circular at module load
-                from core.llm_providers import LLMProvider  # noqa: PLC0415
+                try:
+                    from core.llm_providers import LLMProvider  # type: ignore  # noqa: PLC0415
+                except Exception:  # pragma: no cover - package-mode fallback
+                    from apps.backend.src.core.llm_providers import LLMProvider  # noqa: PLC0415
 
                 return LLMProvider(self.preferred_provider.lower())
             except (ValueError, ImportError):
@@ -188,7 +191,10 @@ if _LANGCHAIN_AVAILABLE:
             context the caller should use ``_agenerate`` directly.
             """
             # Lazy import — avoids circular imports and startup-order issues
-            from core.llm_providers import llm_factory  # noqa: PLC0415
+            try:
+                from core.llm_providers import llm_factory  # type: ignore  # noqa: PLC0415
+            except Exception:  # pragma: no cover - package-mode fallback
+                from apps.backend.src.core.llm_providers import llm_factory  # noqa: PLC0415
 
             kai_msgs, extracted_system = _to_kai_messages(messages)
             system = extracted_system or self.system_prompt or None
@@ -236,7 +242,10 @@ if _LANGCHAIN_AVAILABLE:
             Native async path — directly awaits ``llm_factory.complete()``.
             Preferred over ``_generate`` when the caller is already async.
             """
-            from core.llm_providers import llm_factory  # noqa: PLC0415
+            try:
+                from core.llm_providers import llm_factory  # type: ignore  # noqa: PLC0415
+            except Exception:  # pragma: no cover - package-mode fallback
+                from apps.backend.src.core.llm_providers import llm_factory  # noqa: PLC0415
 
             kai_msgs, extracted_system = _to_kai_messages(messages)
             system = extracted_system or self.system_prompt or None

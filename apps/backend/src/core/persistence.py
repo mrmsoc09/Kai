@@ -19,15 +19,18 @@ def persist_submission(run_id: str, content: str, meta: Dict[str, Any]) -> Dict[
     meta.setdefault('run_id', run_id)
     meta['saved_at'] = datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
     # Write
-    rpt.write_text(content or '')
-    mfp.write_text(json.dumps(meta, indent=2))
-    from core.merkle import compute_merkle_tree
+    rpt.write_text(content or '', encoding='utf-8')
+    mfp.write_text(json.dumps(meta, indent=2), encoding='utf-8')
+    try:
+        from apps.backend.src.core.merkle import compute_merkle_tree
+    except Exception:  # pragma: no cover - compatibility fallback for legacy PYTHONPATH
+        from core.merkle import compute_merkle_tree  # type: ignore
     info = {'dir': str(d), 'report': str(rpt), 'meta': str(mfp)}
     try:
         m = compute_merkle_tree(d)
         info['merkle'] = m
         # Persist merkle tree into the run directory for audit
-        (d / 'merkle.json').write_text(json.dumps(m, indent=2))
-    except Exception:
-        pass
+        (d / 'merkle.json').write_text(json.dumps(m, indent=2), encoding='utf-8')
+    except Exception as exc:
+        info['merkle_error'] = str(exc)
     return info
