@@ -1,184 +1,159 @@
-# Kai (K1) Platform
+# KAISON AI — Autonomous Bug Bounty Platform
 
-> **Governance-first autonomous mission orchestration for authorized security research.**
+> Governance-first autonomous vulnerability research platform for authorized bug bounty programs.
+> Built by Spec.1 | Combat-Jack Security Research | SDVOSB
 
-Kai coordinates autonomous agents to perform security research missions under strict governance policies. Every tool call, agent spawn, and scope decision passes through a multi-layer governance stack with human-in-the-loop approval gates, immutable delegation contracts, and defense-in-depth enforcement.
+KAISON AI runs autonomous bug bounty hunts across HackerOne, Bugcrowd, and Intigriti programs. It coordinates 51 specialist tool agents across 9 hunt phases, applies governance controls at every phase transition, and produces professional reports ready for program submission.
 
----
+## What It Does
+
+**51 specialist tool agents** coordinated across 9 hunt phases:
+- **Phase 1-2**: Passive recon (subfinder, amass, dnsx, chaos, github-subdomains)
+- **Phase 2**: Active fingerprinting (httpx, naabu, masscan, wafw00f, gowitness)
+- **Phase 3**: Content discovery (feroxbuster, katana, paramspider, arjun, gf)
+- **Phase 4**: OSINT intelligence (spiderfoot, sherlock, phoneinfoga, social-analyzer)
+- **Phase 5**: Dark web intelligence (torbot, onionsearch, ahmia-client)
+- **Phase 6**: Secret scanning (trufflehog, gitleaks)
+- **Phase 7**: Vulnerability scanning (nuclei, nikto, testssl, dalfox, sqlmap)
+- **Phase 8**: API security (jwt_tool, kiterunner, graphql-cop, clairvoyance)
+- **Phase 9**: Aggregation (faraday-community)
+
+**13 CrewAI and AutoGen2 crews** for intelligent pre-scan reasoning and adversarial finding validation.
+
+**Real-time frontend**: Tool agent dashboard, crew monitor, orchestrator panel, master findings, approval gates.
 
 ## Quick Start
 
-### Prerequisites
-
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| Linux (Debian/Ubuntu recommended) | — | Windows via WSL2 |
-| Python | 3.11+ | `python3 --version` |
-| Node.js | 18+ | `node --version` — [nodejs.org](https://nodejs.org) |
-| Docker Engine + Compose | 24+ | Supports `docker compose` and `docker-compose` |
-| LLM credentials | Optional | Cloud API key or local Ollama runtime |
-
-`bootstrap.sh` installs system packages and Python/Node dependencies automatically on Ubuntu/Debian.
-External recon tools (amass, subfinder, nuclei, etc.) are auto-installed when `go` is available.
-
-### First-time setup
-
 ```bash
-git clone https://github.com/mrmsoc09/Kai.git
+git clone https://github.com/mrmsoc09/Kai
 cd Kai
-
-./bootstrap.sh   # install deps, configure env, run migrations, verify tools
-
-# Optional local-only profile (Ollama <=9B + Vault dev defaults)
-./scripts/apply_local_ollama_profile.sh
-
-./k1-start       # start backend + celery worker + operator UI
+cp .env.example .env
+# Add API keys to .env
+./bootstrap.sh
+./k1 start
 ```
 
-Open the operator UI at **http://localhost:8081**.
-API docs at **http://localhost:8080/docs**.
+Open http://localhost:8081 (frontend) | http://localhost:8080/docs (API)
+
+## Prerequisites
+
+- Python 3.11+
+- Node.js 18+
+- Docker and Docker Compose
+- 8GB RAM minimum (40GB recommended)
+- Linux (Ubuntu 22.04+ recommended)
+
+## Installation
 
 ```bash
-./k1-stop        # stop all services
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Install all 51 tool agent binaries
+./scripts/install_community_tools.sh
+
+# Initialize database
+alembic upgrade head
+
+# Start all services
+./k1 start
 ```
 
-### What bootstrap does
+## Configuration
 
-1. Installs system packages (`curl`, `git`, `build-essential`, pango/cairo for weasyprint)
-2. Creates Python virtualenv at `.venv` — installs `requirements.txt`
-3. Installs Node.js packages in `ui/node_modules`
-4. Creates `.env` from `.env.example` (first run)
-5. Creates artifact/runtime directories (`artifacts/`, `output/`, `runtime/`)
-6. Starts PostgreSQL + Redis via Docker Compose and runs Alembic migrations
-7. Verifies and auto-installs enabled external tools (amass, subfinder, httpx, nuclei, etc.)
-8. Prints a readiness summary — **all lines must show ✓ before running `./k1-start`**
+Copy `.env.example` to `.env` and configure:
 
-### What must be configured manually
+```bash
+# Required
+OPENAI_API_KEY=your_key
+ANTHROPIC_API_KEY=your_key
 
-Edit `.env` after the first bootstrap run:
-- For cloud providers: `ANTHROPIC_API_KEY` or `OPENAI_API_KEY`
-- For local-only mode: run `./scripts/apply_local_ollama_profile.sh` to pin Ollama + Vault defaults
-- `JWT_SECRET_KEY` — replace placeholder with a cryptographically random value
-- `K1_DEV_TOKEN` — replace placeholder
+# Optional but recommended
+GEMINI_API_KEY=your_key
+SHODAN_API_KEY=your_key
+GITHUB_TOKEN=your_token
+CHAOS_API_KEY=your_key
+```
 
-See `.env.example` for the full variable reference.
+## Running a Hunt
 
-Legacy container orchestration remains available via `./k1 start` (Docker Compose full stack).
+1. Navigate to http://localhost:8081
+2. Add a bug bounty program (scope and rules)
+3. Click Start Mission
+4. Monitor progress in Mission Control
+5. Review findings in Master Findings view
+6. Approve Band 2 actions in Approvals dashboard
+7. Export report when complete
 
----
+## CrewAI and AutoGen2 Integration
+
+Install optional crew support:
+```bash
+pip install "praisonai[crewai]" "praisonai[autogen]"
+```
+
+Crews run before tool agents to produce strategic scanning plans. AutoGen2 validation crews run Hunter vs Skeptic adversarial review on every finding before submission.
+
+## Commands
+
+```bash
+./k1 start                  # Build and launch all services
+./k1 stop                   # Stop all services
+./k1 restart                # Stop then start
+./k1 setup                  # Configuration wizard
+./k1 logs                   # Tail container logs
+
+python -m pytest tests/ -q  # Run tests
+cd apps/frontend && npm run dev   # Frontend dev server
+```
+
+## Governance
+
+- **Band 0**: Passive tools (auto-approved)
+- **Band 1**: Active probing (auto-approved)
+- **Band 2**: Intrusive scanning (requires approval)
+- **Band 3**: Exploitation (blocked in Community Edition)
+
+All tool execution passes through authorization gates with scope validation and audit logging.
 
 ## Architecture
 
-Kai is built on six integrated layers, each with explicit authority boundaries:
+**Backend**: FastAPI with 70+ routers, SQLAlchemy ORM, Celery workers, multi-provider LLM routing.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│  PraisonAI Control Plane                                │
-│  Agent registry · Governance engine · Delegation        │
-│  contracts · Adaptive learning · Strategy profiles      │
-├─────────────────────────────────────────────────────────┤
-│  LangGraph Mission Runtime                              │
-│  K1GraphState · DAG execution · Checkpointing ·         │
-│  Interrupt-based approval gates · Cluster subgraphs     │
-├─────────────────────────────────────────────────────────┤
-│  LangChain Model / Tools Layer                          │
-│  K1ChatModel · K1GovernedTool · Middleware stack ·      │
-│  Structured output schemas · Reasoning engine           │
-├─────────────────────────────────────────────────────────┤
-│  DeepAgents Specialist Runtime                          │
-│  Bridge layer · Sandbox isolation · Contract-aware      │
-│  subagent delegation · Namespace-aware streaming        │
-├─────────────────────────────────────────────────────────┤
-│  LangSmith Observability                                │
-│  Trace correlation · Redaction · Evaluations ·          │
-│  A/B experiments · Dataset management                   │
-├─────────────────────────────────────────────────────────┤
-│  Simulation Safety Overlay                              │
-│  graph_only · tool_mock · replay · Fixture system ·     │
-│  Safety barriers (no mode escalation to live)           │
-└─────────────────────────────────────────────────────────┘
-```
+**Frontend**: React + Material UI with real-time WebSocket updates and agent streaming.
 
-### Services
+**Database**: PostgreSQL 16 with async SQLAlchemy, Alembic migrations.
 
-| Service | Port | Purpose |
-|---------|------|---------|
-| backend | 8080 | FastAPI API server |
-| frontend | 8081 | Vite React operator cockpit |
-| worker | — | Celery worker (tools queue) |
-| postgres | 5432 | Primary database + LangGraph checkpoints |
-| redis | 6379 | Cache + Celery broker |
-| ollama | 11434 | Local model inference |
-| vault | 8200 | Secret management |
-| mailhog | 8025 | Email testing UI |
+**Orchestration**: LangGraph pipeline with Kahn's algorithm topology, GeminiOrchestrator, MidnightOrchestrator.
 
----
+**Security**: httpOnly sessions, CSRF protection, Vault secrets, scope validation at every phase.
 
-## Security Model
-
-- **Tool Risk Bands**: Band 0 (passive, auto-approved) through Band 3 (exploit-like, always blocked)
-- **Governance Stack**: 5 enforcement layers — PraisonGovernor validates, audit hook records, enforce hook blocks
-- **Delegation Contracts**: Frozen, immutable, bidirectional trust enforcement between agents
-- **Scope Enforcement**: Deny-by-default. Explicit deny checked first, then CIDR, then allowlist
-- **Secrets**: Vault-only. Credentials never pass through graph state or LLM context
-- **Approval Gates**: Band 2 tools require human-in-the-loop approval before execution
-
----
-
-## Execution Modes
-
-| Mode | LLM Calls | Tool Execution | Use Case |
-|------|-----------|---------------|----------|
-| `live` | Real | Real | Production missions |
-| `graph_only` | None | None | Topology validation |
-| `tool_mock` | Optional | Fixtures | Strategy testing |
-| `replay` | None | None | Historical analysis |
-
-Simulation modes **never** escalate to live tool execution. All simulation artifacts carry provenance markers.
-
----
-
-## Multi-Provider AI
-
-Kai routes LLM inference through a unified provider abstraction with automatic failover:
-
-- Anthropic Claude
-- OpenAI
-- Google Gemini
-- Ollama (local)
-- Gemma, Qwen, OpenRouter
-
-Configure via `K1_PRIMARY_LLM_PROVIDER` and `K1_FALLBACK_LLM_PROVIDERS` environment variables.
-
----
+**Services**: Backend (8080), Frontend (8081), Worker (Celery), PostgreSQL, Redis, Vault.
 
 ## Testing
 
 ```bash
-# Self-contained tests (no external services required)
-python -m pytest tests/test_scope_guardrails.py tests/test_tool_registry_catalog.py \
-  tests/test_bugbounty_workflow_engine.py tests/test_tool_adapters_bugbounty.py -q
+# Backend tests
+python -m pytest tests/ -q --ignore=tests/integration --ignore=tests/test_simulation_mode.py
 
 # Full suite (requires PostgreSQL, Redis, Vault)
 pytest
 ```
 
----
+## Community Edition vs Pro/Enterprise
 
-## Documentation
-
-| Document | Content |
-|----------|---------|
-| [Architecture](docs/architecture.md) | 6-layer system design, control flow, authority boundaries |
-| [Security Architecture](docs/security-architecture.md) | Governance model, risk bands, approval flow, delegation contracts |
-| [Mission Runtime](docs/mission-runtime.md) | K1GraphState, DAG execution, checkpointing, interrupts |
-| [LangChain / DeepAgents / LangSmith](docs/langstudio-integration.md) | Model abstraction, governed tools, specialist execution, observability |
-| [Simulation Mode](docs/simulation-mode.md) | graph_only, tool_mock, replay, fixtures, safety barriers |
-| [Operator Guide](docs/operator-guide.md) | Missions, approvals, artifacts, troubleshooting |
-| [Developer Guide](docs/developer-guide.md) | Adding agents, tools, nodes, schemas, fixtures |
-
----
+| Feature | Community | Pro | Enterprise |
+|---------|-----------|-----|------------|
+| Tool agents | 51 | 60+ | 70+ |
+| Hunt phases | 9 | 9 | 9 |
+| Programs | Unlimited | Unlimited | Unlimited |
+| Support | GitHub | Email | SLA |
 
 ## License
 
-Licensed under the MIT License.
+MIT License — see LICENSE file.
+
+## Author
+
+Spec.1 | Combat-Jack Security Research  
+kaisonai.com | combat-jack.com
