@@ -52,19 +52,26 @@ class MissionBootstrapper:
                 await asyncio.sleep(60)
 
     async def bootstrap_daily_mission(self):
-        """Parses scope and starts missions."""
-        logger.info("MissionBootstrapper: Bootstrapping daily mission...")
+        """Parses scope, ranks by ROI, and starts prioritized missions."""
+        logger.info("MissionBootstrapper: Bootstrapping daily mission with ROI ranking...")
         
         try:
             note = await self.trilium.get_note(self.scope_note_id)
-            # Robust parsing of scope
             content = note.get("content", "")
-            # Remove HTML tags and extract potential JSON
             clean_content = json.loads(content.replace("<pre><code>", "").replace("</code></pre>", "").strip())
             
-            targets = clean_content.get("targets", [])[:self.daily_limit]
+            targets = clean_content.get("targets", [])
             
-            for target in targets:
+            # Sort targets by 'roi_score' if present, descending
+            ranked_targets = sorted(
+                targets, 
+                key=lambda x: x.get("roi_score", 0), 
+                reverse=True
+            )[:self.daily_limit]
+            
+            logger.info(f"MissionBootstrapper: Selected {len(ranked_targets)} high-ROI targets.")
+            
+            for target in ranked_targets:
                 mission_id = f"mission_{datetime.now(UTC).strftime('%Y%m%d')}_{target['id']}"
                 await self.orchestrator.start_mission(mission_id, target['id'])
                 

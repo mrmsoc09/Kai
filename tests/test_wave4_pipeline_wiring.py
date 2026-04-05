@@ -7,6 +7,8 @@ for all 7 new Wave 4 crew agents.
 
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 from apps.backend.src.core.praison_topology import (
     PraisonTopology,
@@ -285,6 +287,55 @@ class TestCrewAgentFactory:
         factory_result = instantiate_crew_agents()
         assert isinstance(factory_result, dict)
         # May be empty if crew agents are not fully implemented, but should be a dict
+
+    def test_wrap_async_execute_runs_under_active_event_loop(self):
+        """Wrapper should execute async agents even when a loop is already running."""
+        from apps.backend.src.core.crew_agent_factory import _wrap_async_execute
+
+        class _FakeAgent:
+            async def execute(self, mission_context, prior_findings):  # noqa: ANN001
+                return {
+                    "bridge_executed": True,
+                    "findings": prior_findings + [{"source": "fake"}],
+                    "mission_seen": mission_context.get("mission_id"),
+                }
+
+        wrapper = _wrap_async_execute(_FakeAgent(), "FakeAgent")
+
+        async def _invoke():  # noqa: ANN202
+            return wrapper(
+                {
+                    "mission_id": "m-bridge",
+                    "workflow_id": "wf-bridge",
+                    "program_id": "prog-bridge",
+                    "findings": [{"source": "seed"}],
+                }
+            )
+
+        result = asyncio.run(_invoke())
+        assert result.get("bridge_executed") is True
+        assert result.get("mission_seen") == "m-bridge"
+        assert len(result.get("findings", [])) == 2
+        history = result.get("node_history", [])
+        assert history and history[0].get("status") == "completed"
+        assert history[0].get("status") != "deferred_async"
+
+    def test_langgraph_compile_falls_back_for_wave4_fanout(self):
+        """Wave 4 multi-edge fan-out should enforce deterministic fallback compile behavior."""
+        from apps.backend.src.core.praison_langgraph_builder import PraisonLangGraphBuilder
+
+        specs = _make_minimal_agent_specs()
+        graph = PraisonTopology.build_standard_bug_bounty(
+            workflow_id="test-wf",
+            program_id="test-prog",
+            agent_specs=specs,
+        )
+        callables = {
+            node_id: (lambda state, _node_id=node_id: {"last_agent": _node_id})
+            for node_id in graph.nodes
+        }
+        builder = PraisonLangGraphBuilder(graph, callables)
+        assert builder.compile() is None
 
 
 class TestIntegration:

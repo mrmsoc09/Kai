@@ -128,6 +128,19 @@ class ClusterSpec:
     def to_dict(self) -> dict[str, Any]:
         return {"cluster_id": self.cluster_id, "cluster_name": self.cluster_name}
 
+    @property
+    def all_node_ids(self) -> list[str]:
+        """Return all node ids referenced by this cluster, preserving order."""
+        seen: set[str] = set()
+        ordered: list[str] = []
+        for node_id in [self.coordinator_id, self.entry_node, *self.specialist_ids, self.exit_node]:
+            normalized = str(node_id or "").strip()
+            if not normalized or normalized in seen:
+                continue
+            ordered.append(normalized)
+            seen.add(normalized)
+        return ordered
+
 
 # ── Mission graph spec ────────────────────────────────────────────────────────
 
@@ -158,6 +171,14 @@ class MissionGraphSpec:
     def add_cluster(self, cluster: ClusterSpec) -> "MissionGraphSpec":
         self.clusters[cluster.cluster_id] = cluster
         return self
+
+    def nodes_requiring_interrupt(self) -> list[NodeSpec]:
+        """Return nodes that request an interrupt before or after execution."""
+        return [
+            node
+            for node in self.nodes.values()
+            if node.interrupt_before or node.interrupt_after
+        ]
 
 
 # ── Execution order resolution ────────────────────────────────────────────────
@@ -227,36 +248,48 @@ class PraisonTopology:
             node.is_exit = is_exit
             graph.add_node(node)
 
+        def _add_edge_if_present(source: str, target: str, condition: str = EdgeCondition.ALWAYS) -> None:
+            if source in graph.nodes and target in graph.nodes:
+                graph.add_edge(source, target, condition)
+
         # Core orchestration flow: governance → mission direction → phase coordination
-        graph.add_edge("GovernanceDirector", "MissionDirector", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("MissionDirector", "PhaseCoordinator", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("GovernanceDirector", "MissionDirector", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("MissionDirector", "PhaseCoordinator", EdgeCondition.ON_SUCCESS)
 
         # Phase Group A (parallel from PhaseCoordinator: surface mapping + OSINT + dark web + secrets)
-        graph.add_edge("PhaseCoordinator", "SurfaceMapper", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("PhaseCoordinator", "OSINTIntelligenceAgent", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("PhaseCoordinator", "DarkWebIntelAgent", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("PhaseCoordinator", "SecretScannerAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("PhaseCoordinator", "SurfaceMapper", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("PhaseCoordinator", "OSINTIntelligenceAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("PhaseCoordinator", "DarkWebIntelAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("PhaseCoordinator", "SecretScannerAgent", EdgeCondition.ON_SUCCESS)
 
         # Phase Group B (content discovery after Phase 1-2: depends on SurfaceMapper completion)
-        graph.add_edge("SurfaceMapper", "ContentDiscoveryAgent", EdgeCondition.ON_SUCCESS)
+        if "ContentDiscoveryAgent" in graph.nodes:
+            _add_edge_if_present("SurfaceMapper", "ContentDiscoveryAgent", EdgeCondition.ON_SUCCESS)
+        else:
+            # Backward-compatible legacy flow when Wave 4 content discovery is absent.
+            _add_edge_if_present("SurfaceMapper", "ReconSpecialist", EdgeCondition.ON_SUCCESS)
 
         # Phase Group C (vulnerability & API testing after content discovery)
-        graph.add_edge("ContentDiscoveryAgent", "VulnerabilityAgent", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("ContentDiscoveryAgent", "APISecurityAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("ContentDiscoveryAgent", "VulnerabilityAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("ContentDiscoveryAgent", "APISecurityAgent", EdgeCondition.ON_SUCCESS)
 
         # Phase Group D (aggregation & evidence analysis after all scanning complete)
         # All scanning agents converge into faraday coordinator
-        graph.add_edge("VulnerabilityAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("APISecurityAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("VulnerabilityAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("APISecurityAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
         # Parallel agents (OSINT, dark web, secrets) also feed to faraday
-        graph.add_edge("OSINTIntelligenceAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("DarkWebIntelAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("SecretScannerAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("OSINTIntelligenceAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("DarkWebIntelAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("SecretScannerAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
 
         # Evidence analysis → reporting → handoff (final convergence)
-        graph.add_edge("FaradayCoordinatorAgent", "EvidenceAnalyst", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("EvidenceAnalyst", "ReportSynthesisAgent", EdgeCondition.ON_SUCCESS)
-        graph.add_edge("ReportSynthesisAgent", "HandoffLiaison", EdgeCondition.ON_SUCCESS)
+        if "FaradayCoordinatorAgent" in graph.nodes:
+            _add_edge_if_present("FaradayCoordinatorAgent", "EvidenceAnalyst", EdgeCondition.ON_SUCCESS)
+        else:
+            # Legacy fallback when Faraday coordination is not present.
+            _add_edge_if_present("ReconSpecialist", "EvidenceAnalyst", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("EvidenceAnalyst", "ReportSynthesisAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("ReportSynthesisAgent", "HandoffLiaison", EdgeCondition.ON_SUCCESS)
 
         return graph
 
@@ -296,11 +329,15 @@ class MissionOrchestrator:
         self.vulnerability_chainer = vulnerability_chainer
         self.state_handoff_system = state_handoff_system
         self.governor = governor
+        self.ledger = MerkleIntentionLedger() # NEW: Initialize Audit Ledger
         self.operator_absent = os.environ.get("K1_OPERATOR", "true").lower() == "false"
         self.checkpoint_root_id = os.environ.get("K1_CHECKPOINT_ROOT_ID", "checkpoints")
 
     async def start_mission(self, mission_id: str, target_id: str):
         logger.info(f"Orchestrator: Starting mission {mission_id} for {target_id}")
+        
+        # 1. Genesis Commitment
+        self.ledger.commit_action(mission_id, "genesis", "CONSENSUS_TRANSITION_APEX", "mission_start", {"target": target_id})
         
         last_checkpoint = await self._load_last_checkpoint(mission_id)
         stages = ["recon", "scanning", "analysis", "chaining", "exploitation", "reporting", "handoff"]
@@ -311,6 +348,7 @@ class MissionOrchestrator:
             
             if self.governor and not await self.governor.request_token(f"orchestrator_{stage}"):
                 logger.error(f"Governor: Denied token for stage {stage}.")
+                self.ledger.commit_action(mission_id, stage, "GOVERNOR_DENIAL", "halt", {"reason": "token_exhausted"})
                 break
 
             if self.operator_absent:
@@ -318,11 +356,32 @@ class MissionOrchestrator:
 
             try:
                 await self._execute_stage(stage, target_id)
+                
+                # 2. Cryptographic Stage Commitment
+                self.ledger.commit_action(
+                    mission_id, 
+                    stage, 
+                    "CONSENSUS_TRANSITION_APEX", 
+                    f"stage_complete_{stage}", 
+                    {"status": "success", "stage": stage}
+                )
+
                 if stage in ["chaining", "exploitation"]:
                     await self._save_checkpoint(mission_id, target_id, stage)
             except Exception as e:
                 logger.error(f"Orchestrator: Stage {stage} failed: {str(e)}")
+                self.ledger.commit_action(mission_id, stage, "INTERNAL_FAILURE", "halt", {"error": str(e)})
                 break
+        
+        # 3. Finalize Mission with Audit Proof
+        await self._push_audit_trail(mission_id, target_id)
+
+    async def _push_audit_trail(self, mission_id: str, target_id: str):
+        """Finalizes the mission by pushing the full Merkle proof to Trilium."""
+        audit_html = self.ledger.get_audit_log_html()
+        title = f"Audit Trail: {mission_id} (ROOT: {self.ledger.root_hash[:12]})"
+        await self.trilium_client.create_note(target_id, title, audit_html)
+        logger.info(f"Orchestrator: Final audit trail pushed for {mission_id}")
 
     async def _execute_stage(self, stage: str, target_id: str):
         logger.info(f"Orchestrator: Executing {stage}...")
@@ -341,20 +400,28 @@ class MissionOrchestrator:
         await self.trilium_client.create_attribute(note_id, "label", "stage", stage)
 
     async def _load_last_checkpoint(self, mission_id: str) -> MissionCheckpoint | None:
+        """Loads the most recent checkpoint for a given mission by timestamp."""
         query = f"note.labels.mission_id='{mission_id}' AND note.labels.type='checkpoint'"
         results = await self.trilium_client.search_notes(query)
-        if not results: return None
+        if not results: 
+            return None
         
         checkpoints = []
         for r in results:
             note = await self.trilium_client.get_note(r["noteId"])
             try:
+                # Sanitize HTML tags out of content
                 raw_json = re.sub(r"<.*?>", "", note.get("content", "{}")).strip()
                 data = json.loads(raw_json)
                 checkpoints.append(MissionCheckpoint(**data))
-            except Exception: continue
+            except Exception as e: 
+                logger.debug(f"Orchestrator: Skipping corrupted checkpoint: {str(e)}")
+                continue
         
-        if not checkpoints: return None
+        if not checkpoints: 
+            return None
+            
+        # Return the most recent checkpoint based on timestamp
         checkpoints.sort(key=lambda x: x.timestamp, reverse=True)
         return checkpoints[0]
 

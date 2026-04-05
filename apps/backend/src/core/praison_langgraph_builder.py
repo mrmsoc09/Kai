@@ -44,6 +44,7 @@ from __future__ import annotations
 import logging
 import os
 from typing import Any, Callable
+from collections import defaultdict
 
 from apps.backend.src.core.praison_topology import (
     ClusterSpec,
@@ -135,6 +136,22 @@ def _make_condition_router(
     return router
 
 
+def _fanout_sources(graph_spec: MissionGraphSpec) -> list[str]:
+    """
+    Return node_ids that have multi-edge fan-out.
+
+    K1GraphState contains many scalar last-write-wins fields; concurrent branch
+    execution on fan-out nodes can yield invalid concurrent updates or silent
+    branch loss when reduced to single-target routing. For now, fan-out graphs
+    should run via MissionRuntime fallback execution for deterministic behavior.
+    """
+    outgoing: dict[str, list[Any]] = defaultdict(list)
+    for edge in graph_spec.edges:
+        if edge.source in graph_spec.nodes and edge.target in graph_spec.nodes:
+            outgoing[edge.source].append(edge)
+    return sorted([source for source, edges in outgoing.items() if len(edges) > 1])
+
+
 # -- PraisonLangGraphBuilder ---------------------------------------------------
 
 class PraisonLangGraphBuilder:
@@ -204,6 +221,17 @@ class PraisonLangGraphBuilder:
             )
             return None
 
+        fanout_nodes = _fanout_sources(self._spec)
+        if fanout_nodes:
+            logger.warning(
+                "LangGraph compile fallback engaged for graph_id=%s; "
+                "multi-edge fan-out nodes=%s. "
+                "Using MissionRuntime fallback execution for deterministic parity.",
+                self._spec.graph_id,
+                fanout_nodes,
+            )
+            return None
+
         try:
             return self._compile_graph(checkpointer_dsn)
         except Exception as exc:
@@ -234,7 +262,6 @@ class PraisonLangGraphBuilder:
 
         # Wire edges
         # Group outgoing edges by source node for conditional routing
-        from collections import defaultdict
         outgoing: dict[str, list] = defaultdict(list)
         for edge in self._spec.edges:
             outgoing[edge.source].append(edge)

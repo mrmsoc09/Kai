@@ -30,12 +30,12 @@ redis>=5.0.2,<6.0
 celery>=5.4,<6.0
 
 # Templating
-Jinja2>=3.1.4,<4.0
+Jinja2>=3.1.5,<4.0
 
 # Report Generation & PDF
 weasyprint>=60.0,<69.0
 Markdown>=3.5,<4.0
-bleach>=6.0,<7.0
+bleach>=6.1.0,<7.0
 Pillow>=12.1.1  # CVE: out-of-bounds write in PSD loader fixed in 12.1.1
 
 # Vector DB & Search

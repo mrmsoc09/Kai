@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import threading
 from typing import Any, Callable
 
 from apps.backend.src.agents.crew.osint_intelligence_agent import OSINTIntelligenceAgent
@@ -19,6 +20,31 @@ from apps.backend.src.agents.crew.api_security_agent import APISecurityAgent
 from apps.backend.src.agents.crew.faraday_coordinator_agent import FaradayCoordinatorAgent
 
 logger = logging.getLogger(__name__)
+
+
+def _run_coro_in_dedicated_loop(coro: Any, agent_name: str) -> Any:
+    """
+    Execute a coroutine in a dedicated thread/loop and return its result.
+
+    This is used when LangGraph invokes a sync wrapper while already running
+    inside an event loop. Returning placeholders here caused silent degradation
+    of crew-agent execution.
+    """
+    box: dict[str, Any] = {}
+
+    def _runner() -> None:
+        try:
+            box["result"] = asyncio.run(coro)
+        except Exception as exc:  # pragma: no cover - defensive relay
+            box["error"] = exc
+
+    thread = threading.Thread(target=_runner, daemon=True, name=f"{agent_name}_async_bridge")
+    thread.start()
+    thread.join()
+
+    if "error" in box:
+        raise RuntimeError(f"{agent_name} async bridge failed: {box['error']}") from box["error"]
+    return box.get("result")
 
 
 def _wrap_async_execute(
@@ -51,41 +77,32 @@ def _wrap_async_execute(
             prior_findings = state.get("findings", [])
 
             # Try to execute the async method
-            # This will work in an async context (FastAPI app), in which case
-            # LangGraph or the caller will handle the async properly
+            # LangGraph node executors are sync callables; bridge async methods safely.
             coro = agent_instance.execute(mission_context, prior_findings)
 
-            # Attempt 1: Try to get running event loop and schedule as task
             try:
-                loop = asyncio.get_running_loop()
-                # We're in async context, but make_node_executor is sync
-                # Return a placeholder that indicates this agent needs async handling
-                logger.warning(f"{agent_name}: Cannot run async execute in sync context, returning placeholder")
-                return {
-                    "active_node": agent_name,
-                    "last_agent": agent_name,
-                    "node_history": [{"node_id": agent_name, "status": "deferred_async", "entered_at": "", "completed_at": "", "duration_ms": 0}],
-                    "findings": prior_findings,
-                }
+                asyncio.get_running_loop()
+                result = _run_coro_in_dedicated_loop(coro, agent_name)
             except RuntimeError:
-                # No running loop, we can use asyncio.run()
+                # No running loop in current thread; execute directly.
                 result = asyncio.run(coro)
-                if isinstance(result, dict):
-                    # Merge result into state
-                    update = {
-                        "active_node": agent_name,
-                        "last_agent": agent_name,
-                        "node_history": [{"node_id": agent_name, "status": "completed", "entered_at": "", "completed_at": "", "duration_ms": 0}],
-                    }
-                    for key, val in result.items():
-                        if key not in update:
-                            update[key] = val
-                    return update
-                return {
+
+            if isinstance(result, dict):
+                # Merge result into state
+                update = {
                     "active_node": agent_name,
                     "last_agent": agent_name,
-                    "findings": prior_findings,
+                    "node_history": [{"node_id": agent_name, "status": "completed", "entered_at": "", "completed_at": "", "duration_ms": 0}],
                 }
+                for key, val in result.items():
+                    if key not in update:
+                        update[key] = val
+                return update
+            return {
+                "active_node": agent_name,
+                "last_agent": agent_name,
+                "findings": prior_findings,
+            }
 
         except Exception as e:
             logger.error(f"{agent_name} wrapper failed: {e}", exc_info=True)
