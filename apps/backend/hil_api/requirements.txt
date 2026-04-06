@@ -7,7 +7,7 @@ SQLAlchemy==2.0.38
 psycopg2-binary==2.9.11
 asyncpg==0.30.0
 python-dotenv==1.0.1
-requests==2.32.3
+requests==2.33.0
 pydantic==2.10.6
 hvac==2.3.0
 PyYAML==6.0.2
@@ -17,7 +17,7 @@ redis==5.2.1
 httpx==0.28.1
 cryptography==46.0.6
 bleach==6.1.0
-Pillow==10.3.0  # CVE: out-of-bounds write in PSD loader fixed in 12.1.1
+Pillow==12.1.1  # CVE: out-of-bounds write in PSD loader fixed in 12.1.1
 
 # Phase 1 dependency deadlock fixes
 llama-index==0.13.0
