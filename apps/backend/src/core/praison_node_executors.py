@@ -386,8 +386,12 @@ def make_node_executor(
             node_id=node_id, phase=phase,
         ))
 
-        # Graph-only simulation: return stub state update
-        if execution_mode == "graph_only" or agent_callable is None:
+        simulation_graph_only = bool(state.get("_simulation", False)) and execution_mode == "graph_only"
+
+        # Graph-only runtime without simulation marker: return stub state update.
+        # Simulation runs explicitly set _simulation=True and may provide
+        # fixture-backed agent callables that are safe to execute.
+        if (execution_mode == "graph_only" and not simulation_graph_only) or agent_callable is None:
             duration = (time.monotonic() - start) * 1000
             emit(node_completed_event(
                 mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,

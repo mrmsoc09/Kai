@@ -485,6 +485,10 @@ class SimulationRunner:
                 execution_mode=config.mode.value,
                 agent_callables=sim_callables,
             )
+            # Mark mission state as simulation so graph_only mode executes
+            # fixture-backed callables instead of generic stubs.
+            runtime._states[handle.mission_id]["_simulation"] = True
+            handle.initial_state["_simulation"] = True
 
             final_state = runtime.start_mission(handle.mission_id)
 

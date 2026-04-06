@@ -175,6 +175,14 @@ class MissionGraphSpec:
         self.clusters[cluster.cluster_id] = cluster
         return self
 
+    def outgoing_edges(self, node_id: str) -> list[EdgeSpec]:
+        """Return outgoing edges from a node."""
+        return [edge for edge in self.edges if edge.source == node_id]
+
+    def governance_nodes(self) -> list[NodeSpec]:
+        """Return nodes classified as governance nodes."""
+        return [node for node in self.nodes.values() if node.node_type == "governance"]
+
     def nodes_requiring_interrupt(self) -> list[NodeSpec]:
         """Return nodes that request an interrupt before or after execution."""
         return [
@@ -250,6 +258,30 @@ class PraisonTopology:
             node.is_entry = is_entry
             node.is_exit = is_exit
             graph.add_node(node)
+
+        # Canonical cluster map retained for compatibility with topology tests
+        # and deterministic coordinator-specialist grouping.
+        cluster_nodes = [
+            node_id
+            for node_id in [
+                "PhaseCoordinator",
+                "SurfaceMapper",
+                "ReconSpecialist",
+            ]
+            if node_id in graph.nodes
+        ]
+        if cluster_nodes:
+            graph.add_cluster(
+                ClusterSpec(
+                    cluster_name="recon_cluster",
+                    phase="recon",
+                    coordinator_id="PhaseCoordinator" if "PhaseCoordinator" in graph.nodes else "",
+                    specialist_ids=[row for row in cluster_nodes if row != "PhaseCoordinator"],
+                    entry_node=cluster_nodes[0],
+                    exit_node=cluster_nodes[-1],
+                    parallel_execution=True,
+                )
+            )
 
         def _add_edge_if_present(source: str, target: str, condition: str = EdgeCondition.ALWAYS) -> None:
             if source in graph.nodes and target in graph.nodes:

@@ -3,10 +3,22 @@ KaiOrchestrator API Router
 Exposes endpoints for executing tools through the compliance middleware
 """
 
+from datetime import datetime, timezone
+from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 import logging
+import uuid
+
+import yaml
+
+from ..core.crew_yaml_runner import (
+    CREW_REGISTRY_PATH,
+    list_all_crews,
+    run_crew_yaml,
+)
+from ..core.tool_registry_catalog import list_catalog_entries
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +61,92 @@ class ScopeValidationResponse(BaseModel):
     """Response from scope validation"""
     is_valid: bool
     reason: str
+
+
+class CrewRunRequest(BaseModel):
+    """Request to run a crew YAML through the managed adapter path."""
+    file_path: str = Field(..., description="Crew YAML file path under ./crews")
+    framework: Optional[str] = Field(
+        default=None,
+        description="Framework override (crewai, autogen, praisonai)",
+    )
+
+
+def _display_name(name: str) -> str:
+    return name.replace("_", " ").replace("-", " ").title()
+
+
+def _normalize_safety(value: str) -> str:
+    lowered = (value or "").strip().lower()
+    if lowered in {"passive", "active", "intrusive"}:
+        return lowered
+    if lowered in {"safe", "read_only", "readonly"}:
+        return "passive"
+    if lowered in {"dangerous", "exploit"}:
+        return "intrusive"
+    return "active"
+
+
+def _infer_phase(category: str) -> int:
+    lowered = (category or "").strip().lower()
+    if lowered in {"recon_asset_discovery", "http_live_host", "osint"}:
+        return 1
+    if lowered in {"vulnerability_scanning", "api_auth_testing"}:
+        return 7
+    if lowered in {"validation_support"}:
+        return 8
+    if lowered in {"reporting", "aggregation"}:
+        return 9
+    return 5
+
+
+def _resolve_crew_path(raw_path: str) -> Path:
+    repo_crews = (Path.cwd() / "crews").resolve()
+    candidate = (Path.cwd() / raw_path).resolve()
+    try:
+        candidate.relative_to(repo_crews)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail="crew_path_outside_allowed_root") from exc
+    if not candidate.exists():
+        raise HTTPException(status_code=404, detail="crew_yaml_not_found")
+    return candidate
+
+
+def _load_crew_index() -> tuple[dict[str, str], set[str]]:
+    phase_by_path: dict[str, str] = {}
+    primary_paths: set[str] = set()
+    try:
+        payload = yaml.safe_load(CREW_REGISTRY_PATH.read_text(encoding="utf-8")) or {}
+    except Exception:
+        return phase_by_path, primary_paths
+    phase_crews = payload.get("phase_crews", {}) if isinstance(payload, dict) else {}
+    if not isinstance(phase_crews, dict):
+        return phase_by_path, primary_paths
+    for phase_key, phase_cfg in phase_crews.items():
+        if not isinstance(phase_cfg, dict):
+            continue
+        primary = phase_cfg.get("primary")
+        if isinstance(primary, str) and primary.strip():
+            normalized = str((Path.cwd() / primary).resolve())
+            phase_by_path[normalized] = str(phase_key)
+            primary_paths.add(normalized)
+        alternatives = phase_cfg.get("alternatives", [])
+        if isinstance(alternatives, list):
+            for alt in alternatives:
+                if not isinstance(alt, str) or not alt.strip():
+                    continue
+                normalized = str((Path.cwd() / alt).resolve())
+                phase_by_path.setdefault(normalized, str(phase_key))
+    return phase_by_path, primary_paths
+
+
+def _normalize_framework(value: Optional[str]) -> str:
+    lowered = (value or "").strip().lower()
+    if lowered in {"autogen2", "autogen_2", "autogen-2"}:
+        return "autogen"
+    if lowered in {"crewai", "autogen", "praisonai"}:
+        return lowered
+    return "crewai"
 
 
 # ============================================================================
@@ -227,6 +325,89 @@ async def get_scope_decisions(limit: int = 50) -> Dict[str, Any]:
         return {"decisions": [], "total": 0, "error": str(exc)}
 
 
+@router.get("/agents/registry")
+async def get_agent_registry() -> list[Dict[str, Any]]:
+    """Part 3 compatibility endpoint for frontend tool-registry browser."""
+    items = []
+    for entry in list_catalog_entries():
+        safety = _normalize_safety(entry.safety_classification)
+        items.append(
+            {
+                "name": entry.name,
+                "display_name": _display_name(entry.name),
+                "description": (
+                    f"{entry.execution_mode} execution path for {entry.category} workflows."
+                ),
+                "category": entry.category,
+                "safety_classification": safety,
+                "phase": _infer_phase(entry.category),
+                "timeout_seconds": entry.timeout_seconds,
+                "requires_auth": bool(entry.api_keys_required),
+                "api_keys_required": bool(entry.api_keys_required),
+                "enabled": bool(entry.enabled_by_default),
+                "knowledge_files": [],
+                "memory_files": [],
+            }
+        )
+    return items
+
+
+@router.get("/crews/registry")
+async def get_crews_registry() -> list[Dict[str, Any]]:
+    """Part 3 compatibility endpoint for Crew YAML browser."""
+    phase_by_path, primary_paths = _load_crew_index()
+    crews = []
+    for crew in list_all_crews():
+        file_path = str(crew.get("file_path") or "")
+        resolved_path = str((Path.cwd() / file_path).resolve())
+        raw_framework = str(crew.get("framework") or "praisonai")
+        framework = _normalize_framework(raw_framework)
+        roles = crew.get("roles")
+        crews.append(
+            {
+                "name": str(crew.get("name") or _display_name(Path(file_path).stem)),
+                "framework": framework,
+                "phase": phase_by_path.get(resolved_path, "unmapped"),
+                "topic": str(crew.get("topic") or ""),
+                "roles": roles if isinstance(roles, list) else [],
+                "file_path": file_path,
+                "is_primary": resolved_path in primary_paths,
+            }
+        )
+    crews.sort(key=lambda item: (item["phase"], item["name"]))
+    return crews
+
+
+@router.post("/crews/run")
+async def run_crew_registry_entry(request: CrewRunRequest) -> Dict[str, Any]:
+    """Run a registered crew file via the wrapper-only adapter path."""
+    crew_path = _resolve_crew_path(request.file_path)
+    framework = _normalize_framework(request.framework)
+    if request.framework is None:
+        try:
+            parsed = yaml.safe_load(crew_path.read_text(encoding="utf-8")) or {}
+            if isinstance(parsed, dict):
+                framework = _normalize_framework(parsed.get("framework"))
+        except Exception:
+            # Keep safe default if YAML parsing fails.
+            framework = "crewai"
+
+    result = run_crew_yaml(
+        yaml_path=str(crew_path),
+        framework=framework,
+    )
+    return {
+        "job_id": f"crew-{uuid.uuid4().hex[:12]}",
+        "status": "completed" if bool(result.get("success")) else "failed",
+        "file_path": request.file_path,
+        "framework": framework,
+        "result": {
+            "success": bool(result.get("success")),
+            "error": result.get("error"),
+        },
+    }
+
+
 @router.get("/health")
 async def orchestrator_health() -> Dict[str, Any]:
     """Health check for KaiOrchestrator middleware."""
@@ -255,3 +436,113 @@ async def orchestrator_health() -> Dict[str, Any]:
             "status": "error",
             "error": str(e)
         }
+
+
+@router.get("/health/full")
+async def orchestrator_health_full() -> Dict[str, Any]:
+    """Part 3 compatibility endpoint for platform-status dashboard."""
+    timestamp = datetime.now(timezone.utc).isoformat()
+    services: list[dict[str, str]] = []
+
+    try:
+        from ..core.kai_orchestrator import get_kai_orchestrator
+
+        get_kai_orchestrator()
+        services.append(
+            {
+                "name": "KaiOrchestrator",
+                "status": "up",
+                "detail": "Compliance middleware initialized",
+                "last_checked": timestamp,
+            }
+        )
+    except Exception as exc:
+        services.append(
+            {
+                "name": "KaiOrchestrator",
+                "status": "down",
+                "detail": f"Initialization failed: {exc}",
+                "last_checked": timestamp,
+            }
+        )
+
+    try:
+        tool_count = len(list_catalog_entries())
+        tool_status = "up" if tool_count > 0 else "degraded"
+        services.append(
+            {
+                "name": "Tool Registry",
+                "status": tool_status,
+                "detail": f"{tool_count} tools available",
+                "last_checked": timestamp,
+            }
+        )
+    except Exception as exc:
+        services.append(
+            {
+                "name": "Tool Registry",
+                "status": "down",
+                "detail": f"Registry read failed: {exc}",
+                "last_checked": timestamp,
+            }
+        )
+        tool_count = 0
+
+    try:
+        crew_count = len(list_all_crews())
+        crew_status = "up" if crew_count > 0 else "degraded"
+        services.append(
+            {
+                "name": "Crew Registry",
+                "status": crew_status,
+                "detail": f"{crew_count} crew YAML definitions discovered",
+                "last_checked": timestamp,
+            }
+        )
+    except Exception as exc:
+        services.append(
+            {
+                "name": "Crew Registry",
+                "status": "down",
+                "detail": f"Crew registry read failed: {exc}",
+                "last_checked": timestamp,
+            }
+        )
+        crew_count = 0
+
+    try:
+        from ..core.scope_guardrails import _scope_audit_log_path
+
+        scope_log = _scope_audit_log_path()
+        services.append(
+            {
+                "name": "Scope Audit Log",
+                "status": "up" if scope_log.exists() else "degraded",
+                "detail": f"audit_log={scope_log}",
+                "last_checked": timestamp,
+            }
+        )
+    except Exception as exc:
+        services.append(
+            {
+                "name": "Scope Audit Log",
+                "status": "down",
+                "detail": f"Scope audit unavailable: {exc}",
+                "last_checked": timestamp,
+            }
+        )
+
+    statuses = [service["status"] for service in services]
+    if "down" in statuses:
+        overall = "critical"
+    elif "degraded" in statuses:
+        overall = "degraded"
+    else:
+        overall = "healthy"
+
+    ready_to_hunt = overall != "critical" and tool_count > 0 and crew_count > 0
+    return {
+        "overall": overall,
+        "ready_to_hunt": ready_to_hunt,
+        "services": services,
+    }

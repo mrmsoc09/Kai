@@ -644,7 +644,7 @@ class TestEventBusSubscriber:
         assert metadata["kai_stage_id"] == "recon"
         assert metadata["kai_selected_substrate"] == "LANGGRAPH_PRIMARY"
         assert metadata["kai_tool_execution_id"] == "te-123"
-        assert metadata["kai_audit_primary"] is True
+        assert metadata["kai_audit_primary"] == "true"
 
     def test_subscriber_degradation_does_not_raise(self, operational_bridge):
         """LangSmith failures are absorbed and tracked as degraded exports."""

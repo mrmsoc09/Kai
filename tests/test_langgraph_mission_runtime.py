@@ -706,6 +706,44 @@ class TestMissionLifecycle:
         assert metrics.get("stage_count", 0) >= 1
         assert isinstance(metrics.get("stage_timings", []), list)
 
+    def test_start_mission_audits_adaptive_selector_change(self, runtime, minimal_specs, monkeypatch):
+        monkeypatch.setattr(runtime, "_refresh_selector_performance_profile", lambda: None)
+        monkeypatch.setattr(
+            "apps.backend.src.core.praison_mission_runtime.persist_benchmark_run",
+            lambda _record: {"ok": True},
+        )
+        handle = runtime.create_mission(
+            workflow_id="wf-adaptive",
+            program_id="prog-adaptive",
+            execution_mode="live",
+            agent_specs=minimal_specs,
+            selector_inputs={
+                "workflow_complexity": "medium",
+                "needs_resume": False,
+                "adaptive_profile": {
+                    "profile_key": "general|mission|medium|standard",
+                    "recommended_substrate": "MISSIONRUNTIME_CUSTOM",
+                    "confidence": 0.9,
+                    "sample_count": 10,
+                    "stale": False,
+                    "usable": True,
+                    "recommendation_rationale": "historical profile indicates lower latency",
+                },
+            },
+        )
+        final = runtime.start_mission(handle.mission_id)
+        artifacts = final.get("selector_policy_artifacts", [])
+        assert artifacts
+        adaptive = artifacts[0].get("adaptive_change", {})
+        assert adaptive.get("applied") is True
+        assert adaptive.get("previous_selected_substrate") == "LANGGRAPH_PRIMARY"
+        policy_events = final.get("policy_events", [])
+        assert policy_events
+        assert policy_events[0].get("adaptive_applied") is True
+        assert policy_events[0].get("adaptive_considered") is True
+        assert policy_events[0].get("adaptive_accepted") is True
+        assert policy_events[0].get("adaptive_decision_reason") == "adaptive_recommendation_applied"
+
     def test_start_mission_blocks_invalid_persona_contract(self, runtime, minimal_specs):
         handle = runtime.create_mission(
             workflow_id="wf-contract",
@@ -734,6 +772,51 @@ class TestMissionLifecycle:
         assert "selector denied" in final.get("error", "").lower()
         status = runtime.get_status(handle.mission_id)
         assert status.state == "failed"
+
+    def test_start_mission_deepagents_fallback_is_explicit(self, runtime, minimal_specs, monkeypatch):
+        monkeypatch.setattr(runtime, "_refresh_selector_performance_profile", lambda: None)
+        monkeypatch.setattr(
+            "apps.backend.src.core.praison_mission_runtime.persist_benchmark_run",
+            lambda _record: {"ok": True},
+        )
+        handle = runtime.create_mission(
+            workflow_id="wf-deepagents-fallback",
+            program_id="prog-deepagents-fallback",
+            execution_mode="live",
+            agent_specs=minimal_specs,
+            selector_inputs={
+                "requires_specialist_decomposition": True,
+                "risk_band": 1,
+            },
+        )
+        final = runtime.start_mission(handle.mission_id)
+        metrics = final.get("runtime_metrics", {})
+        assert metrics.get("requested_substrate") == "DEEPAGENTS_SPECIALIST"
+        assert metrics.get("actual_substrate") == "LANGGRAPH_PRIMARY"
+
+        policy_events = final.get("policy_events", [])
+        divergence_events = [
+            row
+            for row in policy_events
+            if isinstance(row, dict) and row.get("type") == "execution_substrate_divergence"
+        ]
+        assert divergence_events
+        divergence = divergence_events[0]
+        assert divergence.get("requested_substrate") == "DEEPAGENTS_SPECIALIST"
+        assert divergence.get("actual_substrate") == "LANGGRAPH_PRIMARY"
+        assert divergence.get("reason") == "deepagents_backend_unavailable"
+        assert divergence.get("contract_status") == "deferred_structural_capability"
+        assert divergence.get("capability_owner") == "kai_runtime"
+        assert divergence.get("irreversible") is True
+
+        resolution_artifacts = [
+            row
+            for row in final.get("selector_policy_artifacts", [])
+            if isinstance(row, dict) and row.get("type") == "execution_substrate_resolution"
+        ]
+        assert resolution_artifacts
+        assert resolution_artifacts[0].get("irreversible") is True
+        assert resolution_artifacts[0].get("contract_status") == "deferred_structural_capability"
 
     def test_get_status(self, runtime, minimal_specs):
         handle = runtime.create_mission(

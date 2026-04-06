@@ -150,6 +150,105 @@ def test_run_crew_yaml_handles_missing_file():
     assert "not found" in result["error"].lower()
 
 
+def test_run_crew_yaml_sets_isolated_runtime_env(
+    monkeypatch, tmp_path
+):
+    from core import crew_yaml_runner as runner
+
+    crew_yaml = tmp_path / "sample_crew.yaml"
+    crew_yaml.write_text("framework: crewai\nroles: {}\n", encoding="utf-8")
+
+    captured: dict[str, object] = {}
+
+    class _Result:
+        returncode = 0
+        stdout = "ok"
+        stderr = ""
+
+    def _fake_run(cmd, capture_output, text, timeout, cwd, env):
+        captured["cmd"] = cmd
+        captured["cwd"] = cwd
+        captured["env"] = env
+        return _Result()
+
+    monkeypatch.setattr(
+        runner.subprocess,
+        "run",
+        _fake_run,
+    )
+
+    result = runner.run_crew_yaml(str(crew_yaml), timeout=5)
+    assert result["success"] is True
+    cmd = captured["cmd"]
+    assert isinstance(cmd, list)
+    assert cmd[0].endswith("python")
+    assert cmd[1].endswith("praison_crewai_compat_runner.py")
+    assert cmd[2] == str(crew_yaml.resolve())
+    assert cmd[3] == "crewai"
+    assert captured["cwd"] == str(crew_yaml.parent.resolve())
+    env = captured["env"]
+    assert isinstance(env, dict)
+    assert env["XDG_DATA_HOME"].endswith(".runtime/praison_cli/xdg-data")
+    assert env["XDG_CACHE_HOME"].endswith(".runtime/praison_cli/xdg-cache")
+    assert env["HOME"].endswith(".runtime/praison_cli/home")
+    assert env["CREWAI_STORAGE_DIR"] == "kai_crewai_runtime"
+
+
+def test_run_crew_yaml_non_crewai_uses_native_cli(
+    monkeypatch, tmp_path
+):
+    from core import crew_yaml_runner as runner
+
+    crew_yaml = tmp_path / "sample_crew.yaml"
+    crew_yaml.write_text("framework: autogen\nroles: {}\n", encoding="utf-8")
+
+    captured: dict[str, object] = {}
+
+    class _Result:
+        returncode = 0
+        stdout = "ok"
+        stderr = ""
+
+    def _fake_run(cmd, capture_output, text, timeout, cwd, env):
+        captured["cmd"] = cmd
+        return _Result()
+
+    monkeypatch.setattr(
+        runner.subprocess,
+        "run",
+        _fake_run,
+    )
+
+    result = runner.run_crew_yaml(str(crew_yaml), framework="autogen", timeout=5)
+    assert result["success"] is True
+    assert captured["cmd"] == [
+        "praisonai",
+        str(crew_yaml.resolve()),
+        "--framework",
+        "autogen",
+    ]
+
+
+def test_praison_crewai_model_normalization() -> None:
+    from core.praison_crewai_compat_runner import normalize_model_name
+
+    assert normalize_model_name(None) == "openai/gpt-4o-mini"
+    assert normalize_model_name("gpt-4o-mini") == "openai/gpt-4o-mini"
+    assert normalize_model_name("openai/gpt-4.1-mini") == "openai/gpt-4.1-mini"
+    assert normalize_model_name("ollama/llama3.1:8b") == "ollama/llama3.1:8b"
+
+
+def test_praison_crewai_patch_returns_model_string_for_agent_handoff() -> None:
+    from core.praison_crewai_compat_runner import patch_praison_llm_for_crewai
+    from praisonai.inc.models import PraisonAIModel
+
+    patch_praison_llm_for_crewai()
+    dummy = type("DummyModel", (), {"model": "gpt-4o-mini"})()
+    value = PraisonAIModel.get_model(dummy)  # type: ignore[misc]
+    assert isinstance(value, str)
+    assert value == "openai/gpt-4o-mini"
+
+
 def test_crew_count_by_framework():
     crewai_count = 0
     autogen_count = 0

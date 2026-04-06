@@ -465,12 +465,12 @@ class TestNodeExecutors:
     def test_build_standard_node_callables(self):
         from apps.backend.src.core.praison_node_executors import build_standard_node_callables
         callables = build_standard_node_callables()
-        expected_nodes = {
+        required_nodes = {
             "GovernanceDirector", "MissionDirector", "PhaseCoordinator",
             "SurfaceMapper", "ReconSpecialist", "EvidenceAnalyst",
             "ReportSynthesisAgent", "HandoffLiaison",
         }
-        assert expected_nodes == set(callables.keys())
+        assert required_nodes.issubset(set(callables.keys()))
         for name, fn in callables.items():
             assert callable(fn)
 

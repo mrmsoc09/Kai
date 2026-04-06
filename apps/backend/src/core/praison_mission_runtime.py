@@ -58,6 +58,9 @@ from apps.backend.src.core.kai_execution_benchmarks import (
     mission_benchmark_record_from_state,
     persist_benchmark_run,
 )
+from apps.backend.src.core.kai_selector_learning import (
+    select_adaptive_profile_for_inputs,
+)
 from apps.backend.src.core.kai_persona_contracts import validate_persona_contract
 from apps.backend.src.core.praison_execution_events import (
     EventBus,
@@ -303,6 +306,7 @@ class MissionRuntime:
         self._mission_locks: dict[str, asyncio.Lock] = {}
         self._metrics_lock = threading.Lock()
         self._selector_performance_profile: dict[str, dict[str, float]] = {}
+        self._adaptive_selector_profiles: dict[str, dict[str, Any]] = {}
         self._event_bus.subscribe(self._capture_runtime_metrics_event)
 
     def _get_lock(self, mission_id: str) -> asyncio.Lock:
@@ -346,9 +350,16 @@ class MissionRuntime:
             "node_id": node_id,
             "execution_mode": state.get("execution_mode", handle.execution_mode),
             "needs_resume": base_inputs.get("needs_resume", True),
+            "stage_count": self._safe_int(state.get("runtime_metrics", {}).get("stage_count"), 0)
+            if isinstance(state.get("runtime_metrics"), dict)
+            else 0,
         })
         if self._selector_performance_profile and not merged.get("performance_profile"):
             merged["performance_profile"] = self._selector_performance_profile
+        if not merged.get("adaptive_profile"):
+            adaptive_profile = select_adaptive_profile_for_inputs(self._adaptive_selector_profiles, merged)
+            if adaptive_profile:
+                merged["adaptive_profile"] = adaptive_profile
         if merged.get("execution_mode") == "graph_only":
             merged["is_stateless"] = True
             merged["needs_resume"] = False
@@ -364,15 +375,47 @@ class MissionRuntime:
             self._selector_performance_profile = {
                 str(k): v for k, v in profile.items() if isinstance(v, dict)
             }
+        adaptive_profiles = payload.get("adaptive_performance_profiles", {}) if isinstance(payload, dict) else {}
+        if isinstance(adaptive_profiles, dict):
+            self._adaptive_selector_profiles = {
+                str(k): v for k, v in adaptive_profiles.items() if isinstance(v, dict)
+            }
 
     @staticmethod
     def _selector_policy_event_from_artifact(artifact: dict[str, Any]) -> dict[str, Any]:
+        adaptive = artifact.get("adaptive_change", {})
+        if not isinstance(adaptive, dict):
+            adaptive = {}
+        requested_substrate = artifact.get("requested_substrate") or artifact.get("selected_substrate", "")
+        actual_substrate = artifact.get("actual_substrate") or artifact.get("selected_substrate", "")
+        divergence = artifact.get("substrate_divergence", {})
+        if not isinstance(divergence, dict):
+            divergence = {}
         return {
             "type": "execution_selector_policy",
             "stage_id": artifact.get("stage_id", ""),
             "node_id": artifact.get("node_id", ""),
             "decision": artifact.get("selected_substrate", ""),
+            "requested_substrate": requested_substrate,
+            "actual_substrate": actual_substrate,
+            "substrate_diverged": bool(divergence),
+            "substrate_divergence_reason": divergence.get("reason", ""),
+            "substrate_contract_status": divergence.get("contract_status", ""),
+            "substrate_capability_owner": divergence.get("capability_owner", ""),
             "fallback_substrate": artifact.get("fallback_substrate", ""),
+            "adaptive_applied": bool(adaptive.get("applied", False)),
+            "adaptive_profile_key": adaptive.get("profile_key", ""),
+            "decision_previous_basis": adaptive.get("previous_selected_substrate", ""),
+            "decision_new_basis": adaptive.get("new_selected_substrate", ""),
+            "adaptive_confidence": adaptive.get("confidence", 0.0),
+            "adaptive_sample_count": adaptive.get("sample_count", 0),
+            "adaptive_considered": bool(adaptive.get("considered", False)),
+            "adaptive_accepted": bool(adaptive.get("accepted", False)),
+            "adaptive_rejected": bool(adaptive.get("rejected", False)),
+            "adaptive_decision_reason": adaptive.get("decision_reason", ""),
+            "adaptive_guardrails": adaptive.get("guardrails", {}),
+            "adaptive_failed_guardrails": adaptive.get("failed_guardrails", []),
+            "adaptive_additional_data_needed": adaptive.get("additional_data_needed", []),
             "denied": bool(artifact.get("denied", False)),
             "timestamp": artifact.get("timestamp"),
         }
@@ -490,7 +533,42 @@ class MissionRuntime:
             "total_tokens": self._safe_int(metrics.get("total_tokens"), 0),
             "estimated_cost_cents": self._safe_float(metrics.get("estimated_cost_cents"), 0.0),
             "selected_substrate": str(metrics.get("selected_substrate", "")),
+            "actual_substrate": str(metrics.get("actual_substrate", "")),
         }
+
+    def _resolve_effective_substrate(
+        self,
+        *,
+        requested_substrate: str,
+        fallback_substrate: str,
+        state: dict[str, Any],
+        stage_id: str,
+        node_id: str,
+    ) -> tuple[str, dict[str, Any] | None]:
+        """
+        Resolve requested vs actual substrate with explicit divergence evidence.
+        """
+        normalized_requested = str(requested_substrate or "")
+        normalized_fallback = str(fallback_substrate or ExecutionSubstrate.LANGGRAPH_PRIMARY.value)
+        if (
+            normalized_requested == ExecutionSubstrate.DEEPAGENTS_SPECIALIST.value
+            and not state.get("deepagents_backend_profile")
+        ):
+            divergence = {
+                "type": "execution_substrate_divergence",
+                "stage_id": stage_id,
+                "node_id": node_id,
+                "requested_substrate": normalized_requested,
+                "actual_substrate": normalized_fallback,
+                "reason": "deepagents_backend_unavailable",
+                "contract_status": "deferred_structural_capability",
+                "capability_owner": "kai_runtime",
+                "fallback_contract": "explicit_irreversible_for_stage",
+                "irreversible": True,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }
+            return normalized_fallback, divergence
+        return normalized_requested, None
 
     def _capture_runtime_metrics_event(self, event: MissionEvent) -> None:
         event_type = str(getattr(event, "event_type", "") or "")
@@ -793,6 +871,7 @@ class MissionRuntime:
         selector_decision_latency_ms = (time.monotonic() - selector_decision_start) * 1000.0
         metrics = self._ensure_runtime_metrics(current_state)
         metrics["mission_started_at"] = mission_started_at
+        metrics["requested_substrate"] = selector_artifact.get("selected_substrate", "")
         metrics["selected_substrate"] = selector_artifact.get("selected_substrate", "")
         metrics["fallback_substrate"] = selector_artifact.get("fallback_substrate", "")
         metrics["selector_decision_latency_ms"] = round(selector_decision_latency_ms, 2)
@@ -837,11 +916,48 @@ class MissionRuntime:
                 "fallback_substrate": selector_artifact.get("fallback_substrate", ""),
                 "risk_band": selector_inputs.get("risk_band"),
                 "tenant_id": str(handle.tenant_id),
+                "adaptive_change": selector_artifact.get("adaptive_change", {}),
             },
         ))
 
         try:
-            selected_substrate = str(selector_artifact.get("selected_substrate") or "")
+            requested_substrate = str(selector_artifact.get("selected_substrate") or "")
+            selected_substrate, divergence = self._resolve_effective_substrate(
+                requested_substrate=requested_substrate,
+                fallback_substrate=str(selector_artifact.get("fallback_substrate") or ""),
+                state=current_state,
+                stage_id=str(selector_artifact.get("stage_id") or "mission_start"),
+                node_id=str(selector_artifact.get("node_id") or "mission_dispatch"),
+            )
+            if divergence:
+                current_state = _merge_state(
+                    current_state,
+                    {
+                        "policy_events": [divergence],
+                        "selector_policy_artifacts": [
+                            {
+                                "type": "execution_substrate_resolution",
+                                "stage_id": divergence.get("stage_id", ""),
+                                "node_id": divergence.get("node_id", ""),
+                                "requested_substrate": divergence.get("requested_substrate", ""),
+                                "actual_substrate": divergence.get("actual_substrate", ""),
+                                "reason": divergence.get("reason", ""),
+                                "contract_status": divergence.get("contract_status", ""),
+                                "capability_owner": divergence.get("capability_owner", ""),
+                                "irreversible": True,
+                                "timestamp": divergence.get("timestamp"),
+                            }
+                        ],
+                    },
+                )
+                metrics = self._ensure_runtime_metrics(current_state)
+                metrics["actual_substrate"] = divergence.get("actual_substrate", selected_substrate)
+                current_state["runtime_metrics"] = metrics
+                self._states[mission_id] = current_state
+            else:
+                metrics = self._ensure_runtime_metrics(current_state)
+                metrics["actual_substrate"] = selected_substrate
+                current_state["runtime_metrics"] = metrics
             final_state: dict[str, Any] | None = None
             if selected_substrate == ExecutionSubstrate.PRAISON_EXTERNAL.value:
                 try:
@@ -1407,11 +1523,26 @@ class MissionRuntime:
                 node_id=node_id,
                 selector_inputs=selector_inputs,
             )
+            requested_substrate = str(stage_artifact.get("selected_substrate") or "")
+            effective_substrate, divergence = self._resolve_effective_substrate(
+                requested_substrate=requested_substrate,
+                fallback_substrate=str(stage_artifact.get("fallback_substrate") or ""),
+                state=state,
+                stage_id=stage_id,
+                node_id=node_id,
+            )
+            if divergence:
+                stage_artifact = dict(stage_artifact)
+                stage_artifact["actual_substrate"] = effective_substrate
+                stage_artifact["substrate_divergence"] = divergence
             state = _merge_state(
                 state,
                 {
                     "selector_policy_artifacts": [stage_artifact],
-                    "policy_events": [self._selector_policy_event_from_artifact(stage_artifact)],
+                    "policy_events": [
+                        self._selector_policy_event_from_artifact(stage_artifact),
+                        *([divergence] if divergence else []),
+                    ],
                 },
             )
             if stage_artifact.get("denied"):
@@ -1424,7 +1555,7 @@ class MissionRuntime:
 
             stage_started_at = datetime.now(timezone.utc).isoformat()
             stage_started = time.monotonic()
-            selected_substrate = str(stage_artifact.get("selected_substrate") or ExecutionSubstrate.MISSIONRUNTIME_CUSTOM.value)
+            selected_substrate = str(stage_artifact.get("actual_substrate") or effective_substrate or ExecutionSubstrate.MISSIONRUNTIME_CUSTOM.value)
             emit(MissionEvent(
                 event_type="stage_execution_started",
                 mission_id=str(state.get("mission_id", "")),
@@ -1436,7 +1567,9 @@ class MissionRuntime:
                     "stage_id": stage_id,
                     "node_id": node_id,
                     "selected_substrate": selected_substrate,
+                    "requested_substrate": requested_substrate,
                     "fallback_substrate": str(stage_artifact.get("fallback_substrate") or ""),
+                    "substrate_divergence": divergence or {},
                 },
             ))
 

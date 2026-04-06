@@ -26,6 +26,15 @@ _ALLOWED_PRIVILEGE = {"read", "write", "intrusive"}
 _ALLOWED_TENANT_MODE = {"single", "multi"}
 _ALLOWED_TELEMETRY = {"standard", "strict"}
 _ALLOWED_PERF_KEYS = {"failure_rate", "p95_latency_ms", "retry_frequency"}
+_ALLOWED_ADAPTIVE_KEYS = {
+    "profile_key",
+    "recommended_substrate",
+    "confidence",
+    "sample_count",
+    "stale",
+    "usable",
+    "recommendation_rationale",
+}
 
 _FALLBACK_BY_PRIMARY: dict[str, str] = {
     ExecutionSubstrate.DEEPAGENTS_SPECIALIST.value: ExecutionSubstrate.LANGGRAPH_PRIMARY.value,
@@ -96,6 +105,46 @@ def _normalize_performance_profile(value: Any) -> dict[str, dict[str, float]]:
     return profile
 
 
+def _normalize_adaptive_profile(value: Any) -> dict[str, Any]:
+    if not isinstance(value, Mapping):
+        return {}
+    profile: dict[str, Any] = {}
+    for key, raw in value.items():
+        normalized_key = str(key or "").strip().lower()
+        if normalized_key not in _ALLOWED_ADAPTIVE_KEYS:
+            continue
+        if normalized_key in {"stale", "usable"}:
+            profile[normalized_key] = _normalized_bool(raw, default=False)
+        elif normalized_key in {"sample_count"}:
+            profile[normalized_key] = _normalized_int(raw, default=0, minimum=0)
+        elif normalized_key in {"confidence"}:
+            try:
+                confidence = float(raw)
+            except (TypeError, ValueError):
+                confidence = 0.0
+            profile[normalized_key] = max(0.0, min(1.0, confidence))
+        elif normalized_key == "recommended_substrate":
+            profile[normalized_key] = str(raw or "").strip().upper()
+        else:
+            profile[normalized_key] = str(raw or "").strip()
+    return profile
+
+
+def _adaptive_recommendation_compatible(inputs: Mapping[str, Any], recommended_substrate: str) -> bool:
+    if not recommended_substrate:
+        return False
+    if recommended_substrate == ExecutionSubstrate.DENY.value:
+        return False
+    if inputs.get("requires_protocol_bridge") and recommended_substrate != ExecutionSubstrate.PRAISON_EXTERNAL.value:
+        return False
+    if inputs.get("needs_resume") and recommended_substrate == ExecutionSubstrate.MISSIONRUNTIME_CUSTOM.value:
+        return False
+    if inputs.get("tenant_mode") == "multi" and recommended_substrate == ExecutionSubstrate.DEEPAGENTS_SPECIALIST.value:
+        # Keep safer default unless explicit profile routing is enabled later.
+        return False
+    return True
+
+
 def normalize_selector_inputs(raw_inputs: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """
     Normalize selector inputs into deterministic, bounded values.
@@ -141,6 +190,7 @@ def normalize_selector_inputs(raw_inputs: Mapping[str, Any] | None = None) -> di
         "node_id": str(src.get("node_id") or "").strip(),
         "execution_mode": str(src.get("execution_mode") or "live").strip().lower(),
         "performance_profile": _normalize_performance_profile(src.get("performance_profile")),
+        "adaptive_profile": _normalize_adaptive_profile(src.get("adaptive_profile")),
     }
 
 
@@ -158,6 +208,7 @@ def select_execution_substrate(raw_inputs: Mapping[str, Any] | None = None) -> d
     ]
     justification = "Default LangGraph selection."
     selected = ExecutionSubstrate.LANGGRAPH_PRIMARY.value
+    adaptive_change: dict[str, Any] = {}
 
     # Hard guard: scope rejection.
     if not inputs["scope_authorized"]:
@@ -262,6 +313,80 @@ def select_execution_substrate(raw_inputs: Mapping[str, Any] | None = None) -> d
                 )
                 selected = fallback_candidate
 
+    adaptive_profile = inputs.get("adaptive_profile", {})
+    if isinstance(adaptive_profile, dict):
+        recommended_substrate = str(adaptive_profile.get("recommended_substrate") or "").strip().upper()
+        confidence = float(adaptive_profile.get("confidence", 0.0) or 0.0)
+        sample_count = int(adaptive_profile.get("sample_count", 0) or 0)
+        stale = bool(adaptive_profile.get("stale", False))
+        usable = bool(adaptive_profile.get("usable", False))
+        profile_key = str(adaptive_profile.get("profile_key") or "")
+        rationale = str(adaptive_profile.get("recommendation_rationale") or "")
+
+        compatible = _adaptive_recommendation_compatible(inputs, recommended_substrate)
+        guardrails = {
+            "has_recommendation": bool(recommended_substrate),
+            "profile_usable": usable,
+            "not_stale": not stale,
+            "minimum_samples_met": sample_count >= 3,
+            "minimum_confidence_met": confidence >= 0.65,
+            "changes_selection": bool(recommended_substrate and recommended_substrate != selected),
+            "compatibility_passed": compatible,
+        }
+        failed_guardrails = [name for name, passed in guardrails.items() if not passed]
+        additional_data_needed: list[str] = []
+        if not guardrails["minimum_samples_met"]:
+            additional_data_needed.append("collect_more_runs")
+        if not guardrails["minimum_confidence_met"]:
+            additional_data_needed.append("improve_profile_confidence")
+        if not guardrails["not_stale"]:
+            additional_data_needed.append("refresh_recent_benchmark_data")
+        if not guardrails["compatibility_passed"]:
+            additional_data_needed.append("provide_compatible_substrate_recommendation")
+
+        adaptive_change = {
+            "mode": "recommendation",
+            "profile_key": profile_key,
+            "recommended_substrate": recommended_substrate,
+            "confidence": round(confidence, 4),
+            "sample_count": sample_count,
+            "stale": stale,
+            "usable": usable,
+            "applied": False,
+            "considered": bool(recommended_substrate),
+            "accepted": False,
+            "rejected": True,
+            "previous_selected_substrate": selected,
+            "new_selected_substrate": selected,
+            "rationale": rationale,
+            "guardrails": guardrails,
+            "failed_guardrails": failed_guardrails,
+            "additional_data_needed": additional_data_needed,
+            "decision_reason": "adaptive_recommendation_not_applied",
+        }
+
+        if (
+            recommended_substrate
+            and usable
+            and not stale
+            and sample_count >= 3
+            and confidence >= 0.65
+            and recommended_substrate != selected
+            and compatible
+        ):
+            selected = recommended_substrate
+            adaptive_change["applied"] = True
+            adaptive_change["accepted"] = True
+            adaptive_change["rejected"] = False
+            adaptive_change["new_selected_substrate"] = selected
+            adaptive_change["decision_reason"] = "adaptive_recommendation_applied"
+            audit_tags.append("selector:adaptive_recommendation_applied")
+            guards.append("adaptive_recommendation_audited")
+            justification = (
+                f"{justification} Adaptive recommendation applied from profile "
+                f"'{profile_key}' (confidence={confidence:.2f}, samples={sample_count})."
+            )
+
     return {
         "selected_substrate": selected,
         "fallback_substrate": _FALLBACK_BY_PRIMARY.get(selected, ExecutionSubstrate.LANGGRAPH_PRIMARY.value),
@@ -269,6 +394,7 @@ def select_execution_substrate(raw_inputs: Mapping[str, Any] | None = None) -> d
         "required_guards": sorted(set(guards)),
         "audit_tags": audit_tags + [f"selector:{selected.lower()}"],
         "inputs": inputs,
+        "adaptive_change": adaptive_change,
         "denied": False,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
@@ -294,6 +420,7 @@ def selector_artifact_for_stage(
         "required_guards": list(decision.get("required_guards", [])),
         "audit_tags": list(decision.get("audit_tags", [])),
         "selector_inputs": decision.get("inputs", {}),
+        "adaptive_change": decision.get("adaptive_change", {}),
         "denied": bool(decision.get("denied", False)),
         "timestamp": decision.get("timestamp"),
     }

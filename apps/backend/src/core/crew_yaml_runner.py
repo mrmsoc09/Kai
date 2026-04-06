@@ -11,16 +11,38 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 
 import yaml
+from .helpers import repo_root
 
 logger = logging.getLogger(__name__)
 
 CREW_REGISTRY_PATH = Path("crews/crew_registry.yaml")
 CREWS_DIR = Path("crews")
+
+
+def _build_praison_runtime_env() -> dict[str, str]:
+    """Build a safe writable runtime environment for Praison/CrewAI CLI calls."""
+    env = os.environ.copy()
+    runtime_root = repo_root() / ".runtime" / "praison_cli"
+    data_home = runtime_root / "xdg-data"
+    cache_home = runtime_root / "xdg-cache"
+    home_dir = runtime_root / "home"
+
+    for directory in (runtime_root, data_home, cache_home, home_dir):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    env["XDG_DATA_HOME"] = str(data_home)
+    env["XDG_CACHE_HOME"] = str(cache_home)
+    env["HOME"] = str(home_dir)
+    # CrewAI derives storage from this project identifier + XDG_DATA_HOME.
+    env.setdefault("CREWAI_STORAGE_DIR", "kai_crewai_runtime")
+    return env
 
 
 def run_crew_yaml(
@@ -41,7 +63,7 @@ def run_crew_yaml(
     Returns:
         dict with success, output, error, metadata
     """
-    path = Path(yaml_path)
+    path = Path(yaml_path).expanduser().resolve()
     if not path.exists():
         return {
             "success": False,
@@ -51,37 +73,57 @@ def run_crew_yaml(
             "framework": framework,
         }
 
-    cmd = [
-        "praisonai",
-        str(path),
-        "--framework",
-        framework,
-    ]
+    framework_name = (framework or "").strip().lower()
+    if framework_name == "crewai":
+        compat_runner = (
+            repo_root()
+            / "apps"
+            / "backend"
+            / "src"
+            / "core"
+            / "praison_crewai_compat_runner.py"
+        )
+        cmd = [
+            sys.executable,
+            str(compat_runner),
+            str(path),
+            framework_name,
+        ]
+    else:
+        cmd = [
+            "praisonai",
+            str(path),
+            "--framework",
+            framework_name,
+        ]
 
     try:
         logger.info(
             "Running crew: %s (framework: %s)",
-            yaml_path,
+            path,
             framework,
         )
+        env = _build_praison_runtime_env()
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
             timeout=timeout,
+            cwd=str(path.parent),
+            env=env,
         )
         success = result.returncode == 0
         if not success:
             logger.warning(
                 "Crew failed: %s — %s",
-                yaml_path,
+                path,
                 result.stderr[:500],
             )
         return {
             "success": success,
             "output": result.stdout,
             "error": result.stderr,
-            "yaml_path": yaml_path,
+            "yaml_path": str(path),
             "framework": framework,
             "returncode": result.returncode,
         }

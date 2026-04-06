@@ -160,3 +160,81 @@ def test_tools_authorization_context_rejects_spoofed_program_id():
         assert getattr(exc_info.value, "status_code", None) == 403
     finally:
         guardrails.authorized_certificates = original_certs
+
+
+def test_orchestrator_part3_tool_registry_endpoint_shape(client) -> None:
+    response = client.get("/orchestrator/agents/registry")
+    assert response.status_code == 200, response.text
+    payload = response.json()
+    assert isinstance(payload, list)
+    assert payload, "expected non-empty tool registry payload"
+    entry = payload[0]
+    required = {
+        "name",
+        "display_name",
+        "description",
+        "category",
+        "safety_classification",
+        "phase",
+        "timeout_seconds",
+        "requires_auth",
+        "api_keys_required",
+        "enabled",
+    }
+    assert required.issubset(set(entry.keys()))
+
+
+def test_orchestrator_part3_crews_registry_and_health_full(client) -> None:
+    crews = client.get("/orchestrator/crews/registry")
+    assert crews.status_code == 200, crews.text
+    crews_payload = crews.json()
+    assert isinstance(crews_payload, list)
+    assert crews_payload, "expected crew definitions in registry"
+    crew = crews_payload[0]
+    assert "file_path" in crew
+    assert "framework" in crew
+    assert "phase" in crew
+    assert "is_primary" in crew
+
+    health = client.get("/orchestrator/health/full")
+    assert health.status_code == 200, health.text
+    health_payload = health.json()
+    assert set(["overall", "ready_to_hunt", "services"]).issubset(
+        set(health_payload.keys())
+    )
+    assert isinstance(health_payload["services"], list)
+    assert health_payload["overall"] in {"healthy", "degraded", "critical"}
+
+
+def test_orchestrator_part3_crews_run_enforces_safe_path_and_returns_job(
+    client, monkeypatch
+) -> None:
+    router_mod = importlib.import_module("apps.backend.src.routers.orchestrator")
+
+    monkeypatch.setattr(
+        router_mod,
+        "run_crew_yaml",
+        lambda yaml_path, framework="crewai", timeout=600: {
+            "success": True,
+            "output": "ok",
+            "error": "",
+            "yaml_path": yaml_path,
+            "framework": framework,
+        },
+    )
+
+    invalid = client.post(
+        "/orchestrator/crews/run",
+        json={"file_path": "../outside.yaml"},
+    )
+    assert invalid.status_code == 400
+    assert invalid.json()["detail"] == "crew_path_outside_allowed_root"
+
+    valid = client.post(
+        "/orchestrator/crews/run",
+        json={"file_path": "crews/recon/primary_recon_crew.yaml"},
+    )
+    assert valid.status_code == 200, valid.text
+    payload = valid.json()
+    assert payload["job_id"].startswith("crew-")
+    assert payload["status"] == "completed"

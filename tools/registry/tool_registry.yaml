@@ -596,3 +596,25 @@ tools:
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 1800
     safety_classification: intrusive
+
+  - name: tlsx
+    agent_class: TlsxAgent
+    category: http_live_host
+    execution_mode: native
+    binary_path: tlsx
+    install_verification_cmd: ["tlsx", "-version"]
+    input_schema: {"target": "host_or_domain"}
+    output_schema: {"records": "list[json]"}
+    timeout_seconds: 300
+    safety_classification: active
+
+  - name: postman_collection_export
+    agent_class: PostmanCollectionImportAgent
+    category: orchestration
+    execution_mode: integration_hook
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "path_to_collection_json"}
+    output_schema: {"collection_summary": "dict_or_none"}
+    timeout_seconds: 60
+    safety_classification: passive

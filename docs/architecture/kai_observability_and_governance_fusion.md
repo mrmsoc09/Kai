@@ -84,6 +84,7 @@ Rules:
 
 - Selector policy output is attached as audit metadata at stage start.
 - Runtime emits `stage_execution_started` and `stage_execution_completed` for per-stage latency profiling.
+- Adaptive selector changes (when applied) are emitted with previous/new decision basis and profile confidence metadata.
 - Every external substrate call (Praison, DeepAgents, provider SDK) emits:
   - pre-dispatch policy check event
   - execution start/finish/failure event

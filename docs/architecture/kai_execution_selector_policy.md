@@ -53,6 +53,20 @@ After base selection, Kai may apply a deterministic override when a benchmark pr
 2. If selected substrate is `DEEPAGENTS_SPECIALIST` or `PRAISON_EXTERNAL` and `p95_latency_ms > 2 * latency_slo_ms`, fail over.
 3. Every override is emitted in selector audit tags (`selector:perf_reliability_override` or `selector:perf_latency_override`) and required guards.
 
+## Bounded Learning Guardrails
+
+- Adaptive profiles are recommendation-only and require:
+  - minimum sample threshold
+  - minimum confidence threshold
+  - non-stale profile age
+- Weak/stale profiles are ignored and baseline deterministic policy remains authoritative.
+- If an adaptive recommendation changes the selected substrate, the selector artifact must include:
+  - previous selected substrate
+  - new selected substrate
+  - profile key
+  - confidence and sample count
+  - rationale
+
 ## Do-Not-Use Conditions
 
 ## Praison
