@@ -396,6 +396,12 @@ if [[ -n "${COMPOSE_BIN}" ]]; then
         fi
     fi
 
+    info "Checking Docker authentication..."
+    if ! bash "${REPO_ROOT}/scripts/docker_auth_check.sh"; then
+        error "Docker authentication check failed."
+        exit 1
+    fi
+
     info "Ensuring infrastructure services are running: ${INFRA_SERVICES[*]}"
     compose_up_with_retry "${COMPOSE_BIN}" "${INFRA_SERVICES[@]}"
     wait_for_port 127.0.0.1 5432 60 || {
