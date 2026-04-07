@@ -21,6 +21,7 @@ from ..core.submission_lifecycle import transition_submission_state
 from ..core.report_validator import evaluate_report_quality_gate
 from ..core.report_engine import get_report_engine
 from ..core.evidence_qualification_engine import qualify_evidence
+from ..core.impact_validation_engine import validate_impact
 
 try:
     from ..core.report_formats import get_format, render_report, validate_rendered  # type: ignore
@@ -70,10 +71,33 @@ def _qualify_for_reporting(
         persist=True,
         update_duplicate_history=False,
     )
+    impact_validation = validate_impact(
+        finding={
+            **finding,
+            "baseline_response": finding.get("baseline_response") or evidence_payload.get("baseline_response"),
+            "exploit_response": finding.get("exploit_response") or evidence_payload.get("exploit_response"),
+        },
+        qualification=qualification.to_dict(),
+        baseline_response=finding.get("baseline_response") or evidence_payload.get("baseline_response"),
+        exploit_response=finding.get("exploit_response") or evidence_payload.get("exploit_response"),
+        scope_metadata=finding.get("scope_metadata") if isinstance(finding.get("scope_metadata"), dict) else {
+            "target": finding.get("target") or finding.get("url") or "",
+            "in_scope": bool(finding.get("in_scope", True)),
+        },
+        mission_id=run_id,
+        stage_id="impact_validation_reporting",
+        report_id=run_id,
+        persist=True,
+    )
     finding["evidence_qualification"] = qualification.to_dict()
+    finding["impact_validation"] = impact_validation.to_dict()
     if evidence_payload is not None:
         evidence_payload["evidence_qualification"] = qualification.to_dict()
-    return qualification.to_dict()
+        evidence_payload["impact_validation"] = impact_validation.to_dict()
+    return {
+        "evidence_qualification": qualification.to_dict(),
+        "impact_validation": impact_validation.to_dict(),
+    }
 
 @router.post('/render')
 async def render(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -145,11 +169,13 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     finding = payload.get('finding') or {}
     evidence = normalize_report_evidence(payload.get('evidence') or {})
-    qualification = _qualify_for_reporting(
+    validation = _qualify_for_reporting(
         finding=finding,
         evidence=evidence,
         run_id=run_id,
     )
+    qualification = validation.get("evidence_qualification", {})
+    impact_validation = validation.get("impact_validation", {})
     if not qualification.get("submission_candidate"):
         return JSONResponse(
             status_code=409,
@@ -158,6 +184,14 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
                 "reason": "evidence_qualification_rejected",
                 "rejection_reason": qualification.get("rejection_reason"),
                 "evidence_qualification": qualification,
+            },
+        )
+    if not impact_validation:
+        return JSONResponse(
+            status_code=409,
+            content={
+                "status": "blocked",
+                "reason": "impact_validation_required",
             },
         )
     mitigation = payload.get('mitigation') or {}
@@ -172,6 +206,7 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
         'duplicate_check': payload.get('duplicate_check') or {},
         'stakeholder': fmt.get('stakeholder', 'generic'),
         'evidence_qualification': qualification,
+        'impact_validation': impact_validation,
     })
     try:
         transition_submission_state(
@@ -245,13 +280,16 @@ async def package(payload: Dict[str, Any]) -> Dict[str, Any]:
         'hil_approved': True,
         'duplicate_check': payload.get('duplicate_check') or {}
     }
-    qualification = _qualify_for_reporting(
+    validation = _qualify_for_reporting(
         finding=ctx["finding"],
         evidence=ctx["evidence"],
         run_id=run_id,
     )
+    qualification = validation.get("evidence_qualification", {})
     if not qualification.get("submission_candidate"):
         raise HTTPException(409, 'evidence_qualification_rejected')
+    if not validation.get("impact_validation"):
+        raise HTTPException(409, 'impact_validation_required')
     from ..core.finalize import finalize_report as _finalize
     if not bool(payload.get('override_package_without_finalize')):
         fin = _finalize(run_id, stakeholder, ctx)

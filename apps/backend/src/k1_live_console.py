@@ -106,10 +106,14 @@ def make_layout() -> Layout:
 
 def get_header() -> Panel:
     curr_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    war_chest = vault.get_war_chest_total()
     header_text = Text.assemble(
         ("K1 COMMAND GLASS v1.0.0", "bold cyan"),
         " | ",
         (curr_time, "white"),
+        " | ",
+        ("WAR CHEST: ", "bold gold1"),
+        (f"${war_chest:,.2f}", "gold1"),
         " | ",
         ("Sovereign Status: ", "white"),
         ("ONLINE", "bold green blink")

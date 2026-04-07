@@ -8,6 +8,7 @@ from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .evidence_qualification_engine import qualify_evidence
+from .impact_validation_engine import validate_impact
 from ..models.campaign import ToolExecution
 from ..models.enums import (
     CorrelationActionEnum,
@@ -370,6 +371,29 @@ class WorkflowRunService:
             update_duplicate_history=True,
         )
         detail_payload["evidence_qualification"] = qualification.to_dict()
+        detail_payload["impact_validation"] = validate_impact(
+            finding={
+                **detail_payload,
+                "finding_id": str(workflow_run_id),
+                "vulnerability_type": vulnerability_type,
+                "severity": severity_hint,
+                "target": asset_identifier,
+                "endpoint": endpoint,
+                "parameter": parameter,
+                "confidence_score": confidence_score,
+            },
+            qualification=qualification.to_dict(),
+            baseline_response=detail_payload.get("baseline_response"),
+            exploit_response=detail_payload.get("exploit_response"),
+            scope_metadata={
+                "target": asset_identifier,
+                "in_scope": True,
+            },
+            mission_id=str(workflow_run_id),
+            stage_id="workflow_finding_impact_validation",
+            report_id=str(tool_execution_id or ""),
+            persist=True,
+        ).to_dict()
 
         record = WorkflowFinding(
             workflow_run_id=workflow_run_id,

@@ -12,6 +12,7 @@ from typing import Any
 from urllib.parse import urlparse
 
 from .evidence_qualification_engine import qualify_evidence
+from .impact_validation_engine import validate_impact
 
 
 def _utcnow_iso() -> str:
@@ -237,6 +238,7 @@ class Report:
     quality_score: float
     duplicate_hash: str
     evidence_qualification: dict[str, Any] = field(default_factory=dict)
+    impact_validation: dict[str, Any] = field(default_factory=dict)
     submission_candidate: bool = False
     rejection_reason: str | None = None
     tenant_id: str | None = None
@@ -278,6 +280,11 @@ class Report:
             evidence_qualification=(
                 payload.get("evidence_qualification")
                 if isinstance(payload.get("evidence_qualification"), dict)
+                else {}
+            ),
+            impact_validation=(
+                payload.get("impact_validation")
+                if isinstance(payload.get("impact_validation"), dict)
                 else {}
             ),
             submission_candidate=bool(payload.get("submission_candidate", False)),
@@ -370,8 +377,16 @@ class ReportEngine:
             else 0.0,
             0.0,
         )
+        impact_quality = _safe_float(
+            report.impact_validation.get("impact_score")
+            if isinstance(report.impact_validation, dict)
+            else 0.0,
+            0.0,
+        )
         if evidence_quality > 0:
             score = (score * 0.8) + (_clamp(evidence_quality) * 0.2)
+        if impact_quality > 0:
+            score = (score * 0.85) + (_clamp(impact_quality) * 0.15)
         return round(_clamp(score), 4)
 
     def _render_markdown(self, report: Report) -> str:
@@ -430,6 +445,13 @@ class ReportEngine:
                 "",
                 "## Impact",
                 report.impact,
+                "",
+                "## Impact Validation",
+                json.dumps(
+                    report.impact_validation if isinstance(report.impact_validation, dict) else {},
+                    indent=2,
+                    ensure_ascii=False,
+                ),
                 "",
                 "## Remediation",
                 report.remediation,
@@ -516,6 +538,23 @@ class ReportEngine:
             persist=True,
             update_duplicate_history=True,
         )
+        impact_validation = validate_impact(
+            finding,
+            qualification=qualification.to_dict(),
+            baseline_response=finding.get("baseline_response"),
+            exploit_response=finding.get("exploit_response"),
+            scope_metadata=(
+                finding.get("scope_metadata")
+                if isinstance(finding.get("scope_metadata"), dict)
+                else {"target": target}
+            ),
+            mission_id=mission_id,
+            stage_id=_normalize_text(finding.get("stage_id") or finding.get("stage") or "impact_validation"),
+            report_id=report_id,
+            persist=True,
+        )
+        if not _normalize_text(finding.get("impact")) and isinstance(impact_validation.impact_statement, dict):
+            impact = _normalize_text(impact_validation.impact_statement.get("technical_impact")) or impact
 
         report = Report(
             report_id=report_id,
@@ -536,6 +575,7 @@ class ReportEngine:
             quality_score=0.0,
             duplicate_hash=duplicate_hash,
             evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
             submission_candidate=qualification.submission_candidate,
             rejection_reason=qualification.rejection_reason,
             tenant_id=tenant_id,

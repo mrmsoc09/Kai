@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from .evidence_qualification_engine import qualify_evidence
 from .evidence_integrity_service import EvidenceIntegrityService
 from .helpers import artifacts_root
+from .impact_validation_engine import validate_impact
 from .recordings import has_recording, list_recordings
 
 
@@ -471,6 +472,24 @@ class ReportHiLGateService:
             persist=True,
             update_duplicate_history=False,
         )
+        impact_validation = validate_impact(
+            finding={
+                **finding,
+                "baseline_response": finding.get("baseline_response") or evidence.get("baseline_response"),
+                "exploit_response": finding.get("exploit_response") or evidence.get("exploit_response"),
+            },
+            qualification=qualification.to_dict(),
+            baseline_response=finding.get("baseline_response") or evidence.get("baseline_response"),
+            exploit_response=finding.get("exploit_response") or evidence.get("exploit_response"),
+            scope_metadata=finding.get("scope_metadata") if isinstance(finding.get("scope_metadata"), dict) else {
+                "target": normalized_target,
+                "in_scope": bool(finding.get("in_scope", True)),
+            },
+            mission_id=run_id,
+            stage_id="impact_validation_hil_gate",
+            report_id=run_id,
+            persist=True,
+        )
 
         missing: list[str] = []
         if not recording_path and not has_recording(run_id):
@@ -486,6 +505,8 @@ class ReportHiLGateService:
             missing.append("arbitration_summary_required")
         if not qualification.submission_candidate:
             missing.append("evidence_qualification_submission_candidate_required")
+        if qualification.submission_candidate and not impact_validation.impact_statement:
+            missing.append("impact_validation_required")
 
         report_state = ReportState.VALIDATED if not missing else ReportState.DRAFT
         reason = "report_ready" if not missing else ",".join(missing)
@@ -498,6 +519,7 @@ class ReportHiLGateService:
             missing=missing,
         )
         report_payload["evidence_qualification"] = qualification.to_dict()
+        report_payload["impact_validation"] = impact_validation.to_dict()
         readiness = ReportReadiness(
             report_ready=not missing,
             report_state=report_state,

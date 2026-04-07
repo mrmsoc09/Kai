@@ -15,6 +15,7 @@ from .audit_events import record_transition_event
 from .bugbounty_workflow_engine import WORKFLOW_TEMPLATES
 from .evidence_qualification_engine import qualify_evidence
 from .helpers import workflow_output_root
+from .impact_validation_engine import validate_impact
 from .phase9_alert_case_service import Phase9AlertCaseService
 from .secret_manager import get_secret_manager
 from .scope_guardrails import ScopePolicy, evaluate_target_scope
@@ -1357,13 +1358,37 @@ class BugBountyHuntingService:
                 persist=True,
                 update_duplicate_history=True,
             )
+            impact_validation = validate_impact(
+                finding={
+                    "finding_id": str(wf.id),
+                    "vulnerability_type": wf.vulnerability_type,
+                    "target": wf.asset_identifier,
+                    "endpoint": wf.endpoint,
+                    "severity": wf.severity_hint,
+                    "summary": str((wf.details_json or {}).get("summary") or ""),
+                    "description": str((wf.details_json or {}).get("description") or ""),
+                },
+                qualification=qualification.to_dict(),
+                baseline_response=(wf.details_json or {}).get("baseline_response"),
+                exploit_response=(wf.details_json or {}).get("exploit_response"),
+                scope_metadata={
+                    "target": wf.asset_identifier,
+                    "allowed": bool(scope_decision.allowed),
+                    "reason": scope_decision.reason,
+                },
+                mission_id=str(workflow_run_id),
+                stage_id="impact_validation_candidate_queue",
+                report_id=str(wf.id),
+                persist=True,
+            )
 
             reportability = min(
                 1.0,
                 max(
                     0.0,
-                    (reportability * 0.55)
-                    + (float(qualification.evidence_quality_score) * 0.45),
+                    (reportability * 0.45)
+                    + (float(qualification.evidence_quality_score) * 0.35)
+                    + (float(impact_validation.impact_score) * 0.20),
                 ),
             )
             if qualification.duplicate_risk_score >= 0.75:
@@ -1395,6 +1420,7 @@ class BugBountyHuntingService:
                     "matched_rule": scope_decision.matched_rule,
                 },
                 "evidence_qualification": qualification.to_dict(),
+                "impact_validation": impact_validation.to_dict(),
             }
             if existing is None:
                 queue_item = AnalystQueueItem(
@@ -1461,6 +1487,7 @@ class BugBountyHuntingService:
             raise ValueError("Workflow run does not have a linked campaign context")
         details = _coalesce_json(queue_item.details_json)
         qualification = details.get("evidence_qualification")
+        impact_validation = details.get("impact_validation")
         if not isinstance(qualification, dict):
             qualification = qualify_evidence(
                 {
@@ -1488,10 +1515,30 @@ class BugBountyHuntingService:
             ).to_dict()
             details["evidence_qualification"] = qualification
             queue_item.details_json = details
+        if not isinstance(impact_validation, dict):
+            impact_validation = validate_impact(
+                finding={
+                    "finding_id": str(queue_item.id),
+                    "vulnerability_type": queue_item.vulnerability_type,
+                    "target": queue_item.affected_asset,
+                    "endpoint": queue_item.affected_endpoint,
+                    "severity": queue_item.severity_hint,
+                },
+                qualification=qualification,
+                scope_metadata={"target": queue_item.affected_asset, "in_scope": queue_item.policy_fit_status == "IN_SCOPE"},
+                mission_id=str(queue_item.workflow_run_id),
+                stage_id="impact_validation_report_draft",
+                report_id=str(queue_item.id),
+                persist=True,
+            ).to_dict()
+            details["impact_validation"] = impact_validation
+            queue_item.details_json = details
 
         if not bool(qualification.get("submission_candidate")):
             reason = str(qualification.get("rejection_reason") or "evidence_not_qualified")
             raise ValueError(f"Submission candidate rejected by evidence qualification: {reason}")
+        if not isinstance(impact_validation, dict) or not impact_validation:
+            raise ValueError("Submission candidate blocked: impact validation missing")
 
         reports_dir = workflow_output_root() / "reports" / "bug_bounty"
         reports_dir.mkdir(parents=True, exist_ok=True)
@@ -1508,9 +1555,13 @@ class BugBountyHuntingService:
                 f"- Confidence: `{queue_item.confidence_score}`",
                 f"- Reportability Score: `{queue_item.reportability_score}`",
                 f"- Evidence: `{queue_item.evidence_summary or 'n/a'}`",
+                f"- Impact Score: `{impact_validation.get('impact_score', 'n/a')}`",
                 "",
                 "## Reproduction Notes",
                 queue_item.details_json.get("reproduction", "Based on captured workflow evidence."),
+                "",
+                "## Impact Validation",
+                str(impact_validation.get("impact_statement", {})),
                 "",
                 "## Analyst Notes",
                 analyst_notes or "Pending analyst notes.",
@@ -1534,6 +1585,7 @@ class BugBountyHuntingService:
                 "workflow_run_id": str(queue_item.workflow_run_id),
                 "reportability_score": queue_item.reportability_score,
                 "evidence_qualification": qualification,
+                "impact_validation": impact_validation,
             },
         )
         self.db.add(draft)
