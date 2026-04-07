@@ -632,3 +632,88 @@ tools:
     timeout_seconds: 60
     safety_classification: passive
     enabled: true
+
+  # Wave 7 - Orphaned API Key Integrations (6 tools)
+  - name: fullhunt
+    display_name: FullHunt Attack Surface Intelligence
+    agent_class: FullHuntAgent
+    category: recon_passive_osint
+    execution_mode: api_integration
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain"}
+    output_schema: {"hosts": "list[dict]"}
+    timeout_seconds: 60
+    safety_classification: passive
+    phase: 1
+    enabled: true
+
+  - name: leakix
+    display_name: LeakIX Exposed Service Index
+    agent_class: LeakIXAgent
+    category: osint_breach_database
+    execution_mode: api_integration
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain"}
+    output_schema: {"services": "list[dict]"}
+    timeout_seconds: 60
+    safety_classification: passive
+    phase: 6
+    enabled: true
+
+  - name: dehashed
+    display_name: Dehashed Credential Breach Database
+    agent_class: DehashedAgent
+    category: osint_breach_database
+    execution_mode: api_integration
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain"}
+    output_schema: {"credentials": "list[dict]"}
+    timeout_seconds: 60
+    safety_classification: passive
+    phase: 4
+    enabled: true
+
+  - name: grayhatwarfare
+    display_name: Gray Hat Warfare Cloud Storage
+    agent_class: GrayHatWarfareAgent
+    category: osint_cloud_exposure
+    execution_mode: api_integration
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain"}
+    output_schema: {"buckets": "list[dict]"}
+    timeout_seconds: 60
+    safety_classification: passive
+    phase: 4
+    enabled: true
+
+  - name: nvd-nist
+    display_name: NVD/NIST CVE Data
+    agent_class: NvdNistAgent
+    category: vulnerability_cve_data
+    execution_mode: api_integration
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "software_version"}
+    output_schema: {"cves": "list[dict]"}
+    timeout_seconds: 60
+    safety_classification: passive
+    phase: 7
+    enabled: true
+
+  - name: ipinfo
+    display_name: IPInfo Intelligence
+    agent_class: IpInfoAgent
+    category: recon_fingerprinting
+    execution_mode: api_integration
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "ip_address"}
+    output_schema: {"intelligence": "dict"}
+    timeout_seconds: 30
+    safety_classification: passive
+    phase: 2
+    enabled: true

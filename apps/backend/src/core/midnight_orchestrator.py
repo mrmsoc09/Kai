@@ -92,6 +92,12 @@ class MidnightOrchestrator:
             "CENSYS_API_KEY": 250,
             "GITHUB_TOKEN": 5000,
             "HUNTER_API_KEY": 25,
+            "FULLHUNT_API_KEY": 100,
+            "LEAKIX_API_KEY": 500,
+            "DEHASHED_API_KEY": 100,
+            "GRAYHATWARFARE_API_KEY": 200,
+            "NVD_NIST_API_KEY": 2000,
+            "IPINFO_API_KEY": 1000,
         }
         for env_var, daily_limit in known_limits.items():
             key_present = bool(os.environ.get(env_var))

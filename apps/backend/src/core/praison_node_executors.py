@@ -379,12 +379,15 @@ def make_node_executor(
     def executor(state: dict[str, Any]) -> dict[str, Any]:
         mission_id = state.get("mission_id", "")
         
-        # Optimization: Check global result cache for deterministic analyst nodes
+        # Optimization: Check global result cache for deterministic nodes
         # Cache key is mission_id + node_id + hash of critical inputs (artifacts)
         artifacts = state.get("artifacts", [])
         cache_key = f"{mission_id}:{node_id}:{hash(tuple(sorted([str(a) for a in artifacts])))}"
         
-        if node_type == "analyst" and cache_key in _NODE_RESULT_CACHE:
+        # Optimized nodes list
+        CACHEABLE_NODES = {"analyst", "reporter", "coordinator"}
+        
+        if node_type in CACHEABLE_NODES and cache_key in _NODE_RESULT_CACHE:
             logger.info(f"Node Optimization: Using cached result for {node_id} in {mission_id}")
             return _NODE_RESULT_CACHE[cache_key]
 
@@ -451,8 +454,8 @@ def make_node_executor(
                 node_id=node_id, phase=phase, artifact_ids=artifact_ids,
             ))
             
-            # Optimization: Cache successful updates for analyst nodes
-            if node_type == "analyst":
+            # Optimization: Cache successful updates for deterministic nodes
+            if node_type in CACHEABLE_NODES:
                 _NODE_RESULT_CACHE[cache_key] = update
                 
             return update
