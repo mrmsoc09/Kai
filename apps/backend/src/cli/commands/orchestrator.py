@@ -109,12 +109,12 @@ def health_check():
     except Exception as e:
         checks.append(["API Server", "unreachable", str(e)])
 
-    # Check Agent Zero
+    # Check Intelligence Orchestrator
     try:
         response = client.get("/api/v1/orchestration/health")
-        checks.append(["Agent Zero", "healthy" if response.status_code == 200 else "degraded", response.status_code])
+        checks.append(["Intelligence Orchestrator", "healthy" if response.status_code == 200 else "degraded", response.status_code])
     except Exception:
-        checks.append(["Agent Zero", "unavailable", "-"])
+        checks.append(["Intelligence Orchestrator", "unavailable", "-"])
 
     # Check Autonomous System
     try:

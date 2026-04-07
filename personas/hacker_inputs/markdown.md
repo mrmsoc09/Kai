@@ -50,9 +50,9 @@
 **Format:** [Markdown]
 **Structure Example:**
 ```markdown
-# Website Creation and Deployment Workflow for Agent-Zero
+# Website Creation and Deployment Workflow for KAISON AI
 
-This document outlines the sequential steps Agent-Zero will follow to create and deploy the single-page, black background, interactive endless scroll website with AI-generated visuals.
+This document outlines the sequential steps KAISON AI will follow to create and deploy the single-page, black background, interactive endless scroll website with AI-generated visuals.
 
 ## Chained Workflow Steps:
 

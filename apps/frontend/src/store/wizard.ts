@@ -14,7 +14,7 @@ type WizardState = {
 export const useWizard = create<WizardState>((set,get)=>({
   open: false,
   busy: false,
-  msgs: [{ role:'system', text:'Kaison Composer HiL Wizard online. All comms are relayed through A0.', ts: new Date().toISOString()}],
+  msgs: [{ role:'system', text:'Kaison Composer HiL Wizard online. All comms are relayed through KAISON AI.', ts: new Date().toISOString()}],
   toggle: ()=> set(s=> ({...s, open: !s.open})),
   add: (m)=> set(s=> ({...s, msgs: [...s.msgs, m]})),
   ask: async (text: string)=>{

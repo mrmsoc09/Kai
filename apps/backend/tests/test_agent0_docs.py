@@ -1,8 +1,8 @@
 """
 Docs endpoint tests.
 
-Note: The agent0 chat/logs endpoints were removed when Agent Zero was replaced by
-Gemini CLI orchestration. Only the /docs/* endpoint tests remain here.
+Note: The agent0 chat/logs endpoints were removed when KAISON AI replaced the legacy system.
+Only the /docs/* endpoint tests remain here.
 """
 from fastapi.testclient import TestClient
 from src.main import app
@@ -35,7 +35,7 @@ def test_docs_index_ok_and_get():
 
 
 def test_agent0_endpoints_no_longer_exist():
-    """Verify agent0 chat/logs endpoints have been removed (Agent Zero was replaced by Gemini CLI)."""
+    """Verify agent0 chat/logs endpoints have been removed (replaced with KAISON AI)."""
     r_chat = client.post('/agent0/chat', json={"text": "ping"}, headers=AUTH)
     assert r_chat.status_code == 404, f"Expected 404 (removed), got {r_chat.status_code}"
     r_logs = client.get('/agent0/logs', headers=AUTH)

@@ -690,7 +690,7 @@ Each curriculum:
 - Tool execution counted as skill experience
 - Success/failure feeds back to skill system
 
-### With Agent Zero
+### With KAISON AI
 - Training requests appear as capabilities
 - Subagent spawning increases team capacity
 - Skill progression improves mission success

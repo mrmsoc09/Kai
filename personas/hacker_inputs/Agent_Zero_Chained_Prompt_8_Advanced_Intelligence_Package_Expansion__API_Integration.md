@@ -1,4 +1,4 @@
-# Agent_Zero Chained Prompt 8: Advanced Intelligence Package Expansion & API Integration
+# KAISON_AI Chained Prompt 8: Advanced Intelligence Package Expansion & API Integration
 
 <prompt>
 

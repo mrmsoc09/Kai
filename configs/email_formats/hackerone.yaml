@@ -13,6 +13,6 @@ body: |
   {{ mitigation.plan }}
 
   Regards,
-  K1/Agent Zero
+  KAISON AI
 headers:
   X-Platform: "HackerOne"

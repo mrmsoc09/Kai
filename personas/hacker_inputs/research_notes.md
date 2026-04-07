@@ -3,7 +3,7 @@
 
 ## Overview
 
-The goal is to identify methods and strategies for Agent-Zero to automatically obtain and manage API keys for free-tiered services in a headless environment, without requiring user interaction. This is crucial for scaling OSINT investigations for high-stakes background checks, where hundreds or thousands of API calls might be necessary.
+The goal is to identify methods and strategies for KAISON AI to automatically obtain and manage API keys for free-tiered services in a headless environment, without requiring user interaction. This is crucial for scaling OSINT investigations for high-stakes background checks, where hundreds or thousands of API calls might be necessary.
 
 ## Key Findings from Search Results
 

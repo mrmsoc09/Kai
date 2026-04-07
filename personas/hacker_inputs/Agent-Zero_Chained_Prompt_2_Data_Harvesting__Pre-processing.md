@@ -1,4 +1,4 @@
-# Agent-Zero Chained Prompt 2: Data Harvesting & Pre-processing
+# KAISON AI Chained Prompt 2: Data Harvesting & Pre-processing
 
 <prompt>
 

@@ -1,4 +1,4 @@
-# Agent-Zero Chained Prompt 1: Initial Query & Scraper Orchestration
+# KAISON AI Chained Prompt 1: Initial Query & Scraper Orchestration
 
 <prompt>
 

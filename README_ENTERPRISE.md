@@ -41,7 +41,7 @@ Kaison K1 now supports automated bulk import for your 75+ external API keys (Sho
 
 ---
 
-## 🤖 Kaison Composer (formerly Agent Zero)
+## 🤖 Kaison Composer
 Access the advanced AI engine via the sidebar **"Kaison Composer"**.
 *   **Model:** Enforced to use `gpt-4.1` for optimal reasoning and rate limits.
 *   **UI:** Fully rebranded with an Enterprise Dark Mode theme.

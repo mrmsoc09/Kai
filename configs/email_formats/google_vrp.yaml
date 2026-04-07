@@ -17,7 +17,7 @@ body: |
   Timeline: {{ mitigation.timeline|default('n/a') }}
 
   Regards,
-  K1/Agent Zero
+  KAISON AI
 headers:
   X-K1-Report: "{{ run_id }}"
   X-Program: "google_vrp"

@@ -21,7 +21,7 @@ _DEFAULT = {
         'Mitigation Plan:\n{{ mitigation.plan }}\n\n'
         'Timeline: {{ mitigation.timeline|default("n/a") }}\n\n'
         'Reproduction steps and a safe screen recording are included.\n\n'
-        'Best regards,\nK1/Agent Zero\n'
+        'Best regards,\nKAISON AI\n'
     ),
     'headers': { 'X-K1-Report': '{{ run_id }}' }
 }

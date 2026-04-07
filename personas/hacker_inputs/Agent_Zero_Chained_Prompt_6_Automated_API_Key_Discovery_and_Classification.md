@@ -1,4 +1,4 @@
-# Agent_Zero Chained Prompt 6: Automated API Key Discovery and Classification
+# KAISON_AI Chained Prompt 6: Automated API Key Discovery and Classification
 
 <prompt>
 

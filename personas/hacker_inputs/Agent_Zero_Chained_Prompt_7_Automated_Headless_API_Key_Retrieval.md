@@ -1,4 +1,4 @@
-# Agent_Zero Chained Prompt 7: Automated Headless API Key Retrieval
+# KAISON_AI Chained Prompt 7: Automated Headless API Key Retrieval
 
 <prompt>
 

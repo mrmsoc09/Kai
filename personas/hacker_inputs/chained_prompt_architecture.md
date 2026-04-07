@@ -1,10 +1,10 @@
-# Chained Prompt Architecture for Agent-Zero OSINT Operations
+# Chained Prompt Architecture for KAISON AI OSINT Operations
 
-This document outlines the proposed chained prompt architecture for Agent-Zero, designed to facilitate automated OSINT investigations on a Kali Linux environment. The architecture leverages Agent-Zero's ability to control shell environments, interact with various OSINT tools, and utilize its AI Fusion Engine for data analysis and report generation.
+This document outlines the proposed chained prompt architecture for KAISON AI, designed to facilitate automated OSINT investigations on a Kali Linux environment. The architecture leverages KAISON AI's ability to control shell environments, interact with various OSINT tools, and utilize its AI Fusion Engine for data analysis and report generation.
 
 ## Core Principles of Chained Prompting
 
-Chained prompting involves a series of interconnected prompts, where the output of one prompt serves as the input or context for the subsequent prompt. This approach allows for complex, multi-step tasks to be broken down into manageable, sequential operations, enhancing the clarity, control, and efficiency of Agent-Zero's OSINT workflows.
+Chained prompting involves a series of interconnected prompts, where the output of one prompt serves as the input or context for the subsequent prompt. This approach allows for complex, multi-step tasks to be broken down into manageable, sequential operations, enhancing the clarity, control, and efficiency of KAISON AI's OSINT workflows.
 
 ### Advantages:
 - **Modularity:** Each prompt focuses on a specific sub-task, making the overall workflow easier to design, debug, and maintain.
@@ -23,10 +23,10 @@ Based on the provided OSINT workflow diagram and the "Tracer" persona, the chain
 **Input:** User's natural language query (e.g., "Investigate threat actor 'DarkWebNinja'").
 
 **Processing:**
-- **Query Analysis:** Agent-Zero analyzes the query to identify key entities, objectives, and potential data sources.
-- **Tool Selection:** Based on the query, Agent-Zero determines which scraping tools (Social Media Crawlers, Public Record Harvesters, Blockchain Explorers) are relevant.
-- **Parameter Generation:** Agent-Zero generates specific parameters and commands for the selected scraping tools.
-- **Execution Orchestration:** Agent-Zero initiates the scraping processes in the shell environment.
+- **Query Analysis:** KAISON AI analyzes the query to identify key entities, objectives, and potential data sources.
+- **Tool Selection:** Based on the query, KAISON AI determines which scraping tools (Social Media Crawlers, Public Record Harvesters, Blockchain Explorers) are relevant.
+- **Parameter Generation:** KAISON AI generates specific parameters and commands for the selected scraping tools.
+- **Execution Orchestration:** KAISON AI initiates the scraping processes in the shell environment.
 
 **Output:**
 - Confirmation of scraping initiation.
@@ -40,7 +40,7 @@ Based on the provided OSINT workflow diagram and the "Tracer" persona, the chain
 **Input:** Structured plan from Chain Link 1, raw data streams from scraping tools (Twint/Twitter, Invidious/YouTube, Nitter/Reddit, OSINT-Framework, OpenSanctions, BlockchainETL).
 
 **Processing:**
-- **Shell Command Execution:** Agent-Zero executes shell commands to run the identified scraping tools.
+- **Shell Command Execution:** KAISON AI executes shell commands to run the identified scraping tools.
 - **Data Ingestion:** Collects data from various sources, handling different formats and potential API rate limits.
 - **Initial Filtering/Cleaning:** Removes redundant or irrelevant data, standardizes formats where possible.
 - **Error Monitoring:** Monitors scraping processes for errors and logs any issues.
@@ -83,13 +83,13 @@ Based on the provided OSINT workflow diagram and the "Tracer" persona, the chain
 - Final OSINT report (e.g., Markdown, PDF, JSON).
 - Structured data for the Data Marketplace.
 
-## Integration with Agent-Zero Capabilities
+## Integration with KAISON AI Capabilities
 
-Each link in this chain will implicitly rely on Agent-Zero's core capabilities:
+Each link in this chain will implicitly rely on KAISON AI's core capabilities:
 
 - **Shell Control:** For executing OSINT tools, managing files, and monitoring processes.
 - **File System Access:** For reading input data, writing intermediate results, and saving final outputs.
 - **AI/LLM Capabilities:** For natural language understanding, query analysis, data interpretation, and report generation.
 
-This chained architecture provides a robust framework for Agent-Zero to perform sophisticated OSINT operations autonomously.
+This chained architecture provides a robust framework for KAISON AI to perform sophisticated OSINT operations autonomously.
 

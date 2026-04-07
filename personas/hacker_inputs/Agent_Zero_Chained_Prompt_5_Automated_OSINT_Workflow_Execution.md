@@ -1,4 +1,4 @@
-# Agent_Zero Chained Prompt 5: Automated OSINT Workflow Execution
+# KAISON_AI Chained Prompt 5: Automated OSINT Workflow Execution
 
 <prompt>
 
@@ -20,7 +20,7 @@
 <!-- 
   Purpose: Provide all necessary background information, data, and constraints.
 -->
-[You have previously defined a chained prompting architecture for OSINT investigations. Your task is now to execute this entire workflow for a new target, demonstrating the end-to-end capability of Agent-Zero. This involves sequentially calling the previously defined prompts (Chain Link 1, 2, 3, and 4) and passing their outputs as inputs to the next stage.]
+[You have previously defined a chained prompting architecture for OSINT investigations. Your task is now to execute this entire workflow for a new target, demonstrating the end-to-end capability of KAISON AI. This involves sequentially calling the previously defined prompts (Chain Link 1, 2, 3, and 4) and passing their outputs as inputs to the next stage.]
 
 **Key Information:**
 -   **Source:** [User-provided new target query]

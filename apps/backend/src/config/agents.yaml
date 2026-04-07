@@ -15,7 +15,7 @@ agents:
     description: |
       High-level strategic agent that interprets user missions, decomposes them
       into tactical phases, and manages the overall hunting workflow. Interfaces
-      with Agent-Zero for natural language command processing.
+      with KAISON AI for natural language command processing.
 
     responsibilities:
       - Parse user missions from natural language

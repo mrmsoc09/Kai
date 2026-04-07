@@ -1,4 +1,4 @@
-# Agent-Zero Chained Prompt 3: AI Fusion & Analysis
+# KAISON AI Chained Prompt 3: AI Fusion & Analysis
 
 <prompt>
 
