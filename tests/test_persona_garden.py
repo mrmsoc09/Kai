@@ -34,8 +34,8 @@ def test_community_tier_count():
         p for p in data["personas"]
         if p["tier"] == "community"
     ]
-    assert 70 <= len(community) <= 80, \
-        f"Expected ~75 community, got {len(community)}"
+    assert len(community) >= 100, \
+        f"Expected 100+ community personas, got {len(community)}"
 
 def test_all_required_fields_present():
     data = json.loads(REGISTRY.read_text())
@@ -61,7 +61,7 @@ def test_phase_affinity_valid_range():
         phases = p.get("phase_affinity", [])
         assert isinstance(phases, list)
         for ph in phases:
-            assert 1 <= ph <= 5, \
+            assert 1 <= ph <= 9, \
                 f"{p['persona_id']}: phase {ph}"
 
 def test_tier_values_valid():
@@ -89,8 +89,8 @@ def test_persona_phase_coverage():
     for p in community:
         for ph in p.get("phase_affinity", []):
             covered_phases.add(ph)
-    # Personas only have phases 1-5 in source data
-    expected_coverage = {1, 2, 3, 4, 5}
+    # All phases 1-9 should now be covered
+    expected_coverage = {1, 2, 3, 4, 5, 6, 7, 8, 9}
     missing = expected_coverage - covered_phases
     assert not missing, \
         f"Expected phases not covered: {missing}"
