@@ -359,6 +359,9 @@ def _build_strategy_outcome(state: dict[str, Any], result: dict[str, Any]) -> St
 
 # -- Base executor wrapper -----------------------------------------------------
 
+# Simple in-memory cache for node result optimization
+_NODE_RESULT_CACHE: dict[str, Any] = {}
+
 def make_node_executor(
     node_id: str,
     agent_callable: Callable[[dict[str, Any]], dict[str, Any]] | None = None,
@@ -375,6 +378,16 @@ def make_node_executor(
     @execution_timer(node_name=node_id)
     def executor(state: dict[str, Any]) -> dict[str, Any]:
         mission_id = state.get("mission_id", "")
+        
+        # Optimization: Check global result cache for deterministic analyst nodes
+        # Cache key is mission_id + node_id + hash of critical inputs (artifacts)
+        artifacts = state.get("artifacts", [])
+        cache_key = f"{mission_id}:{node_id}:{hash(tuple(sorted([str(a) for a in artifacts])))}"
+        
+        if node_type == "analyst" and cache_key in _NODE_RESULT_CACHE:
+            logger.info(f"Node Optimization: Using cached result for {node_id} in {mission_id}")
+            return _NODE_RESULT_CACHE[cache_key]
+
         workflow_id = state.get("workflow_id", "")
         program_id = state.get("program_id", "")
         phase = state.get("phase", "")
@@ -437,6 +450,11 @@ def make_node_executor(
                 mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,
                 node_id=node_id, phase=phase, artifact_ids=artifact_ids,
             ))
+            
+            # Optimization: Cache successful updates for analyst nodes
+            if node_type == "analyst":
+                _NODE_RESULT_CACHE[cache_key] = update
+                
             return update
 
         except Exception as exc:
@@ -1225,6 +1243,7 @@ def build_standard_node_callables(
         "VulnerabilityAgent",
         "APISecurityAgent",
         "FaradayCoordinatorAgent",
+        "RalphFuzzer",
     ]
     for agent_id in wave4_agents:
         callables[agent_id] = make_specialist_cluster_executor(
