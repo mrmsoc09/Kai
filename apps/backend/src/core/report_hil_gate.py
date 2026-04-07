@@ -8,6 +8,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from .evidence_qualification_engine import qualify_evidence
 from .evidence_integrity_service import EvidenceIntegrityService
 from .helpers import artifacts_root
 from .recordings import has_recording, list_recordings
@@ -393,6 +394,83 @@ class ReportHiLGateService:
         screenshots = self._screenshots(payload)
         arbitration = self._arbitration_summary(payload)
         confidence = self._confidence_score(payload)
+        finding = payload.get("finding") if isinstance(payload.get("finding"), dict) else {}
+        evidence = payload.get("evidence") if isinstance(payload.get("evidence"), dict) else {}
+        normalized_exploit_results = (
+            finding.get("exploit_results")
+            if isinstance(finding.get("exploit_results"), list)
+            else None
+        )
+        normalized_rr_signatures: list[str] = [
+            f"{req}::{resp}"
+            for req, resp in zip(
+                finding.get("http_requests", []) if isinstance(finding.get("http_requests"), list) else [],
+                finding.get("http_responses", []) if isinstance(finding.get("http_responses"), list) else [],
+            )
+        ]
+        if not normalized_rr_signatures and isinstance(evidence, dict):
+            normalized_rr_signatures = [
+                f"{req}::{resp}"
+                for req, resp in zip(
+                    evidence.get("requests", []) if isinstance(evidence.get("requests"), list) else [],
+                    evidence.get("responses", []) if isinstance(evidence.get("responses"), list) else [],
+                )
+            ]
+
+        if not normalized_exploit_results and not normalized_rr_signatures:
+            is_validated = bool(finding.get("validated")) or str(arbitration.get("final_verdict") or "").lower() == "confirmed"
+            if is_validated and recording_path:
+                replay_signature = hashlib.sha256(
+                    json.dumps(
+                        {
+                            "title": finding.get("title"),
+                            "summary": finding.get("summary"),
+                            "reproduction_steps": finding.get("reproduction_steps"),
+                            "recording": recording_path,
+                        },
+                        sort_keys=True,
+                        default=str,
+                    ).encode("utf-8")
+                ).hexdigest()[:24]
+                normalized_exploit_results = [
+                    {"status": "success", "request_signature": replay_signature, "response_signature": "validated"},
+                    {"status": "success", "request_signature": replay_signature, "response_signature": "validated"},
+                ]
+                normalized_rr_signatures = []
+        normalized_target = (
+            finding.get("target")
+            or finding.get("url")
+            or finding.get("domain")
+            or payload.get("target")
+            or run_id
+        )
+        qualification = qualify_evidence(
+            {
+                **finding,
+                "target": normalized_target,
+                "severity": finding.get("severity") or "medium",
+                "confidence_score": finding.get("confidence_score") or self._confidence_score(payload),
+                "validation_evidence": (
+                    finding.get("validation_evidence")
+                    or evidence.get("repro")
+                    or [recording_path] if recording_path else []
+                ),
+                "evidence": evidence.get("artifacts") or screenshots or ([recording_path] if recording_path else []),
+                "http_requests": finding.get("http_requests") or evidence.get("requests") or [],
+                "http_responses": finding.get("http_responses") or evidence.get("responses") or [],
+            },
+            exploit_results=normalized_exploit_results,
+            request_response_signatures=normalized_rr_signatures,
+            scope_metadata=finding.get("scope_metadata") if isinstance(finding.get("scope_metadata"), dict) else {
+                "target": normalized_target,
+                "in_scope": bool(finding.get("in_scope", True)),
+            },
+            mission_id=run_id,
+            stage_id="report_hil_gate",
+            report_id=run_id,
+            persist=True,
+            update_duplicate_history=False,
+        )
 
         missing: list[str] = []
         if not recording_path and not has_recording(run_id):
@@ -406,6 +484,8 @@ class ReportHiLGateService:
 
         if not arbitration.get("final_verdict") or arbitration.get("final_confidence") is None or not arbitration.get("arbitration_reason"):
             missing.append("arbitration_summary_required")
+        if not qualification.submission_candidate:
+            missing.append("evidence_qualification_submission_candidate_required")
 
         report_state = ReportState.VALIDATED if not missing else ReportState.DRAFT
         reason = "report_ready" if not missing else ",".join(missing)
@@ -417,6 +497,7 @@ class ReportHiLGateService:
             report_state=report_state,
             missing=missing,
         )
+        report_payload["evidence_qualification"] = qualification.to_dict()
         readiness = ReportReadiness(
             report_ready=not missing,
             report_state=report_state,

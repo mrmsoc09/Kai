@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from .evidence_qualification_engine import qualify_evidence
 from ..models.campaign import ToolExecution
 from ..models.enums import (
     CorrelationActionEnum,
@@ -345,6 +346,31 @@ class WorkflowRunService:
         evidence_artifact_path: str | None,
         details_json: dict | None = None,
     ) -> WorkflowFinding:
+        detail_payload = dict(details_json or {})
+        qualification = qualify_evidence(
+            {
+                **detail_payload,
+                "finding_id": str(workflow_run_id),
+                "vulnerability_type": vulnerability_type,
+                "severity": severity_hint,
+                "target": asset_identifier,
+                "endpoint": endpoint,
+                "parameter": parameter,
+                "confidence_score": confidence_score,
+                "evidence": [evidence_artifact_path] if evidence_artifact_path else [],
+            },
+            scope_metadata={
+                "target": asset_identifier,
+                "in_scope": True,
+            },
+            mission_id=str(workflow_run_id),
+            stage_id="workflow_finding_creation",
+            report_id=str(tool_execution_id or ""),
+            persist=True,
+            update_duplicate_history=True,
+        )
+        detail_payload["evidence_qualification"] = qualification.to_dict()
+
         record = WorkflowFinding(
             workflow_run_id=workflow_run_id,
             campaign_id=campaign_id,
@@ -357,7 +383,7 @@ class WorkflowRunService:
             confidence_score=confidence_score,
             severity_hint=severity_hint,
             evidence_artifact_path=evidence_artifact_path,
-            details_json=details_json or {},
+            details_json=detail_payload,
         )
         self.db.add(record)
         await self.db.flush()

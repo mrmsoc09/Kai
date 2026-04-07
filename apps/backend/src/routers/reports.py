@@ -20,6 +20,7 @@ from ..core.evidence_contract import normalize_report_evidence
 from ..core.submission_lifecycle import transition_submission_state
 from ..core.report_validator import evaluate_report_quality_gate
 from ..core.report_engine import get_report_engine
+from ..core.evidence_qualification_engine import qualify_evidence
 
 try:
     from ..core.report_formats import get_format, render_report, validate_rendered  # type: ignore
@@ -40,6 +41,39 @@ def _safe_attachment_name(report_id: str, suffix: str) -> str:
 
 def _tenant_filter(user: User) -> str | None:
     return user.tenant_id or None
+
+
+def _qualify_for_reporting(
+    *,
+    finding: Dict[str, Any],
+    evidence: Dict[str, Any] | None = None,
+    run_id: str | None = None,
+) -> dict[str, Any]:
+    evidence_payload = evidence if isinstance(evidence, dict) else {}
+    qualification = qualify_evidence(
+        finding,
+        exploit_results=finding.get("exploit_results") if isinstance(finding.get("exploit_results"), list) else None,
+        request_response_signatures=[
+            f"{req}::{resp}"
+            for req, resp in zip(
+                finding.get("http_requests", []) if isinstance(finding.get("http_requests"), list) else [],
+                finding.get("http_responses", []) if isinstance(finding.get("http_responses"), list) else [],
+            )
+        ],
+        scope_metadata=finding.get("scope_metadata") if isinstance(finding.get("scope_metadata"), dict) else {
+            "target": finding.get("target") or finding.get("url") or "",
+            "in_scope": bool(finding.get("in_scope", True)),
+        },
+        mission_id=run_id,
+        stage_id="reporting_hil_gate",
+        report_id=run_id,
+        persist=True,
+        update_duplicate_history=False,
+    )
+    finding["evidence_qualification"] = qualification.to_dict()
+    if evidence_payload is not None:
+        evidence_payload["evidence_qualification"] = qualification.to_dict()
+    return qualification.to_dict()
 
 @router.post('/render')
 async def render(payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -111,6 +145,21 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
 
     finding = payload.get('finding') or {}
     evidence = normalize_report_evidence(payload.get('evidence') or {})
+    qualification = _qualify_for_reporting(
+        finding=finding,
+        evidence=evidence,
+        run_id=run_id,
+    )
+    if not qualification.get("submission_candidate"):
+        return JSONResponse(
+            status_code=409,
+            content={
+                "status": "blocked",
+                "reason": "evidence_qualification_rejected",
+                "rejection_reason": qualification.get("rejection_reason"),
+                "evidence_qualification": qualification,
+            },
+        )
     mitigation = payload.get('mitigation') or {}
     fmt = get_format(fid)
     content = render_report(fmt, finding, evidence, mitigation)
@@ -121,7 +170,8 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
         'format_id': fid,
         'hil_approved': True,
         'duplicate_check': payload.get('duplicate_check') or {},
-        'stakeholder': fmt.get('stakeholder', 'generic')
+        'stakeholder': fmt.get('stakeholder', 'generic'),
+        'evidence_qualification': qualification,
     })
     try:
         transition_submission_state(
@@ -195,6 +245,13 @@ async def package(payload: Dict[str, Any]) -> Dict[str, Any]:
         'hil_approved': True,
         'duplicate_check': payload.get('duplicate_check') or {}
     }
+    qualification = _qualify_for_reporting(
+        finding=ctx["finding"],
+        evidence=ctx["evidence"],
+        run_id=run_id,
+    )
+    if not qualification.get("submission_candidate"):
+        raise HTTPException(409, 'evidence_qualification_rejected')
     from ..core.finalize import finalize_report as _finalize
     if not bool(payload.get('override_package_without_finalize')):
         fin = _finalize(run_id, stakeholder, ctx)

@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .audit_events import record_transition_event
 from .bugbounty_workflow_engine import WORKFLOW_TEMPLATES
+from .evidence_qualification_engine import qualify_evidence
 from .helpers import workflow_output_root
 from .phase9_alert_case_service import Phase9AlertCaseService
 from .secret_manager import get_secret_manager
@@ -1296,6 +1297,7 @@ class BugBountyHuntingService:
         workflow_run = await self.db.scalar(select(WorkflowRun).where(WorkflowRun.id == workflow_run_id))
         if workflow_run is None:
             return
+        scope_policy = await self._build_program_scope_policy(schedule.program_id)
         findings_result = await self.db.execute(
             select(WorkflowFinding).where(WorkflowFinding.workflow_run_id == workflow_run_id)
         )
@@ -1329,7 +1331,50 @@ class BugBountyHuntingService:
                     + (novelty * 0.2),
                 ),
             )
-            if reportability >= 0.8 and wf.evidence_artifact_path:
+            scope_decision = evaluate_target_scope(wf.asset_identifier, scope_policy)
+            qualification = qualify_evidence(
+                {
+                    "finding_id": str(wf.id),
+                    "title": str((wf.details_json or {}).get("title") or wf.vulnerability_type),
+                    "vulnerability_type": wf.vulnerability_type,
+                    "severity": wf.severity_hint,
+                    "target": wf.asset_identifier,
+                    "endpoint": wf.endpoint,
+                    "parameter": wf.parameter,
+                    "confidence_score": confidence,
+                    "evidence": [wf.evidence_artifact_path] if wf.evidence_artifact_path else [],
+                    "validation_evidence": (wf.details_json or {}).get("validation_evidence", []),
+                    "duplicate_risk": 0.0 if prior_count == 0 else min(1.0, prior_count * 0.2),
+                },
+                scope_metadata={
+                    "target": wf.asset_identifier,
+                    "allowed": bool(scope_decision.allowed),
+                    "reason": scope_decision.reason,
+                },
+                mission_id=str(workflow_run_id),
+                stage_id="candidate_queue_ingestion",
+                report_id=str(wf.id),
+                persist=True,
+                update_duplicate_history=True,
+            )
+
+            reportability = min(
+                1.0,
+                max(
+                    0.0,
+                    (reportability * 0.55)
+                    + (float(qualification.evidence_quality_score) * 0.45),
+                ),
+            )
+            if qualification.duplicate_risk_score >= 0.75:
+                duplicate_hint = "HIGH"
+            elif qualification.duplicate_risk_score >= 0.5:
+                duplicate_hint = "ELEVATED"
+
+            if not qualification.scope_validity:
+                policy_fit = "OUT_OF_SCOPE"
+                status = "dismissed"
+            elif qualification.submission_candidate and reportability >= 0.8 and wf.evidence_artifact_path:
                 status = "ready_for_report"
             elif reportability >= 0.55:
                 status = "needs_manual_validation"
@@ -1344,6 +1389,12 @@ class BugBountyHuntingService:
                     "novelty": novelty,
                     "reportability": reportability,
                 },
+                "scope_decision": {
+                    "allowed": bool(scope_decision.allowed),
+                    "reason": scope_decision.reason,
+                    "matched_rule": scope_decision.matched_rule,
+                },
+                "evidence_qualification": qualification.to_dict(),
             }
             if existing is None:
                 queue_item = AnalystQueueItem(
@@ -1408,6 +1459,39 @@ class BugBountyHuntingService:
             raise ValueError("Workflow run not found for queue item")
         if workflow_run.campaign_run_id is None:
             raise ValueError("Workflow run does not have a linked campaign context")
+        details = _coalesce_json(queue_item.details_json)
+        qualification = details.get("evidence_qualification")
+        if not isinstance(qualification, dict):
+            qualification = qualify_evidence(
+                {
+                    "finding_id": str(queue_item.id),
+                    "title": f"{queue_item.vulnerability_type} on {queue_item.affected_asset}",
+                    "vulnerability_type": queue_item.vulnerability_type,
+                    "severity": queue_item.severity_hint,
+                    "target": queue_item.affected_asset,
+                    "endpoint": queue_item.affected_endpoint,
+                    "parameter": queue_item.parameter,
+                    "confidence_score": queue_item.confidence_score,
+                    "evidence": [queue_item.evidence_summary] if queue_item.evidence_summary else [],
+                    "duplicate_risk": 0.0
+                    if (queue_item.duplicate_risk_hint or "").upper() == "LOW"
+                    else 0.7
+                    if (queue_item.duplicate_risk_hint or "").upper() in {"HIGH", "ELEVATED"}
+                    else 0.4,
+                },
+                scope_metadata={"target": queue_item.affected_asset, "in_scope": queue_item.policy_fit_status == "IN_SCOPE"},
+                mission_id=str(queue_item.workflow_run_id),
+                stage_id="report_draft_generation",
+                report_id=str(queue_item.id),
+                persist=True,
+                update_duplicate_history=False,
+            ).to_dict()
+            details["evidence_qualification"] = qualification
+            queue_item.details_json = details
+
+        if not bool(qualification.get("submission_candidate")):
+            reason = str(qualification.get("rejection_reason") or "evidence_not_qualified")
+            raise ValueError(f"Submission candidate rejected by evidence qualification: {reason}")
 
         reports_dir = workflow_output_root() / "reports" / "bug_bounty"
         reports_dir.mkdir(parents=True, exist_ok=True)
@@ -1449,6 +1533,7 @@ class BugBountyHuntingService:
                 "queue_item_id": str(queue_item.id),
                 "workflow_run_id": str(queue_item.workflow_run_id),
                 "reportability_score": queue_item.reportability_score,
+                "evidence_qualification": qualification,
             },
         )
         self.db.add(draft)

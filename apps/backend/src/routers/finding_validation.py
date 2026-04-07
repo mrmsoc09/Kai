@@ -7,6 +7,8 @@ from fastapi import APIRouter, HTTPException
 from typing import Dict, List, Any, Optional
 import json
 
+from apps.backend.src.core.evidence_qualification_engine import qualify_evidence
+
 router = APIRouter(prefix="/api/findings", tags=["findings"])
 
 
@@ -59,6 +61,24 @@ async def submit_finding(
         )
 
         # Step 2: Route finding
+        qualification = qualify_evidence(
+            {
+                "target": target_domain,
+                "vulnerability_type": vulnerability_type,
+                "endpoint": endpoint,
+                "description": description,
+                "severity": severity,
+                "confidence_score": confidence_score,
+                "payload": payload_hash,
+            },
+            request_response_signatures=[],
+            scope_metadata={"target": target_domain, "in_scope": True},
+            mission_id=f"finding-{target_domain}",
+            stage_id="finding_validation_submit",
+            report_id=None,
+            persist=True,
+            update_duplicate_history=True,
+        )
         routed = await router_sys.route_finding(
             target_domain=target_domain,
             vulnerability_type=vulnerability_type,
@@ -66,6 +86,7 @@ async def submit_finding(
             cvss_score=cvss_score,
             severity=severity,
             confidence_score=confidence_score,
+            submission_candidate=qualification.submission_candidate,
             is_duplicate=dup_result.is_duplicate,
             duplicate_reason=dup_result.reason,
             chainable_with=[f.finding_id for f in dup_result.chainable_with] if dup_result.chainable_with else None
@@ -75,6 +96,7 @@ async def submit_finding(
             "finding_id": routed.finding_id,
             "route": routed.route.value,
             "routing_reasoning": routed.reasoning,
+            "evidence_qualification": qualification.to_dict(),
             "duplicate_check": {
                 "is_duplicate": dup_result.is_duplicate,
                 "similarity_score": dup_result.similarity_score,
@@ -165,6 +187,21 @@ async def route_finding(
             cvss_score=cvss_score,
             severity=severity,
             confidence_score=confidence_score,
+            submission_candidate=qualify_evidence(
+                {
+                    "target": target_domain,
+                    "vulnerability_type": vulnerability_type,
+                    "endpoint": endpoint,
+                    "severity": severity,
+                    "confidence_score": confidence_score,
+                },
+                scope_metadata={"target": target_domain, "in_scope": True},
+                mission_id=f"route-{target_domain}",
+                stage_id="finding_validation_route",
+                report_id=None,
+                persist=True,
+                update_duplicate_history=True,
+            ).submission_candidate,
             is_duplicate=is_duplicate,
             duplicate_reason=duplicate_reason
         )

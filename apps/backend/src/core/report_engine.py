@@ -11,6 +11,8 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
+from .evidence_qualification_engine import qualify_evidence
+
 
 def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -234,6 +236,9 @@ class Report:
     confidence_score: float
     quality_score: float
     duplicate_hash: str
+    evidence_qualification: dict[str, Any] = field(default_factory=dict)
+    submission_candidate: bool = False
+    rejection_reason: str | None = None
     tenant_id: str | None = None
     mission_id: str | None = None
     opportunity_id: str | None = None
@@ -270,6 +275,13 @@ class Report:
             confidence_score=_clamp(_safe_float(payload.get("confidence_score"), 0.0)),
             quality_score=_clamp(_safe_float(payload.get("quality_score"), 0.0)),
             duplicate_hash=_normalize_text(payload.get("duplicate_hash")),
+            evidence_qualification=(
+                payload.get("evidence_qualification")
+                if isinstance(payload.get("evidence_qualification"), dict)
+                else {}
+            ),
+            submission_candidate=bool(payload.get("submission_candidate", False)),
+            rejection_reason=_normalize_text(payload.get("rejection_reason")) or None,
             tenant_id=payload.get("tenant_id"),
             mission_id=payload.get("mission_id"),
             opportunity_id=payload.get("opportunity_id"),
@@ -352,6 +364,14 @@ class ReportEngine:
             + 0.10 * repro_clarity
             + 0.10 * duplicate_component
         )
+        evidence_quality = _safe_float(
+            report.evidence_qualification.get("evidence_quality_score")
+            if isinstance(report.evidence_qualification, dict)
+            else 0.0,
+            0.0,
+        )
+        if evidence_quality > 0:
+            score = (score * 0.8) + (_clamp(evidence_quality) * 0.2)
         return round(_clamp(score), 4)
 
     def _render_markdown(self, report: Report) -> str:
@@ -474,6 +494,28 @@ class ReportEngine:
         duplicate_hash = self._duplicate_hash(finding, payload_signature)
         report_id = self._report_id(duplicate_hash, finding_id or "", target)
         title = _normalize_text(finding.get("title")) or f"{vuln_type.upper()} on {target}"
+        qualification = qualify_evidence(
+            finding,
+            exploit_results=(
+                finding.get("exploit_results")
+                if isinstance(finding.get("exploit_results"), list)
+                else None
+            ),
+            request_response_signatures=[
+                f"{request}::{response}"
+                for request, response in zip(http_requests[:3], http_responses[:3])
+            ],
+            scope_metadata=(
+                finding.get("scope_metadata")
+                if isinstance(finding.get("scope_metadata"), dict)
+                else {"target": target}
+            ),
+            mission_id=mission_id,
+            stage_id=_normalize_text(finding.get("stage_id") or finding.get("stage") or "report_generation"),
+            report_id=report_id,
+            persist=True,
+            update_duplicate_history=True,
+        )
 
         report = Report(
             report_id=report_id,
@@ -493,6 +535,9 @@ class ReportEngine:
             confidence_score=confidence,
             quality_score=0.0,
             duplicate_hash=duplicate_hash,
+            evidence_qualification=qualification.to_dict(),
+            submission_candidate=qualification.submission_candidate,
+            rejection_reason=qualification.rejection_reason,
             tenant_id=tenant_id,
             mission_id=mission_id,
             opportunity_id=opportunity_id,

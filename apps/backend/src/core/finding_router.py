@@ -59,6 +59,7 @@ class FindingRouter:
         cvss_score: float,
         severity: str,
         confidence_score: float,
+        submission_candidate: bool | None = None,
         is_duplicate: bool = False,
         duplicate_reason: Optional[str] = None,
         chainable_with: Optional[List[str]] = None
@@ -68,15 +69,19 @@ class FindingRouter:
         finding_id = f"finding_{uuid.uuid4().hex[:8]}"
         reasoning = ""
 
-        # Step 1: Check if duplicate
-        if is_duplicate:
+        # Step 1: Enforce evidence qualification outcome when provided
+        if submission_candidate is False:
+            route = FindingRoute.DISCARDED
+            reasoning = "Evidence qualification rejected finding for submission"
+        # Step 2: Check if duplicate
+        elif is_duplicate:
             route = FindingRoute.DUPLICATE_SKIP
             reasoning = f"Duplicate: {duplicate_reason}"
-        # Step 2: Check confidence threshold
+        # Step 3: Check confidence threshold
         elif confidence_score < 0.5:
             route = FindingRoute.DISCARDED
             reasoning = f"Low confidence score ({confidence_score:.2f})"
-        # Step 3: Route by severity
+        # Step 4: Route by severity
         elif severity.lower() in ["critical", "high"]:
             route = FindingRoute.HIL_VALIDATION
             reasoning = f"{severity} severity finding requires HiL approval"
