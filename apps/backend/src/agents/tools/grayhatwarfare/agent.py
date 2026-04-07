@@ -12,6 +12,9 @@ class GrayHatWarfareAgent(BaseToolAgent):
 
     TOOL_NAME = "grayhatwarfare"
 
+    def _get_tool_name(self) -> str:
+        return self.TOOL_NAME
+
     def build_command(
         self, target: str, options: dict[str, Any] | None = None
     ) -> list[str]:
@@ -30,7 +33,7 @@ try:
         timeout=30
     )
     print(json.dumps(r.json() if r.ok else {{}}, default=str))
-except Exception as e:
+except Exception:
     print(json.dumps({{}}, default=str))
 """,
         ]
@@ -53,7 +56,6 @@ except Exception as e:
         for bucket in buckets:
             if not isinstance(bucket, dict):
                 continue
-
             findings.append(
                 {
                     "type": "exposed_cloud_storage",
@@ -61,7 +63,7 @@ except Exception as e:
                     "target": target,
                     "severity": "high",
                     "confidence": 0.85,
-                    "source_tool": "grayhatwarfare",
+                    "source_tool": self.TOOL_NAME,
                     "raw_evidence": str(bucket)[:500],
                     "context": {
                         "provider": bucket.get("provider", ""),
@@ -69,37 +71,33 @@ except Exception as e:
                         "keywords": bucket.get("keywords", []),
                     },
                     "recommended_next_tools": ["EvidenceAnalystAgent"],
-                    "recommended_next_actions": [
-                        "verify_bucket_access",
-                        "inventory_exposed_files",
-                    ],
+                    "recommended_next_actions": ["verify_bucket_access", "inventory_exposed_files"],
                 }
             )
 
         return findings
 
     def filter_noise(
-        self, findings: list[dict[str, Any]], target: str
+        self, findings: list[dict[str, Any]]
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        signal = []
-        noise = []
+        signal: list[dict[str, Any]] = []
+        noise: list[dict[str, Any]] = []
 
-        for f in findings:
-            if f["context"].get("file_count", 0) > 0:
-                signal.append(f)
+        for finding in findings:
+            if int(finding.get("context", {}).get("file_count", 0)) > 0:
+                signal.append(finding)
             else:
-                noise.append(f)
+                noise.append(finding)
 
         return signal, noise
 
     def _generate_next_agent_instructions(
-        self, result: dict[str, Any], target: str
+        self, signal: list[dict[str, Any]], target: str
     ) -> dict[str, Any]:
-        finding_count = len(result.get("findings", []))
         return {
             "next_agents": ["EvidenceAnalystAgent"],
             "operator_summary": (
-                f"GrayHatWarfare found {finding_count} exposed cloud buckets "
+                f"GrayHatWarfare found {len(signal)} exposed cloud buckets "
                 f"related to {target}. Verify access before reporting."
             ),
         }

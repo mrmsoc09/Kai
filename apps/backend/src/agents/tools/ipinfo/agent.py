@@ -12,6 +12,9 @@ class IpInfoAgent(BaseToolAgent):
 
     TOOL_NAME = "ipinfo"
 
+    def _get_tool_name(self) -> str:
+        return self.TOOL_NAME
+
     def build_command(
         self, target: str, options: dict[str, Any] | None = None
     ) -> list[str]:
@@ -23,12 +26,12 @@ class IpInfoAgent(BaseToolAgent):
 import requests, json
 try:
     r = requests.get(
-        f'https://ipinfo.io/{target}/json',
+        'https://ipinfo.io/{target}/json',
         params={{'token': '{api_key}'}},
         timeout=15
     )
     print(json.dumps(r.json() if r.ok else {{}}, default=str))
-except Exception as e:
+except Exception:
     print(json.dumps({{}}, default=str))
 """,
         ]
@@ -47,17 +50,8 @@ except Exception as e:
         org = data.get("org", "")
         asn = org.split()[0] if org else ""
 
-        cloud_providers = [
-            "amazon",
-            "google",
-            "microsoft",
-            "cloudflare",
-            "fastly",
-            "akamai",
-        ]
-        hosting = (
-            "cloud" if any(p in org.lower() for p in cloud_providers) else "other"
-        )
+        cloud_providers = ["amazon", "google", "microsoft", "cloudflare", "fastly", "akamai"]
+        hosting = "cloud" if any(provider in org.lower() for provider in cloud_providers) else "other"
 
         findings.append(
             {
@@ -66,7 +60,7 @@ except Exception as e:
                 "target": target,
                 "severity": "info",
                 "confidence": 0.95,
-                "source_tool": "ipinfo",
+                "source_tool": self.TOOL_NAME,
                 "raw_evidence": str(data)[:500],
                 "context": {
                     "org": org,
@@ -76,30 +70,27 @@ except Exception as e:
                     "hosting": hosting,
                 },
                 "recommended_next_tools": ["nmap", "masscan"],
-                "recommended_next_actions": [
-                    "correlate_asn_range",
-                    "map_hosting_provider",
-                ],
+                "recommended_next_actions": ["correlate_asn_range", "map_hosting_provider"],
             }
         )
 
         return findings
 
     def filter_noise(
-        self, findings: list[dict[str, Any]], target: str
+        self, findings: list[dict[str, Any]]
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        signal = []
-        noise = []
+        signal: list[dict[str, Any]] = []
+        noise: list[dict[str, Any]] = []
 
-        for f in findings:
-            if f["context"].get("hosting") == "cloud":
-                f["context"]["note"] = "Cloud hosted — WAF likely present"
-            signal.append(f)
+        for finding in findings:
+            if finding.get("context", {}).get("hosting") == "cloud":
+                finding.setdefault("context", {})["note"] = "Cloud hosted - WAF likely present"
+            signal.append(finding)
 
         return signal, noise
 
     def _generate_next_agent_instructions(
-        self, result: dict[str, Any], target: str
+        self, signal: list[dict[str, Any]], target: str
     ) -> dict[str, Any]:
         return {
             "next_agents": ["nmap", "masscan"],

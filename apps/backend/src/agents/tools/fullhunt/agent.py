@@ -12,6 +12,9 @@ class FullHuntAgent(BaseToolAgent):
 
     TOOL_NAME = "fullhunt"
 
+    def _get_tool_name(self) -> str:
+        return self.TOOL_NAME
+
     def build_command(
         self, target: str, options: dict[str, Any] | None = None
     ) -> list[str]:
@@ -20,7 +23,7 @@ class FullHuntAgent(BaseToolAgent):
             "python3",
             "-c",
             f"""
-import requests, json, sys
+import requests, json
 headers = {{'X-API-KEY': '{api_key}'}}
 try:
     r = requests.get(
@@ -30,7 +33,7 @@ try:
         timeout=30
     )
     print(json.dumps(r.json() if r.ok else {{}}, default=str))
-except Exception as e:
+except Exception:
     print(json.dumps({{}}, default=str))
 """,
         ]
@@ -47,10 +50,12 @@ except Exception as e:
             return findings
 
         hosts = data.get("hosts", [])
+        if not isinstance(hosts, list):
+            return findings
+
         for host in hosts:
             if not isinstance(host, dict):
                 continue
-
             findings.append(
                 {
                     "type": "subdomain",
@@ -58,7 +63,7 @@ except Exception as e:
                     "target": target,
                     "severity": "info",
                     "confidence": 0.85,
-                    "source_tool": "fullhunt",
+                    "source_tool": self.TOOL_NAME,
                     "raw_evidence": str(host)[:500],
                     "context": {
                         "ip": host.get("ip", ""),
@@ -67,20 +72,17 @@ except Exception as e:
                         "ports": host.get("ports", []),
                     },
                     "recommended_next_tools": ["dnsx", "httpx_probe"],
-                    "recommended_next_actions": [
-                        "resolve_dns",
-                        "probe_http",
-                    ],
+                    "recommended_next_actions": ["resolve_dns", "probe_http"],
                 }
             )
 
         return findings
 
     def filter_noise(
-        self, findings: list[dict[str, Any]], target: str
+        self, findings: list[dict[str, Any]]
     ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        signal = []
-        noise = []
+        signal: list[dict[str, Any]] = []
+        noise: list[dict[str, Any]] = []
         high_value = [
             "admin",
             "api",
@@ -91,27 +93,25 @@ except Exception as e:
             "portal",
         ]
 
-        for f in findings:
-            val = f["value"].lower()
-            if any(p in val for p in high_value):
-                f["severity"] = "medium"
-                f["confidence"] = 0.9
-                signal.append(f)
-            elif f["context"].get("ports"):
-                signal.append(f)
-            else:
-                signal.append(f)
+        for finding in findings:
+            value = str(finding.get("value", "")).lower()
+            ports = finding.get("context", {}).get("ports", [])
+            if any(token in value for token in high_value):
+                finding["severity"] = "medium"
+                finding["confidence"] = 0.9
+            if ports:
+                finding["confidence"] = max(float(finding.get("confidence", 0.85)), 0.9)
+            signal.append(finding)
 
         return signal, noise
 
     def _generate_next_agent_instructions(
-        self, result: dict[str, Any], target: str
+        self, signal: list[dict[str, Any]], target: str
     ) -> dict[str, Any]:
-        finding_count = len(result.get("findings", []))
         return {
             "next_agents": ["dnsx", "httpx_probe"],
             "operator_summary": (
-                f"FullHunt found {finding_count} hosts for {target} "
-                f"with port and cloud context."
+                f"FullHunt found {len(signal)} hosts for {target} with port "
+                f"and cloud context."
             ),
         }
