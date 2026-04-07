@@ -68,6 +68,7 @@ from apps.backend.src.core.vulnerability_validation import (
     ValidationResult,
     decide_validation_next_action,
 )
+from apps.backend.src.utils.profiler import execution_timer
 
 logger = logging.getLogger(__name__)
 
@@ -371,6 +372,7 @@ def make_node_executor(
     If agent_callable is None, the node returns a graph_only stub.
     """
 
+    @execution_timer(node_name=node_id)
     def executor(state: dict[str, Any]) -> dict[str, Any]:
         mission_id = state.get("mission_id", "")
         workflow_id = state.get("workflow_id", "")

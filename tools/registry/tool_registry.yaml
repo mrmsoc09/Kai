@@ -618,3 +618,17 @@ tools:
     output_schema: {"collection_summary": "dict_or_none"}
     timeout_seconds: 60
     safety_classification: passive
+
+  # Integration Agents - Intelligence Chain
+  - name: thehive-handoff
+    display_name: TheHive Case Management
+    agent_class: TheHiveHandoffAgent
+    category: intelligence
+    execution_mode: integration_hook
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"finding": "dict", "scan_context": "dict"}
+    output_schema: {"case_id": "str", "observables_added": "int", "tasks_created": "int"}
+    timeout_seconds: 60
+    safety_classification: passive
+    enabled: true
