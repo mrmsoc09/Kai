@@ -558,6 +558,14 @@ if [[ -n "${COMPOSE_BIN}" ]]; then
         exit 1
     fi
 
+    echo "[k1] Building sandbox image..."
+    if docker build -t kaison-sandbox:latest docker/sandbox/ >/dev/null 2>&1; then
+        info "Sandbox image built successfully."
+    else
+        warn "Sandbox build failed."
+        warn "Payload execution isolation disabled."
+    fi
+
     ${COMPOSE_BIN} -f docker-compose.yml up -d "${INFRA_SERVICES[@]}"
     if wait_for_port 127.0.0.1 5432 60 && wait_for_port 127.0.0.1 6379 45; then
         if [[ " ${INFRA_SERVICES[*]} " == *" vault "* ]]; then
