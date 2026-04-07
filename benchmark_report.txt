@@ -1,0 +1,34 @@
+Starting benchmark: simple_task
+Starting benchmark: multi_stage_mission
+[
+  {
+    "scenario": "simple_task",
+    "total_duration_ms": 26.36,
+    "stage_latencies": {
+      "GovernanceDirector": 3.63,
+      "MissionDirector": 2.84,
+      "PhaseCoordinator": 2.62,
+      "SurfaceMapper": 2.86,
+      "ReconSpecialist": 2.64,
+      "EvidenceAnalyst": 2.74,
+      "ReportSynthesisAgent": 3.78,
+      "HandoffLiaison": 5.09
+    },
+    "status": "success"
+  },
+  {
+    "scenario": "multi_stage_mission",
+    "total_duration_ms": 27.86,
+    "stage_latencies": {
+      "GovernanceDirector": 4.21,
+      "MissionDirector": 2.93,
+      "PhaseCoordinator": 3.06,
+      "SurfaceMapper": 2.87,
+      "ReconSpecialist": 3.92,
+      "EvidenceAnalyst": 2.59,
+      "ReportSynthesisAgent": 3.32,
+      "HandoffLiaison": 4.8
+    },
+    "status": "success"
+  }
+]
