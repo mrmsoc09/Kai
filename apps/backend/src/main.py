@@ -64,6 +64,7 @@ from apps.backend.src.routers import (
     orchestration_v1,
     orchestrator,
     persona,
+    persona_garden,
     planner,
     programs,
     programs_discovery,
@@ -386,6 +387,7 @@ app.include_router(artifact_signing.router)
 app.include_router(dorks.router)
 app.include_router(knowledge.router)
 app.include_router(graph.router)
+app.include_router(persona_garden.router)
 
 # Core operations (Tools and orchestration)
 app.include_router(tools)

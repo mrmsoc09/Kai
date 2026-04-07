@@ -1,0 +1,6070 @@
+{
+  "total": 301,
+  "community": 75,
+  "pro": 226,
+  "trained": 0,
+  "generated_at": "2026-04-07T04:44:53.218662+00:00",
+  "personas": [
+    {
+      "persona_id": "acquisition_analyst",
+      "display_name": "Acquisition Analyst",
+      "specialization": "acquisition_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/acquisition_analyst.md"
+    },
+    {
+      "persona_id": "ad_fraud_detector",
+      "display_name": "Ad Fraud Detector",
+      "specialization": "ad_fraud_detector",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/ad_fraud_detector.md"
+    },
+    {
+      "persona_id": "adversary_profiler",
+      "display_name": "Adversary Profiler",
+      "specialization": "adversary_profiler",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/adversary_profiler.md"
+    },
+    {
+      "persona_id": "ai_ethicist",
+      "display_name": "Ai Ethicist",
+      "specialization": "ai_ethicist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/ai_ethicist.md"
+    },
+    {
+      "persona_id": "ai_safety_auditor",
+      "display_name": "Ai Safety Auditor",
+      "specialization": "ai_safety_auditor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/ai_safety_auditor.md"
+    },
+    {
+      "persona_id": "alternative_futures_analyst",
+      "display_name": "Alternative Futures Analyst",
+      "specialization": "alternative_futures_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/alternative_futures_analyst.md"
+    },
+    {
+      "persona_id": "anonymized_telemetry_seller",
+      "display_name": "Anonymized Telemetry Seller",
+      "specialization": "anonymized_telemetry_seller",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/anonymized_telemetry_seller.md"
+    },
+    {
+      "persona_id": "api_endpoint_discoverer",
+      "display_name": "Api Endpoint Discoverer",
+      "specialization": "api_endpoint_discoverer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/api_endpoint_discoverer.md"
+    },
+    {
+      "persona_id": "api_endpoint_sales_agent",
+      "display_name": "Api Endpoint Sales Agent",
+      "specialization": "api_endpoint_sales_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/api_endpoint_sales_agent.md"
+    },
+    {
+      "persona_id": "asn_mapper",
+      "display_name": "Asn Mapper",
+      "specialization": "asn_mapper",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/asn_mapper.md"
+    },
+    {
+      "persona_id": "attack_path_manager",
+      "display_name": "Attack Path Manager",
+      "specialization": "attack_path_manager",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/attack_path_manager.md"
+    },
+    {
+      "persona_id": "attack_surface_mapper",
+      "display_name": "Attack Surface Mapper",
+      "specialization": "attack_surface_mapper",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/attack_surface_mapper.md"
+    },
+    {
+      "persona_id": "auth_bypass_specialist",
+      "display_name": "Auth Bypass Specialist",
+      "specialization": "auth_bypass_specialist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/auth_bypass_specialist.md"
+    },
+    {
+      "persona_id": "aviation_tracker",
+      "display_name": "Aviation Tracker",
+      "specialization": "aviation_tracker",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/aviation_tracker.md"
+    },
+    {
+      "persona_id": "biometric_signature_analyst",
+      "display_name": "Biometric Signature Analyst",
+      "specialization": "biometric_signature_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/biometric_signature_analyst.md"
+    },
+    {
+      "persona_id": "brand_monitoring_agent",
+      "display_name": "Brand Monitoring Agent",
+      "specialization": "brand_monitoring_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/brand_monitoring_agent.md"
+    },
+    {
+      "persona_id": "bug_bounty_arbitrage_agent",
+      "display_name": "Bug Bounty Arbitrage Agent",
+      "specialization": "bug_bounty_arbitrage_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/bug_bounty_arbitrage_agent.md"
+    },
+    {
+      "persona_id": "burner_identity_seller",
+      "display_name": "Burner Identity Seller",
+      "specialization": "burner_identity_seller",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/burner_identity_seller.md"
+    },
+    {
+      "persona_id": "business_logic_abuser",
+      "display_name": "Business Logic Abuser",
+      "specialization": "business_logic_abuser",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/business_logic_abuser.md"
+    },
+    {
+      "persona_id": "caldera_operator",
+      "display_name": "Caldera Operator",
+      "specialization": "caldera_operator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/caldera_operator.md"
+    },
+    {
+      "persona_id": "cloud_asset_finder",
+      "display_name": "Cloud Asset Finder",
+      "specialization": "cloud_asset_finder",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/cloud_asset_finder.md"
+    },
+    {
+      "persona_id": "cloud_pivoting_expert",
+      "display_name": "Cloud Pivoting Expert",
+      "specialization": "cloud_pivoting_expert",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/cloud_pivoting_expert.md"
+    },
+    {
+      "persona_id": "cloud_security_auditor",
+      "display_name": "Cloud Security Auditor",
+      "specialization": "cloud_security_auditor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/cloud_security_auditor.md"
+    },
+    {
+      "persona_id": "code_plagiarism_detector",
+      "display_name": "Code Plagiarism Detector",
+      "specialization": "code_plagiarism_detector",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/code_plagiarism_detector.md"
+    },
+    {
+      "persona_id": "command_injection_agent",
+      "display_name": "Command Injection Agent",
+      "specialization": "command_injection_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/command_injection_agent.md"
+    },
+    {
+      "persona_id": "competitive_landscape_cartographer",
+      "display_name": "Competitive Landscape Cartographer",
+      "specialization": "competitive_landscape_cartographer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/competitive_landscape_cartographer.md"
+    },
+    {
+      "persona_id": "competitive_strategist",
+      "display_name": "Competitive Strategist",
+      "specialization": "competitive_strategist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/competitive_strategist.md"
+    },
+    {
+      "persona_id": "competitor_intelligence_agent",
+      "display_name": "Competitor Intelligence Agent",
+      "specialization": "competitor_intelligence_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/competitor_intelligence_agent.md"
+    },
+    {
+      "persona_id": "compliance_officer",
+      "display_name": "Compliance Officer",
+      "specialization": "compliance_officer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/compliance_officer.md"
+    },
+    {
+      "persona_id": "conference_presentation_generator",
+      "display_name": "Conference Presentation Generator",
+      "specialization": "conference_presentation_generator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/conference_presentation_generator.md"
+    },
+    {
+      "persona_id": "counter_propaganda_agent",
+      "display_name": "Counter-Propaganda Agent",
+      "specialization": "counter_propaganda_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/counter_propaganda_agent.md"
+    },
+    {
+      "persona_id": "counter_reconnaissance_agent",
+      "display_name": "Counter-Reconnaissance Agent",
+      "specialization": "counter_reconnaissance_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/counter_reconnaissance_agent.md"
+    },
+    {
+      "persona_id": "ctf_challenge_designer",
+      "display_name": "Ctf Challenge Designer",
+      "specialization": "ctf_challenge_designer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/ctf_challenge_designer.md"
+    },
+    {
+      "persona_id": "cultural_anthropologist",
+      "display_name": "Cultural Anthropologist",
+      "specialization": "cultural_anthropologist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/cultural_anthropologist.md"
+    },
+    {
+      "persona_id": "custom_wordlist_generator",
+      "display_name": "Custom Wordlist Generator",
+      "specialization": "custom_wordlist_generator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/custom_wordlist_generator.md"
+    },
+    {
+      "persona_id": "cve_matcher",
+      "display_name": "Cve Matcher",
+      "specialization": "cve_matcher",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/cve_matcher.md"
+    },
+    {
+      "persona_id": "dao_governance_analyst",
+      "display_name": "Dao Governance Analyst",
+      "specialization": "dao_governance_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/dao_governance_analyst.md"
+    },
+    {
+      "persona_id": "dark_web_api_provider",
+      "display_name": "Dark Web Api Provider",
+      "specialization": "dark_web_api_provider",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/dark_web_api_provider.md"
+    },
+    {
+      "persona_id": "darknet_monitor",
+      "display_name": "Darknet Monitor",
+      "specialization": "darknet_monitor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/darknet_monitor.md"
+    },
+    {
+      "persona_id": "data_breach_notification_service",
+      "display_name": "Data Breach Notification Service",
+      "specialization": "data_breach_notification_service",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/data_breach_notification_service.md"
+    },
+    {
+      "persona_id": "data_economist",
+      "display_name": "Data Economist",
+      "specialization": "data_economist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/data_economist.md"
+    },
+    {
+      "persona_id": "data_validator",
+      "display_name": "Data Validator",
+      "specialization": "data_validator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/data_validator.md"
+    },
+    {
+      "persona_id": "database_pillager",
+      "display_name": "Database Pillager",
+      "specialization": "database_pillager",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/database_pillager.md"
+    },
+    {
+      "persona_id": "deception_architect",
+      "display_name": "Deception Architect",
+      "specialization": "deception_architect",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/deception_architect.md"
+    },
+    {
+      "persona_id": "deepfake_detector",
+      "display_name": "Deepfake Detector",
+      "specialization": "deepfake_detector",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/deepfake_detector.md"
+    },
+    {
+      "persona_id": "deepweb_specialist",
+      "display_name": "Deepweb Specialist",
+      "specialization": "deepweb_specialist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/deepweb_specialist.md"
+    },
+    {
+      "persona_id": "deserialization_bug_finder",
+      "display_name": "Deserialization Bug Finder",
+      "specialization": "deserialization_bug_finder",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/deserialization_bug_finder.md"
+    },
+    {
+      "persona_id": "digital_ghost",
+      "display_name": "Digital Ghost",
+      "specialization": "digital_ghost",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/digital_ghost.md"
+    },
+    {
+      "persona_id": "directory_bruteforcer",
+      "display_name": "Directory Bruteforcer",
+      "specialization": "directory_bruteforcer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/directory_bruteforcer.md"
+    },
+    {
+      "persona_id": "domain_acquisition_scout",
+      "display_name": "Domain Acquisition Scout",
+      "specialization": "domain_acquisition_scout",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/domain_acquisition_scout.md"
+    },
+    {
+      "persona_id": "due_diligence_reporter",
+      "display_name": "Due Diligence Reporter",
+      "specialization": "due_diligence_reporter",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/due_diligence_reporter.md"
+    },
+    {
+      "persona_id": "duplicate_finder",
+      "display_name": "Duplicate Finder",
+      "specialization": "duplicate_finder",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/duplicate_finder.md"
+    },
+    {
+      "persona_id": "employee_profiler",
+      "display_name": "Employee Profiler",
+      "specialization": "employee_profiler",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/employee_profiler.md"
+    },
+    {
+      "persona_id": "ethical_hacker_social",
+      "display_name": "Ethical Hacker (Social)",
+      "specialization": "ethical_hacker_social",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/ethical_hacker_social.md"
+    },
+    {
+      "persona_id": "executive_profiler",
+      "display_name": "Executive Profiler",
+      "specialization": "executive_profiler",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/executive_profiler.md"
+    },
+    {
+      "persona_id": "executive_protection_feed_agent",
+      "display_name": "Executive Protection Feed Agent",
+      "specialization": "executive_protection_feed_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/executive_protection_feed_agent.md"
+    },
+    {
+      "persona_id": "explainability_specialist_xai",
+      "display_name": "Explainability Specialist (Xai)",
+      "specialization": "explainability_specialist_xai",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/explainability_specialist_xai.md"
+    },
+    {
+      "persona_id": "exploit_sales_agent",
+      "display_name": "Exploit Sales Agent",
+      "specialization": "exploit_sales_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/exploit_sales_agent.md"
+    },
+    {
+      "persona_id": "finint_specialist",
+      "display_name": "Finint Specialist",
+      "specialization": "finint_specialist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/finint_specialist.md"
+    },
+    {
+      "persona_id": "forensic_evidence_handler",
+      "display_name": "Forensic Evidence Handler",
+      "specialization": "forensic_evidence_handler",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/forensic_evidence_handler.md"
+    },
+    {
+      "persona_id": "fuzzer_operator",
+      "display_name": "Fuzzer Operator",
+      "specialization": "fuzzer_operator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/fuzzer_operator.md"
+    },
+    {
+      "persona_id": "geoint_analyst",
+      "display_name": "Geoint Analyst",
+      "specialization": "geoint_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/geoint_analyst.md"
+    },
+    {
+      "persona_id": "geopolitical_risk_feed_agent",
+      "display_name": "Geopolitical Risk Feed Agent",
+      "specialization": "geopolitical_risk_feed_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/geopolitical_risk_feed_agent.md"
+    },
+    {
+      "persona_id": "git_recon_specialist",
+      "display_name": "Git Recon Specialist",
+      "specialization": "git_recon_specialist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/git_recon_specialist.md"
+    },
+    {
+      "persona_id": "group_dynamics_expert",
+      "display_name": "Group Dynamics Expert",
+      "specialization": "group_dynamics_expert",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/group_dynamics_expert.md"
+    },
+    {
+      "persona_id": "historical_analogist",
+      "display_name": "Historical Analogist",
+      "specialization": "historical_analogist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/historical_analogist.md"
+    },
+    {
+      "persona_id": "honeypot_as_a_service_provider",
+      "display_name": "Honeypot-As-A-Service Provider",
+      "specialization": "honeypot_as_a_service_provider",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/honeypot_as_a_service_provider.md"
+    },
+    {
+      "persona_id": "honeytoken_deployer",
+      "display_name": "Honeytoken Deployer",
+      "specialization": "honeytoken_deployer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/honeytoken_deployer.md"
+    },
+    {
+      "persona_id": "human_asset_liaison",
+      "display_name": "Human Asset Liaison",
+      "specialization": "human_asset_liaison",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/human_asset_liaison.md"
+    },
+    {
+      "persona_id": "hypothesis_tester",
+      "display_name": "Hypothesis Tester",
+      "specialization": "hypothesis_tester",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/hypothesis_tester.md"
+    },
+    {
+      "persona_id": "idor_seeker",
+      "display_name": "Idor Seeker",
+      "specialization": "idor_seeker",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/idor_seeker.md"
+    },
+    {
+      "persona_id": "influence_mapper",
+      "display_name": "Influence Mapper",
+      "specialization": "influence_mapper",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/influence_mapper.md"
+    },
+    {
+      "persona_id": "infrastructure_mapper",
+      "display_name": "Infrastructure Mapper",
+      "specialization": "infrastructure_mapper",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/infrastructure_mapper.md"
+    },
+    {
+      "persona_id": "insurance_risk_assessor",
+      "display_name": "Insurance Risk Assessor",
+      "specialization": "insurance_risk_assessor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/insurance_risk_assessor.md"
+    },
+    {
+      "persona_id": "intelligence_synthesizer",
+      "display_name": "Intelligence Synthesizer",
+      "specialization": "intelligence_synthesizer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/intelligence_synthesizer.md"
+    },
+    {
+      "persona_id": "iot_device_profiler",
+      "display_name": "Iot Device Profiler",
+      "specialization": "iot_device_profiler",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/iot_device_profiler.md"
+    },
+    {
+      "persona_id": "kinesics_analyst",
+      "display_name": "Kinesics Analyst",
+      "specialization": "kinesics_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/kinesics_analyst.md"
+    },
+    {
+      "persona_id": "labor_relations_monitor",
+      "display_name": "Labor Relations Monitor",
+      "specialization": "labor_relations_monitor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/labor_relations_monitor.md"
+    },
+    {
+      "persona_id": "lateral_movement_planner",
+      "display_name": "Lateral Movement Planner",
+      "specialization": "lateral_movement_planner",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/lateral_movement_planner.md"
+    },
+    {
+      "persona_id": "legal_discovery_agent",
+      "display_name": "Legal Discovery Agent",
+      "specialization": "legal_discovery_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/legal_discovery_agent.md"
+    },
+    {
+      "persona_id": "legal_precedent_analyst",
+      "display_name": "Legal Precedent Analyst",
+      "specialization": "legal_precedent_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/legal_precedent_analyst.md"
+    },
+    {
+      "persona_id": "loot_manager",
+      "display_name": "Loot Manager",
+      "specialization": "loot_manager",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/loot_manager.md"
+    },
+    {
+      "persona_id": "m_a_target_scouter",
+      "display_name": "M&A Target Scouter",
+      "specialization": "m_a_target_scouter",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/m_a_target_scouter.md"
+    },
+    {
+      "persona_id": "maritime_tracker",
+      "display_name": "Maritime Tracker",
+      "specialization": "maritime_tracker",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/maritime_tracker.md"
+    },
+    {
+      "persona_id": "market_sentiment_gauger",
+      "display_name": "Market Sentiment Gauger",
+      "specialization": "market_sentiment_gauger",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/market_sentiment_gauger.md"
+    },
+    {
+      "persona_id": "market_trend_analyst",
+      "display_name": "Market Trend Analyst",
+      "specialization": "market_trend_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/market_trend_analyst.md"
+    },
+    {
+      "persona_id": "merger_acquisition_scout",
+      "display_name": "Merger & Acquisition Scout",
+      "specialization": "merger_acquisition_scout",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/merger_acquisition_scout.md"
+    },
+    {
+      "persona_id": "misinformation_campaign_tracker",
+      "display_name": "Misinformation Campaign Tracker",
+      "specialization": "misinformation_campaign_tracker",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/misinformation_campaign_tracker.md"
+    },
+    {
+      "persona_id": "model_drift_monitor",
+      "display_name": "Model Drift Monitor",
+      "specialization": "model_drift_monitor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/model_drift_monitor.md"
+    },
+    {
+      "persona_id": "mythology_decoder",
+      "display_name": "Mythology Decoder",
+      "specialization": "mythology_decoder",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/mythology_decoder.md"
+    },
+    {
+      "persona_id": "narrative_framework_analyst",
+      "display_name": "Narrative Framework Analyst",
+      "specialization": "narrative_framework_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/narrative_framework_analyst.md"
+    },
+    {
+      "persona_id": "nft_scam_detector",
+      "display_name": "Nft Scam Detector",
+      "specialization": "nft_scam_detector",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/nft_scam_detector.md"
+    },
+    {
+      "persona_id": "osint_orchestrator",
+      "display_name": "Osint Orchestrator",
+      "specialization": "osint_orchestrator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/osint_orchestrator.md"
+    },
+    {
+      "persona_id": "parameter_miner",
+      "display_name": "Parameter Miner",
+      "specialization": "parameter_miner",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/parameter_miner.md"
+    },
+    {
+      "persona_id": "patch_prioritization_analyst",
+      "display_name": "Patch Prioritization Analyst",
+      "specialization": "patch_prioritization_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/patch_prioritization_analyst.md"
+    },
+    {
+      "persona_id": "patent_filings_monitor",
+      "display_name": "Patent Filings Monitor",
+      "specialization": "patent_filings_monitor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/patent_filings_monitor.md"
+    },
+    {
+      "persona_id": "payload_designer",
+      "display_name": "Payload Designer",
+      "specialization": "payload_designer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/payload_designer.md"
+    },
+    {
+      "persona_id": "phishing_simulation_service",
+      "display_name": "Phishing Simulation Service",
+      "specialization": "phishing_simulation_service",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/phishing_simulation_service.md"
+    },
+    {
+      "persona_id": "platform_tutor",
+      "display_name": "Platform Tutor",
+      "specialization": "platform_tutor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/platform_tutor.md"
+    },
+    {
+      "persona_id": "port_scanner",
+      "display_name": "Port Scanner",
+      "specialization": "port_scanner",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/port_scanner.md"
+    },
+    {
+      "persona_id": "privilege_escalation_scout",
+      "display_name": "Privilege Escalation Scout",
+      "specialization": "privilege_escalation_scout",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/privilege_escalation_scout.md"
+    },
+    {
+      "persona_id": "proof_of_concept_generator",
+      "display_name": "Proof Of Concept Generator",
+      "specialization": "proof_of_concept_generator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/proof_of_concept_generator.md"
+    },
+    {
+      "persona_id": "publicrecords_specialist",
+      "display_name": "Publicrecords Specialist",
+      "specialization": "publicrecords_specialist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/publicrecords_specialist.md"
+    },
+    {
+      "persona_id": "race_condition_exploiter",
+      "display_name": "Race Condition Exploiter",
+      "specialization": "race_condition_exploiter",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/race_condition_exploiter.md"
+    },
+    {
+      "persona_id": "radicalization_monitor",
+      "display_name": "Radicalization Monitor",
+      "specialization": "radicalization_monitor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/radicalization_monitor.md"
+    },
+    {
+      "persona_id": "red_team_ttp_seller",
+      "display_name": "Red Team Ttp Seller",
+      "specialization": "red_team_ttp_seller",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/red_team_ttp_seller.md"
+    },
+    {
+      "persona_id": "regulatory_affairs_analyst",
+      "display_name": "Regulatory Affairs Analyst",
+      "specialization": "regulatory_affairs_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/regulatory_affairs_analyst.md"
+    },
+    {
+      "persona_id": "remediation_plan_generator",
+      "display_name": "Remediation Plan Generator",
+      "specialization": "remediation_plan_generator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/remediation_plan_generator.md"
+    },
+    {
+      "persona_id": "report_generator",
+      "display_name": "Report Generator",
+      "specialization": "report_generator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/report_generator.md"
+    },
+    {
+      "persona_id": "resume_verifier",
+      "display_name": "Resume Verifier",
+      "specialization": "resume_verifier",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/resume_verifier.md"
+    },
+    {
+      "persona_id": "rf_signal_scanner",
+      "display_name": "Rf Signal Scanner",
+      "specialization": "rf_signal_scanner",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/rf_signal_scanner.md"
+    },
+    {
+      "persona_id": "rhetoric_specialist",
+      "display_name": "Rhetoric Specialist",
+      "specialization": "rhetoric_specialist",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/rhetoric_specialist.md"
+    },
+    {
+      "persona_id": "satellite_imagery_analyst",
+      "display_name": "Satellite Imagery Analyst",
+      "specialization": "satellite_imagery_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/satellite_imagery_analyst.md"
+    },
+    {
+      "persona_id": "scada_system_analyst",
+      "display_name": "Scada System Analyst",
+      "specialization": "scada_system_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/scada_system_analyst.md"
+    },
+    {
+      "persona_id": "scope_parser",
+      "display_name": "Scope Parser",
+      "specialization": "scope_parser",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/scope_parser.md"
+    },
+    {
+      "persona_id": "scraping_infrastructure_provider",
+      "display_name": "Scraping Infrastructure Provider",
+      "specialization": "scraping_infrastructure_provider",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/scraping_infrastructure_provider.md"
+    },
+    {
+      "persona_id": "secret_scavenger",
+      "display_name": "Secret Scavenger",
+      "specialization": "secret_scavenger",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/secret_scavenger.md"
+    },
+    {
+      "persona_id": "security_blogger_agent",
+      "display_name": "Security Blogger Agent",
+      "specialization": "security_blogger_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/security_blogger_agent.md"
+    },
+    {
+      "persona_id": "security_research_platform_provider",
+      "display_name": "Security Research Platform Provider",
+      "specialization": "security_research_platform_provider",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/security_research_platform_provider.md"
+    },
+    {
+      "persona_id": "shell_handler",
+      "display_name": "Shell Handler",
+      "specialization": "shell_handler",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/shell_handler.md"
+    },
+    {
+      "persona_id": "shodan_sentinel",
+      "display_name": "Shodan Sentinel",
+      "specialization": "shodan_sentinel",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/shodan_sentinel.md"
+    },
+    {
+      "persona_id": "simulation_environment_manager",
+      "display_name": "Simulation Environment Manager",
+      "specialization": "simulation_environment_manager",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/simulation_environment_manager.md"
+    },
+    {
+      "persona_id": "smart_contract_auditor",
+      "display_name": "Smart Contract Auditor",
+      "specialization": "smart_contract_auditor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/smart_contract_auditor.md"
+    },
+    {
+      "persona_id": "socmint_analyst",
+      "display_name": "Socmint Analyst",
+      "specialization": "socmint_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/socmint_analyst.md"
+    },
+    {
+      "persona_id": "sqli_injector",
+      "display_name": "Sqli Injector",
+      "specialization": "sqli_injector",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/sqli_injector.md"
+    },
+    {
+      "persona_id": "ssrf_prober",
+      "display_name": "Ssrf Prober",
+      "specialization": "ssrf_prober",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/ssrf_prober.md"
+    },
+    {
+      "persona_id": "stock_market_predictor",
+      "display_name": "Stock Market Predictor",
+      "specialization": "stock_market_predictor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/stock_market_predictor.md"
+    },
+    {
+      "persona_id": "subdomain_enumerator",
+      "display_name": "Subdomain Enumerator",
+      "specialization": "subdomain_enumerator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/subdomain_enumerator.md"
+    },
+    {
+      "persona_id": "supply_chain_intel_service",
+      "display_name": "Supply Chain Intel Service",
+      "specialization": "supply_chain_intel_service",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/supply_chain_intel_service.md"
+    },
+    {
+      "persona_id": "supply_chain_mapper",
+      "display_name": "Supply Chain Mapper",
+      "specialization": "supply_chain_mapper",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/supply_chain_mapper.md"
+    },
+    {
+      "persona_id": "technology_identifier",
+      "display_name": "Technology Identifier",
+      "specialization": "technology_identifier",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/technology_identifier.md"
+    },
+    {
+      "persona_id": "technology_trend_forecaster",
+      "display_name": "Technology Trend Forecaster",
+      "specialization": "technology_trend_forecaster",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/technology_trend_forecaster.md"
+    },
+    {
+      "persona_id": "temporal_analyst",
+      "display_name": "Temporal Analyst",
+      "specialization": "temporal_analyst",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/temporal_analyst.md"
+    },
+    {
+      "persona_id": "threat_feed_generator",
+      "display_name": "Threat Feed Generator",
+      "specialization": "threat_feed_generator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/threat_feed_generator.md"
+    },
+    {
+      "persona_id": "threat_intelligence_integrator",
+      "display_name": "Threat Intelligence Integrator",
+      "specialization": "threat_intelligence_integrator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/threat_intelligence_integrator.md"
+    },
+    {
+      "persona_id": "threat_monitor",
+      "display_name": "Threat Monitor",
+      "specialization": "threat_monitor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/threat_monitor.md"
+    },
+    {
+      "persona_id": "threat_report_author",
+      "display_name": "Threat Report Author",
+      "specialization": "threat_report_author",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/threat_report_author.md"
+    },
+    {
+      "persona_id": "training_module_creator",
+      "display_name": "Training Module Creator",
+      "specialization": "training_module_creator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/training_module_creator.md"
+    },
+    {
+      "persona_id": "typo_squatting_alert_service",
+      "display_name": "Typo-Squatting Alert Service",
+      "specialization": "typo_squatting_alert_service",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/typo_squatting_alert_service.md"
+    },
+    {
+      "persona_id": "user_intent_interpreter",
+      "display_name": "User Intent Interpreter",
+      "specialization": "user_intent_interpreter",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/user_intent_interpreter.md"
+    },
+    {
+      "persona_id": "venture_capital_tracker",
+      "display_name": "Venture Capital Tracker",
+      "specialization": "venture_capital_tracker",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/venture_capital_tracker.md"
+    },
+    {
+      "persona_id": "vetting_as_a_service_agent",
+      "display_name": "Vetting-As-A-Service Agent",
+      "specialization": "vetting_as_a_service_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/vetting_as_a_service_agent.md"
+    },
+    {
+      "persona_id": "virtual_ciso_advisor",
+      "display_name": "Virtual Ciso Advisor",
+      "specialization": "virtual_ciso_advisor",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/virtual_ciso_advisor.md"
+    },
+    {
+      "persona_id": "visual_investigator",
+      "display_name": "Visual Investigator",
+      "specialization": "visual_investigator",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/visual_investigator.md"
+    },
+    {
+      "persona_id": "vulnerability_chainer",
+      "display_name": "Vulnerability Chainer",
+      "specialization": "vulnerability_chainer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/vulnerability_chainer.md"
+    },
+    {
+      "persona_id": "vulnerability_intelligence_broker",
+      "display_name": "Vulnerability Intelligence Broker",
+      "specialization": "vulnerability_intelligence_broker",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/vulnerability_intelligence_broker.md"
+    },
+    {
+      "persona_id": "vulnerability_validation_service",
+      "display_name": "Vulnerability Validation Service",
+      "specialization": "vulnerability_validation_service",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/vulnerability_validation_service.md"
+    },
+    {
+      "persona_id": "web_crawler_spider",
+      "display_name": "Web Crawler & Spider",
+      "specialization": "web_crawler_spider",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/web_crawler_spider.md"
+    },
+    {
+      "persona_id": "workflow_optimizer",
+      "display_name": "Workflow Optimizer",
+      "specialization": "workflow_optimizer",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/workflow_optimizer.md"
+    },
+    {
+      "persona_id": "xss_hunter",
+      "display_name": "Xss Hunter",
+      "specialization": "xss_hunter",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/xss_hunter.md"
+    },
+    {
+      "persona_id": "youtube_explainer_agent",
+      "display_name": "Youtube Explainer Agent",
+      "specialization": "youtube_explainer_agent",
+      "phase_affinity": [
+        1,
+        2,
+        4
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "cybersecurity"
+      ],
+      "trained": false,
+      "community_rank": 55,
+      "file_path": "personas/hacker_inputs/youtube_explainer_agent.md"
+    },
+    {
+      "persona_id": "persona_lib_001",
+      "display_name": "Persona 001",
+      "specialization": "recon",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_001.md"
+    },
+    {
+      "persona_id": "persona_lib_002",
+      "display_name": "Persona 002",
+      "specialization": "web_app",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_002.md"
+    },
+    {
+      "persona_id": "persona_lib_003",
+      "display_name": "Persona 003",
+      "specialization": "api",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_003.md"
+    },
+    {
+      "persona_id": "persona_lib_004",
+      "display_name": "Persona 004",
+      "specialization": "cloud",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_004.md"
+    },
+    {
+      "persona_id": "persona_lib_005",
+      "display_name": "Persona 005",
+      "specialization": "iam",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_005.md"
+    },
+    {
+      "persona_id": "persona_lib_006",
+      "display_name": "Persona 006",
+      "specialization": "container",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_006.md"
+    },
+    {
+      "persona_id": "persona_lib_007",
+      "display_name": "Persona 007",
+      "specialization": "supply_chain",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_007.md"
+    },
+    {
+      "persona_id": "persona_lib_008",
+      "display_name": "Persona 008",
+      "specialization": "mobile",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_008.md"
+    },
+    {
+      "persona_id": "persona_lib_009",
+      "display_name": "Persona 009",
+      "specialization": "infra",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_009.md"
+    },
+    {
+      "persona_id": "persona_lib_010",
+      "display_name": "Persona 010",
+      "specialization": "endpoint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_010.md"
+    },
+    {
+      "persona_id": "persona_lib_011",
+      "display_name": "Persona 011",
+      "specialization": "crypto",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_011.md"
+    },
+    {
+      "persona_id": "persona_lib_012",
+      "display_name": "Persona 012",
+      "specialization": "threat_intel",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_012.md"
+    },
+    {
+      "persona_id": "persona_lib_013",
+      "display_name": "Persona 013",
+      "specialization": "privacy",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_013.md"
+    },
+    {
+      "persona_id": "persona_lib_014",
+      "display_name": "Persona 014",
+      "specialization": "compliance",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_014.md"
+    },
+    {
+      "persona_id": "persona_lib_015",
+      "display_name": "Persona 015",
+      "specialization": "soc",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_015.md"
+    },
+    {
+      "persona_id": "persona_lib_016",
+      "display_name": "Persona 016",
+      "specialization": "secops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_016.md"
+    },
+    {
+      "persona_id": "persona_lib_017",
+      "display_name": "Persona 017",
+      "specialization": "forensics",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_017.md"
+    },
+    {
+      "persona_id": "persona_lib_018",
+      "display_name": "Persona 018",
+      "specialization": "red_team",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_018.md"
+    },
+    {
+      "persona_id": "persona_lib_019",
+      "display_name": "Persona 019",
+      "specialization": "blue_team",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_019.md"
+    },
+    {
+      "persona_id": "persona_lib_020",
+      "display_name": "Persona 020",
+      "specialization": "appsec",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_020.md"
+    },
+    {
+      "persona_id": "persona_lib_021",
+      "display_name": "Persona 021",
+      "specialization": "devsecops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_021.md"
+    },
+    {
+      "persona_id": "persona_lib_022",
+      "display_name": "Persona 022",
+      "specialization": "gcp",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_022.md"
+    },
+    {
+      "persona_id": "persona_lib_023",
+      "display_name": "Persona 023",
+      "specialization": "aws",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_023.md"
+    },
+    {
+      "persona_id": "persona_lib_024",
+      "display_name": "Persona 024",
+      "specialization": "azure",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_024.md"
+    },
+    {
+      "persona_id": "persona_lib_025",
+      "display_name": "Persona 025",
+      "specialization": "cloudflare",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_025.md"
+    },
+    {
+      "persona_id": "persona_lib_026",
+      "display_name": "Persona 026",
+      "specialization": "kubernetes",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_026.md"
+    },
+    {
+      "persona_id": "persona_lib_027",
+      "display_name": "Persona 027",
+      "specialization": "linux",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_027.md"
+    },
+    {
+      "persona_id": "persona_lib_028",
+      "display_name": "Persona 028",
+      "specialization": "windows",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_028.md"
+    },
+    {
+      "persona_id": "persona_lib_029",
+      "display_name": "Persona 029",
+      "specialization": "osint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_029.md"
+    },
+    {
+      "persona_id": "persona_lib_030",
+      "display_name": "Persona 030",
+      "specialization": "recon",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_030.md"
+    },
+    {
+      "persona_id": "persona_lib_031",
+      "display_name": "Persona 031",
+      "specialization": "web_app",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_031.md"
+    },
+    {
+      "persona_id": "persona_lib_032",
+      "display_name": "Persona 032",
+      "specialization": "api",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_032.md"
+    },
+    {
+      "persona_id": "persona_lib_033",
+      "display_name": "Persona 033",
+      "specialization": "cloud",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_033.md"
+    },
+    {
+      "persona_id": "persona_lib_034",
+      "display_name": "Persona 034",
+      "specialization": "iam",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_034.md"
+    },
+    {
+      "persona_id": "persona_lib_035",
+      "display_name": "Persona 035",
+      "specialization": "container",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_035.md"
+    },
+    {
+      "persona_id": "persona_lib_036",
+      "display_name": "Persona 036",
+      "specialization": "supply_chain",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_036.md"
+    },
+    {
+      "persona_id": "persona_lib_037",
+      "display_name": "Persona 037",
+      "specialization": "mobile",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_037.md"
+    },
+    {
+      "persona_id": "persona_lib_038",
+      "display_name": "Persona 038",
+      "specialization": "infra",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_038.md"
+    },
+    {
+      "persona_id": "persona_lib_039",
+      "display_name": "Persona 039",
+      "specialization": "endpoint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_039.md"
+    },
+    {
+      "persona_id": "persona_lib_040",
+      "display_name": "Persona 040",
+      "specialization": "crypto",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_040.md"
+    },
+    {
+      "persona_id": "persona_lib_041",
+      "display_name": "Persona 041",
+      "specialization": "threat_intel",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_041.md"
+    },
+    {
+      "persona_id": "persona_lib_042",
+      "display_name": "Persona 042",
+      "specialization": "privacy",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_042.md"
+    },
+    {
+      "persona_id": "persona_lib_043",
+      "display_name": "Persona 043",
+      "specialization": "compliance",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_043.md"
+    },
+    {
+      "persona_id": "persona_lib_044",
+      "display_name": "Persona 044",
+      "specialization": "soc",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_044.md"
+    },
+    {
+      "persona_id": "persona_lib_045",
+      "display_name": "Persona 045",
+      "specialization": "secops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_045.md"
+    },
+    {
+      "persona_id": "persona_lib_046",
+      "display_name": "Persona 046",
+      "specialization": "forensics",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_046.md"
+    },
+    {
+      "persona_id": "persona_lib_047",
+      "display_name": "Persona 047",
+      "specialization": "red_team",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_047.md"
+    },
+    {
+      "persona_id": "persona_lib_048",
+      "display_name": "Persona 048",
+      "specialization": "blue_team",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_048.md"
+    },
+    {
+      "persona_id": "persona_lib_049",
+      "display_name": "Persona 049",
+      "specialization": "appsec",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_049.md"
+    },
+    {
+      "persona_id": "persona_lib_050",
+      "display_name": "Persona 050",
+      "specialization": "devsecops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_050.md"
+    },
+    {
+      "persona_id": "persona_lib_051",
+      "display_name": "Persona 051",
+      "specialization": "gcp",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_051.md"
+    },
+    {
+      "persona_id": "persona_lib_052",
+      "display_name": "Persona 052",
+      "specialization": "aws",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_052.md"
+    },
+    {
+      "persona_id": "persona_lib_053",
+      "display_name": "Persona 053",
+      "specialization": "azure",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_053.md"
+    },
+    {
+      "persona_id": "persona_lib_054",
+      "display_name": "Persona 054",
+      "specialization": "cloudflare",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_054.md"
+    },
+    {
+      "persona_id": "persona_lib_055",
+      "display_name": "Persona 055",
+      "specialization": "kubernetes",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_055.md"
+    },
+    {
+      "persona_id": "persona_lib_056",
+      "display_name": "Persona 056",
+      "specialization": "linux",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_056.md"
+    },
+    {
+      "persona_id": "persona_lib_057",
+      "display_name": "Persona 057",
+      "specialization": "windows",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_057.md"
+    },
+    {
+      "persona_id": "persona_lib_058",
+      "display_name": "Persona 058",
+      "specialization": "osint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_058.md"
+    },
+    {
+      "persona_id": "persona_lib_059",
+      "display_name": "Persona 059",
+      "specialization": "recon",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_059.md"
+    },
+    {
+      "persona_id": "persona_lib_060",
+      "display_name": "Persona 060",
+      "specialization": "web_app",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_060.md"
+    },
+    {
+      "persona_id": "persona_lib_061",
+      "display_name": "Persona 061",
+      "specialization": "api",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_061.md"
+    },
+    {
+      "persona_id": "persona_lib_062",
+      "display_name": "Persona 062",
+      "specialization": "cloud",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_062.md"
+    },
+    {
+      "persona_id": "persona_lib_063",
+      "display_name": "Persona 063",
+      "specialization": "iam",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_063.md"
+    },
+    {
+      "persona_id": "persona_lib_064",
+      "display_name": "Persona 064",
+      "specialization": "container",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_064.md"
+    },
+    {
+      "persona_id": "persona_lib_065",
+      "display_name": "Persona 065",
+      "specialization": "supply_chain",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_065.md"
+    },
+    {
+      "persona_id": "persona_lib_066",
+      "display_name": "Persona 066",
+      "specialization": "mobile",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_066.md"
+    },
+    {
+      "persona_id": "persona_lib_067",
+      "display_name": "Persona 067",
+      "specialization": "infra",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_067.md"
+    },
+    {
+      "persona_id": "persona_lib_068",
+      "display_name": "Persona 068",
+      "specialization": "endpoint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_068.md"
+    },
+    {
+      "persona_id": "persona_lib_069",
+      "display_name": "Persona 069",
+      "specialization": "crypto",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_069.md"
+    },
+    {
+      "persona_id": "persona_lib_070",
+      "display_name": "Persona 070",
+      "specialization": "threat_intel",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_070.md"
+    },
+    {
+      "persona_id": "persona_lib_071",
+      "display_name": "Persona 071",
+      "specialization": "privacy",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_071.md"
+    },
+    {
+      "persona_id": "persona_lib_072",
+      "display_name": "Persona 072",
+      "specialization": "compliance",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_072.md"
+    },
+    {
+      "persona_id": "persona_lib_073",
+      "display_name": "Persona 073",
+      "specialization": "soc",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_073.md"
+    },
+    {
+      "persona_id": "persona_lib_074",
+      "display_name": "Persona 074",
+      "specialization": "secops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_074.md"
+    },
+    {
+      "persona_id": "persona_lib_075",
+      "display_name": "Persona 075",
+      "specialization": "forensics",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_075.md"
+    },
+    {
+      "persona_id": "persona_lib_076",
+      "display_name": "Persona 076",
+      "specialization": "red_team",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_076.md"
+    },
+    {
+      "persona_id": "persona_lib_077",
+      "display_name": "Persona 077",
+      "specialization": "blue_team",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_077.md"
+    },
+    {
+      "persona_id": "persona_lib_078",
+      "display_name": "Persona 078",
+      "specialization": "appsec",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_078.md"
+    },
+    {
+      "persona_id": "persona_lib_079",
+      "display_name": "Persona 079",
+      "specialization": "devsecops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_079.md"
+    },
+    {
+      "persona_id": "persona_lib_080",
+      "display_name": "Persona 080",
+      "specialization": "gcp",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_080.md"
+    },
+    {
+      "persona_id": "persona_lib_081",
+      "display_name": "Persona 081",
+      "specialization": "aws",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_081.md"
+    },
+    {
+      "persona_id": "persona_lib_082",
+      "display_name": "Persona 082",
+      "specialization": "azure",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_082.md"
+    },
+    {
+      "persona_id": "persona_lib_083",
+      "display_name": "Persona 083",
+      "specialization": "cloudflare",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_083.md"
+    },
+    {
+      "persona_id": "persona_lib_084",
+      "display_name": "Persona 084",
+      "specialization": "kubernetes",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_084.md"
+    },
+    {
+      "persona_id": "persona_lib_085",
+      "display_name": "Persona 085",
+      "specialization": "linux",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_085.md"
+    },
+    {
+      "persona_id": "persona_lib_086",
+      "display_name": "Persona 086",
+      "specialization": "windows",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_086.md"
+    },
+    {
+      "persona_id": "persona_lib_087",
+      "display_name": "Persona 087",
+      "specialization": "osint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_087.md"
+    },
+    {
+      "persona_id": "persona_lib_088",
+      "display_name": "Persona 088",
+      "specialization": "recon",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_088.md"
+    },
+    {
+      "persona_id": "persona_lib_089",
+      "display_name": "Persona 089",
+      "specialization": "web_app",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_089.md"
+    },
+    {
+      "persona_id": "persona_lib_090",
+      "display_name": "Persona 090",
+      "specialization": "api",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_090.md"
+    },
+    {
+      "persona_id": "persona_lib_091",
+      "display_name": "Persona 091",
+      "specialization": "cloud",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_091.md"
+    },
+    {
+      "persona_id": "persona_lib_092",
+      "display_name": "Persona 092",
+      "specialization": "iam",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_092.md"
+    },
+    {
+      "persona_id": "persona_lib_093",
+      "display_name": "Persona 093",
+      "specialization": "container",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_093.md"
+    },
+    {
+      "persona_id": "persona_lib_094",
+      "display_name": "Persona 094",
+      "specialization": "supply_chain",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_094.md"
+    },
+    {
+      "persona_id": "persona_lib_095",
+      "display_name": "Persona 095",
+      "specialization": "mobile",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_095.md"
+    },
+    {
+      "persona_id": "persona_lib_096",
+      "display_name": "Persona 096",
+      "specialization": "infra",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_096.md"
+    },
+    {
+      "persona_id": "persona_lib_097",
+      "display_name": "Persona 097",
+      "specialization": "endpoint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_097.md"
+    },
+    {
+      "persona_id": "persona_lib_098",
+      "display_name": "Persona 098",
+      "specialization": "crypto",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_098.md"
+    },
+    {
+      "persona_id": "persona_lib_099",
+      "display_name": "Persona 099",
+      "specialization": "threat_intel",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_099.md"
+    },
+    {
+      "persona_id": "persona_lib_100",
+      "display_name": "Persona 100",
+      "specialization": "privacy",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_100.md"
+    },
+    {
+      "persona_id": "persona_lib_101",
+      "display_name": "Persona 101",
+      "specialization": "compliance",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_101.md"
+    },
+    {
+      "persona_id": "persona_lib_102",
+      "display_name": "Persona 102",
+      "specialization": "soc",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_102.md"
+    },
+    {
+      "persona_id": "persona_lib_103",
+      "display_name": "Persona 103",
+      "specialization": "secops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_103.md"
+    },
+    {
+      "persona_id": "persona_lib_104",
+      "display_name": "Persona 104",
+      "specialization": "forensics",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_104.md"
+    },
+    {
+      "persona_id": "persona_lib_105",
+      "display_name": "Persona 105",
+      "specialization": "red_team",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_105.md"
+    },
+    {
+      "persona_id": "persona_lib_106",
+      "display_name": "Persona 106",
+      "specialization": "blue_team",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_106.md"
+    },
+    {
+      "persona_id": "persona_lib_107",
+      "display_name": "Persona 107",
+      "specialization": "appsec",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_107.md"
+    },
+    {
+      "persona_id": "persona_lib_108",
+      "display_name": "Persona 108",
+      "specialization": "devsecops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_108.md"
+    },
+    {
+      "persona_id": "persona_lib_109",
+      "display_name": "Persona 109",
+      "specialization": "gcp",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_109.md"
+    },
+    {
+      "persona_id": "persona_lib_110",
+      "display_name": "Persona 110",
+      "specialization": "aws",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_110.md"
+    },
+    {
+      "persona_id": "persona_lib_111",
+      "display_name": "Persona 111",
+      "specialization": "azure",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_111.md"
+    },
+    {
+      "persona_id": "persona_lib_112",
+      "display_name": "Persona 112",
+      "specialization": "cloudflare",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_112.md"
+    },
+    {
+      "persona_id": "persona_lib_113",
+      "display_name": "Persona 113",
+      "specialization": "kubernetes",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_113.md"
+    },
+    {
+      "persona_id": "persona_lib_114",
+      "display_name": "Persona 114",
+      "specialization": "linux",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_114.md"
+    },
+    {
+      "persona_id": "persona_lib_115",
+      "display_name": "Persona 115",
+      "specialization": "windows",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_115.md"
+    },
+    {
+      "persona_id": "persona_lib_116",
+      "display_name": "Persona 116",
+      "specialization": "osint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_116.md"
+    },
+    {
+      "persona_id": "persona_lib_117",
+      "display_name": "Persona 117",
+      "specialization": "recon",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_117.md"
+    },
+    {
+      "persona_id": "persona_lib_118",
+      "display_name": "Persona 118",
+      "specialization": "web_app",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_118.md"
+    },
+    {
+      "persona_id": "persona_lib_119",
+      "display_name": "Persona 119",
+      "specialization": "api",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "manufacturing",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_119.md"
+    },
+    {
+      "persona_id": "persona_lib_120",
+      "display_name": "Persona 120",
+      "specialization": "cloud",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "healthcare",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_120.md"
+    },
+    {
+      "persona_id": "persona_lib_121",
+      "display_name": "Persona 121",
+      "specialization": "iam",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "pharma",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_121.md"
+    },
+    {
+      "persona_id": "persona_lib_122",
+      "display_name": "Persona 122",
+      "specialization": "container",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "ecommerce",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_122.md"
+    },
+    {
+      "persona_id": "persona_lib_123",
+      "display_name": "Persona 123",
+      "specialization": "supply_chain",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "government",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_123.md"
+    },
+    {
+      "persona_id": "persona_lib_124",
+      "display_name": "Persona 124",
+      "specialization": "mobile",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "finance",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_124.md"
+    },
+    {
+      "persona_id": "persona_lib_125",
+      "display_name": "Persona 125",
+      "specialization": "infra",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "saas",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_125.md"
+    },
+    {
+      "persona_id": "persona_lib_126",
+      "display_name": "Persona 126",
+      "specialization": "endpoint",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "education",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_126.md"
+    },
+    {
+      "persona_id": "persona_lib_127",
+      "display_name": "Persona 127",
+      "specialization": "crypto",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "energy",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_127.md"
+    },
+    {
+      "persona_id": "persona_lib_128",
+      "display_name": "Persona 128",
+      "specialization": "threat_intel",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "retail",
+        "default",
+        "bugbounty",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_128.md"
+    },
+    {
+      "persona_id": "persona_lib_129",
+      "display_name": "Persona 129",
+      "specialization": "privacy",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "osint",
+        "enterprise",
+        "logistics"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_129.md"
+    },
+    {
+      "persona_id": "persona_lib_130",
+      "display_name": "Persona 130",
+      "specialization": "compliance",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "bugbounty",
+        "default",
+        "agent",
+        "vuln",
+        "telecom",
+        "osint",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 35,
+      "file_path": "personas/hacker_inputs/persona_lib_130.md"
+    },
+    {
+      "persona_id": "az_agent_0",
+      "display_name": "Agent 0",
+      "specialization": "autonomous_agent",
+      "phase_affinity": [
+        1,
+        5
+      ],
+      "tier": "community",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "automation",
+        "multi-agent"
+      ],
+      "trained": false,
+      "community_rank": 25,
+      "file_path": "personas/hacker_inputs/az_agent_0.md"
+    },
+    {
+      "persona_id": "az_developer",
+      "display_name": "Developer",
+      "specialization": "autonomous_agent",
+      "phase_affinity": [
+        1,
+        5
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "automation",
+        "multi-agent"
+      ],
+      "trained": false,
+      "community_rank": 25,
+      "file_path": "personas/hacker_inputs/az_developer.md"
+    },
+    {
+      "persona_id": "az_hacker",
+      "display_name": "Hacker",
+      "specialization": "autonomous_agent",
+      "phase_affinity": [
+        1,
+        5
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "automation",
+        "multi-agent"
+      ],
+      "trained": false,
+      "community_rank": 25,
+      "file_path": "personas/hacker_inputs/az_hacker.md"
+    },
+    {
+      "persona_id": "az_researcher",
+      "display_name": "Researcher",
+      "specialization": "autonomous_agent",
+      "phase_affinity": [
+        1,
+        5
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "automation",
+        "multi-agent"
+      ],
+      "trained": false,
+      "community_rank": 25,
+      "file_path": "personas/hacker_inputs/az_researcher.md"
+    },
+    {
+      "persona_id": "persona_correlation",
+      "display_name": "Correlation Analyst",
+      "specialization": "analysis",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_correlation.md"
+    },
+    {
+      "persona_id": "persona_evidence",
+      "display_name": "Evidence Custodian",
+      "specialization": "evidence",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_evidence.md"
+    },
+    {
+      "persona_id": "persona_graph",
+      "display_name": "Graph Builder",
+      "specialization": "graph",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_graph.md"
+    },
+    {
+      "persona_id": "persona_mitigation",
+      "display_name": "Mitigation Engineer",
+      "specialization": "mitigation",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_mitigation.md"
+    },
+    {
+      "persona_id": "persona_persona",
+      "display_name": "Persona Factory",
+      "specialization": "persona",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_persona.md"
+    },
+    {
+      "persona_id": "persona_policy",
+      "display_name": "Policy Guardian",
+      "specialization": "policy",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_policy.md"
+    },
+    {
+      "persona_id": "persona_reporting",
+      "display_name": "Reporting Lead",
+      "specialization": "reporting",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_reporting.md"
+    },
+    {
+      "persona_id": "persona_toolhealth",
+      "display_name": "Tool Health Monitor",
+      "specialization": "ops",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_toolhealth.md"
+    },
+    {
+      "persona_id": "persona_training",
+      "display_name": "Training Scheduler",
+      "specialization": "training",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent",
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 5,
+      "file_path": "personas/hacker_inputs/persona_training.md"
+    },
+    {
+      "persona_id": "agent_orchestrator",
+      "display_name": "Circle Orchestrator",
+      "specialization": "coordination",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 0,
+      "file_path": "personas/hacker_inputs/agent_orchestrator.md"
+    },
+    {
+      "persona_id": "agent_recon",
+      "display_name": "OSINT Recon Lead",
+      "specialization": "recon",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 0,
+      "file_path": "personas/hacker_inputs/agent_recon.md"
+    },
+    {
+      "persona_id": "agent_vuln",
+      "display_name": "Vulnerability Lead",
+      "specialization": "vuln",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "enterprise"
+      ],
+      "trained": false,
+      "community_rank": 0,
+      "file_path": "personas/hacker_inputs/agent_vuln.md"
+    },
+    {
+      "persona_id": "persona_orchestrator",
+      "display_name": "Orchestrator",
+      "specialization": "coordination",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent"
+      ],
+      "trained": false,
+      "community_rank": 0,
+      "file_path": "personas/hacker_inputs/persona_orchestrator.md"
+    },
+    {
+      "persona_id": "persona_recon",
+      "display_name": "Recon Lead",
+      "specialization": "recon",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent"
+      ],
+      "trained": false,
+      "community_rank": 0,
+      "file_path": "personas/hacker_inputs/persona_recon.md"
+    },
+    {
+      "persona_id": "persona_security_analyst",
+      "display_name": "Security Analyst",
+      "specialization": "analysis",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "default"
+      ],
+      "trained": false,
+      "community_rank": 0,
+      "file_path": "personas/hacker_inputs/persona_security_analyst.md"
+    },
+    {
+      "persona_id": "persona_vuln",
+      "display_name": "Vuln Lead",
+      "specialization": "vuln",
+      "phase_affinity": [
+        1,
+        3
+      ],
+      "tier": "pro",
+      "hunting_style": "methodical",
+      "target_verticals": [
+        "agent"
+      ],
+      "trained": false,
+      "community_rank": 0,
+      "file_path": "personas/hacker_inputs/persona_vuln.md"
+    }
+  ]
+}
