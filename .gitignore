@@ -63,3 +63,52 @@ kaison_fix.sh
 test_output_*.txt
 KAISON_GO_NOGO_*.txt
 kaison_fix.log
+
+# External tool source directories
+tools-src/
+tool-repos/
+/opt/
+~/.local/share/kaison-tools/
+
+# Backup and temporary files
+*.bak
+*.bak.*
+AGENTS.md.bak.*
+*_backup.*
+
+# Test and verification scripts at root
+test_phase*.py
+verify_*.py
+test_orchestrator.py
+configure_k1.py
+bootstrap_codex_kai.sh
+
+# Duplicate documentation
+README_FRONT_PAGE.md
+README_GITHUB_IMPROVED.md
+README_IMPROVEMENTS.md
+README_IMPROVEMENTS_*.md
+REASONING_LOOP*.md
+UNIFIED_K1_PLATFORM_GUIDE.md
+SETUP_SCRIPTS_README.md
+
+# Scan outputs and logs
+test_output_*.txt
+*.output
+build_*.log
+deployment_*.log
+
+# Runtime directories that shouldn't be tracked
+logs/
+memory/
+var/
+runtime/
+output/
+reports/
+cache/
+
+# IDE and temp files
+*.swp
+*.swo
+*~
+.tmp/
