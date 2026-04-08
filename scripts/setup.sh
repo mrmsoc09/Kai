@@ -341,6 +341,15 @@ install_native_tool() {
         gitleaks)
             install_local_download_tool gitleaks || install_go_tool github.com/zricethezav/gitleaks/v8@latest
             ;;
+        testssl)
+            install_testssl
+            ;;
+        spiderfoot)
+            install_spiderfoot
+            ;;
+        graphql-cop)
+            install_graphql_cop
+            ;;
         *)
             return 1
             ;;
@@ -370,6 +379,11 @@ for tool in payload.get("tools", []):
         print(json.dumps(record))
 PY
 }
+
+# Source Wave 7 tool bootstrap functions
+if [[ -f "${REPO_ROOT}/scripts/tools-bootstrap-functions.sh" ]]; then
+    source "${REPO_ROOT}/scripts/tools-bootstrap-functions.sh"
+fi
 
 section "System package dependencies"
 # Packages needed at the OS level for Python packages that wrap C libraries

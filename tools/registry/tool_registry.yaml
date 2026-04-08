@@ -367,8 +367,8 @@ tools:
     agent_class: SpiderfootAgent
     category: intelligence_osint
     execution_mode: native
-    binary_path: sf
-    install_verification_cmd: ["sf", "-h"]
+    binary_path: spiderfoot
+    install_verification_cmd: ["spiderfoot", "--help"]
     input_schema: {"target": "domain"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 900

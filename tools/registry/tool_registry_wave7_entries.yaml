@@ -1,0 +1,116 @@
+# Wave 7 Tool Installation Configuration
+# Metadata for testssl.sh, spiderfoot, and graphql-cop
+# Used by scripts/tools-bootstrap-functions.sh and scripts/setup.sh
+# Last updated: 2026-04-07
+
+wave7_tools:
+
+  testssl:
+    display_name: "testssl.sh TLS/SSL Vulnerability Scanner"
+    github_url: https://github.com/testssl/testssl.sh.git
+    install_method: git_clone
+    install_base_dir: ~/.local/share/kaison-tools
+    install_target: testssl
+    executable_path: testssl.sh
+    binary_symlink: ~/.local/bin/testssl.sh
+    verification_cmd: ["testssl.sh", "--version"]
+    dependencies:
+      - git (for clone)
+      - bash (for execution)
+      - curl (for HTTPS operations)
+    description: |
+      Official TLS/SSL certificate and vulnerability scanner.
+      Clones from testssl/testssl.sh GitHub repo, makes testssl.sh executable,
+      symlinks to ~/.local/bin/testssl.sh for PATH discovery.
+    phase: 2
+    category: vulnerability_scanning
+    safety_classification: passive
+
+  spiderfoot:
+    display_name: "Spiderfoot OSINT Intelligence Platform"
+    github_url: https://github.com/smicallef/spiderfoot.git
+    install_method: git_clone_with_pip
+    install_base_dir: ~/.local/share/kaison-tools
+    install_target: spiderfoot
+    executable_path: sf.py
+    wrapper_script: ~/.local/bin/spiderfoot
+    wrapper_calls: python3 sf.py
+    verification_cmd: ["spiderfoot", "--help"]
+    dependencies:
+      - git (for clone)
+      - python3 (for execution)
+      - pip (for dependency installation)
+      - requirements.txt from repo
+    description: |
+      Spiderfoot is an OSINT automation platform for reconnaissance.
+      Clones from smicallef/spiderfoot GitHub repo, installs Python dependencies
+      via pip, creates wrapper script ~/.local/bin/spiderfoot that calls sf.py.
+    phase: 1
+    category: recon_asset_discovery
+    safety_classification: passive
+
+  graphql-cop:
+    display_name: "GraphQL-Cop API Security Policy Validator"
+    github_url: https://github.com/dolevf/graphql-cop.git
+    install_method: git_clone_and_build_or_binary
+    install_base_dir: ~/.local/share/kaison-tools
+    install_target: graphql-cop
+    executable_path: graphql-cop
+    binary_symlink: ~/.local/bin/graphql-cop
+    verification_cmd: ["graphql-cop", "--help"]
+    supported_architectures:
+      - x86_64 (linux_amd64)
+      - aarch64 (linux_arm64)
+    binary_download_pattern: |
+      https://github.com/dolevf/graphql-cop/releases/download/{tag}/
+      graphql-cop_{version}_linux_{arch}
+    build_fallback: |
+      If binary download fails or not available:
+      1. Clone repo: git clone https://github.com/dolevf/graphql-cop.git
+      2. Check for: go.mod (Go project), setup.py (Python), or Makefile (build script)
+      3. If Go: Install via pip using compiled binary or build with 'go build -o ~/.local/bin/graphql-cop'
+      4. If Python: Install via 'pip install -e .' then wrapper to python3 -m graphql_cop
+    dependencies:
+      - git (for clone)
+      - python3 or Go 1.18+ (build dependencies, varies by distribution)
+      - curl (for binary download)
+    description: |
+      GraphQL security policy validator for API testing.
+      Attempts binary download for x86_64/arm64. Falls back to source clone
+      and build. Creates symlink ~/.local/bin/graphql-cop for PATH discovery.
+    phase: 8
+    category: api_security
+    safety_classification: intrusive
+
+installation_flow:
+  1_source_bootstrap: |
+    scripts/setup.sh sources scripts/tools-bootstrap-functions.sh
+    at startup to load Wave 7 install functions.
+
+  2_verify_tools: |
+    For each tool in tool_registry.yaml with execution_mode: native,
+    setup.sh attempts to verify via install_verification_cmd.
+
+  3_install_missing: |
+    If verification fails, setup.sh calls install_native_tool(toolname),
+    which dispatches to install_testssl(), install_spiderfoot(),
+    or install_graphql_cop() as configured above.
+
+  4_log_results: |
+    Installation success/failure logged to console with [k1-tools] prefix.
+    Tool errors collected in TOOL_ERRORS array for readiness summary.
+
+  5_path_registration: |
+    All three tools create symlinks in ~/.local/bin/, which is added
+    to PATH in setup.sh (line 443: export PATH="${HOME}/.local/bin:${PATH}")
+
+verification_commands:
+  testssl.sh: "testssl.sh --version"
+  spiderfoot: "spiderfoot --help"
+  graphql-cop: "graphql-cop --help"
+
+success_indicators:
+  - All three tools discoverable in ~/.local/bin/
+  - All verification commands return exit code 0
+  - Symlinks or wrapper scripts properly created
+  - No git/network/permission errors in setup.sh output
