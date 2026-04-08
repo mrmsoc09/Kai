@@ -580,7 +580,7 @@ if [[ -n "${COMPOSE_BIN}" ]]; then
         warn "Payload execution isolation disabled."
     fi
 
-    ${COMPOSE_BIN} -f docker-compose.yml up -d "${INFRA_SERVICES[@]}"
+    ${COMPOSE_BIN} -f docker-compose.yml -f docker-compose.dev.yml up -d "${INFRA_SERVICES[@]}"
     if wait_for_port 127.0.0.1 5432 60 && wait_for_port 127.0.0.1 6379 45; then
         if [[ " ${INFRA_SERVICES[*]} " == *" vault "* ]]; then
             VAULT_HOST_BIND="$(read_env_value K1_VAULT_HOST_BIND 127.0.0.1 .env)"
