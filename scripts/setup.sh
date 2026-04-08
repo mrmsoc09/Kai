@@ -343,47 +343,116 @@ EOF
 install_native_tool() {
     local tool="$1"
     case "${tool}" in
-        amass)
-            install_local_download_tool amass || apt_install_packages amass
-            ;;
-        nmap) apt_install_packages nmap ;;
-        theharvester)
-            install_local_download_tool theharvester || apt_install_packages theharvester
-            ;;
-        searchsploit)
-            install_local_download_tool searchsploit || apt_install_packages exploitdb
-            ;;
-        findomain)
-            install_local_download_tool findomain || apt_install_packages findomain
-            ;;
+        # Go tools
+        amass) install_go_tool github.com/OWASP/Amass/v3/cmd/amass@latest ;;
         assetfinder) install_go_tool github.com/tomnomnom/assetfinder@latest ;;
         subfinder) install_go_tool github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest ;;
         dnsx) install_go_tool github.com/projectdiscovery/dnsx/cmd/dnsx@latest ;;
         gau) install_go_tool github.com/lc/gau/v2/cmd/gau@latest ;;
         waybackurls) install_go_tool github.com/tomnomnom/waybackurls@latest ;;
         httpx) install_go_tool github.com/projectdiscovery/httpx/cmd/httpx@latest ;;
+        httpx_probe) install_go_tool github.com/tomnomnom/httprobe@latest ;;
         httprobe) install_go_tool github.com/tomnomnom/httprobe@latest ;;
         naabu) install_go_tool github.com/projectdiscovery/naabu/v2/cmd/naabu@latest ;;
         tlsx) install_go_tool github.com/projectdiscovery/tlsx/cmd/tlsx@latest ;;
-        hakrawler)
-            install_local_download_tool hakrawler || install_go_tool github.com/hakluke/hakrawler@latest
-            ;;
-        gitleaks)
-            install_local_download_tool gitleaks || install_go_tool github.com/zricethezav/gitleaks/v8@latest
-            ;;
-        testssl)
-            install_testssl
-            ;;
-        spiderfoot)
-            install_spiderfoot
-            ;;
-        graphql-cop)
-            install_graphql_cop
-            ;;
+        nuclei) install_go_tool github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest ;;
+        katana) install_go_tool github.com/projectdiscovery/katana/cmd/katana@latest ;;
+        dalfox) install_go_tool github.com/hahwul/dalfox/v2@latest ;;
+        feroxbuster) install_go_tool github.com/epi052/feroxbuster@latest ;;
+        paramspider) install_go_tool github.com/devanshbatham/paramspider@latest ;;
+        hakrawler) install_go_tool github.com/hakluke/hakrawler@latest ;;
+        gitleaks) install_go_tool github.com/zricethezav/gitleaks/v8@latest ;;
+        ffuf) install_go_tool github.com/ffuf/ffuf/v2@latest ;;
+        gf) install_go_tool github.com/tomnomnom/gf@latest ;;
+        trufflehog) install_go_tool github.com/trufflesecurity/trufflehog/v3@latest ;;
+        crlfuzz) install_go_tool github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest ;;
+        phoneinfoga) install_go_tool github.com/sundowndev/phoneinfoga/v2@latest ;;
+        github-subdomains) install_go_tool github.com/gwen001/github-subdomains@latest ;;
+        gowitness) install_go_tool github.com/sensepost/gowitness@latest ;;
+        findomain) install_go_tool github.com/Findomain/Findomain@latest ;;
+
+        # APT packages
+        nmap) apt_install_packages nmap ;;
+        nikto) apt_install_packages nikto ;;
+        whatweb) apt_install_packages whatweb ;;
+        exploitdb) apt_install_packages exploitdb ;;
+        searchsploit) apt_install_packages exploitdb ;;
+        zaproxy) apt_install_packages zaproxy ;;
+        wafw00f) apt_install_packages wafw00f ;;
+
+        # Source builds
+        testssl) install_testssl ;;
+        spiderfoot) install_spiderfoot ;;
+        graphql-cop) install_graphql_cop ;;
+        kiterunner) install_kiterunner ;;
+        masscan) install_masscan ;;
+        reconftw) install_reconftw ;;
+        caido) install_caido ;;
+        faraday-community) install_faraday ;;
+
+        # Python tools
+        arjun) pip install arjun ;;
+        social-analyzer) pip install social-analyzer ;;
+        torbot) pip install torbot ;;
+        smuggler) pip install smuggler ;;
+
         *)
             return 1
             ;;
     esac
+}
+
+install_kiterunner() {
+    local src_dir="${REPO_ROOT}/opt/k1-tools/src/kiterunner"
+    if [[ ! -d "${src_dir}" ]]; then
+        mkdir -p "${REPO_ROOT}/opt/k1-tools/src"
+        git clone https://github.com/assetnote/kiterunner "${src_dir}" 2>&1 | head -3
+    fi
+    cd "${src_dir}" && make build 2>&1 | tail -2
+    cp "${src_dir}/dist/kr" /usr/local/bin/kr && chmod +x /usr/local/bin/kr
+}
+
+install_masscan() {
+    if apt_install_packages masscan 2>/dev/null; then
+        return 0
+    fi
+    warn "Masscan: apt install failed, install pre-built binary manually"
+    return 1
+}
+
+install_reconftw() {
+    local src_dir="${REPO_ROOT}/opt/k1-tools/src/reconftw"
+    if [[ ! -d "${src_dir}" ]]; then
+        mkdir -p "${REPO_ROOT}/opt/k1-tools/src"
+        git clone https://github.com/six2dez/reconftw "${src_dir}" 2>&1 | head -3
+    fi
+    if [[ -f "${src_dir}/reconftw" ]]; then
+        cp "${src_dir}/reconftw" /usr/local/bin/reconftw && chmod +x /usr/local/bin/reconftw
+    fi
+}
+
+install_caido() {
+    warn "Caido: download endpoint unstable, manual install recommended"
+    warn "  Install manually: curl -L https://caido.io/download -o caido && chmod +x caido && mv caido /usr/local/bin/"
+    return 1
+}
+
+install_faraday() {
+    warn "Faraday Community: requires additional setup, install manually if needed"
+    warn "  Docs: https://docs.faradaysec.com/en/dev/install-guide/"
+    return 1
+}
+
+install_go_tool() {
+    local pkg="$1"
+    export GO111MODULE=on
+    export GOPATH="${HOME}/go"
+    export PATH="${PATH}:${GOPATH}/bin"
+    go install "${pkg}" 2>&1 | grep -v "no matching files" || return 1
+}
+
+pip() {
+    python3 -m pip "$@" 2>&1 | grep -v "Requirement already satisfied" || return 1
 }
 
 load_enabled_tools() {
@@ -661,9 +730,13 @@ else
     exit 1
 fi
 
-section "External tool verification"
+section "External tool verification + installation"
 REQUIRE_EXTERNAL_TOOLS="$(read_env_bool K1_BOOTSTRAP_REQUIRE_EXTERNAL_TOOLS true .env)"
 mapfile -t TOOL_RECORDS < <(load_enabled_tools)
+
+# Ensure Go bin is in PATH for tool verification
+export GOPATH="${HOME}/go"
+export PATH="${GOPATH}/bin:/usr/local/bin:${PATH}"
 
 for record in "${TOOL_RECORDS[@]}"; do
     name="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["name"])' "${record}")"
@@ -687,9 +760,11 @@ for record in "${TOOL_RECORDS[@]}"; do
 
     if [[ "${mode}" == "native" ]]; then
         warn "Tool ${name}: missing; attempting install"
-        if install_native_tool "${name}" && run_verify_cmd "${verify_json}"; then
-            info "Tool ${name}: installed successfully"
-            continue
+        if install_native_tool "${name}" 2>&1 | tail -1; then
+            if run_verify_cmd "${verify_json}"; then
+                info "Tool ${name}: installed successfully"
+                continue
+            fi
         fi
         TOOL_ERRORS+=("${name}: auto-install failed; install manually and re-run bootstrap.")
         continue
@@ -697,6 +772,18 @@ for record in "${TOOL_RECORDS[@]}"; do
 
     warn "Tool ${name}: optional mode not installed"
 done
+
+# Post-install: Copy Go binaries to /usr/local/bin for accessibility
+if [[ -d "${GOPATH}/bin" ]]; then
+    info "Copying Go binaries to /usr/local/bin for system-wide access..."
+    chmod -R a+rx "${GOPATH}" 2>/dev/null || true
+    for binary in "${GOPATH}"/bin/*; do
+        if [[ -x "${binary}" ]]; then
+            cp "${binary}" "/usr/local/bin/$(basename "${binary}")" 2>/dev/null || true
+            chmod +x "/usr/local/bin/$(basename "${binary}")" 2>/dev/null || true
+        fi
+    done
+fi
 
 if [[ ${#TOOL_ERRORS[@]} -eq 0 ]]; then
     TOOLS_OK=true
