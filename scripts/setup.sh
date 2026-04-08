@@ -609,6 +609,8 @@ else
     warn "No docker compose command available; assuming required services are managed externally."
 fi
 
+DATABASE_URL="$(read_env_value DATABASE_URL "" .env)"
+export DATABASE_URL
 if alembic upgrade heads; then
     MIGRATIONS_OK=true
 else
