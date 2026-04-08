@@ -12,6 +12,7 @@ from apps.backend.src.core.impact_validation_engine import (
     resolve_submission_candidate_decision,
     validate_impact,
 )
+from apps.backend.src.core.novelty_dedupe_engine import evaluate_novelty_dedupe
 from apps.backend.src.core.vulnerability_intelligence_engine import enrich_finding_with_intelligence
 
 router = APIRouter(prefix="/api/findings", tags=["findings"])
@@ -123,6 +124,26 @@ async def submit_finding(
             persist=True,
             update_history=True,
         ).to_dict()
+        novelty_dedupe = evaluate_novelty_dedupe(
+            {
+                "target": target_domain,
+                "vulnerability_type": vulnerability_type,
+                "endpoint": endpoint,
+                "description": description,
+                "severity": severity,
+                "confidence_score": confidence_score,
+                "payload": payload_hash,
+            },
+            vulnerability_intelligence=vulnerability_intelligence,
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
+            submission_decision=submission_decision,
+            mission_id=f"finding-{target_domain}",
+            stage_id="novelty_dedupe_submit",
+            report_id=None,
+            persist=True,
+            update_history=True,
+        ).to_dict()
         routed = await router_sys.route_finding(
             target_domain=target_domain,
             vulnerability_type=vulnerability_type,
@@ -133,7 +154,10 @@ async def submit_finding(
             submission_candidate=bool(submission_decision.get("submission_candidate")),
             is_duplicate=dup_result.is_duplicate,
             duplicate_reason=dup_result.reason,
-            chainable_with=[f.finding_id for f in dup_result.chainable_with] if dup_result.chainable_with else None
+            chainable_with=[f.finding_id for f in dup_result.chainable_with] if dup_result.chainable_with else None,
+            novelty_dedupe=novelty_dedupe,
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
         )
 
         return {
@@ -144,6 +168,7 @@ async def submit_finding(
             "impact_validation": impact_validation.to_dict(),
             "submission_decision": submission_decision,
             "vulnerability_intelligence": vulnerability_intelligence,
+            "novelty_dedupe": novelty_dedupe,
             "duplicate_check": {
                 "is_duplicate": dup_result.is_duplicate,
                 "similarity_score": dup_result.similarity_score,
@@ -278,6 +303,24 @@ async def route_finding(
             persist=True,
             update_history=True,
         ).to_dict()
+        novelty_dedupe = evaluate_novelty_dedupe(
+            {
+                "target": target_domain,
+                "vulnerability_type": vulnerability_type,
+                "endpoint": endpoint,
+                "severity": severity,
+                "confidence_score": confidence_score,
+            },
+            vulnerability_intelligence=vulnerability_intelligence,
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
+            submission_decision=submission_decision,
+            mission_id=f"route-{target_domain}",
+            stage_id="novelty_dedupe_route",
+            report_id=None,
+            persist=True,
+            update_history=True,
+        ).to_dict()
         routed = await router_sys.route_finding(
             target_domain=target_domain,
             vulnerability_type=vulnerability_type,
@@ -287,7 +330,10 @@ async def route_finding(
             confidence_score=confidence_score,
             submission_candidate=bool(submission_decision.get("submission_candidate")),
             is_duplicate=is_duplicate,
-            duplicate_reason=duplicate_reason
+            duplicate_reason=duplicate_reason,
+            novelty_dedupe=novelty_dedupe,
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
         )
 
         return {
@@ -296,6 +342,7 @@ async def route_finding(
             "reasoning": routed.reasoning,
             "submission_decision": submission_decision,
             "vulnerability_intelligence": vulnerability_intelligence,
+            "novelty_dedupe": novelty_dedupe,
             "next_steps": _get_next_steps(routed.route)
         }
 
@@ -316,7 +363,7 @@ async def get_routing_statistics() -> Dict[str, Any]:
 
 
 @router.get("/pending-hil-validation")
-async def get_findings_pending_hil() -> Dict[str, Any]:
+async def get_findings_pending_hil(include_suppressed: bool = False) -> Dict[str, Any]:
     """Get findings awaiting HiL validation"""
 
     _, _, router_sys, _ = get_systems()
@@ -324,10 +371,11 @@ async def get_findings_pending_hil() -> Dict[str, Any]:
     if not router_sys:
         raise HTTPException(status_code=503, detail="Finding router not initialized")
 
-    findings = router_sys.get_findings_for_hil_validation()
+    findings = router_sys.get_findings_for_hil_validation(include_suppressed=include_suppressed)
 
     return {
         "count": len(findings),
+        "include_suppressed": include_suppressed,
         "findings": [
             {
                 "finding_id": f.finding_id,
@@ -336,7 +384,11 @@ async def get_findings_pending_hil() -> Dict[str, Any]:
                 "cvss": f.cvss_score,
                 "severity": f.severity,
                 "confidence": f.confidence_score,
-                "endpoint": f.metadata.get("endpoint")
+                "endpoint": f.metadata.get("endpoint"),
+                "suppression_recommendation": (f.metadata.get("novelty_dedupe") or {}).get("suppression_recommendation"),
+                "novelty_score": (f.metadata.get("novelty_dedupe") or {}).get("novelty_score"),
+                "duplicate_likelihood_score": (f.metadata.get("novelty_dedupe") or {}).get("duplicate_likelihood_score"),
+                "duplicate_cluster_key": (f.metadata.get("novelty_dedupe") or {}).get("duplicate_cluster_key"),
             }
             for f in findings
         ]

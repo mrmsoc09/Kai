@@ -62,7 +62,10 @@ class FindingRouter:
         submission_candidate: bool | None = None,
         is_duplicate: bool = False,
         duplicate_reason: Optional[str] = None,
-        chainable_with: Optional[List[str]] = None
+        chainable_with: Optional[List[str]] = None,
+        novelty_dedupe: Dict[str, Any] | None = None,
+        evidence_qualification: Dict[str, Any] | None = None,
+        impact_validation: Dict[str, Any] | None = None,
     ) -> RoutedFinding:
         """Route single finding to appropriate module"""
 
@@ -108,7 +111,11 @@ class FindingRouter:
             reasoning=reasoning,
             metadata={
                 "endpoint": endpoint,
-                "chainable_with": chainable_with or []
+                "chainable_with": chainable_with or [],
+                "submission_candidate": submission_candidate,
+                "novelty_dedupe": novelty_dedupe or {},
+                "evidence_qualification": evidence_qualification or {},
+                "impact_validation": impact_validation or {},
             }
         )
 
@@ -144,7 +151,7 @@ class FindingRouter:
 
         return routed
 
-    def get_findings_for_hil_validation(self) -> List[RoutedFinding]:
+    def get_findings_for_hil_validation(self, *, include_suppressed: bool = False) -> List[RoutedFinding]:
         """Get findings awaiting HiL validation"""
         findings = []
         for domain_findings in self.routing_history.values():
@@ -152,6 +159,36 @@ class FindingRouter:
                 f for f in domain_findings
                 if f.route == FindingRoute.HIL_VALIDATION
             ])
+        if not include_suppressed:
+            findings = [
+                f
+                for f in findings
+                if str(
+                    (
+                        f.metadata.get("novelty_dedupe", {})
+                        if isinstance(f.metadata, dict)
+                        else {}
+                    ).get("suppression_recommendation", "")
+                ).strip().lower()
+                != "suppress_from_default_hil_view"
+            ]
+
+        def _priority_key(item: RoutedFinding) -> tuple[float, float, float]:
+            metadata = item.metadata if isinstance(item.metadata, dict) else {}
+            novelty = metadata.get("novelty_dedupe", {}) if isinstance(metadata.get("novelty_dedupe"), dict) else {}
+            impact = metadata.get("impact_validation", {}) if isinstance(metadata.get("impact_validation"), dict) else {}
+            evidence = metadata.get("evidence_qualification", {}) if isinstance(metadata.get("evidence_qualification"), dict) else {}
+            novelty_score = float(novelty.get("novelty_score") or 0.0)
+            duplicate_score = float(novelty.get("duplicate_likelihood_score") or 0.0)
+            impact_score = float(impact.get("impact_score") or 0.0)
+            evidence_quality = float(evidence.get("evidence_quality_score") or 0.0)
+            return (
+                round(novelty_score, 4),
+                round(impact_score + evidence_quality, 4),
+                round(1.0 - duplicate_score, 4),
+            )
+
+        findings.sort(key=_priority_key, reverse=True)
         return findings
 
     def get_findings_for_chaining(self) -> List[RoutedFinding]:

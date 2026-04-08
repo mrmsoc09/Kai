@@ -22,6 +22,7 @@ from ..core.report_validator import evaluate_report_quality_gate
 from ..core.report_engine import get_report_engine
 from ..core.evidence_qualification_engine import qualify_evidence
 from ..core.impact_validation_engine import resolve_submission_candidate_decision, validate_impact
+from ..core.novelty_dedupe_engine import evaluate_novelty_dedupe
 from ..core.vulnerability_intelligence_engine import enrich_finding_with_intelligence
 
 try:
@@ -112,16 +113,34 @@ def _qualify_for_reporting(
         persist=True,
         update_history=False,
     ).to_dict()
+    novelty_dedupe = evaluate_novelty_dedupe(
+        {
+            **finding,
+            "submission_decision": submission_decision,
+        },
+        vulnerability_intelligence=vulnerability_intelligence,
+        evidence_qualification=qualification.to_dict(),
+        impact_validation=impact_validation.to_dict(),
+        submission_decision=submission_decision,
+        mission_id=run_id,
+        stage_id="novelty_dedupe_reporting",
+        report_id=run_id,
+        persist=True,
+        update_history=False,
+    ).to_dict()
     finding["submission_decision"] = submission_decision
     finding["vulnerability_intelligence"] = vulnerability_intelligence
+    finding["novelty_dedupe"] = novelty_dedupe
     if evidence_payload is not None:
         evidence_payload["submission_decision"] = submission_decision
         evidence_payload["vulnerability_intelligence"] = vulnerability_intelligence
+        evidence_payload["novelty_dedupe"] = novelty_dedupe
     return {
         "evidence_qualification": qualification.to_dict(),
         "impact_validation": impact_validation.to_dict(),
         "submission_decision": submission_decision,
         "vulnerability_intelligence": vulnerability_intelligence,
+        "novelty_dedupe": novelty_dedupe,
     }
 
 @router.post('/render')
@@ -203,6 +222,7 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
     impact_validation = validation.get("impact_validation", {})
     submission_decision = validation.get("submission_decision", {})
     vulnerability_intelligence = validation.get("vulnerability_intelligence", {})
+    novelty_dedupe = validation.get("novelty_dedupe", {})
     if not submission_decision.get("submission_candidate"):
         return JSONResponse(
             status_code=409,
@@ -214,6 +234,7 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
                 "impact_validation": impact_validation,
                 "submission_decision": submission_decision,
                 "vulnerability_intelligence": vulnerability_intelligence,
+                "novelty_dedupe": novelty_dedupe,
             },
         )
     mitigation = payload.get('mitigation') or {}
@@ -231,6 +252,7 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
         'impact_validation': impact_validation,
         'submission_decision': submission_decision,
         'vulnerability_intelligence': vulnerability_intelligence,
+        'novelty_dedupe': novelty_dedupe,
     })
     try:
         transition_submission_state(

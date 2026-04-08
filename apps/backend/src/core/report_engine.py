@@ -13,6 +13,7 @@ from urllib.parse import urlparse
 
 from .evidence_qualification_engine import qualify_evidence
 from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
+from .novelty_dedupe_engine import evaluate_novelty_dedupe
 from .vulnerability_intelligence_engine import enrich_finding_with_intelligence
 
 
@@ -241,6 +242,7 @@ class Report:
     evidence_qualification: dict[str, Any] = field(default_factory=dict)
     impact_validation: dict[str, Any] = field(default_factory=dict)
     vulnerability_intelligence: dict[str, Any] = field(default_factory=dict)
+    novelty_dedupe: dict[str, Any] = field(default_factory=dict)
     submission_decision: dict[str, Any] = field(default_factory=dict)
     submission_candidate: bool = False
     rejection_reason: str | None = None
@@ -293,6 +295,11 @@ class Report:
             vulnerability_intelligence=(
                 payload.get("vulnerability_intelligence")
                 if isinstance(payload.get("vulnerability_intelligence"), dict)
+                else {}
+            ),
+            novelty_dedupe=(
+                payload.get("novelty_dedupe")
+                if isinstance(payload.get("novelty_dedupe"), dict)
                 else {}
             ),
             submission_decision=(
@@ -412,8 +419,32 @@ class ReportEngine:
             else 0.0,
             0.0,
         )
+        dedupe_novelty = _safe_float(
+            report.novelty_dedupe.get("novelty_score")
+            if isinstance(report.novelty_dedupe, dict)
+            else 0.0,
+            0.0,
+        )
+        dedupe_duplicate = _safe_float(
+            report.novelty_dedupe.get("duplicate_likelihood_score")
+            if isinstance(report.novelty_dedupe, dict)
+            else 0.0,
+            0.0,
+        )
         if intel_dup > 0 or intel_novelty > 0:
-            score = (score * 0.75) + ((1.0 - _clamp(intel_dup)) * 0.15) + (_clamp(intel_novelty) * 0.10)
+            # Intelligence/dedupe should inform queue ranking, not collapse intrinsic report quality.
+            score = (score * 0.9) + (_clamp(intel_novelty) * 0.08) + ((1.0 - _clamp(intel_dup)) * 0.02)
+        if dedupe_novelty > 0 or dedupe_duplicate > 0:
+            score = (score * 0.92) + (_clamp(dedupe_novelty) * 0.06) + ((1.0 - _clamp(dedupe_duplicate)) * 0.02)
+        suppression = _normalize_text(
+            report.novelty_dedupe.get("suppression_recommendation")
+            if isinstance(report.novelty_dedupe, dict)
+            else ""
+        )
+        if suppression == "suppress_from_default_hil_view":
+            score = min(score, 0.62)
+        elif suppression == "deprioritize":
+            score = min(score, 0.72)
         if not report.submission_candidate:
             # Keep report quality and submission eligibility aligned to avoid HiL queue leakage.
             score = min(score, 0.74)
@@ -488,6 +519,13 @@ class ReportEngine:
                 "## Vulnerability Intelligence",
                 json.dumps(
                     report.vulnerability_intelligence if isinstance(report.vulnerability_intelligence, dict) else {},
+                    indent=2,
+                    ensure_ascii=False,
+                ),
+                "",
+                "## Novelty + Duplicate Suppression",
+                json.dumps(
+                    report.novelty_dedupe if isinstance(report.novelty_dedupe, dict) else {},
                     indent=2,
                     ensure_ascii=False,
                 ),
@@ -616,6 +654,23 @@ class ReportEngine:
             persist=True,
             update_history=True,
         ).to_dict()
+        novelty_dedupe = evaluate_novelty_dedupe(
+            {
+                **finding,
+                "target": target,
+                "vulnerability_type": vuln_type,
+                "submission_decision": submission_decision,
+            },
+            vulnerability_intelligence=vulnerability_intelligence,
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
+            submission_decision=submission_decision,
+            mission_id=mission_id,
+            stage_id=_normalize_text(finding.get("stage_id") or finding.get("stage") or "novelty_dedupe"),
+            report_id=report_id,
+            persist=True,
+            update_history=True,
+        ).to_dict()
         if not _normalize_text(finding.get("impact")) and isinstance(impact_validation.impact_statement, dict):
             impact = _normalize_text(impact_validation.impact_statement.get("technical_impact")) or impact
 
@@ -640,6 +695,7 @@ class ReportEngine:
             evidence_qualification=qualification.to_dict(),
             impact_validation=impact_validation.to_dict(),
             vulnerability_intelligence=vulnerability_intelligence,
+            novelty_dedupe=novelty_dedupe,
             submission_decision=submission_decision,
             submission_candidate=bool(submission_decision.get("submission_candidate")),
             rejection_reason=_normalize_text(submission_decision.get("rejection_reason")) or None,

@@ -306,6 +306,7 @@ async def test_create_workflow_finding_record():
     assert "impact_validation" in finding.details_json
     assert "submission_decision" in finding.details_json
     assert "vulnerability_intelligence" in finding.details_json
+    assert "novelty_dedupe" in finding.details_json
     assert finding.details_json.get("submission_candidate") is False
     assert finding.details_json.get("submission_rejection_reason")
     assert finding in db.added

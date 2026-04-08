@@ -12,6 +12,7 @@ from .evidence_qualification_engine import qualify_evidence
 from .evidence_integrity_service import EvidenceIntegrityService
 from .helpers import artifacts_root
 from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
+from .novelty_dedupe_engine import evaluate_novelty_dedupe
 from .recordings import has_recording, list_recordings
 from .vulnerability_intelligence_engine import enrich_finding_with_intelligence
 
@@ -514,6 +515,22 @@ class ReportHiLGateService:
             persist=True,
             update_history=False,
         ).to_dict()
+        novelty_dedupe = evaluate_novelty_dedupe(
+            {
+                **finding,
+                "target": normalized_target,
+                "submission_decision": submission_decision,
+            },
+            vulnerability_intelligence=vulnerability_intelligence,
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
+            submission_decision=submission_decision,
+            mission_id=run_id,
+            stage_id="novelty_dedupe_hil_gate",
+            report_id=run_id,
+            persist=True,
+            update_history=False,
+        ).to_dict()
 
         missing: list[str] = []
         if not recording_path and not has_recording(run_id):
@@ -544,6 +561,7 @@ class ReportHiLGateService:
         report_payload["evidence_qualification"] = qualification.to_dict()
         report_payload["impact_validation"] = impact_validation.to_dict()
         report_payload["vulnerability_intelligence"] = vulnerability_intelligence
+        report_payload["novelty_dedupe"] = novelty_dedupe
         report_payload["submission_decision"] = submission_decision
         report_payload["submission_candidate"] = bool(submission_decision.get("submission_candidate"))
         report_payload["rejection_reason"] = (

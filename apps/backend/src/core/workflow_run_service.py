@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .evidence_qualification_engine import qualify_evidence
 from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
+from .novelty_dedupe_engine import evaluate_novelty_dedupe
 from .vulnerability_intelligence_engine import enrich_finding_with_intelligence
 from ..models.campaign import ToolExecution
 from ..models.enums import (
@@ -418,6 +419,28 @@ class WorkflowRunService:
             persist=True,
             update_history=True,
         ).to_dict()
+        novelty_dedupe = evaluate_novelty_dedupe(
+            {
+                **detail_payload,
+                "finding_id": str(workflow_run_id),
+                "vulnerability_type": vulnerability_type,
+                "severity": severity_hint,
+                "target": asset_identifier,
+                "endpoint": endpoint,
+                "parameter": parameter,
+                "confidence_score": confidence_score,
+                "submission_decision": submission_decision,
+            },
+            vulnerability_intelligence=vulnerability_intelligence,
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation,
+            submission_decision=submission_decision,
+            mission_id=str(workflow_run_id),
+            stage_id="workflow_finding_novelty_dedupe",
+            report_id=str(tool_execution_id or ""),
+            persist=True,
+            update_history=True,
+        ).to_dict()
         detail_payload["submission_decision"] = submission_decision
         detail_payload["submission_candidate"] = bool(submission_decision.get("submission_candidate"))
         detail_payload["submission_rejection_reason"] = (
@@ -426,6 +449,7 @@ class WorkflowRunService:
             else None
         )
         detail_payload["vulnerability_intelligence"] = vulnerability_intelligence
+        detail_payload["novelty_dedupe"] = novelty_dedupe
 
         record = WorkflowFinding(
             workflow_run_id=workflow_run_id,
