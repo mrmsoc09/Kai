@@ -200,11 +200,11 @@ async def get_pool(
     return pool_status
 
 
-@router.delete("/{pool_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{pool_id}", status_code=status.HTTP_204_NO_CONTENT, response_model=None)
 async def delete_pool(
     pool_id: UUID,
     db=Depends(get_db),
-) -> None:
+):
     """Delete a pool.  Pool must be in 'stopped' or 'paused' status."""
     from sqlalchemy import select
 
@@ -393,12 +393,13 @@ async def add_opportunity(
 @router.delete(
     "/{pool_id}/opportunities/{entry_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
 )
 async def remove_opportunity(
     pool_id: UUID,
     entry_id: UUID,
     db=Depends(get_db),
-) -> None:
+):
     """Remove a waiting or error entry from the queue."""
     rotator = ScanQueueRotator()
     removed = await rotator.remove_opportunity(db, pool_id, entry_id)
