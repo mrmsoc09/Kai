@@ -175,6 +175,36 @@ raise SystemExit(1)
 PY
 }
 
+wait_for_postgres() {
+    local host="$1"
+    local port="$2"
+    local user="$3"
+    local password="$4"
+    local db="$5"
+    local timeout="${6:-60}"
+    python3 - "$host" "$port" "$user" "$password" "$db" "$timeout" <<'PY'
+import psycopg2
+import sys
+import time
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+user = sys.argv[3]
+password = sys.argv[4]
+db = sys.argv[5]
+timeout = int(sys.argv[6])
+deadline = time.time() + timeout
+while time.time() < deadline:
+    try:
+        conn = psycopg2.connect(dbname=db, user=user, password=password, host=host, port=port, connect_timeout=2)
+        conn.close()
+        raise SystemExit(0)
+    except Exception:
+        time.sleep(1)
+raise SystemExit(1)
+PY
+}
+
 should_manage_ollama_container() {
     local env_file="$1"
     local external_raw
@@ -611,11 +641,23 @@ fi
 
 DATABASE_URL="$(read_env_value DATABASE_URL "" .env)"
 export DATABASE_URL
-if alembic upgrade heads; then
-    MIGRATIONS_OK=true
+POSTGRES_USER="$(read_env_value POSTGRES_USER k1 .env)"
+POSTGRES_PASSWORD="$(read_env_value POSTGRES_PASSWORD "" .env)"
+POSTGRES_DB="$(read_env_value POSTGRES_DB k1 .env)"
+
+info "Waiting for PostgreSQL to be fully ready..."
+if wait_for_postgres 127.0.0.1 5432 "${POSTGRES_USER}" "${POSTGRES_PASSWORD}" "${POSTGRES_DB}" 60; then
+    info "PostgreSQL is ready. Running database migrations..."
+    if alembic upgrade heads; then
+        MIGRATIONS_OK=true
+    else
+        error "Database migrations failed."
+        error "Ensure PostgreSQL is running and DATABASE_URL in .env is reachable."
+        exit 1
+    fi
 else
-    error "Database migrations failed."
-    error "Ensure PostgreSQL is running and DATABASE_URL in .env is reachable."
+    error "PostgreSQL did not become ready in time."
+    error "Ensure PostgreSQL is running and credentials in .env are correct."
     exit 1
 fi
 
