@@ -57,7 +57,7 @@ python-gnupg==0.5.0
 
 # LLM Providers (K1 Core)
 anthropic==0.45.2
-openai==1.68.2
+openai==1.109.1
 google-generativeai==0.8.4
 
 # Orchestration Layer — Platform 1: PraisonAI Governance
@@ -79,14 +79,14 @@ aiohttp==3.13.4
 beautifulsoup4==4.13.3
 
 # LlamaIndex + RAG System
-llama-index==0.13.0
-llama-index-llms-ollama==0.5.0
-llama-index-embeddings-huggingface==0.5.0
-llama-index-vector-stores-chroma==0.4.0
+llama-index==0.14.18
+llama-index-llms-ollama==0.10.1
+llama-index-embeddings-huggingface==0.7.0
+llama-index-vector-stores-chroma==0.5.5
 chromadb==0.6.3
 
 # Ollama Integration
-ollama==0.4.7
+ollama==0.6.1
 psutil==6.1.1
 py3nvml==0.2.7
 
