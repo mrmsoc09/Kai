@@ -65,6 +65,8 @@ install_spiderfoot() {
     local tools_base="${HOME}/.local/share/kaison-tools"
     local bin_dir="${HOME}/.local/bin"
     local spiderfoot_dir="${tools_base}/spiderfoot"
+    local pip_output
+    local pip_exit_code
 
     mkdir -p "${tools_base}" "${bin_dir}"
 
@@ -90,16 +92,30 @@ install_spiderfoot() {
         return 1
     fi
 
-    # Install Python dependencies
-    info "Installing spiderfoot Python dependencies..."
-    if ! (cd "${spiderfoot_dir}" && pip install -q -r requirements.txt 2>/dev/null); then
-        warn "spiderfoot dependency installation had issues, attempting to continue"
+    # Check if requirements.txt exists
+    if [[ ! -f "${spiderfoot_dir}/requirements.txt" ]]; then
+        warn "requirements.txt not found in spiderfoot directory, skipping pip install"
+    else
+        # Install Python dependencies with output capture
+        info "Installing spiderfoot Python dependencies from requirements.txt..."
+        pip_output=$(cd "${spiderfoot_dir}" && pip install -r requirements.txt 2>&1)
+        pip_exit_code=$?
+
+        if [[ ${pip_exit_code} -ne 0 ]]; then
+            error "Failed to install spiderfoot dependencies. pip error:"
+            error "${pip_output}"
+            rm -rf "${spiderfoot_dir}"
+            return 1
+        fi
+        info "spiderfoot dependencies installed successfully"
     fi
 
     create_spiderfoot_wrapper "${spiderfoot_dir}" "${bin_dir}"
 
     if ! "${bin_dir}/spiderfoot" --version >/dev/null 2>&1; then
-        warn "spiderfoot --version test failed, but installation may still be functional"
+        error "spiderfoot --version test failed after installation"
+        rm -rf "${spiderfoot_dir}"
+        return 1
     fi
 
     info "spiderfoot installed successfully at ${spiderfoot_dir}"
@@ -179,6 +195,13 @@ install_graphql_cop() {
         return 1
     fi
 
+    # Verify final installation
+    if ! "${bin_dir}/graphql-cop" --version >/dev/null 2>&1 && ! "${bin_dir}/graphql-cop" --help >/dev/null 2>&1; then
+        error "graphql-cop verification failed after build"
+        rm -rf "${graphql_cop_dir}"
+        return 1
+    fi
+
     info "graphql-cop installed successfully at ${graphql_cop_dir}"
     return 0
 }
@@ -234,6 +257,8 @@ try_graphql_cop_binary() {
 build_graphql_cop_from_source() {
     local graphql_cop_dir="$1"
     local bin_dir="$2"
+    local pip_output
+    local pip_exit_code
 
     if ! command -v pip >/dev/null 2>&1 && ! command -v pip3 >/dev/null 2>&1; then
         error "pip/pip3 required to build graphql-cop from source"
@@ -242,25 +267,49 @@ build_graphql_cop_from_source() {
 
     info "Building graphql-cop from source..."
 
-    if ! (cd "${graphql_cop_dir}" && pip install -q -e . 2>/dev/null); then
-        error "Failed to install graphql-cop via pip"
+    # Check if graphql-cop.py exists (main executable)
+    if [[ ! -f "${graphql_cop_dir}/graphql-cop.py" ]]; then
+        error "graphql-cop.py not found in ${graphql_cop_dir}"
         return 1
     fi
 
-    # Create wrapper script if graphql-cop is not in PATH
-    local graphql_cop_bin
-    graphql_cop_bin="$(python3 -c "import shutil; print(shutil.which('graphql-cop'))" 2>/dev/null || true)"
-
-    if [[ -z "${graphql_cop_bin}" ]]; then
-        # Create wrapper for module call
-        cat > "${bin_dir}/graphql-cop" <<'EOF'
-#!/usr/bin/env bash
-exec python3 -m graphql_cop "$@"
-EOF
-        chmod +x "${bin_dir}/graphql-cop"
+    # Install requirements.txt (graphql-cop is a script-based project, not setuptools)
+    if [[ ! -f "${graphql_cop_dir}/requirements.txt" ]]; then
+        warn "requirements.txt not found in graphql-cop directory"
     else
-        # Create symlink to found binary
-        ln -sf "${graphql_cop_bin}" "${bin_dir}/graphql-cop"
+        info "Installing graphql-cop requirements.txt..."
+        pip_output=$(cd "${graphql_cop_dir}" && pip install -r requirements.txt 2>&1)
+        pip_exit_code=$?
+
+        if [[ ${pip_exit_code} -ne 0 ]]; then
+            error "Failed to install graphql-cop requirements.txt. pip error:"
+            error "${pip_output}"
+            return 1
+        fi
+        info "graphql-cop requirements.txt installed successfully"
+    fi
+
+    # Create wrapper script for graphql-cop.py
+    cat > "${bin_dir}/graphql-cop" <<EOF
+#!/usr/bin/env bash
+# graphql-cop wrapper — calls graphql-cop.py from installation directory
+GRAPHQL_COP_DIR="${graphql_cop_dir}"
+
+if [[ ! -f "\${GRAPHQL_COP_DIR}/graphql-cop.py" ]]; then
+    echo "Error: graphql-cop.py not found at \${GRAPHQL_COP_DIR}/graphql-cop.py" >&2
+    exit 1
+fi
+
+cd "\${GRAPHQL_COP_DIR}" || exit 1
+exec python3 graphql-cop.py "\$@"
+EOF
+
+    chmod +x "${bin_dir}/graphql-cop"
+
+    # Verify installation
+    if ! "${bin_dir}/graphql-cop" --help >/dev/null 2>&1; then
+        error "graphql-cop --help verification failed after installation"
+        return 1
     fi
 
     return 0
