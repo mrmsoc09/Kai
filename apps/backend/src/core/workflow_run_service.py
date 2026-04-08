@@ -8,7 +8,8 @@ from sqlalchemy import Select, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .evidence_qualification_engine import qualify_evidence
-from .impact_validation_engine import validate_impact
+from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
+from .vulnerability_intelligence_engine import enrich_finding_with_intelligence
 from ..models.campaign import ToolExecution
 from ..models.enums import (
     CorrelationActionEnum,
@@ -371,7 +372,7 @@ class WorkflowRunService:
             update_duplicate_history=True,
         )
         detail_payload["evidence_qualification"] = qualification.to_dict()
-        detail_payload["impact_validation"] = validate_impact(
+        impact_validation = validate_impact(
             finding={
                 **detail_payload,
                 "finding_id": str(workflow_run_id),
@@ -394,6 +395,37 @@ class WorkflowRunService:
             report_id=str(tool_execution_id or ""),
             persist=True,
         ).to_dict()
+        detail_payload["impact_validation"] = impact_validation
+        submission_decision = resolve_submission_candidate_decision(
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation,
+        )
+        vulnerability_intelligence = enrich_finding_with_intelligence(
+            {
+                **detail_payload,
+                "finding_id": str(workflow_run_id),
+                "vulnerability_type": vulnerability_type,
+                "severity": severity_hint,
+                "target": asset_identifier,
+                "endpoint": endpoint,
+                "parameter": parameter,
+                "confidence_score": confidence_score,
+                "submission_decision": submission_decision,
+            },
+            mission_id=str(workflow_run_id),
+            stage_id="workflow_finding_vulnerability_intelligence",
+            report_id=str(tool_execution_id or ""),
+            persist=True,
+            update_history=True,
+        ).to_dict()
+        detail_payload["submission_decision"] = submission_decision
+        detail_payload["submission_candidate"] = bool(submission_decision.get("submission_candidate"))
+        detail_payload["submission_rejection_reason"] = (
+            str(submission_decision.get("rejection_reason")).strip()
+            if submission_decision.get("rejection_reason") is not None
+            else None
+        )
+        detail_payload["vulnerability_intelligence"] = vulnerability_intelligence
 
         record = WorkflowFinding(
             workflow_run_id=workflow_run_id,

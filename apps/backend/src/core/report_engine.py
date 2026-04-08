@@ -12,7 +12,8 @@ from typing import Any
 from urllib.parse import urlparse
 
 from .evidence_qualification_engine import qualify_evidence
-from .impact_validation_engine import validate_impact
+from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
+from .vulnerability_intelligence_engine import enrich_finding_with_intelligence
 
 
 def _utcnow_iso() -> str:
@@ -239,6 +240,8 @@ class Report:
     duplicate_hash: str
     evidence_qualification: dict[str, Any] = field(default_factory=dict)
     impact_validation: dict[str, Any] = field(default_factory=dict)
+    vulnerability_intelligence: dict[str, Any] = field(default_factory=dict)
+    submission_decision: dict[str, Any] = field(default_factory=dict)
     submission_candidate: bool = False
     rejection_reason: str | None = None
     tenant_id: str | None = None
@@ -285,6 +288,16 @@ class Report:
             impact_validation=(
                 payload.get("impact_validation")
                 if isinstance(payload.get("impact_validation"), dict)
+                else {}
+            ),
+            vulnerability_intelligence=(
+                payload.get("vulnerability_intelligence")
+                if isinstance(payload.get("vulnerability_intelligence"), dict)
+                else {}
+            ),
+            submission_decision=(
+                payload.get("submission_decision")
+                if isinstance(payload.get("submission_decision"), dict)
                 else {}
             ),
             submission_candidate=bool(payload.get("submission_candidate", False)),
@@ -387,6 +400,23 @@ class ReportEngine:
             score = (score * 0.8) + (_clamp(evidence_quality) * 0.2)
         if impact_quality > 0:
             score = (score * 0.85) + (_clamp(impact_quality) * 0.15)
+        intel_dup = _safe_float(
+            report.vulnerability_intelligence.get("duplicate_likelihood_score")
+            if isinstance(report.vulnerability_intelligence, dict)
+            else 0.0,
+            0.0,
+        )
+        intel_novelty = _safe_float(
+            report.vulnerability_intelligence.get("novelty_score")
+            if isinstance(report.vulnerability_intelligence, dict)
+            else 0.0,
+            0.0,
+        )
+        if intel_dup > 0 or intel_novelty > 0:
+            score = (score * 0.75) + ((1.0 - _clamp(intel_dup)) * 0.15) + (_clamp(intel_novelty) * 0.10)
+        if not report.submission_candidate:
+            # Keep report quality and submission eligibility aligned to avoid HiL queue leakage.
+            score = min(score, 0.74)
         return round(_clamp(score), 4)
 
     def _render_markdown(self, report: Report) -> str:
@@ -399,6 +429,8 @@ class ReportEngine:
             f"**Target:** `{report.target}`",
             f"**Confidence:** `{report.confidence_score:.2f}`",
             f"**Quality Score:** `{report.quality_score:.2f}`",
+            f"**Submission Candidate:** `{report.submission_candidate}`",
+            f"**Rejection Reason:** `{report.rejection_reason or 'n/a'}`",
             "",
             "## Summary",
             report.summary,
@@ -449,6 +481,13 @@ class ReportEngine:
                 "## Impact Validation",
                 json.dumps(
                     report.impact_validation if isinstance(report.impact_validation, dict) else {},
+                    indent=2,
+                    ensure_ascii=False,
+                ),
+                "",
+                "## Vulnerability Intelligence",
+                json.dumps(
+                    report.vulnerability_intelligence if isinstance(report.vulnerability_intelligence, dict) else {},
                     indent=2,
                     ensure_ascii=False,
                 ),
@@ -553,6 +592,30 @@ class ReportEngine:
             report_id=report_id,
             persist=True,
         )
+        submission_decision = resolve_submission_candidate_decision(
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
+        )
+        vulnerability_intelligence = enrich_finding_with_intelligence(
+            {
+                **finding,
+                "target": target,
+                "vulnerability_type": vuln_type,
+                "submission_decision": submission_decision,
+                "evidence_qualification": qualification.to_dict(),
+                "impact_validation": impact_validation.to_dict(),
+                "scope_metadata": (
+                    finding.get("scope_metadata")
+                    if isinstance(finding.get("scope_metadata"), dict)
+                    else {"target": target}
+                ),
+            },
+            mission_id=mission_id,
+            stage_id=_normalize_text(finding.get("stage_id") or finding.get("stage") or "vulnerability_intelligence"),
+            report_id=report_id,
+            persist=True,
+            update_history=True,
+        ).to_dict()
         if not _normalize_text(finding.get("impact")) and isinstance(impact_validation.impact_statement, dict):
             impact = _normalize_text(impact_validation.impact_statement.get("technical_impact")) or impact
 
@@ -576,8 +639,10 @@ class ReportEngine:
             duplicate_hash=duplicate_hash,
             evidence_qualification=qualification.to_dict(),
             impact_validation=impact_validation.to_dict(),
-            submission_candidate=qualification.submission_candidate,
-            rejection_reason=qualification.rejection_reason,
+            vulnerability_intelligence=vulnerability_intelligence,
+            submission_decision=submission_decision,
+            submission_candidate=bool(submission_decision.get("submission_candidate")),
+            rejection_reason=_normalize_text(submission_decision.get("rejection_reason")) or None,
             tenant_id=tenant_id,
             mission_id=mission_id,
             opportunity_id=opportunity_id,

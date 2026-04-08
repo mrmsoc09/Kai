@@ -277,7 +277,7 @@ validate_whonix_kvm_proxy() {
         proxy_url="$(read_env_value HTTP_PROXY "")"
     fi
     if [[ -z "${proxy_url}" ]]; then
-        proxy_host="$(read_env_value K1_WHONIX_PROXY_HOST 10.152.152.10)"
+        proxy_host="$(read_env_value K1_WHONIX_PROXY_HOST 127.0.0.1)"
         proxy_port="$(read_env_value K1_WHONIX_PROXY_PORT 9050)"
     else
         proxy_host="$(PROXY_URL="${proxy_url}" python3 -c 'import os, urllib.parse; u = urllib.parse.urlparse(os.environ["PROXY_URL"]); print(u.hostname or "")')"

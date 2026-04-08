@@ -53,7 +53,7 @@ def main():
     https_proxy = ""
     
     if use_whonix in ['y', 'yes', 'true', '1']:
-        gateway_ip = prompt_user("Enter Whonix Gateway IP", default="10.152.152.10")
+        gateway_ip = prompt_user("Enter Proxy/Gateway IP", default="127.0.0.1")
         gateway_port = prompt_user("Enter Whonix Gateway Port", default="9050") # Usually 9050 for Socks, 9080 for HTTP if configured
         
         # Note: Docker usually needs HTTP proxies. 

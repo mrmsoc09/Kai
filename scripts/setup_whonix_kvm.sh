@@ -485,10 +485,10 @@ if [[ "${gw_state}" != *"running"* ]]; then
     run_virsh start "${gw_domain}" >/dev/null
 fi
 
-proxy_host="${K1_WHONIX_PROXY_HOST:-10.152.152.10}"
+proxy_host="${K1_WHONIX_PROXY_HOST:-127.0.0.1}"
 proxy_port="${K1_WHONIX_PROXY_PORT:-9050}"
 
-if [[ "${URI}" == "qemu:///system" && "${proxy_host}" == "10.152.152.10" ]]; then
+if [[ "${URI}" == "qemu:///system" ]]; then
     if ! ensure_internal_bridge_host_ip "Whonix-Internal"; then
         warn "Unable to confirm host IPv4 on Whonix-Internal bridge; proxy check may fail."
     fi

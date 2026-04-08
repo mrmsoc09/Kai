@@ -141,5 +141,5 @@ def test_reports_submit_hil_has_no_qualification_bypass(tmp_path: Path):
     )
     assert response.status_code == 409
     payload = response.json()
-    assert payload.get("reason") == "evidence_qualification_rejected"
-
+    assert payload.get("reason") == "submission_candidate_rejected"
+    assert payload.get("rejection_reason")

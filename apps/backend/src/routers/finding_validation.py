@@ -8,7 +8,11 @@ from typing import Dict, List, Any, Optional
 import json
 
 from apps.backend.src.core.evidence_qualification_engine import qualify_evidence
-from apps.backend.src.core.impact_validation_engine import validate_impact
+from apps.backend.src.core.impact_validation_engine import (
+    resolve_submission_candidate_decision,
+    validate_impact,
+)
+from apps.backend.src.core.vulnerability_intelligence_engine import enrich_finding_with_intelligence
 
 router = APIRouter(prefix="/api/findings", tags=["findings"])
 
@@ -96,6 +100,29 @@ async def submit_finding(
             report_id=None,
             persist=True,
         )
+        submission_decision = resolve_submission_candidate_decision(
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
+        )
+        vulnerability_intelligence = enrich_finding_with_intelligence(
+            {
+                "target": target_domain,
+                "vulnerability_type": vulnerability_type,
+                "endpoint": endpoint,
+                "description": description,
+                "severity": severity,
+                "confidence_score": confidence_score,
+                "payload": payload_hash,
+                "evidence_qualification": qualification.to_dict(),
+                "impact_validation": impact_validation.to_dict(),
+                "submission_decision": submission_decision,
+            },
+            mission_id=f"finding-{target_domain}",
+            stage_id="vulnerability_intelligence_submit",
+            report_id=None,
+            persist=True,
+            update_history=True,
+        ).to_dict()
         routed = await router_sys.route_finding(
             target_domain=target_domain,
             vulnerability_type=vulnerability_type,
@@ -103,7 +130,7 @@ async def submit_finding(
             cvss_score=cvss_score,
             severity=severity,
             confidence_score=confidence_score,
-            submission_candidate=qualification.submission_candidate and impact_validation.submission_candidate,
+            submission_candidate=bool(submission_decision.get("submission_candidate")),
             is_duplicate=dup_result.is_duplicate,
             duplicate_reason=dup_result.reason,
             chainable_with=[f.finding_id for f in dup_result.chainable_with] if dup_result.chainable_with else None
@@ -115,6 +142,8 @@ async def submit_finding(
             "routing_reasoning": routed.reasoning,
             "evidence_qualification": qualification.to_dict(),
             "impact_validation": impact_validation.to_dict(),
+            "submission_decision": submission_decision,
+            "vulnerability_intelligence": vulnerability_intelligence,
             "duplicate_check": {
                 "is_duplicate": dup_result.is_duplicate,
                 "similarity_score": dup_result.similarity_score,
@@ -228,6 +257,27 @@ async def route_finding(
             report_id=None,
             persist=True,
         )
+        submission_decision = resolve_submission_candidate_decision(
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
+        )
+        vulnerability_intelligence = enrich_finding_with_intelligence(
+            {
+                "target": target_domain,
+                "vulnerability_type": vulnerability_type,
+                "endpoint": endpoint,
+                "severity": severity,
+                "confidence_score": confidence_score,
+                "evidence_qualification": qualification.to_dict(),
+                "impact_validation": impact_validation.to_dict(),
+                "submission_decision": submission_decision,
+            },
+            mission_id=f"route-{target_domain}",
+            stage_id="vulnerability_intelligence_route",
+            report_id=None,
+            persist=True,
+            update_history=True,
+        ).to_dict()
         routed = await router_sys.route_finding(
             target_domain=target_domain,
             vulnerability_type=vulnerability_type,
@@ -235,7 +285,7 @@ async def route_finding(
             cvss_score=cvss_score,
             severity=severity,
             confidence_score=confidence_score,
-            submission_candidate=qualification.submission_candidate and impact_validation.submission_candidate,
+            submission_candidate=bool(submission_decision.get("submission_candidate")),
             is_duplicate=is_duplicate,
             duplicate_reason=duplicate_reason
         )
@@ -244,6 +294,8 @@ async def route_finding(
             "finding_id": routed.finding_id,
             "route": routed.route.value,
             "reasoning": routed.reasoning,
+            "submission_decision": submission_decision,
+            "vulnerability_intelligence": vulnerability_intelligence,
             "next_steps": _get_next_steps(routed.route)
         }
 

@@ -21,7 +21,8 @@ from ..core.submission_lifecycle import transition_submission_state
 from ..core.report_validator import evaluate_report_quality_gate
 from ..core.report_engine import get_report_engine
 from ..core.evidence_qualification_engine import qualify_evidence
-from ..core.impact_validation_engine import validate_impact
+from ..core.impact_validation_engine import resolve_submission_candidate_decision, validate_impact
+from ..core.vulnerability_intelligence_engine import enrich_finding_with_intelligence
 
 try:
     from ..core.report_formats import get_format, render_report, validate_rendered  # type: ignore
@@ -94,9 +95,33 @@ def _qualify_for_reporting(
     if evidence_payload is not None:
         evidence_payload["evidence_qualification"] = qualification.to_dict()
         evidence_payload["impact_validation"] = impact_validation.to_dict()
+    submission_decision = resolve_submission_candidate_decision(
+        evidence_qualification=qualification.to_dict(),
+        impact_validation=impact_validation.to_dict(),
+    )
+    vulnerability_intelligence = enrich_finding_with_intelligence(
+        {
+            **finding,
+            "submission_decision": submission_decision,
+            "evidence_qualification": qualification.to_dict(),
+            "impact_validation": impact_validation.to_dict(),
+        },
+        mission_id=run_id,
+        stage_id="vulnerability_intelligence_reporting",
+        report_id=run_id,
+        persist=True,
+        update_history=False,
+    ).to_dict()
+    finding["submission_decision"] = submission_decision
+    finding["vulnerability_intelligence"] = vulnerability_intelligence
+    if evidence_payload is not None:
+        evidence_payload["submission_decision"] = submission_decision
+        evidence_payload["vulnerability_intelligence"] = vulnerability_intelligence
     return {
         "evidence_qualification": qualification.to_dict(),
         "impact_validation": impact_validation.to_dict(),
+        "submission_decision": submission_decision,
+        "vulnerability_intelligence": vulnerability_intelligence,
     }
 
 @router.post('/render')
@@ -176,22 +201,19 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
     )
     qualification = validation.get("evidence_qualification", {})
     impact_validation = validation.get("impact_validation", {})
-    if not qualification.get("submission_candidate"):
+    submission_decision = validation.get("submission_decision", {})
+    vulnerability_intelligence = validation.get("vulnerability_intelligence", {})
+    if not submission_decision.get("submission_candidate"):
         return JSONResponse(
             status_code=409,
             content={
                 "status": "blocked",
-                "reason": "evidence_qualification_rejected",
-                "rejection_reason": qualification.get("rejection_reason"),
+                "reason": "submission_candidate_rejected",
+                "rejection_reason": submission_decision.get("rejection_reason"),
                 "evidence_qualification": qualification,
-            },
-        )
-    if not impact_validation:
-        return JSONResponse(
-            status_code=409,
-            content={
-                "status": "blocked",
-                "reason": "impact_validation_required",
+                "impact_validation": impact_validation,
+                "submission_decision": submission_decision,
+                "vulnerability_intelligence": vulnerability_intelligence,
             },
         )
     mitigation = payload.get('mitigation') or {}
@@ -207,6 +229,8 @@ async def submit_hil(payload: Dict[str, Any]) -> Dict[str, Any]:
         'stakeholder': fmt.get('stakeholder', 'generic'),
         'evidence_qualification': qualification,
         'impact_validation': impact_validation,
+        'submission_decision': submission_decision,
+        'vulnerability_intelligence': vulnerability_intelligence,
     })
     try:
         transition_submission_state(
@@ -285,11 +309,9 @@ async def package(payload: Dict[str, Any]) -> Dict[str, Any]:
         evidence=ctx["evidence"],
         run_id=run_id,
     )
-    qualification = validation.get("evidence_qualification", {})
-    if not qualification.get("submission_candidate"):
-        raise HTTPException(409, 'evidence_qualification_rejected')
-    if not validation.get("impact_validation"):
-        raise HTTPException(409, 'impact_validation_required')
+    submission_decision = validation.get("submission_decision", {})
+    if not submission_decision.get("submission_candidate"):
+        raise HTTPException(409, f"submission_candidate_rejected:{submission_decision.get('rejection_reason') or 'unknown'}")
     from ..core.finalize import finalize_report as _finalize
     if not bool(payload.get('override_package_without_finalize')):
         fin = _finalize(run_id, stakeholder, ctx)

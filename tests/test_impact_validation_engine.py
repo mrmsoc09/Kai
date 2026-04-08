@@ -113,3 +113,15 @@ def test_impact_statement_generation_correctness():
     assert "business_impact" in statement
     assert statement.get("severity_estimate") in {"low", "medium", "high", "critical"}
 
+
+def test_unsupported_vulnerability_type_is_not_submission_candidate():
+    finding = _base_finding("open_redirect")
+    result = validate_impact(
+        finding,
+        scope_metadata={"target": "api.example.com", "in_scope": True},
+        mission_id="mission-unsupported",
+        stage_id="impact_test",
+        persist=True,
+    )
+    assert result.capability_validation_results["status"] == "limited"
+    assert result.submission_candidate is False

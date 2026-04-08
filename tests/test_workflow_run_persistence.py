@@ -301,6 +301,13 @@ async def test_create_workflow_finding_record():
     assert finding.asset_identifier == "api.example.com"
     assert finding.vulnerability_type == "sql_injection_candidate"
     assert finding.severity_hint == "high"
+    assert isinstance(finding.details_json, dict)
+    assert "evidence_qualification" in finding.details_json
+    assert "impact_validation" in finding.details_json
+    assert "submission_decision" in finding.details_json
+    assert "vulnerability_intelligence" in finding.details_json
+    assert finding.details_json.get("submission_candidate") is False
+    assert finding.details_json.get("submission_rejection_reason")
     assert finding in db.added
 
 

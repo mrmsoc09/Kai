@@ -1,0 +1,49 @@
+# K1 SOVEREIGN DOCKERFILE (Stage 21)
+# Multi-stage build for a portable, offensive-ready K1 environment.
+
+# --- STAGE 1: Tool Builder ---
+FROM debian:bookworm-slim AS tool-builder
+RUN apt-get update && apt-get install -y \
+    git \
+    make \
+    gcc \
+    libpcap-dev \
+    wget \
+    unzip
+
+# Install Nuclei
+RUN wget https://github.com/projectdiscovery/nuclei/releases/download/v3.3.0/nuclei_3.3.0_linux_amd64.zip && \
+    unzip nuclei_3.3.0_linux_amd64.zip && \
+    mv nuclei /usr/local/bin/
+
+# Install Subfinder
+RUN wget https://github.com/projectdiscovery/subfinder/releases/download/v2.6.6/subfinder_2.6.6_linux_amd64.zip && \
+    unzip subfinder_2.6.6_linux_amd64.zip && \
+    mv subfinder /usr/local/bin/
+
+# --- STAGE 2: Final Runtime ---
+FROM python:3.11-slim-bookworm
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    proxychains4 \
+    curl \
+    git \
+    nmap \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy tools from builder
+COPY --from=tool-builder /usr/local/bin/nuclei /usr/local/bin/
+COPY --from=tool-builder /usr/local/bin/subfinder /usr/local/bin/
+
+WORKDIR /app
+
+# Copy application
+COPY . .
+
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Entrypoint setup
+RUN chmod +x scripts/k1-start.sh
+ENTRYPOINT ["scripts/k1-start.sh"]

@@ -19,6 +19,7 @@ from apps.backend.src.core.protocol import (
     KaisonResultMetadata,
     Severity,
 )
+from apps.backend.src.core.governor import StealthWrapper
 from apps.backend.src.agents.tools.handoff_report import HandoffReport
 
 
@@ -236,7 +237,18 @@ class BaseToolAgent(ABC):
         kill_telemetry: dict[str, Any] = {}
 
         process: subprocess.Popen[bytes] | None = None
+        stealth_context = None
         try:
+            stealth_context = StealthWrapper.prepare_sync_command(
+                command,
+                target=target,
+                metadata={
+                    "tool_name": self.TOOL_NAME,
+                    "waf_detected": bool(opts.get("waf_detected", False)),
+                    "waf_vendor": opts.get("waf_vendor"),
+                },
+            )
+            command = stealth_context.command
             process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
@@ -268,6 +280,11 @@ class BaseToolAgent(ABC):
         finally:
             if process is not None and process.poll() is None:
                 kill_telemetry = self._kill_process_group(process)
+            StealthWrapper.finalize_context(
+                stealth_context,
+                stdout=stdout,
+                stderr=stderr,
+            )
 
         stdout = stdout[: self.MAX_STDIO_CHARS]
         stderr = stderr[: self.MAX_STDIO_CHARS]

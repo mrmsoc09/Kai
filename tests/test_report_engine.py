@@ -125,3 +125,22 @@ def test_report_listing_filters_by_opportunity_id(tmp_path, monkeypatch):
     kept = engine.list_reports(opportunity_id="opp-keep")
     assert len(kept) == 1
     assert kept[0].opportunity_id == "opp-keep"
+
+
+def test_report_quality_score_is_capped_when_submission_candidate_false(tmp_path, monkeypatch):
+    monkeypatch.setenv("K1_REPORT_ENGINE_STATE_PATH", str(tmp_path / "state.json"))
+    monkeypatch.setenv("K1_REPORT_ENGINE_ARTIFACT_DIR", str(tmp_path / "reports"))
+    engine = ReportEngine()
+
+    finding = _sample_finding(
+        finding_id="f-low-impact",
+        vulnerability_type="xss",
+        summary="Thin evidence",
+        validation_evidence=[],
+        confidence_score=0.9,
+        baseline_response={"status_code": 200, "body": "ok"},
+        exploit_response={"status_code": 200, "body": "ok"},
+    )
+    report, _ = engine.generate_and_store_report(finding=finding, exploit_chain=None, artifacts=[])
+    assert report.submission_candidate is False
+    assert report.quality_score <= 0.74

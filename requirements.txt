@@ -34,7 +34,7 @@ celery==5.4.0
 Jinja2==3.1.5
 
 # Report Generation & PDF
-weasyprint==63.0
+weasyprint==68.0
 Markdown==3.7
 bleach==6.1.0
 Pillow==10.3.0  # CVE: out-of-bounds write in PSD loader fixed in 12.1.1
@@ -57,7 +57,7 @@ python-gnupg==0.5.0
 
 # LLM Providers (K1 Core)
 anthropic==0.45.2
-openai==1.61.0
+openai==1.68.2
 google-generativeai==0.8.4
 
 # Orchestration Layer — Platform 1: PraisonAI Governance

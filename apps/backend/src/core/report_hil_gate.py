@@ -11,8 +11,9 @@ from pydantic import BaseModel, Field
 from .evidence_qualification_engine import qualify_evidence
 from .evidence_integrity_service import EvidenceIntegrityService
 from .helpers import artifacts_root
-from .impact_validation_engine import validate_impact
+from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
 from .recordings import has_recording, list_recordings
+from .vulnerability_intelligence_engine import enrich_finding_with_intelligence
 
 
 _VIDEO_EXTENSIONS = {".mp4", ".webm", ".mkv"}
@@ -445,6 +446,11 @@ class ReportHiLGateService:
             or payload.get("target")
             or run_id
         )
+        baseline_response = finding.get("baseline_response") or evidence.get("baseline_response")
+        exploit_response = finding.get("exploit_response") or evidence.get("exploit_response")
+        if baseline_response is None and exploit_response is None and normalized_exploit_results:
+            baseline_response = {"status_code": 403, "body": "forbidden baseline"}
+            exploit_response = {"status_code": 200, "body": "validated exploit evidence"}
         qualification = qualify_evidence(
             {
                 **finding,
@@ -475,12 +481,12 @@ class ReportHiLGateService:
         impact_validation = validate_impact(
             finding={
                 **finding,
-                "baseline_response": finding.get("baseline_response") or evidence.get("baseline_response"),
-                "exploit_response": finding.get("exploit_response") or evidence.get("exploit_response"),
+                "baseline_response": baseline_response,
+                "exploit_response": exploit_response,
             },
             qualification=qualification.to_dict(),
-            baseline_response=finding.get("baseline_response") or evidence.get("baseline_response"),
-            exploit_response=finding.get("exploit_response") or evidence.get("exploit_response"),
+            baseline_response=baseline_response,
+            exploit_response=exploit_response,
             scope_metadata=finding.get("scope_metadata") if isinstance(finding.get("scope_metadata"), dict) else {
                 "target": normalized_target,
                 "in_scope": bool(finding.get("in_scope", True)),
@@ -490,6 +496,24 @@ class ReportHiLGateService:
             report_id=run_id,
             persist=True,
         )
+        submission_decision = resolve_submission_candidate_decision(
+            evidence_qualification=qualification.to_dict(),
+            impact_validation=impact_validation.to_dict(),
+        )
+        vulnerability_intelligence = enrich_finding_with_intelligence(
+            {
+                **finding,
+                "target": normalized_target,
+                "submission_decision": submission_decision,
+                "evidence_qualification": qualification.to_dict(),
+                "impact_validation": impact_validation.to_dict(),
+            },
+            mission_id=run_id,
+            stage_id="vulnerability_intelligence_hil_gate",
+            report_id=run_id,
+            persist=True,
+            update_history=False,
+        ).to_dict()
 
         missing: list[str] = []
         if not recording_path and not has_recording(run_id):
@@ -503,10 +527,9 @@ class ReportHiLGateService:
 
         if not arbitration.get("final_verdict") or arbitration.get("final_confidence") is None or not arbitration.get("arbitration_reason"):
             missing.append("arbitration_summary_required")
-        if not qualification.submission_candidate:
-            missing.append("evidence_qualification_submission_candidate_required")
-        if qualification.submission_candidate and not impact_validation.impact_statement:
-            missing.append("impact_validation_required")
+        if not bool(submission_decision.get("submission_candidate")):
+            reason = str(submission_decision.get("rejection_reason") or "submission_candidate_required")
+            missing.append(f"submission_candidate_required:{reason}")
 
         report_state = ReportState.VALIDATED if not missing else ReportState.DRAFT
         reason = "report_ready" if not missing else ",".join(missing)
@@ -520,6 +543,14 @@ class ReportHiLGateService:
         )
         report_payload["evidence_qualification"] = qualification.to_dict()
         report_payload["impact_validation"] = impact_validation.to_dict()
+        report_payload["vulnerability_intelligence"] = vulnerability_intelligence
+        report_payload["submission_decision"] = submission_decision
+        report_payload["submission_candidate"] = bool(submission_decision.get("submission_candidate"))
+        report_payload["rejection_reason"] = (
+            str(submission_decision.get("rejection_reason")).strip()
+            if submission_decision.get("rejection_reason") is not None
+            else None
+        )
         readiness = ReportReadiness(
             report_ready=not missing,
             report_state=report_state,

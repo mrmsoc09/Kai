@@ -14,6 +14,15 @@ from urllib.parse import urlparse
 from .audit_logger import write_audit_record
 from .scope_guardrails import ScopePolicy, evaluate_target_scope, load_scope_policy
 
+MIN_EVIDENCE_QUALITY_SCORE = 0.75
+MIN_IMPACT_SCORE = 0.35
+REQUIRED_IMPACT_STATEMENT_FIELDS = (
+    "impact_summary",
+    "technical_impact",
+    "business_impact",
+    "severity_estimate",
+)
+
 
 def _utcnow_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -236,6 +245,13 @@ class ImpactValidationEngine:
         qualification_candidate = True
         if isinstance(qualification, Mapping):
             qualification_candidate = bool(qualification.get("submission_candidate", True))
+        statement_complete = all(_normalize_text(statement.get(field)) for field in REQUIRED_IMPACT_STATEMENT_FIELDS)
+        submission_candidate = (
+            scope_valid
+            and qualification_candidate
+            and impact_score >= MIN_IMPACT_SCORE
+            and statement_complete
+        )
 
         result = ImpactValidationResult(
             validation_id=f"iv-{sha256(f'{finding_key}:{_utcnow_iso()}'.encode('utf-8')).hexdigest()[:16]}",
@@ -257,7 +273,7 @@ class ImpactValidationEngine:
             commands_executed=list(capability.get("commands_executed") or []),
             allowed_actions_taken=list(capability.get("allowed_actions_taken") or []),
             blocked_actions=list(capability.get("blocked_actions") or []),
-            submission_candidate=scope_valid and qualification_candidate,
+            submission_candidate=submission_candidate,
             created_at=_utcnow_iso(),
             artifact_path=None,
         )
@@ -639,3 +655,136 @@ def validate_impact(
         persist=persist,
     )
 
+
+def resolve_submission_candidate_decision(
+    *,
+    evidence_qualification: Mapping[str, Any] | None,
+    impact_validation: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    qualification = dict(evidence_qualification or {})
+    impact = dict(impact_validation or {})
+
+    if not qualification:
+        return {
+            "submission_candidate": False,
+            "rejection_reason": "evidence_qualification_missing",
+            "warnings": [],
+            "additional_data_needed": ["evidence_qualification"],
+            "decision_basis": {"evidence_qualification_present": False, "impact_validation_present": bool(impact)},
+        }
+    evidence_quality_score = _safe_float(qualification.get("evidence_quality_score"), 0.0)
+    if not bool(qualification.get("submission_candidate")):
+        return {
+            "submission_candidate": False,
+            "rejection_reason": _normalize_text(qualification.get("rejection_reason")) or "evidence_qualification_rejected",
+            "warnings": [],
+            "additional_data_needed": ["evidence_requalification"],
+            "decision_basis": {
+                "evidence_qualification_present": True,
+                "impact_validation_present": bool(impact),
+                "evidence_quality_score": evidence_quality_score,
+            },
+        }
+    if evidence_quality_score < MIN_EVIDENCE_QUALITY_SCORE:
+        return {
+            "submission_candidate": False,
+            "rejection_reason": "evidence_quality_below_threshold",
+            "warnings": [],
+            "additional_data_needed": ["higher_reproducibility_and_evidence_quality"],
+            "decision_basis": {
+                "evidence_qualification_present": True,
+                "impact_validation_present": bool(impact),
+                "evidence_quality_score": evidence_quality_score,
+                "required_evidence_quality_score": MIN_EVIDENCE_QUALITY_SCORE,
+            },
+        }
+    if not impact:
+        return {
+            "submission_candidate": False,
+            "rejection_reason": "impact_validation_missing",
+            "warnings": [],
+            "additional_data_needed": ["impact_validation"],
+            "decision_basis": {"evidence_qualification_present": True, "impact_validation_present": False},
+        }
+    impact_score = _safe_float(impact.get("impact_score"), 0.0)
+    if not bool(impact.get("submission_candidate")):
+        rejection_reason = (
+            _normalize_text(impact.get("scope_reason"))
+            or _normalize_text((impact.get("capability_validation_results") or {}).get("reason"))
+            or "impact_validation_rejected"
+        )
+        return {
+            "submission_candidate": False,
+            "rejection_reason": rejection_reason,
+            "warnings": [],
+            "additional_data_needed": ["safe_impact_validation_signal"],
+            "decision_basis": {
+                "evidence_qualification_present": True,
+                "impact_validation_present": True,
+                "impact_score": impact_score,
+                "scope_compliance_status": _normalize_text(impact.get("scope_compliance_status")),
+            },
+        }
+    if impact_score < MIN_IMPACT_SCORE:
+        return {
+            "submission_candidate": False,
+            "rejection_reason": "impact_score_below_threshold",
+            "warnings": [],
+            "additional_data_needed": ["stronger_behavioral_impact_validation"],
+            "decision_basis": {
+                "evidence_qualification_present": True,
+                "impact_validation_present": True,
+                "impact_score": impact_score,
+                "required_impact_score": MIN_IMPACT_SCORE,
+                "scope_compliance_status": _normalize_text(impact.get("scope_compliance_status")),
+            },
+        }
+    impact_statement = impact.get("impact_statement")
+    if not isinstance(impact_statement, dict) or not impact_statement:
+        return {
+            "submission_candidate": False,
+            "rejection_reason": "impact_statement_missing",
+            "warnings": [],
+            "additional_data_needed": ["structured_impact_statement"],
+            "decision_basis": {
+                "evidence_qualification_present": True,
+                "impact_validation_present": True,
+                "impact_score": impact_score,
+            },
+        }
+    missing_statement_fields = [
+        field for field in REQUIRED_IMPACT_STATEMENT_FIELDS if not _normalize_text(impact_statement.get(field))
+    ]
+    if missing_statement_fields:
+        return {
+            "submission_candidate": False,
+            "rejection_reason": "impact_statement_incomplete",
+            "warnings": [],
+            "additional_data_needed": [f"impact_statement.{field}" for field in missing_statement_fields],
+            "decision_basis": {
+                "evidence_qualification_present": True,
+                "impact_validation_present": True,
+                "impact_score": impact_score,
+                "missing_statement_fields": missing_statement_fields,
+            },
+        }
+
+    warnings: list[str] = []
+    if bool(impact.get("impact_limited_due_to_scope")):
+        warnings.append("impact_validation_limited")
+
+    return {
+        "submission_candidate": True,
+        "rejection_reason": None,
+        "warnings": warnings,
+        "additional_data_needed": [],
+        "decision_basis": {
+            "evidence_qualification_present": True,
+            "impact_validation_present": True,
+            "evidence_quality_score": evidence_quality_score,
+            "required_evidence_quality_score": MIN_EVIDENCE_QUALITY_SCORE,
+            "impact_score": impact_score,
+            "required_impact_score": MIN_IMPACT_SCORE,
+            "scope_compliance_status": _normalize_text(impact.get("scope_compliance_status")),
+        },
+    }

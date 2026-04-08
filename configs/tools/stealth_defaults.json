@@ -1,0 +1,39 @@
+{
+  "global_concurrency_limit": 4,
+  "queue_heat_threshold": 0.75,
+  "autopause_seconds": 600,
+  "jitter_mean": 0.20,
+  "jitter_std": 0.08,
+  "jitter_min": 0.01,
+  "jitter_max": 3.0,
+  "tools": {
+    "nuclei": {
+      "rate_limit": {
+        "low": 12,
+        "medium": 6,
+        "high": 3
+      }
+    },
+    "ffuf": {
+      "threads": {
+        "low": 8,
+        "medium": 5,
+        "high": 2
+      }
+    },
+    "subfinder": {
+      "threads": {
+        "low": 20,
+        "medium": 10,
+        "high": 5
+      }
+    },
+    "msfconsole": {
+      "threads": {
+        "low": 5,
+        "medium": 2,
+        "high": 1
+      }
+    }
+  }
+}

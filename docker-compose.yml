@@ -1,140 +1,57 @@
-# K1 Developer Compose — start with: docker compose up
-# For production: use docker-compose.prod.yml
-# For monitoring: overlay with docker-compose.monitoring.yml
+version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: k1_postgres
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.sovereign
+    container_name: k1-orchestrator
+    volumes:
+      - .:/app
+      - .k1:/app/.k1
+      - logs:/app/logs
     environment:
-      POSTGRES_USER: k1
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-k1devpass}
-      POSTGRES_DB: k1
-    ports:
-      - "5432:5432"
+      - K1_OPERATOR_ABSENT=true
+      - K1_CHECKPOINT_ROOT_ID=checkpoints
+      - TRILIUM_URL=${TRILIUM_URL}
+      - TRILIUM_TOKEN=${TRILIUM_TOKEN}
+    networks:
+      - k1-net
+    dns:
+      - 1.1.1.1
+      - 8.8.8.8
+    cap_add:
+      - NET_ADMIN # Required for advanced networking/proxychains
+    restart: always
+
+  # --- Data Layer ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: k1-db
+    environment:
+      - POSTGRES_USER=k1
+      - POSTGRES_PASSWORD=k1_pass_secure
+      - POSTGRES_DB=k1
+    networks:
+      - k1-net
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U k1"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
 
   redis:
     image: redis:7-alpine
-    container_name: k1_redis
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+    container_name: k1-cache
+    networks:
+      - k1-net
 
-  vault:
-    image: hashicorp/vault:1.16
-    container_name: k1_vault
-    command: server -dev -dev-root-token-id=${VAULT_DEV_ROOT_TOKEN:-do-not-use-hardcoded-tokens}
-    environment:
-      VAULT_DEV_ROOT_TOKEN_ID: ${VAULT_DEV_ROOT_TOKEN:-do-not-use-hardcoded-tokens}
-      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
-    ports:
-      - "${K1_VAULT_HOST_BIND:-127.0.0.1}:${K1_VAULT_HOST_PORT:-8200}:8200"
-    cap_add:
-      - IPC_LOCK
-    volumes:
-      - vault_data:/vault/file
-
-  ollama:
-    image: ollama/ollama:latest
-    container_name: k1_ollama
-    ports:
-      - "11434:11434"
-    volumes:
-      - ollama_data:/root/.ollama
-
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: k1_backend
-    environment:
-      ENVIRONMENT: development
-      DATABASE_URL: postgresql://k1:${POSTGRES_PASSWORD:-k1devpass}@postgres:5432/k1
-      REDIS_URL: redis://redis:6379/0
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-dev-jwt-secret-change-in-production}
-      K1_DEV_TOKEN: ${K1_DEV_TOKEN:-dev-token}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://ollama:11434}
-      K1_SECRET_BACKEND: ${K1_SECRET_BACKEND:-env}
-      VAULT_ADDR: ${VAULT_ADDR:-http://vault:8200}
-      VAULT_TOKEN: ${VAULT_TOKEN:-}
-      CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://localhost:8081"
-      K1_REQUIRED_SERVICES: postgres
-      K1_METRICS_INTERNAL_ONLY: "false"
-      LOG_LEVEL: ${LOG_LEVEL:-DEBUG}
-    ports:
-      - "8080:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      vault:
-        condition: service_started
-      ollama:
-        condition: service_started
-    volumes:
-      - ./artifacts:/app/artifacts
-      - ./output:/app/output
-      # Hot-reload: mount source for development
-      - .:/app:delegated
-    command: >
-      python -m uvicorn apps.backend.src.main:app
-      --host 0.0.0.0 --port 8080 --reload --log-level debug
-
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile.worker
-    container_name: k1_worker
-    environment:
-      DATABASE_URL: postgresql://k1:${POSTGRES_PASSWORD:-k1devpass}@postgres:5432/k1
-      REDIS_URL: redis://redis:6379/0
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      OLLAMA_HOST: ${OLLAMA_HOST:-http://ollama:11434}
-      K1_SECRET_BACKEND: ${K1_SECRET_BACKEND:-env}
-      VAULT_ADDR: ${VAULT_ADDR:-http://vault:8200}
-      VAULT_TOKEN: ${VAULT_TOKEN:-}
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
-      vault:
-        condition: service_started
-      ollama:
-        condition: service_started
-    volumes:
-      - ./artifacts:/app/artifacts
-      - .:/app:delegated
-
-  ui:
-    build:
-      context: .
-      dockerfile: apps/frontend/Dockerfile
-    container_name: k1_ui
-    ports:
-      - "8081:8081"
-    depends_on:
-      - backend
-    environment:
-      VITE_API_BASE: http://localhost:8080
+networks:
+  k1-net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: k1br0
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
 volumes:
   postgres_data:
-  vault_data:
-  ollama_data:
+  logs:

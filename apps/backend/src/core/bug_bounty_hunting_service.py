@@ -15,7 +15,7 @@ from .audit_events import record_transition_event
 from .bugbounty_workflow_engine import WORKFLOW_TEMPLATES
 from .evidence_qualification_engine import qualify_evidence
 from .helpers import workflow_output_root
-from .impact_validation_engine import validate_impact
+from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
 from .phase9_alert_case_service import Phase9AlertCaseService
 from .secret_manager import get_secret_manager
 from .scope_guardrails import ScopePolicy, evaluate_target_scope
@@ -1381,6 +1381,10 @@ class BugBountyHuntingService:
                 report_id=str(wf.id),
                 persist=True,
             )
+            submission_decision = resolve_submission_candidate_decision(
+                evidence_qualification=qualification.to_dict(),
+                impact_validation=impact_validation.to_dict(),
+            )
 
             reportability = min(
                 1.0,
@@ -1399,7 +1403,7 @@ class BugBountyHuntingService:
             if not qualification.scope_validity:
                 policy_fit = "OUT_OF_SCOPE"
                 status = "dismissed"
-            elif qualification.submission_candidate and reportability >= 0.8 and wf.evidence_artifact_path:
+            elif bool(submission_decision.get("submission_candidate")) and reportability >= 0.8 and wf.evidence_artifact_path:
                 status = "ready_for_report"
             elif reportability >= 0.55:
                 status = "needs_manual_validation"
@@ -1421,6 +1425,7 @@ class BugBountyHuntingService:
                 },
                 "evidence_qualification": qualification.to_dict(),
                 "impact_validation": impact_validation.to_dict(),
+                "submission_decision": submission_decision,
             }
             if existing is None:
                 queue_item = AnalystQueueItem(
@@ -1533,12 +1538,18 @@ class BugBountyHuntingService:
             ).to_dict()
             details["impact_validation"] = impact_validation
             queue_item.details_json = details
+        submission_decision = details.get("submission_decision")
+        if not isinstance(submission_decision, dict):
+            submission_decision = resolve_submission_candidate_decision(
+                evidence_qualification=qualification,
+                impact_validation=impact_validation,
+            )
+            details["submission_decision"] = submission_decision
+            queue_item.details_json = details
 
-        if not bool(qualification.get("submission_candidate")):
-            reason = str(qualification.get("rejection_reason") or "evidence_not_qualified")
-            raise ValueError(f"Submission candidate rejected by evidence qualification: {reason}")
-        if not isinstance(impact_validation, dict) or not impact_validation:
-            raise ValueError("Submission candidate blocked: impact validation missing")
+        if not bool(submission_decision.get("submission_candidate")):
+            reason = str(submission_decision.get("rejection_reason") or "submission_candidate_rejected")
+            raise ValueError(f"Submission candidate rejected: {reason}")
 
         reports_dir = workflow_output_root() / "reports" / "bug_bounty"
         reports_dir.mkdir(parents=True, exist_ok=True)
@@ -1586,6 +1597,7 @@ class BugBountyHuntingService:
                 "reportability_score": queue_item.reportability_score,
                 "evidence_qualification": qualification,
                 "impact_validation": impact_validation,
+                "submission_decision": submission_decision,
             },
         )
         self.db.add(draft)
