@@ -8,6 +8,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "${REPO_ROOT}"
 
+# Source sovereign tool installer module
+source "${SCRIPT_DIR}/sovereign_tool_installer.sh"
+
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
@@ -382,7 +385,7 @@ install_native_tool() {
         gitleaks) install_go_tool github.com/gitleaks/gitleaks/v8@latest ;;
         ffuf) install_go_tool github.com/ffuf/ffuf/v2@latest ;;
         gf) install_go_tool github.com/tomnomnom/gf@latest ;;
-        trufflehog) install_go_tool github.com/trufflesecurity/trufflehog/v3@latest ;;
+        trufflehog) _install_trufflehog_sovereign ;;
         crlfuzz) install_go_tool github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest ;;
         phoneinfoga) install_go_tool github.com/sundowndev/phoneinfoga/v2@latest ;;
         github-subdomains) install_go_tool github.com/gwen001/github-subdomains@latest ;;
@@ -398,24 +401,24 @@ install_native_tool() {
         zaproxy) apt_install_packages zaproxy ;;
         wafw00f) apt_install_packages wafw00f ;;
 
-        # Source builds
+        # Source builds (Sovereign Build framework)
         testssl) install_testssl ;;
-        spiderfoot) install_spiderfoot ;;
-        eyewitness) install_eyewitness ;;
+        spiderfoot) _install_spiderfoot_sovereign ;;
+        eyewitness) _install_eyewitness_sovereign ;;
         graphql-cop) install_graphql_cop ;;
         kiterunner) install_kiterunner ;;
-        masscan) install_masscan ;;
-        metasploit-framework) install_metasploit_framework ;;
-        reconftw) install_reconftw ;;
+        masscan) _install_masscan_sovereign ;;
+        metasploit-framework) _install_metasploit_sovereign ;;
+        reconftw) _install_reconftw_sovereign ;;
         ahmia-client) install_ahmia_client ;;
-        searchsploit) install_searchsploit ;;
-        caido) install_caido ;;
-        faraday-community) install_faraday ;;
+        searchsploit) _install_searchsploit_sovereign ;;
+        caido) _install_caido_sovereign ;;
+        faraday-community) _install_faraday_sovereign ;;
 
-        # Python tools
-        arjun) pip install "git+https://github.com/s0md3v/Arjun.git" ;;
+        # Python tools (Sovereign Build framework)
+        arjun) _install_arjun_sovereign ;;
         social-analyzer) pip install "git+https://github.com/qeeqbox/social-analyzer.git" ;;
-        torbot) pip install "git+https://github.com/DedSecInside/TorBot.git" ;;
+        torbot) _install_torbot_sovereign ;;
         smuggler) pip install smuggler ;;
 
         *)
@@ -435,73 +438,59 @@ install_kiterunner() {
     cp "${src_dir}/dist/kr" "${LOCAL_BIN_DIR}/kr" && chmod +x "${LOCAL_BIN_DIR}/kr"
 }
 
-install_eyewitness() {
-    local src_dir="${LOCAL_TOOLS_SRC_DIR}/EyeWitness"
-    ensure_local_bin
-    clone_or_update_repo "https://github.com/RedSiege/EyeWitness.git" "${src_dir}" || return 1
-    if [[ -f "${src_dir}/Python/requirements.txt" ]]; then
-        (cd "${src_dir}/Python" && pip install -r requirements.txt >/dev/null 2>&1) || true
-    fi
-    cat > "${LOCAL_BIN_DIR}/eyewitness" <<EOF
-#!/usr/bin/env bash
-set -euo pipefail
-ROOT="${src_dir}"
-if [[ -f "\${ROOT}/Python/EyeWitness.py" ]]; then
-  exec python3 "\${ROOT}/Python/EyeWitness.py" "\$@"
-fi
-exec python3 "\${ROOT}/EyeWitness.py" "\$@"
-EOF
-    chmod +x "${LOCAL_BIN_DIR}/eyewitness"
+# Old install_eyewitness replaced by sovereign tool installer
+# See sovereign_tool_installer.sh for implementation
+
+# Wrapper for sovereign tool installer
+_install_masscan_sovereign() {
+    install_masscan "$@"
 }
 
-install_masscan() {
-    if apt_install_packages masscan 2>/dev/null; then
-        return 0
-    fi
-    local src_dir="${LOCAL_TOOLS_SRC_DIR}/masscan"
-    ensure_local_bin
-    clone_or_update_repo "https://github.com/robertdavidgraham/masscan.git" "${src_dir}" || return 1
-    apt_install_packages libpcap-dev >/dev/null 2>&1 || true
-    (cd "${src_dir}" && make -j"$(nproc)") || return 1
-    cp "${src_dir}/bin/masscan" "${LOCAL_BIN_DIR}/masscan" && chmod +x "${LOCAL_BIN_DIR}/masscan"
+_install_metasploit_sovereign() {
+    install_metasploit "$@"
 }
 
-install_metasploit_framework() {
-    if has_cmd msfconsole; then
-        return 0
-    fi
-    if apt_install_packages metasploit-framework 2>/dev/null; then
-        return 0
-    fi
-    local src_dir="${LOCAL_TOOLS_SRC_DIR}/metasploit-framework"
-    ensure_local_bin
-    clone_or_update_repo "https://github.com/rapid7/metasploit-framework.git" "${src_dir}" || return 1
-    if [[ ! -x "${src_dir}/msfconsole" ]]; then
-        return 1
-    fi
-    cat > "${LOCAL_BIN_DIR}/msfconsole" <<EOF
-#!/usr/bin/env bash
-exec "${src_dir}/msfconsole" "\$@"
-EOF
-    chmod +x "${LOCAL_BIN_DIR}/msfconsole"
+_install_eyewitness_sovereign() {
+    install_eyewitness "$@"
 }
 
-install_reconftw() {
-    local src_dir="${LOCAL_TOOLS_SRC_DIR}/reconftw"
-    local script_path=""
-    ensure_local_bin
-    clone_or_update_repo "https://github.com/six2dez/reconftw.git" "${src_dir}" || return 1
-    if [[ -f "${src_dir}/reconftw.sh" ]]; then
-        script_path="${src_dir}/reconftw.sh"
-    elif [[ -f "${src_dir}/reconftw" ]]; then
-        script_path="${src_dir}/reconftw"
-    else
-        return 1
-    fi
-    cp "${script_path}" "${LOCAL_BIN_DIR}/reconftw.sh"
-    chmod +x "${LOCAL_BIN_DIR}/reconftw.sh"
-    ln -sf "${LOCAL_BIN_DIR}/reconftw.sh" "${LOCAL_BIN_DIR}/reconftw"
+_install_arjun_sovereign() {
+    install_arjun "$@"
 }
+
+_install_spiderfoot_sovereign() {
+    install_spiderfoot "$@"
+}
+
+_install_reconftw_sovereign() {
+    install_reconftw "$@"
+}
+
+_install_torbot_sovereign() {
+    install_torbot "$@"
+}
+
+_install_trufflehog_sovereign() {
+    install_trufflehog "$@"
+}
+
+_install_searchsploit_sovereign() {
+    install_searchsploit "$@"
+}
+
+_install_caido_sovereign() {
+    install_caido "$@"
+}
+
+_install_faraday_sovereign() {
+    install_faraday "$@"
+}
+
+# Old install_metasploit_framework replaced by sovereign tool installer
+# See sovereign_tool_installer.sh for implementation
+
+# Old install_reconftw replaced by sovereign tool installer
+# See sovereign_tool_installer.sh for implementation
 
 install_ahmia_client() {
     local crawler_dir="${LOCAL_TOOLS_SRC_DIR}/ahmia-crawler"
@@ -532,46 +521,14 @@ EOF
     chmod +x "${LOCAL_BIN_DIR}/ahmia"
 }
 
-install_searchsploit() {
-    if apt_install_packages exploitdb 2>/dev/null; then
-        return 0
-    fi
-    local src_dir="${LOCAL_TOOLS_SRC_DIR}/searchsploit"
-    ensure_local_bin
-    clone_or_update_repo "https://github.com/JitPatro/searchsploit.git" "${src_dir}" || return 1
-    if [[ -x "${src_dir}/searchsploit" ]]; then
-        ln -sf "${src_dir}/searchsploit" "${LOCAL_BIN_DIR}/searchsploit"
-        return 0
-    fi
-    if [[ -f "${src_dir}/searchsploit.py" ]]; then
-        cat > "${LOCAL_BIN_DIR}/searchsploit" <<EOF
-#!/usr/bin/env bash
-exec python3 "${src_dir}/searchsploit.py" "\$@"
-EOF
-        chmod +x "${LOCAL_BIN_DIR}/searchsploit"
-        return 0
-    fi
-    return 1
-}
+# Old install_searchsploit replaced by sovereign tool installer
+# See sovereign_tool_installer.sh for implementation
 
-install_caido() {
-    ensure_local_bin
-    if has_cmd npm && npm view @caido/cli version >/dev/null 2>&1; then
-        npm install -g @caido/cli >/dev/null 2>&1 || true
-    fi
-    if has_cmd caido; then
-        return 0
-    fi
-    warn "Caido CLI not auto-installed. Install manually from https://github.com/caido and ensure 'caido' is in PATH."
-    return 1
-}
+# Old install_caido replaced by sovereign tool installer
+# See sovereign_tool_installer.sh for implementation
 
-install_faraday() {
-    local src_dir="${LOCAL_TOOLS_SRC_DIR}/faraday"
-    clone_or_update_repo "https://github.com/infobyte/faraday.git" "${src_dir}" || true
-    info "Faraday source prepared at ${src_dir} (tool is used as internal aggregator in Kai)."
-    return 0
-}
+# Old install_faraday replaced by sovereign tool installer
+# See sovereign_tool_installer.sh for implementation
 
 pip() {
     python3 -m pip "$@" 2>&1 | grep -v "Requirement already satisfied" || return 1
