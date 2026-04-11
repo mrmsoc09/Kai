@@ -61,7 +61,9 @@ openai==1.109.1
 google-generativeai==0.8.4
 
 # Orchestration Layer — Platform 1: PraisonAI Governance
-praisonaiagents==1.5.148
+# praisonaiagents intentionally excluded:
+# current published PyPI versions are flagged by GHSA-x462-jjpc-q4q4
+# and GHSA-ffp3-3562-8cv3. Runtime has stub fallback paths when absent.
 
 
 # Utilities
