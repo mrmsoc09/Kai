@@ -1,0 +1,360 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║           K1 EVIDENCE PACK — COMPLETE DIRECTORY STRUCTURE TREE            ║
+║                                                                            ║
+║  Root: /home/k1-admin/Kai                                                 ║
+║  Last Updated: April 11, 2026                                             ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+MAIN DATA STORAGE HIERARCHY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+/home/k1-admin/Kai/
+│
+├── [ARTIFACTS ROOT] K1_ARTIFACTS_ROOT=artifacts/ (200 KB)
+│   ├── evidence/                          [EXISTING - Reserved]
+│   ├── submissions/                       [Platform submissions]
+│   │   └── outbox/                        └─ Pending to H1/BC/INT
+│   ├── workflows/                         [Workflow state]
+│   ├── dork_runs/                         [Google Dork results]
+│   ├── programs/                          [Program configs]
+│   ├── knowledge/                         [Knowledge base]
+│   ├── decision/                          [Decision trees]
+│   ├── ingest/                            [Data ingestion]
+│   ├── graph/                             [Attack graphs]
+│   └── auth/                              [Auth artifacts]
+│
+├── [WORKFLOW OUTPUT ROOT] K1_WORKFLOW_OUTPUT_ROOT=output/ (2.5 MB)
+│   ├── logs/
+│   │   ├── scope_decisions.jsonl          ← PRIMARY FINDING LOG (359 KB)
+│   │   │   └─ Fields: timestamp, target, scope_status, reason, auditor_id
+│   │   └── workflow_*.jsonl               ← Workflow execution logs
+│   │
+│   ├── raw/
+│   │   ├── wf-{uuid}/
+│   │   │   ├── plan.json                  └─ Workflow DAG
+│   │   │   ├── phases.json                └─ Phase results
+│   │   │   └── ...
+│   │   └── ...
+│   │
+│   ├── normalized/
+│   │   ├── wf-{uuid}/
+│   │   │   ├── findings.json              └─ Normalized vulnerabilities
+│   │   │   └── ...
+│   │   └── ...
+│   │
+│   ├── workflows/
+│   │   ├── wf-{uuid}/                    └─ Workflow metadata
+│   │   └── ...
+│   │
+│   ├── reports/
+│   │   ├── wf-{uuid}/
+│   │   │   ├── vulnerability_report.md
+│   │   │   ├── summary.json
+│   │   │   └── ...
+│   │   └── ...
+│   │
+│   ├── burp_exports/                      ← Burp Suite imports
+│   └── slow_mem/                          ← ML cache
+│
+├── [VAULT ROOT] vault/ (4.0 KB → will expand)
+│   ├── permission_slips/                  [EXISTING - Approval records]
+│   │
+│   ├── evidence/                          [NEW - Evidence Pack Storage]
+│   │   ├── recordings/                    [WebM video recordings]
+│   │   │   ├── {task_id}_recording.webm               (20-50 MB each)
+│   │   │   ├── {task_id}_recording.json               (metadata)
+│   │   │   └── {task_id}_interactions.json            (interaction log)
+│   │   │
+│   │   ├── scripts/                       [Reproducible scripts]
+│   │   │   ├── {task_id}_repro.sh                     (curl command)
+│   │   │   ├── {task_id}_repro.py                     (Python requests)
+│   │   │   └── {task_id}_exploit.py                   (standalone exploit)
+│   │   │
+│   │   ├── hil_bundles/                   [HiL Review bundles]
+│   │   │   ├── {task_id}_{bundle_id}_evidence.zip    (70-100 MB each)
+│   │   │   │   ├── report.md              └─ 3-persona report
+│   │   │   │   ├── evidence/              └─ Video + metadata
+│   │   │   │   ├── scripts/               └─ curl, Python, exploit
+│   │   │   │   ├── logs/                  └─ HTTP traffic
+│   │   │   │   ├── README.md              └─ Instructions
+│   │   │   │   └── BUNDLE_MANIFEST.json   └─ Metadata & status
+│   │   │   └── {task_id}_{bundle_id}_evidence.json   (for indexing)
+│   │   │
+│   │   └── http_logs/                     [Raw HTTP traffic]
+│   │       ├── {task_id}_traffic.jsonl               (request/response pairs)
+│   │       └── {task_id}_metadata.json               (log info)
+│   │
+│   └── governance/                        [NEW - Governance & PGP]
+│       ├── pgp_keys/                      [Approver PGP public keys]
+│       │   ├── {approver_id}.pub          └─ One key per approver
+│       │   ├── admin.pub
+│       │   ├── security_team_lead.pub
+│       │   └── ...
+│       │
+│       ├── approval_audit.jsonl           [Immutable approval log]
+│       │   └─ Fields: task_id, approver_id, status, pgp_sig_status, timestamp
+│       │
+│       ├── hil_policy.yaml                [HiL approval policy config]
+│       │   └─ Defines: timeout, signature_validity, required_approvers
+│       │
+│       └── rejected_findings.jsonl        [Rejection log]
+│           └─ Fields: task_id, reason, timestamp, requester
+│
+├── config/                                [YAML CONFIGURATION]
+│   ├── scope_guardrails.yaml              [Scope policy]
+│   ├── policies.yaml                      [Governance policies]
+│   ├── [NEW] governance.yaml              [Evidence Pack config]
+│   │   └─ Defines: recording format, script types, bundle locations
+│   ├── provider_registry.yaml             [LLM providers]
+│   ├── apis.yaml                          [API credentials]
+│   ├── toolpacks.yaml                     [Tool pack definitions]
+│   ├── branding.yaml                      [Company branding]
+│   ├── knowledge.yaml                     [Knowledge base]
+│   ├── registry/                          [Tool/skill registries]
+│   │   ├── tool_registry.yaml
+│   │   ├── skill_registry.yaml
+│   │   ├── routing_matrix.yaml
+│   │   └── model_capabilities.yaml
+│   ├── providers/                         [LLM provider configs]
+│   │   ├── anthropic.yaml
+│   │   ├── openai.yaml
+│   │   ├── gemini.yaml
+│   │   ├── ollama.yaml
+│   │   └── ...
+│   ├── tools/                             [Tool-specific configs]
+│   ├── security/                          [Security policies]
+│   │   └── [NEW] pgp_keys.yaml            [Approver key definitions]
+│   └── environments/                      [Environment configs]
+│       ├── local.yaml
+│       ├── cloud.yaml
+│       └── hybrid.yaml
+│
+├── apps/backend/src/                      [FASTAPI APPLICATION]
+│   ├── core/
+│   │   ├── [NEW] recording_client.py      [Playwright headless browser]
+│   │   ├── [NEW] evidence_recording_engine.py [Recording orchestration]
+│   │   ├── [NEW] repro_script_generator.py   [Script generation]
+│   │   ├── [NEW] generate_hil_bundle.py      [Bundle packaging]
+│   │   ├── governance_hil_approval.py     [HiL approval gates]
+│   │   ├── kai_orchestrator.py            [Mission orchestrator]
+│   │   ├── scope_guardrails.py            [Scope validation]
+│   │   ├── novelty_dedupe_engine.py       [Novelty deduplication]
+│   │   ├── workflow_executor.py           [Workflow execution]
+│   │   ├── tool_registry_catalog.py       [Tool registry]
+│   │   └── ... (50+ more modules)
+│   ├── models/
+│   │   ├── bug_bounty.py                  [Finding models]
+│   │   ├── campaign.py                    [Campaign models]
+│   │   ├── workflow.py                    [Workflow models]
+│   │   ├── hil.py                         [HiL models]
+│   │   └── ...
+│   ├── routers/
+│   │   ├── findings.py
+│   │   ├── [NEW] approvals.py             [Approval endpoints]
+│   │   ├── [NEW] evidence.py              [Evidence retrieval]
+│   │   └── ...
+│   └── main.py                            [FastAPI entry point]
+│
+├── .env                                   [ENVIRONMENT VARIABLES]
+│   ├── K1_ARTIFACTS_ROOT=artifacts
+│   ├── K1_WORKFLOW_OUTPUT_ROOT=output
+│   ├── [NEW] K1_EVIDENCE_RECORDINGS_DIR=vault/evidence/recordings
+│   ├── [NEW] K1_EVIDENCE_SCRIPTS_DIR=vault/evidence/scripts
+│   ├── [NEW] K1_EVIDENCE_BUNDLES_DIR=vault/evidence/hil_bundles
+│   ├── [NEW] K1_EVIDENCE_HTTP_LOGS_DIR=vault/evidence/http_logs
+│   ├── [NEW] K1_GOVERNANCE_PGP_KEYS_DIR=vault/governance/pgp_keys
+│   ├── [NEW] K1_GOVERNANCE_AUDIT_LOG=vault/governance/approval_audit.jsonl
+│   ├── [NEW] K1_FINDINGS_STATUS_LOG=output/logs/finding_status.jsonl
+│   ├── K1_VAULT_HOST_PORT=18201
+│   ├── DATABASE_URL=postgresql://...
+│   └── ... (other vars)
+│
+└── [OTHER DIRECTORIES]
+    ├── tests/
+    ├── tools/
+    ├── docs/
+    ├── crews/
+    ├── prompts/
+    ├── personas/
+    ├── scripts/
+    ├── runtime/
+    ├── logs/
+    └── ...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINDING LIFECYCLE: DATA FLOW
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. DISCOVERY (Tool Output)
+   ├─ Tool executes in workflow
+   └─ Output stored: output/raw/wf-{uuid}/{tool}_*.json
+
+2. VALIDATION (Scope Check)
+   ├─ Scope validation gate applied
+   ├─ Decision logged: output/logs/scope_decisions.jsonl
+   └─ Status: IN_SCOPE|OUT_OF_SCOPE|REQUIRES_APPROVAL
+
+3. RECORDING (Evidence Capture)
+   ├─ Playwright records exploitation video
+   ├─ Video saved: vault/evidence/recordings/{task_id}_recording.webm
+   ├─ Metadata: vault/evidence/recordings/{task_id}_recording.json
+   └─ Status: RECORDED (logged to finding_status.jsonl)
+
+4. SCRIPT GENERATION (Reproducibility)
+   ├─ Extract HTTP requests from recording
+   ├─ Generate curl command: vault/evidence/scripts/{task_id}_repro.sh
+   ├─ Generate Python script: vault/evidence/scripts/{task_id}_repro.py
+   ├─ Generate exploit.py: vault/evidence/scripts/{task_id}_exploit.py
+   └─ Status: SCRIPTED (logged to finding_status.jsonl)
+
+5. BUNDLING (Package Evidence)
+   ├─ Collect all evidence files
+   ├─ Create ZIP: vault/evidence/hil_bundles/{task_id}_{bundle_id}_evidence.zip
+   ├─ Generate metadata: vault/evidence/hil_bundles/{task_id}_{bundle_id}_evidence.json
+   ├─ Create README with instructions
+   └─ Status: BUNDLED (logged to finding_status.jsonl)
+
+6. MANUAL APPROVAL (HiL Review)
+   ├─ Security expert reviews bundle
+   ├─ Expert validates with one of: repro.sh, repro.py, exploit.py
+   ├─ Expert signs with PGP: gpg --detach-sign --armor {task_id}.txt
+   ├─ Expert submits: k1 approve {task_id} --pgp-sign <signature>
+   ├─ Signature verified: vault/governance/pgp_keys/{approver_id}.pub
+   ├─ Status logged: vault/governance/approval_audit.jsonl
+   └─ Status: APPROVED (logged to finding_status.jsonl)
+
+7. PLATFORM SUBMISSION (Final Delivery)
+   ├─ Check approval status: can_submit_to_platform({task_id})
+   ├─ BLOCKS if: no PGP signature OR signature expired OR status != APPROVED
+   ├─ SUBMITS to: HackerOne API / Bugcrowd API / Intigriti API
+   ├─ Queued in: artifacts/submissions/outbox/
+   └─ Status: SUBMITTED (logged to finding_status.jsonl)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+FINDING STATUS STATES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+State Flow: DISCOVERED → RECORDED → SCRIPTED → BUNDLED → PENDING_APPROVAL → APPROVED → SUBMITTED
+
+Log Location: /home/k1-admin/Kai/output/logs/finding_status.jsonl
+
+Example Entry:
+{
+  "timestamp": "2026-04-11T14:32:42Z",
+  "task_id": "task_xyz789",
+  "status": "APPROVED",
+  "bundle_id": "8f9d2e1b",
+  "approver_id": "security_team_lead",
+  "pgp_signature_status": "valid",
+  "platform_submission_status": "pending"
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SAMPLE DIRECTORY INSTANCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+For a specific finding (task_xyz789):
+
+vault/evidence/
+├── recordings/
+│   ├── task_xyz789_recording.webm          (27.5 MB)
+│   ├── task_xyz789_recording.json          (contains: duration=27.5s, fps=30, res=1920x1080)
+│   └── task_xyz789_interactions.json       (contains: 12 interactions, timestamps)
+│
+├── scripts/
+│   ├── task_xyz789_repro.sh                (1.2 KB - curl command)
+│   ├── task_xyz789_repro.py                (3.8 KB - Python requests)
+│   └── task_xyz789_exploit.py              (6.4 KB - full exploit class)
+│
+├── hil_bundles/
+│   ├── task_xyz789_8f9d2e1b_evidence.zip   (77.2 MB)
+│   │   ├── report.md                       (3-persona report)
+│   │   ├── evidence/
+│   │   │   ├── task_xyz789_recording.webm
+│   │   │   └── task_xyz789_recording.json
+│   │   ├── scripts/
+│   │   │   ├── task_xyz789_repro.sh
+│   │   │   ├── task_xyz789_repro.py
+│   │   │   └── task_xyz789_exploit.py
+│   │   ├── logs/
+│   │   │   └── http_traffic.jsonl          (8 requests/responses)
+│   │   ├── README.md                       (instructions, approval workflow)
+│   │   └── BUNDLE_MANIFEST.json            (metadata, approval status)
+│   │
+│   └── task_xyz789_8f9d2e1b_evidence.json  (for indexing)
+│       └── Contains: task_id, bundle_id, created_at, file_list, status
+│
+└── http_logs/
+    ├── task_xyz789_traffic.jsonl           (8 pairs)
+    └── task_xyz789_metadata.json           (count=8, endpoints=3)
+
+vault/governance/
+├── pgp_keys/
+│   ├── admin.pub                           (4 KB)
+│   ├── security_team_lead.pub              (4 KB)
+│   └── compliance_officer.pub              (4 KB)
+│
+├── approval_audit.jsonl                    (one entry per approval)
+│   └─ Entry for task_xyz789 approval at 2026-04-11T14:35:00Z
+│
+└── hil_policy.yaml
+    └─ Contains: approval_timeout=300s, signature_validity=86400s
+
+output/logs/
+├── scope_decisions.jsonl
+│   └─ Entry: {timestamp, target:example.com, scope_status:IN_SCOPE, ...}
+│
+└── finding_status.jsonl
+    └─ Entries for task_xyz789: DISCOVERED → RECORDED → SCRIPTED → BUNDLED → APPROVED → SUBMITTED
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SIZE ESTIMATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Per Finding (task_id):
+  ├── Recording (webm): 20-50 MB
+  ├── Metadata: 5 KB
+  ├── Scripts: 10 KB
+  ├── HTTP logs: 10-50 KB
+  ├── Bundle (zip): 70-100 MB
+  └── Total per finding: 90-150 MB
+
+For 100 Findings:
+  └── Total storage: 9-15 GB (manageable on typical systems)
+
+For 1000 Findings:
+  └── Total storage: 90-150 GB (will need external storage)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IMMEDIATE SETUP
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Step 1: Create directories
+  mkdir -p /home/k1-admin/Kai/vault/evidence/{recordings,scripts,hil_bundles,http_logs}
+  mkdir -p /home/k1-admin/Kai/vault/governance/pgp_keys
+
+Step 2: Update .env
+  Add these lines to /home/k1-admin/Kai/.env:
+    K1_EVIDENCE_RECORDINGS_DIR=vault/evidence/recordings
+    K1_EVIDENCE_SCRIPTS_DIR=vault/evidence/scripts
+    K1_EVIDENCE_BUNDLES_DIR=vault/evidence/hil_bundles
+    K1_EVIDENCE_HTTP_LOGS_DIR=vault/evidence/http_logs
+    K1_GOVERNANCE_PGP_KEYS_DIR=vault/governance/pgp_keys
+    K1_GOVERNANCE_AUDIT_LOG=vault/governance/approval_audit.jsonl
+    K1_FINDINGS_STATUS_LOG=output/logs/finding_status.jsonl
+
+Step 3: Create governance.yaml
+  Create /home/k1-admin/Kai/config/governance.yaml with Evidence Pack config
+
+Step 4: Verify
+  ls -la /home/k1-admin/Kai/vault/evidence/
+  ls -la /home/k1-admin/Kai/vault/governance/
+  grep K1_EVIDENCE /home/k1-admin/Kai/.env
+
+═════════════════════════════════════════════════════════════════════════════════════
+
+Ready for Evidence Pack Module Integration
+
+Generated: April 11, 2026
+Status: COMPLETE ✓

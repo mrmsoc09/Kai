@@ -46,6 +46,15 @@ import random
 import time
 from typing import Any, Optional
 
+from .governance_evidence_integration import (
+    get_governance_evidence_integration,
+    ActionType,
+    ActionCriticality,
+    FindingDetectionEvent,
+)
+from .finding_status_tracker import get_finding_status_tracker, FindingStatusEnum
+from .background_evidence_dispatcher import get_background_evidence_dispatcher
+
 logger = logging.getLogger(__name__)
 
 _orchestrator: "GeminiOrchestrator | None" = None
@@ -92,6 +101,9 @@ class GeminiOrchestrator:
         self._vision_agent: Optional[Any] = None
         self._init_vision_agent()
 
+        # Initialize governance & evidence integration
+        self._governance_integration: Optional[Any] = None
+
     # ------------------------------------------------------------------
     # Startup
     # ------------------------------------------------------------------
@@ -107,6 +119,17 @@ class GeminiOrchestrator:
             logger.info("GeminiOrchestrator: ScreenVisionAgent wired")
         except Exception as exc:
             logger.warning("GeminiOrchestrator: ScreenVisionAgent init failed: %s", exc)
+
+    async def _init_governance_integration(self) -> None:
+        """Initialize governance and evidence integration."""
+        try:
+            self._governance_integration = await get_governance_evidence_integration()
+            logger.info("GeminiOrchestrator: Governance & Evidence integration ready")
+        except Exception as exc:
+            logger.warning(
+                "GeminiOrchestrator: Governance & Evidence integration failed: %s",
+                exc
+            )
 
     # ------------------------------------------------------------------
     # Core execution
@@ -173,6 +196,43 @@ class GeminiOrchestrator:
                 messages = [{"role": "user", "content": instruction}]
                 if context:
                     messages[0]["content"] += f"\n\nContext: {context}"
+
+                # Check for governance gates on HIGH/CRITICAL actions
+                if tools:
+                    # Lazy-initialize governance integration on first use
+                    if self._governance_integration is None:
+                        try:
+                            await self._init_governance_integration()
+                        except Exception as exc:
+                            logger.warning("Failed to initialize governance integration: %s", exc)
+
+                    if self._governance_integration:
+                        # Determine criticality from context
+                        criticality = ActionCriticality.MEDIUM  # default
+                        if context and "criticality" in context:
+                            criticality_str = context["criticality"].lower()
+                            if criticality_str in ("high", "critical"):
+                                criticality = ActionCriticality[criticality_str.upper()]
+
+                        # Request approval for HIGH/CRITICAL
+                        if criticality in (ActionCriticality.HIGH, ActionCriticality.CRITICAL):
+                            action_id = f"{session_id}_tool_execution"
+                            approved = await self._governance_integration.request_action_approval(
+                                action_id=action_id,
+                                action_type=ActionType.TOOL_EXECUTION,
+                                criticality=criticality,
+                                description=f"Execute tools: {', '.join(tools)}",
+                                context=context,
+                            )
+
+                            if not approved:
+                                logger.error(f"Tool execution BLOCKED: {action_id}")
+                                return {
+                                    "task_id": session_id,
+                                    "status": "BLOCKED_PENDING_APPROVAL",
+                                    "output": f"Execution blocked pending HiL approval",
+                                    "tool_calls_made": [],
+                                }
 
                 # Tool dispatch: invoke stub for each requested tool
                 dispatched_tools: list[dict[str, Any]] = []
@@ -285,6 +345,84 @@ class GeminiOrchestrator:
         except Exception as exc:
             logger.debug("_observe_vision: %s", exc)
             return []
+
+    async def capture_evidence_on_finding(
+        self,
+        task_id: str,
+        target_url: str,
+        vulnerability_type: str,
+        severity: str,
+        tool_name: str,
+        evidence: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Trigger evidence capture as NON-BLOCKING background task.
+
+        CRITICAL: This method returns IMMEDIATELY and does NOT wait for
+        evidence collection to complete. The scanner loop continues while
+        evidence is being collected in the background.
+
+        Returns:
+            Dict with background_task_id and finding_id for tracking
+        """
+        if not self._governance_integration:
+            return {}
+
+        # Get status tracker (lazy init if needed)
+        status_tracker = await get_finding_status_tracker()
+
+        # Create finding record in DETECTED state
+        finding_status = await status_tracker.create_finding(
+            task_id=task_id,
+            target_url=target_url,
+            vulnerability_type=vulnerability_type,
+            severity=severity,
+            tool_name=tool_name,
+            metadata=evidence,
+        )
+
+        logger.info(f"📍 Finding created: {finding_status.finding_id}")
+
+        # Get background dispatcher
+        dispatcher = get_background_evidence_dispatcher()
+
+        # Define evidence collection function
+        async def _collect_evidence():
+            """Async function to collect evidence in background."""
+            event = FindingDetectionEvent(
+                task_id=task_id,
+                finding_id=finding_status.finding_id,
+                target_url=target_url,
+                vulnerability_type=vulnerability_type,
+                severity=severity,
+                tool_name=tool_name,
+                evidence=evidence,
+            )
+
+            result = await self._governance_integration.on_vulnerability_detected(event)
+            logger.info(f"Evidence collection result for {finding_status.finding_id}: {result}")
+            return result
+
+        # Dispatch to background (NON-BLOCKING)
+        background_task_id = await dispatcher.dispatch_evidence_collection(
+            finding_id=finding_status.finding_id,
+            task_id=task_id,
+            target_url=target_url,
+            vulnerability_type=vulnerability_type,
+            severity=severity,
+            tool_name=tool_name,
+            evidence=evidence,
+            evidence_fn=_collect_evidence,
+            status_tracker=status_tracker,
+        )
+
+        # Return immediately (scanner loop can continue)
+        return {
+            "finding_id": finding_status.finding_id,
+            "background_task_id": background_task_id,
+            "status": "dispatched",
+            "message": "Evidence collection started in background (non-blocking)",
+        }
 
     # ------------------------------------------------------------------
     # Tool dispatch
