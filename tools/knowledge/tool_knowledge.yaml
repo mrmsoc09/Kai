@@ -1,0 +1,231 @@
+# Tool Knowledge Registry for KAISON AI Wave 7 Agents
+# Single source of truth for tool-specific knowledge, interpretation rules, and execution parameters.
+# This registry is referenced by agents at runtime to interpret findings with domain expertise.
+
+testssl:
+  metadata:
+    description: "TLS/SSL protocol scanning and vulnerability assessment tool"
+    phase: 2
+    source_url: "https://github.com/drwetter/testssl.sh"
+    version: "3.2.x"
+    classification: "Active reconnaissance, cryptographic assessment"
+
+  core_concepts:
+    - "TLS/SSL handshake analysis: testssl performs full SSL/TLS handshakes to enumerate supported protocols, cipher suites, and certificate chains. Failures at handshake indicate protocol misconfigurations or missing services."
+    - "Certificate validation: Tools validate certificate chain integrity, expiration, self-signing, and CN/SAN matching. Mismatches indicate potential MitM opportunities or legitimate misconfiguration."
+    - "Cipher suite strength: Modern ciphers use authenticated encryption (AEAD); legacy ciphers lack forward secrecy or use weak key exchange. Suite ordering indicates server preference enforcement capability."
+    - "Protocol version support: TLS 1.3 is hardened; TLS 1.2 with strong ciphers is acceptable; TLS 1.1/1.0 are deprecated but common in legacy systems; SSL 3.0 and earlier are completely broken."
+    - "Vulnerability patterns: Known issues (BEAST, CRIME, POODLE, Heartbleed) leave specific signatures in protocol negotiation, compression settings, and extension lists. Absence of mitigations indicates vulnerability."
+
+  key_findings:
+    certificate_expired: "Indicates service misconfiguration or PKI failure. Severity depends on time delta and criticality. Expired certs are often functional but signal neglected infrastructure."
+    self_signed_certificate: "Self-signed certificates are common in development/internal systems but dangerous in public-facing services. Check CN/SAN for legitimacy. May indicate legitimate internal PKI or attempted MitM."
+    weak_key_exchange: "DHE with short parameters (<2048 bits) or non-DHE key exchange (RSA, static) allows passive decryption of session keys. Forces TLS session log compromise if SSLKEYLOG captured."
+    missing_tls13: "TLS 1.3 absence indicates legacy/conservative infrastructure. Reduces connection privacy and speeds up attacks against session resumption mechanisms."
+    missing_ocsp_stapling: "OCSP stapling not configured forces clients to contact OCSP responder, creating privacy leaks and additional attack surface. Absence on high-traffic sites is negligence."
+    insecure_renegotiation: "Insecure renegotiation (CVE-2009-3555) allows man-in-the-middle to inject data into HTTPS sessions. Modern servers must negotiate 'secure renegotiation' or refuse renegotiation."
+    heartbleed_vulnerable: "Heartbleed (CVE-2014-0160) in OpenSSL <1.0.1g leaks server memory including session keys and plaintext. Presence indicates unpatched critical infrastructure."
+    poodle_vulnerable: "POODLE (CVE-2014-3566) downgrades TLS to SSL 3.0 and exploits padding oracle. Indicates either SSLv3 not disabled or non-compliant TLS fallback."
+    compression_enabled: "TLS compression (CRIME attack) leaks session state via compression ratio analysis. Should always be disabled; presence indicates legacy configuration."
+
+  execution_parameters:
+    critical_flags:
+      - flag: "--starttls"
+        purpose: "Enable protocol-specific STARTTLS negotiation (SMTP, POP3, IMAP, FTP, LDAP). Detects encryption misconfiguration in non-HTTPS services."
+        default: "Disabled; only TLS on default ports tested"
+      - flag: "--severity"
+        purpose: "Set minimum severity threshold for reported findings (LOW, MEDIUM, HIGH, CRITICAL). Filters noise from non-exploitable issues."
+        default: "All severities reported"
+      - flag: "-p <port>"
+        purpose: "Override default port detection. Required for non-standard HTTPS ports (8443, 8080, etc.). Tool auto-detects port from service but explicit specification prevents mismatches."
+        default: "443"
+      - flag: "--full"
+        purpose: "Complete test suite: all protocols, all ciphers, all extensions. Slower but reveals every supported mechanism. Essential for thorough audits."
+        default: "Partial testing"
+      - flag: "--timeout"
+        purpose: "Socket timeout in seconds. Slow/unreliable targets need higher values (10-30s). Lower values skip slow checks."
+        default: "5 seconds"
+    optional_flags:
+      - flag: "--heartbleed"
+        purpose: "Dedicated Heartbleed (CVE-2014-0160) test. Useful for quick scans focused on critical vulnerability."
+      - flag: "--ccs"
+        purpose: "Test for CCS injection vulnerability. Specific check for renegotiation attacks."
+      - flag: "--pfs"
+        purpose: "Focus on Perfect Forward Secrecy support. Highlights modern security posture."
+      - flag: "--json"
+        purpose: "Output results in JSON format for programmatic parsing and agent interpretation."
+    known_limitations:
+      - "testssl.sh relies on OpenSSL internally; if OpenSSL is broken/misconfigured on the scanning host, tests may produce false negatives. Always validate against canonical OpenSSL version."
+      - "Certificate validation is local-only; testssl cannot verify OCSP responses or CRL freshness. Cross-check with online validators for CRL/OCSP status."
+      - "Timeouts on slow targets can cause incomplete scans. Increase --timeout flag for targets with latency >200ms or rate limiting."
+      - "IPv6 connectivity is not automatically detected. Explicitly test IPv6 addresses if dual-stack is expected."
+
+  interpretation_rules:
+    - "Rule 1: If testssl reports 'CRITICAL' severity findings (e.g., Heartbleed, POODLE, expired cert on production domain), escalate immediately. These are exploitable by attackers without advanced techniques."
+    - "Rule 2: If 'missing_tls13' is reported on modern infrastructure (built within last 3 years), flag as likely configuration debt. Check if TLS 1.3 client support exists or is intentionally disabled."
+    - "Rule 3: If weak key exchange (DHE <2048 bits or RSA-only) is found, assess session retention policy. If sessions persist >24 hours, protocol allows passive decryption of historical traffic."
+    - "Rule 4: If self-signed certificate is found on non-localhost target, verify against expected CN/SAN. If legitimate internal CA, document. If unexpected, investigate certificate pinning bypass or MitM setup."
+    - "Rule 5: If OCSP stapling is missing but cert validity is short (<90 days), risk is moderate. If cert validity is long (>1 year) without OCSP, privacy leakage is significant."
+    - "Rule 6: Ignore 'deprecated cipher supported' for targets that must support legacy clients (e.g., Windows XP, embedded systems). Document trade-off and assess if cipher is used by clients or server-preferred."
+    - "Rule 7: If renegotiation is insecure (RFC 5746 not negotiated), check if renegotiation is actually used in practice. Many modern services disable renegotiation entirely, reducing risk."
+    - "Rule 8: False positive indicator - 'certificate_expired' may be expected on non-production internal services. Verify environment (dev/staging/prod) before escalating."
+
+  common_pitfalls:
+    - "Pitfall: Scanning with wrong port. Service may be on 8443, 9443, or custom port. Always enumerate listening ports first with nmap; use -p flag explicitly rather than relying on auto-detection."
+    - "Pitfall: OpenSSL version mismatch. If scanning host has old OpenSSL (1.0.x), it cannot test TLS 1.3 or modern ciphers. Update OpenSSL on scanning infrastructure or use containerized testssl.sh."
+    - "Pitfall: Assuming all 'HIGH' severity findings require immediate remediation. Prioritize by exploitability and business impact. Self-signed cert on internal service != Heartbleed vulnerability."
+    - "Pitfall: Not checking client requirements before disabling legacy protocols. Legacy clients may require SSLv3 or TLS 1.0; verify all clients support TLS 1.2+ before hardening."
+    - "Pitfall: Timeout errors interpreted as 'service down'. Service may be rate-limiting scanners. Increase timeout, add delays, or test from different network paths."
+    - "Pitfall: Missing STARTTLS flag for email/LDAP services. Default HTTP scan fails; explicitly specify --starttls smtp, --starttls ldap, etc. for correct protocol handling."
+
+spiderfoot:
+  metadata:
+    description: "Comprehensive OSINT reconnaissance and passive network intelligence collection"
+    phase: 1
+    source_url: "https://github.com/smicallef/spiderfoot"
+    version: "4.x"
+    classification: "Passive reconnaissance, OSINT aggregation, footprinting"
+
+  core_concepts:
+    - "OSINT aggregation: Spiderfoot integrates 200+ data sources (DNS, WHOIS, ASN, geolocation, SSL certs, breach databases, threat feeds) into unified queries. A single domain triggers cascading lookups across all sources."
+    - "DNS reconnaissance: Enumerates A/AAAA/CNAME/MX/NS records, transfers, zone files, and DNS amplification potential. DNS data feeds subdomain discovery and MX enumeration for email infrastructure mapping."
+    - "Reverse DNS and geolocation: Maps IP addresses to hostnames, ASNs, and geographic locations. Identifies infrastructure concentration (single data center = single point of failure) and jurisdiction risk."
+    - "Certificate transparency logs: Queries CT logs for all SSL certificates issued for a domain. Reveals subdomains, defunct services, and historical infrastructure changes. CT is passive; no alerts triggered to target."
+    - "Email and contact harvesting: Extracts email addresses from public sources (WHOIS, DNS, certs, GitHub, LinkedIn). Enables phishing targeting and password spray reconnaissance. Aggressive harvesting may trigger IDS alerts if too rapid."
+    - "Subdomain enumeration: Combines DNS brute-force, zone transfer attempts, and passive source integration to enumerate subdomains. Results feed into Phase 2-8 reconnaissance for expanded attack surface."
+
+  key_findings:
+    new_subdomain_discovered: "Subdomain reveals potential service endpoints. Assess if subdomain is in scope per engagement boundaries. Subdomains commonly host dev/staging instances with weaker security than production."
+    mail_server_identified: "Mail server (MX record) identifies email provider and infrastructure. Weak MX configurations allow email spoofing and impersonation. Chain with mail server abuse checks."
+    asn_identified: "Autonomous System Number allows enumeration of all IP space owned by organization. Enables network-wide attack surface mapping. Check for third-party ASNs indicating outsourced infrastructure."
+    dns_zone_transfer_successful: "Zone transfer exposes entire DNS database including internal/private subdomains. Critical misconfiguration allowing attackers to map entire organization infrastructure without guess work."
+    certificate_transparency_disclosure: "CT logs reveal all SSL certificates issued for domain, including expired and revoked certs. Subdomains in certs indicate historical services; check if still in use (may be vulnerably exposed legacy systems)."
+    new_email_identified: "Email addresses enable targeted spear-phishing, password spray, and social engineering. Cross-reference with breach databases (HaveIBeenPwned, Dehashed) for compromised credentials."
+    whois_privacy_failure: "WHOIS registrant information exposure reveals organization structure, technical contacts, and administrative practices. Privacy failures enable social engineering targeting of actual administrators."
+    reverse_dns_unexpected: "Reverse DNS records should match forward DNS. Mismatches indicate potential MitM setup, spoofed infrastructure, or misconfigured reverse zones. Investigate ownership."
+
+  execution_parameters:
+    critical_flags:
+      - flag: "-s <target>"
+        purpose: "Specify target for scanning (domain, IP address, email address, phone number, username). Single target per invocation. Required parameter."
+        default: "None; must be specified"
+      - flag: "-m <module>"
+        purpose: "Specific module to run (dns, cert, email, asn, etc.). Restricts output to single data source. Useful for focused scans."
+        default: "All modules"
+      - flag: "-t <modules>"
+        purpose: "Comma-separated list of specific modules to include/exclude. Allows fine-grained module control for targeted scans."
+        default: "All modules enabled"
+      - flag: "-l"
+        purpose: "List all available modules and exit. Use to identify module names for targeted scans."
+        default: "N/A"
+      - flag: "--maxthreads"
+        purpose: "Number of parallel threads for concurrent lookups. Higher threads = faster but higher API rate limits. Default is conservative (4-8)."
+        default: "4"
+    optional_flags:
+      - flag: "-o <format>"
+        purpose: "Output format (json, csv, human-readable). JSON essential for parsing and agent interpretation."
+      - flag: "-d <delay>"
+        purpose: "Delay between requests in milliseconds. Reduces rate-limiting risk and IDS triggering for aggressive scans."
+      - flag: "-w"
+        purpose: "Enable live (online) lookups. Spiderfoot can work offline with cached data; -w forces fresh queries."
+    known_limitations:
+      - "Rate limiting: Many OSINT sources enforce rate limits (WHOIS servers, CT logs). Scanning multiple domains in rapid succession triggers blocking. Use delays and distributed scanning."
+      - "API key dependency: Many high-quality sources (Shodan, VirusTotal, SecurityTrails) require paid API keys. Without keys, source returns no data. Check configured API keys before relying on output."
+      - "Passive-only by design: Spiderfoot never sends packets to target. Cannot confirm service availability, response time, or actual vulnerability. Use for reconnaissance only; validate with active tools."
+      - "Data freshness: OSINT sources vary in freshness (DNS: minutes, CT logs: hours, WHOIS: days, breach databases: irregular). Don't assume current data reflects live infrastructure."
+
+  interpretation_rules:
+    - "Rule 1: If 'dns_zone_transfer_successful' is reported, escalate immediately. This is a critical misconfiguration allowing complete infrastructure enumeration. Zone transfers should be restricted to authorized secondaries."
+    - "Rule 2: If new subdomains are discovered (especially dev/staging/api subdomains), check scope boundaries. If in scope, pass to Phase 2 for SSL/TLS analysis and Phase 4-8 for active testing."
+    - "Rule 3: If WHOIS registrant information is exposed (non-private registration), check if sensitive. Document administrator contact for social engineering risk assessment. High-profile targets should use privacy services."
+    - "Rule 4: If certificate_transparency shows domains not in organization control, investigate. May indicate typosquatting, forgotten domains, or third-party SaaS infrastructure using organization domain."
+    - "Rule 5: If mail server is identified on non-expected IP/ASN, verify legitimacy. Unexpected mail servers may indicate compromised DNS, email spoofing infrastructure, or third-party email provider (verify against IT documentation)."
+    - "Rule 6: If ASN enumeration reveals many IPs not expected by organization, these may be third-party CDN, cloud, or rented infrastructure. Cross-reference against documented architecture."
+    - "Rule 7: Ignore 'email_identified' findings for public email addresses (contacts@, support@, info@). Prioritize administrative/technical contact addresses for phishing risk assessment."
+    - "Rule 8: If no new findings after spiderfoot scan, assume reconnaissance is fairly complete. Narrow engagement scope to confirmed assets or pivot to adjacent organizations if authorized."
+
+  common_pitfalls:
+    - "Pitfall: Running all modules against all targets without rate limiting. OSINT sources block aggressive scanners. Use --maxthreads=1 or -d 1000 (1 second delay) for live scans against multiple targets."
+    - "Pitfall: Relying on spiderfoot for service enumeration. Spiderfoot is passive; it finds DNS records but cannot confirm services are running. Always validate with active probes (nmap, HTTP HEAD, TLS handshake)."
+    - "Pitfall: Missing API key configuration. High-value sources (Shodan, SecurityTrails) return nothing without keys. Configure all available API keys in spiderfoot config before relying on output completeness."
+    - "Pitfall: Not filtering by scope. Spiderfoot finds all related infrastructure (parent org, sister companies, third-party services). Always validate each finding against authorized scope before escalating."
+    - "Pitfall: Assuming old CT log entries are current services. Expired certificates and old domains in CT logs may be decommissioned. Always verify with active probes before targeting."
+    - "Pitfall: Not checking WHOIS privacy status. WHOIS lookups may be blocked or return dummy data if privacy protection is enabled. Document this limitation; target may require social engineering or legal process for admin contact."
+
+graphql-cop:
+  metadata:
+    description: "GraphQL API security policy enforcement and introspection vulnerability scanner"
+    phase: 8
+    source_url: "https://github.com/dolevf/graphql-cop"
+    version: "1.x"
+    classification: "API security, introspection analysis, query complexity assessment"
+
+  core_concepts:
+    - "GraphQL introspection: GraphQL exposes complete schema via introspection query. Attackers enumerate all types, fields, and operations without authentication. Introspection reveals data model, permissions, and potential vulnerabilities."
+    - "Query complexity and depth: Unbounded query depth/breadth allows Denial of Service via resource exhaustion. Simple nested queries can request millions of objects; complexity limits prevent abuse. Absence of limits indicates vulnerability."
+    - "Field-level permissions: GraphQL operates on field-level (not query-level) authorization. Weak permissions allow users to query fields they shouldn't access (e.g., unprivileged user reads all user emails)."
+    - "Mutation security: Mutations modify server state. Unprotected mutations allow state corruption (delete users, change prices, modify permissions). Mutations require authentication and authorization, often overlooked by developers."
+    - "Batch queries and alias abuse: GraphQL allows multiple queries per request and query aliases. Attackers craft batch requests to bypass rate limits (1 request = 1000 queries). Alias abuse reads same data with multiple names."
+    - "Directive injection: Directives (@skip, @include) control query execution conditionally. Custom directives may process user input unsafely. Injection into directive arguments can bypass authorization or extract data."
+
+  key_findings:
+    introspection_enabled: "Introspection query (__schema) succeeds, revealing complete GraphQL schema. This should be disabled in production (use GraphQL gateway to block introspection queries). Helps attackers enumerate API surface."
+    no_query_depth_limit: "GraphQL accepts arbitrary query depth. Attackers craft deeply nested queries (e.g., 100+ levels) causing stack overflow or memory exhaustion. Must enforce maximum depth (typically 10-15)."
+    no_query_complexity_limit: "No complexity scoring on queries. Attackers send requests requesting billions of objects (nested loops with large multipliers). Must enforce query complexity limits (typical threshold: 1000-5000)."
+    no_rate_limiting: "GraphQL endpoint has no rate limiting. Attackers submit unlimited requests in tight loops, causing DoS. Rate limiting should be per-IP, per-user, and per-query-complexity."
+    field_permissions_bypass: "Fields accessible without authentication or with weaker authentication than required. Example: unprivileged user queries 'admin { passwords }' successfully. Permissions must be enforced per-field."
+    mutation_without_auth: "Mutations are accessible without authentication. Attackers modify server state (create users, delete data, change prices). All mutations must require authentication and field-level authorization."
+    batch_query_abuse: "Endpoint accepts batch queries (multiple operations per request). Attackers bypass rate limits by sending 1 request = 1000 mutations. Batch queries must be limited or disabled."
+    alias_attack_vulnerability: "Aliases allow multiple queries with different names in one request. Attackers use aliases to bypass caching/rate limiting. Example: { a: getUserData, b: getUserData, c: getUserData } x 1000 = DoS."
+    debug_mode_enabled: "GraphQL debug output enabled in production. Server returns stack traces, internal error details, and query execution plans. Leaks implementation details. Must be disabled in production."
+    custom_directive_injection: "Custom directives process user input without sanitization. Injection into directive arguments can bypass authorization, execute arbitrary code, or extract data. Directives must validate input strictly."
+
+  execution_parameters:
+    critical_flags:
+      - flag: "-e <url>"
+        purpose: "GraphQL endpoint URL to scan (e.g., https://api.example.com/graphql). Required parameter. Must be accessible from scanner network."
+        default: "None; must be specified"
+      - flag: "-o <output>"
+        purpose: "Output report format (json, html, csv, markdown). JSON essential for agent interpretation and downstream processing."
+        default: "Human-readable text"
+      - flag: "-c <config>"
+        purpose: "Configuration file for custom security policies (depth limits, complexity limits, rate limit thresholds). Allows comparison against expected configuration."
+        default: "Built-in defaults"
+      - flag: "--auth-token"
+        purpose: "Bearer token for authenticated endpoint access. If endpoint requires authentication, provide token for permission bypass testing."
+        default: "No authentication"
+    optional_flags:
+      - flag: "--check-all"
+        purpose: "Run all available security checks (introspection, complexity, permissions, mutations, directives). Default is subset of important checks."
+      - flag: "--json"
+        purpose: "Force JSON output for parsing."
+      - flag: "--timeout"
+        purpose: "HTTP request timeout in seconds. Slow endpoints need higher values."
+      - flag: "-x"
+        purpose: "Exclude specific checks (comma-separated list). Useful for skipping known-safe areas in scans."
+    known_limitations:
+      - "Authenticated checks require valid credentials. graphql-cop can test with token but cannot enumerate all permission levels across all users. Manual testing required for comprehensive RBAC assessment."
+      - "Directive injection testing is pattern-based and may miss custom directives. If target uses custom directives, they must be tested manually with domain knowledge."
+      - "Batch query limits are server-dependent. graphql-cop detects batch support but cannot determine exact limits without trial-and-error testing (may trigger alerts)."
+      - "Query complexity scoring is heuristic-based. Actual server complexity calculation may differ; results are informational. Validate with actual query performance testing."
+
+  interpretation_rules:
+    - "Rule 1: If introspection is enabled in production, escalate immediately. Disable introspection via GraphQL gateway (Apollo Server, graphql-core middleware). This is foundational GraphQL hardening."
+    - "Rule 2: If no_query_depth_limit is reported, assess risk. Depth limit should be 10-15 maximum. Lack of limit allows stack overflow DoS. Implement depth limiting in GraphQL engine configuration."
+    - "Rule 3: If no_query_complexity_limit is reported, risk is moderate-to-high depending on dataset size. Complexity limits should be 1000-5000. Implement complexity scoring and rate limiting immediately."
+    - "Rule 4: If field_permissions_bypass is reported, assess data sensitivity. Bypassing authentication for sensitive fields (user emails, payments, admin data) is critical. Review GraphQL resolver permissions and enforce authorization middleware."
+    - "Rule 5: If mutations are accessible without auth, this is critical regardless of mutation impact. Even seemingly benign mutations (like toggling a preference) should require authentication. Add auth middleware to all mutations."
+    - "Rule 6: If batch_query_abuse is reported, disable batch queries if not essential to API contract. If batch queries are required, limit batch size (e.g., max 5 operations per request) and enforce strict rate limiting."
+    - "Rule 7: If alias_attack_vulnerability is reported, this is a design flaw; aliases cannot be disabled without breaking GraphQL spec. Mitigation is strict rate limiting per-IP and per-user (e.g., 100 requests/minute)."
+    - "Rule 8: If debug_mode_enabled is reported, disable immediately. Set debug=false in production GraphQL config. Stack traces leak implementation details and aid attackers."
+    - "Rule 9: If custom_directive_injection is reported, review custom directive implementations. Directives must validate input, enforce authorization, and avoid code injection. Consider removing custom directives if not essential."
+    - "Rule 10: False positive indicator - if endpoint is development/staging, some findings (debug mode, introspection) are expected. Verify environment before escalating. Production endpoints have zero tolerance for missing controls."
+
+  common_pitfalls:
+    - "Pitfall: Not providing authentication when endpoint requires it. Many GraphQL APIs require API key or Bearer token. graphql-cop cannot find permission bypasses if unauthenticated. Always provide --auth-token if endpoint is protected."
+    - "Pitfall: Assuming introspection disable = secure schema hiding. Introspection can be brute-forced (queryall fields by name if schema is predictable). Hide introspection AND use field-level authorization."
+    - "Pitfall: Misinterpreting query depth limit. Depth is nesting level (how many {}) not breadth (how many objects returned). A query with 5 depth requesting 1000 objects per level still causes DoS. Check BOTH depth and complexity limits."
+    - "Pitfall: Not testing batch queries for rate limit bypass. If batch queries are allowed, attackers send 1 HTTP request = 1000 GraphQL operations. Rate limiting must account for batch size, not just HTTP request count."
+    - "Pitfall: Assuming GraphQL rate limits are sufficient. GraphQL lacks built-in rate limiting; must be implemented at gateway/middleware level. Default behavior is unlimited requests. Always explicitly verify rate limiting implementation."
+    - "Pitfall: Custom directive validation is inconsistent. Developers may validate input in one directive but not others. Audit ALL custom directives, not just high-risk ones. Test injection payloads in all directives."
+    - "Pitfall: Overlooking mutations in security review. Mutations are often less tested than queries. Review all mutations for authorization, input validation, and impact. A trivial-seeming mutation may corrupt critical data."

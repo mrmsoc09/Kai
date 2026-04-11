@@ -21,6 +21,7 @@ from apps.backend.src.core.protocol import (
 )
 from apps.backend.src.core.governor import StealthWrapper
 from apps.backend.src.agents.tools.handoff_report import HandoffReport
+from apps.backend.src.tools.knowledge.loader import ToolKnowledgeLoader
 
 
 @dataclass(slots=True)
@@ -93,6 +94,70 @@ class BaseToolAgent(ABC):
         self._findings_correlation_path = self.memory_dir / "findings_correlation.jsonl"
         self._scan_history_path.touch(exist_ok=True)
         self._findings_correlation_path.touch(exist_ok=True)
+
+        # Initialize tool knowledge loader
+        self._knowledge_loader = self._initialize_knowledge_loader()
+        self._tool_knowledge: dict[str, Any] | None = None
+        if self._knowledge_loader:
+            try:
+                self._tool_knowledge = self._knowledge_loader.get_tool_knowledge(self.TOOL_NAME)
+                import logging
+
+                logging.getLogger(__name__).debug(f"Loaded tool knowledge for {self.TOOL_NAME}")
+            except KeyError:
+                import logging
+
+                logging.getLogger(__name__).debug(
+                    f"No tool knowledge available for {self.TOOL_NAME}"
+                )
+
+    @staticmethod
+    def _initialize_knowledge_loader() -> ToolKnowledgeLoader | None:
+        """Initialize tool knowledge loader if knowledge file exists.
+
+        Returns:
+            ToolKnowledgeLoader instance or None if knowledge file not found.
+        """
+        knowledge_file = (
+            Path(__file__).resolve().parents[3] / "tools" / "knowledge" / "tool_knowledge.yaml"
+        )
+        if not knowledge_file.exists():
+            return None
+        try:
+            return ToolKnowledgeLoader(knowledge_file)
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).warning(f"Failed to initialize knowledge loader: {e}")
+            return None
+
+    def get_tool_knowledge(self) -> dict[str, Any]:
+        """Retrieve loaded tool knowledge for this agent's tool.
+
+        Returns:
+            Dictionary containing tool knowledge (metadata, concepts, findings, rules, etc.),
+            or empty dict if knowledge is not available.
+        """
+        return self._tool_knowledge or {}
+
+    def get_interpretation_context(self) -> str:
+        """Generate agent-ready context string with tool knowledge.
+
+        This context can be injected into agent prompts to provide domain expertise
+        for interpreting tool output.
+
+        Returns:
+            Formatted text ready for agent injection, or empty string if knowledge unavailable.
+        """
+        if not self._knowledge_loader or not self._tool_knowledge:
+            return ""
+        try:
+            return self._knowledge_loader.inject_into_context(self.TOOL_NAME, context_format="text")
+        except Exception as e:
+            import logging
+
+            logging.getLogger(__name__).warning(f"Failed to generate interpretation context: {e}")
+            return ""
 
     @abstractmethod
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
@@ -224,7 +289,11 @@ class BaseToolAgent(ABC):
         timeout_seconds = max(1, int(opts.get("timeout_seconds", self.DEFAULT_TIMEOUT_SECONDS)))
         command = self.build_command(target, opts)
 
-        if not isinstance(command, list) or not command or not all(isinstance(x, str) and x for x in command):
+        if (
+            not isinstance(command, list)
+            or not command
+            or not all(isinstance(x, str) and x for x in command)
+        ):
             raise ValueError("build_command() must return a non-empty list[str]")
 
         started_at = datetime.now(UTC)
@@ -353,7 +422,9 @@ class BaseToolAgent(ABC):
             runtime_ms=runtime_ms,
             handoff_report=result.target_context.get("handoff_report"),
         )
-        self._record_findings_correlation(target=target, findings=deduped_findings, started_at=started_at)
+        self._record_findings_correlation(
+            target=target, findings=deduped_findings, started_at=started_at
+        )
         self._persist_memory(target, deduped_findings)
         return result
 
@@ -608,7 +679,16 @@ class BaseToolAgent(ABC):
 
     @staticmethod
     def _coerce_value(payload: dict[str, Any], target: str) -> str:
-        for key in ("value", "subdomain", "port", "url", "endpoint", "secret", "vulnerability", "name"):
+        for key in (
+            "value",
+            "subdomain",
+            "port",
+            "url",
+            "endpoint",
+            "secret",
+            "vulnerability",
+            "name",
+        ):
             candidate = payload.get(key)
             if isinstance(candidate, str) and candidate.strip():
                 return candidate.strip()[:2048]
@@ -625,7 +705,10 @@ class BaseToolAgent(ABC):
         lowered_keys = {str(k).lower() for k in payload.keys()}
         corpus = " ".join(
             [value.lower()]
-            + [str(payload.get("signal_reason", "")).lower(), str(payload.get("noise_reason", "")).lower()]
+            + [
+                str(payload.get("signal_reason", "")).lower(),
+                str(payload.get("noise_reason", "")).lower(),
+            ]
         )
 
         if "subdomain" in lowered_keys:
@@ -636,9 +719,14 @@ class BaseToolAgent(ABC):
             return FindingType.VULN
         if {"secret", "credential", "password", "token", "api_key"}.intersection(lowered_keys):
             return FindingType.SECRET
-        if any(token in corpus for token in ("cve-", "xss", "sqli", "rce", "ssrf", "lfi", "vuln", "exploit")):
+        if any(
+            token in corpus
+            for token in ("cve-", "xss", "sqli", "rce", "ssrf", "lfi", "vuln", "exploit")
+        ):
             return FindingType.VULN
-        if any(token in corpus for token in ("secret", "credential", "password", "token", "apikey")):
+        if any(
+            token in corpus for token in ("secret", "credential", "password", "token", "apikey")
+        ):
             return FindingType.SECRET
         return FindingType.CONFIG
 
