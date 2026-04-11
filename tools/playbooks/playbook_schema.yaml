@@ -1,0 +1,175 @@
+playbook_schema:
+  id: "kai_playbook_schema_v1"
+  version: "1.0"
+  updated: "2026-04-11"
+  owner: "KAISON AI Security Team"
+  description: >
+    Canonical schema for authorized security validation playbooks that orchestrate
+    personas, tools, decision branches, CVE assessment, and reporting.
+
+  safety_baseline:
+    authorized_only: true
+    non_destructive_defaults: true
+    exploit_execution_prohibited_by_default: true
+    scope_validation_required: true
+    command_policy:
+      allow_modes: ["passive", "active_validation", "check_only", "analysis"]
+      deny_modes: ["destructive", "rce_payload", "service_disruption", "credential_abuse"]
+
+  required_top_level:
+    - playbook
+
+  playbook_contract:
+    required_sections:
+      - metadata
+      - objective
+      - constraints
+      - required_tools
+      - steps
+      - decision_branches
+      - reporting
+
+    metadata:
+      required_fields:
+        - name
+        - id
+        - version
+        - author
+        - created
+        - description
+        - target_environment
+        - complexity
+        - duration_minutes
+        - phases_enabled
+        - prerequisites
+
+    objective:
+      required_fields:
+        - primary
+        - secondary
+        - success_criteria
+
+    required_tools_item:
+      required_fields:
+        - name
+        - phase
+        - purpose
+        - alternative
+
+    steps_item:
+      required_fields:
+        - step_id
+        - title
+        - description
+        - executor
+        - tool_usage
+        - input
+        - expected_output
+        - success_criteria
+      executor:
+        required_fields:
+          - personas
+          - primary_persona
+          - persona_phase
+          - justification
+        persona_constraints:
+          min_personas: 2
+          max_personas: 4
+      tool_usage:
+        required_fields:
+          - tool_name
+          - execution_mode
+          - parameters
+          - safety_notes
+      transition:
+        success_keys: ["message", "next_step"]
+        failure_keys: ["message", "fallback_action", "next_step"]
+
+    decision_branch_item:
+      required_fields:
+        - condition
+        - action
+        - personas
+
+    reporting:
+      required_fields:
+        - findings_to_include
+        - severity_aggregation
+        - template
+        - output_destinations
+
+  template_example:
+    playbook:
+      metadata:
+        name: "Web Application Reconnaissance Playbook"
+        id: "web_app_recon_v1"
+        version: "1.0"
+        author: "KAISON AI Security Team"
+        created: "2026-04-08"
+        description: "Authorized web reconnaissance and validation workflow."
+        target_environment: "Web Application (HTTP/HTTPS)"
+        complexity: "Medium"
+        duration_minutes: 45
+        phases_enabled: [1, 2, 3]
+        prerequisites: "Authorized scope target and connectivity"
+      objective:
+        primary: "Map attack surface and identify likely weaknesses"
+        secondary:
+          - "Enumerate assets"
+          - "Fingerprint technologies"
+          - "Map CVE exposure"
+        success_criteria:
+          - "Attack surface inventory produced"
+      constraints:
+        - "Authorized scope only"
+        - "No destructive payloads"
+      required_tools:
+        - name: "spiderfoot"
+          phase: 1
+          purpose: "OSINT reconnaissance"
+          alternative: "amass"
+      steps:
+        - step_id: 1
+          title: "Initial Recon"
+          description: "Run passive reconnaissance"
+          executor:
+            personas: ["geoint_analyst", "attack_surface_mapper"]
+            primary_persona: "geoint_analyst"
+            persona_phase: 1
+            justification: "OSINT + surface mapping"
+          tool_usage:
+            tool_name: "spiderfoot"
+            execution_mode: "passive"
+            parameters:
+              target: "{target}"
+              timeout: 300
+            safety_notes:
+              - "Respect scope constraints"
+          input:
+            source: "user_input"
+            required_fields:
+              - name: "target"
+                type: "domain_or_ip"
+          expected_output:
+            findings: []
+            interpretation_rules: []
+          success_criteria:
+            - "Scan finished"
+          on_success:
+            message: "Recon complete"
+            next_step: 2
+          on_failure:
+            message: "Recon failed"
+            fallback_action: "Continue with known target data"
+            next_step: 2
+      decision_branches:
+        - condition: "GraphQL endpoint discovered"
+          action: "Switch to graphql_attacks_v1"
+          personas: ["graphql_introspector", "api_security_tester"]
+      reporting:
+        findings_to_include:
+          - "Asset inventory"
+        severity_aggregation: "Highest confirmed severity"
+        template: "reconnaissance_report.md"
+        output_destinations:
+          - "Phase 9 final findings"

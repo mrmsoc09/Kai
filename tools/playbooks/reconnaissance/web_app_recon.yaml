@@ -1,0 +1,297 @@
+playbook:
+  metadata:
+    name: "Web Application Reconnaissance Playbook"
+    id: "web_app_recon_v1"
+    version: "1.0"
+    author: "KAISON AI Security Team"
+    created: "2026-04-08"
+    description: >
+      Authorized and auditable reconnaissance workflow for mapping web attack
+      surface, fingerprinting stack components, and identifying CVE candidates.
+    target_environment: "Web Application (HTTP/HTTPS)"
+    complexity: "Medium"
+    duration_minutes: 45
+    phases_enabled: [1, 2, 3, 7, 9]
+    prerequisites: "Approved scope target, connectivity, and active engagement authorization"
+
+  objective:
+    primary: "Enumerate web application attack surface and identify likely vulnerability candidates"
+    secondary:
+      - "Discover subdomains and exposed services"
+      - "Identify TLS posture and weak configurations"
+      - "Map technology stack and versions"
+      - "Map identified technologies to known CVE candidates"
+    success_criteria:
+      - "Attack surface inventory generated"
+      - "TLS posture and certificate posture documented"
+      - "Technology stack with version confidence captured"
+      - "CVE candidate set prepared for validation"
+
+  constraints:
+    - "Authorized scope only"
+    - "Passive reconnaissance preferred"
+    - "Non-destructive, low-noise validation only"
+    - "No exploitation payloads or availability-impacting scans"
+
+  required_tools:
+    - name: "spiderfoot"
+      phase: 1
+      purpose: "OSINT reconnaissance and relationship mapping"
+      alternative: "amass"
+    - name: "testssl"
+      phase: 2
+      purpose: "TLS/SSL configuration assessment"
+      alternative: "tlsx"
+    - name: "httpx"
+      phase: 3
+      purpose: "Live host and header fingerprinting"
+      alternative: "wafw00f"
+    - name: "nvd-nist"
+      phase: 7
+      purpose: "CVE candidate correlation"
+      alternative: "searchsploit"
+
+  steps:
+    - step_id: 1
+      title: "OSINT Discovery and Asset Mapping"
+      description: "Collect passive intelligence on domains, hosts, and infrastructure"
+      executor:
+        personas: ["geoint_analyst", "attack_surface_mapper", "infrastructure_mapper"]
+        primary_persona: "geoint_analyst"
+        persona_phase: 1
+        justification: "Combines OSINT collection with topology-aware asset mapping"
+      tool_usage:
+        tool_name: "spiderfoot"
+        execution_mode: "passive"
+        parameters:
+          target: "{target}"
+          max_threads: 4
+          timeout: 300
+        safety_notes:
+          - "Use passive modules by default"
+          - "Respect scope guardrails before each outbound query"
+      input:
+        source: "user_input"
+        required_fields:
+          - name: "target"
+            type: "domain_or_ip"
+            description: "Primary scoped domain or IP"
+      expected_output:
+        findings:
+          - finding_type: "Subdomain"
+            count_expected: "1+"
+          - finding_type: "IP Address"
+            count_expected: "1+"
+          - finding_type: "Hosting Provider"
+            count_expected: "1+"
+        interpretation_rules:
+          - "New subdomains increase attack surface and require scope validation"
+          - "Third-party hosting data informs likely control boundaries"
+      success_criteria:
+        - "At least one scoped asset discovered"
+        - "No scope violations recorded"
+      on_success:
+        message: "OSINT mapping complete"
+        next_step: 2
+      on_failure:
+        message: "OSINT mapping incomplete"
+        fallback_action: "Continue with user-provided seed target only"
+        next_step: 2
+
+    - step_id: 2
+      title: "TLS and Certificate Posture Validation"
+      description: "Validate TLS protocol and cipher posture on discovered live targets"
+      executor:
+        personas: ["api_security_tester", "cvss_scoring_specialist"]
+        primary_persona: "api_security_tester"
+        persona_phase: 2
+        justification: "Interprets protocol-level security findings and risk severity"
+      tool_usage:
+        tool_name: "testssl"
+        execution_mode: "active_validation"
+        parameters:
+          target: "{target}"
+          severity: "HIGH"
+          timeout: 120
+        safety_notes:
+          - "Validation mode only"
+          - "No disruptive renegotiation or stress operations"
+      input:
+        source: "previous_step_output"
+        extract:
+          - field: "domain"
+            from: "step 1"
+          - field: "primary_ip"
+            from: "step 1"
+      expected_output:
+        findings:
+          - finding_type: "Protocol Support"
+            severity: "HIGH"
+          - finding_type: "Cipher Strength"
+            severity: "HIGH"
+          - finding_type: "Certificate Issues"
+            severity: "MEDIUM"
+        interpretation_rules:
+          - "Deprecated protocol support increases downgrade risk"
+          - "Weak cipher findings require remediation recommendations"
+      success_criteria:
+        - "Protocols and ciphers enumerated"
+        - "Certificate posture captured"
+      on_success:
+        message: "TLS posture analysis complete"
+        next_step: 3
+      on_failure:
+        message: "TLS posture analysis incomplete"
+        fallback_action: "Proceed with HTTP fingerprinting"
+        next_step: 3
+
+    - step_id: 3
+      title: "Technology Fingerprinting"
+      description: "Identify technologies, frameworks, and service headers"
+      executor:
+        personas: ["js_endpoint_extractor", "directory_bruteforce_specialist", "api_endpoint_discoverer"]
+        primary_persona: "js_endpoint_extractor"
+        persona_phase: 3
+        justification: "Combines source analysis with endpoint and content discovery"
+      tool_usage:
+        tool_name: "httpx"
+        execution_mode: "active_validation"
+        parameters:
+          target: "{target}"
+          probes: ["title", "status-code", "tech-detect", "server", "cname"]
+          timeout: 120
+        safety_notes:
+          - "GET/HEAD style probing only"
+          - "No mutation or authentication abuse"
+      input:
+        source: "direct"
+        required_fields:
+          - name: "target"
+            type: "url"
+      expected_output:
+        findings:
+          - finding_type: "TechnologyFingerprint"
+            count_expected: "1+"
+          - finding_type: "LiveService"
+            count_expected: "1+"
+        interpretation_rules:
+          - "Versioned components feed CVE correlation"
+          - "Unknown components flagged for manual verification"
+      success_criteria:
+        - "At least one technology identified"
+      on_success:
+        message: "Technology fingerprinting complete"
+        next_step: 4
+      on_failure:
+        message: "Technology fingerprinting incomplete"
+        fallback_action: "Use prior known stack metadata"
+        next_step: 4
+
+    - step_id: 4
+      title: "CVE Candidate Correlation"
+      description: "Correlate identified products and versions to known CVEs"
+      executor:
+        personas: ["cve_exploit_researcher", "cve_matcher", "cvss_scoring_specialist"]
+        primary_persona: "cve_matcher"
+        persona_phase: 7
+        justification: "Provides CVE matching plus severity normalization"
+      tool_usage:
+        tool_name: "nvd-nist"
+        execution_mode: "knowledge_query"
+        parameters:
+          products: "{extract from step 3: identified_products}"
+          versions: "{extract from step 3: identified_versions}"
+          min_severity: "MEDIUM"
+        safety_notes:
+          - "Knowledge lookup only"
+          - "No exploit execution"
+      input:
+        source: "previous_step_output"
+        extract:
+          - field: "identified_products"
+            from: "step 3"
+          - field: "identified_versions"
+            from: "step 3"
+      expected_output:
+        findings:
+          - finding_type: "VulnCandidate"
+            severity: "HIGH"
+          - finding_type: "CorrelationRecord"
+            severity: "INFO"
+        interpretation_rules:
+          - "Treat CVEs as candidates until validated on target"
+          - "Prefer high-confidence version matches"
+      success_criteria:
+        - "At least one CVE candidate or explicit no-match result"
+      decision_point:
+        question: "Were high-confidence CVE candidates identified?"
+        if_yes:
+          message: "CVE candidates found"
+          next_step: 5
+        if_no:
+          message: "No high-confidence CVE candidates"
+          next_step: 5
+
+    - step_id: 5
+      title: "Impact Framing and Reporting"
+      description: "Aggregate findings into actionable remediation-oriented output"
+      executor:
+        personas: ["impact_demonstrator", "report_writer", "evidence_collector"]
+        primary_persona: "impact_demonstrator"
+        persona_phase: 9
+        justification: "Synthesizes technical findings into validated risk narrative"
+      tool_usage:
+        tool_name: "none"
+        execution_mode: "analysis"
+        parameters:
+          aggregation_scope: "all_previous_steps"
+        safety_notes:
+          - "Evidence-based reporting only"
+      input:
+        source: "all_previous_steps"
+        aggregate:
+          - step: 1
+            extract: ["subdomains", "hosting_info"]
+          - step: 2
+            extract: ["protocol_versions", "cipher_findings", "certificate_issues"]
+          - step: 3
+            extract: ["identified_products", "identified_versions"]
+          - step: 4
+            extract: ["cves_found", "confidence", "severity_ratings"]
+      expected_output:
+        report:
+          - section: "Reconnaissance Summary"
+          - section: "CVE Candidate Summary"
+          - section: "Risk Prioritization"
+          - section: "Recommended Next Steps"
+      success_criteria:
+        - "Findings normalized and linked to evidence"
+        - "Clear remediation next actions documented"
+      on_success:
+        message: "Web reconnaissance playbook complete"
+        next_step: "transition_to_follow_on_validation"
+
+  decision_branches:
+    - condition: "GraphQL endpoint discovered"
+      action: "Switch to graphql_attacks_v1"
+      personas: ["graphql_introspector", "api_security_tester", "jwt_breaker"]
+    - condition: "Authentication control weakness detected"
+      action: "Switch to auth_bypass_v1"
+      personas: ["jwt_breaker", "oauth_flow_analyst", "auth_bypass_specialist"]
+    - condition: "Potential SQLi indicators detected"
+      action: "Switch to sql_injection_v1"
+      personas: ["sqli_specialist", "parameter_miner", "impact_demonstrator"]
+
+  reporting:
+    findings_to_include:
+      - "Discovered scoped assets"
+      - "TLS/certificate validation outcomes"
+      - "Technology fingerprint inventory"
+      - "Mapped CVE candidates and confidence"
+      - "Prioritized remediation recommendations"
+    severity_aggregation: "Highest validated severity"
+    template: "reconnaissance_report.md"
+    output_destinations:
+      - "Final findings report (Phase 9)"
+      - "Validation planning queue (Phase 7/8)"
+      - "Crew orchestration log"

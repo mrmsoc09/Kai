@@ -1,0 +1,92 @@
+playbook_registry:
+  version: "1.0"
+  updated: "2026-04-11"
+  owner: "KAISON AI Security Team"
+
+  playbooks:
+    - id: "web_app_recon_v1"
+      name: "Web Application Reconnaissance"
+      path: "tools/playbooks/reconnaissance/web_app_recon.yaml"
+      category: "Reconnaissance"
+      complexity: "Medium"
+      duration_minutes: 45
+      phases: [1, 2, 3, 7, 9]
+      personas_used:
+        ["geoint_analyst", "attack_surface_mapper", "infrastructure_mapper", "api_security_tester", "cve_matcher", "impact_demonstrator", "report_writer"]
+      tools_used: ["spiderfoot", "testssl", "httpx", "nvd-nist"]
+      success_rate: "High"
+      tags: ["web", "osint", "fingerprinting", "cve-assessment", "authorized-validation"]
+
+    - id: "sql_injection_v1"
+      name: "SQL Injection Discovery and Validation"
+      path: "tools/playbooks/exploitation/sql_injection.yaml"
+      category: "Exploitation"
+      complexity: "Medium"
+      duration_minutes: 35
+      phases: [7, 9]
+      personas_used:
+        ["sqli_specialist", "parameter_miner", "api_endpoint_discoverer", "cve_matcher", "impact_demonstrator", "report_writer"]
+      tools_used: ["caido", "sqlmap", "nvd-nist"]
+      success_rate: "High"
+      tags: ["sql-injection", "database", "input-validation", "authorized-validation"]
+
+    - id: "xss_discovery_v1"
+      name: "Cross-Site Scripting Discovery and Validation"
+      path: "tools/playbooks/exploitation/xss_discovery.yaml"
+      category: "Exploitation"
+      complexity: "High"
+      duration_minutes: 45
+      phases: [7, 9]
+      personas_used:
+        ["xss_hunter", "js_endpoint_extractor", "parameter_miner", "impact_demonstrator", "report_writer"]
+      tools_used: ["caido", "owasp-zap"]
+      success_rate: "High"
+      tags: ["xss", "web", "javascript", "safe-payload", "authorized-validation"]
+
+    - id: "auth_bypass_v1"
+      name: "Authentication and Authorization Bypass Validation"
+      path: "tools/playbooks/exploitation/auth_bypass.yaml"
+      category: "Exploitation"
+      complexity: "High"
+      duration_minutes: 50
+      phases: [8, 9]
+      personas_used:
+        ["jwt_breaker", "oauth_flow_analyst", "auth_bypass_specialist", "api_security_tester", "impact_demonstrator", "report_writer"]
+      tools_used: ["caido", "jwt_tool", "graphql-cop"]
+      success_rate: "Medium"
+      tags: ["authentication", "authorization", "jwt", "oauth", "api-security", "authorized-validation"]
+
+    - id: "graphql_attacks_v1"
+      name: "GraphQL API Security Validation"
+      path: "tools/playbooks/exploitation/graphql_attacks.yaml"
+      category: "Exploitation"
+      complexity: "High"
+      duration_minutes: 40
+      phases: [8, 9]
+      personas_used:
+        ["graphql_introspector", "api_security_tester", "jwt_breaker", "oauth_flow_analyst", "report_writer"]
+      tools_used: ["graphql-cop", "clairvoyance", "jwt_tool"]
+      success_rate: "High"
+      tags: ["graphql", "api", "introspection", "authz", "authorized-validation"]
+
+  decision_trees:
+    - condition: "Web application reconnaissance complete"
+      recommendations:
+        - "If GraphQL API found -> graphql_attacks_v1"
+        - "If auth-control weakness found -> auth_bypass_v1"
+        - "If SQLi signals found -> sql_injection_v1"
+
+    - condition: "SQLi signal confirmed"
+      recommendations:
+        - "sql_injection_v1"
+        - "xss_discovery_v1 (if shared input sinks)"
+
+    - condition: "API endpoint with token auth discovered"
+      recommendations:
+        - "auth_bypass_v1"
+        - "graphql_attacks_v1"
+
+    - condition: "Client-side injection path discovered"
+      recommendations:
+        - "xss_discovery_v1"
+        - "auth_bypass_v1 (if auth pages affected)"

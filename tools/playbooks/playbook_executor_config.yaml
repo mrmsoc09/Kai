@@ -1,0 +1,180 @@
+executor_config:
+  version: "1.0"
+  executor_defaults:
+    executor_class: "PlaybookExecutor"
+    enforce_scope_guardrails: true
+    enforce_authorization_token: true
+    default_execution_mode: "check_only"
+    deny_destructive_actions: true
+    max_parallel_steps: 1
+
+  playbooks:
+    web_app_recon:
+      path: "tools/playbooks/reconnaissance/web_app_recon.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "geoint_analyst"
+          support_personas: ["attack_surface_mapper", "infrastructure_mapper"]
+          tool: "spiderfoot"
+          fallback_persona: "osint_orchestrator"
+        step_2:
+          assigned_persona: "api_security_tester"
+          support_personas: ["cvss_scoring_specialist"]
+          tool: "testssl"
+          fallback_persona: "cvss_scoring_specialist"
+        step_3:
+          assigned_persona: "js_endpoint_extractor"
+          support_personas: ["directory_bruteforce_specialist", "api_endpoint_discoverer"]
+          tool: "httpx"
+          fallback_persona: "attack_surface_mapper"
+        step_4:
+          assigned_persona: "cve_matcher"
+          support_personas: ["cve_exploit_researcher", "cvss_scoring_specialist"]
+          tool: "nvd-nist"
+          fallback_persona: "finding_triage_analyst"
+        step_5:
+          assigned_persona: "impact_demonstrator"
+          support_personas: ["report_writer", "evidence_collector"]
+          tool: "none"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+        decision_branches:
+          - if_graphql_found: "switch_to_graphql_attacks_v1"
+          - if_auth_control_weakness_found: "switch_to_auth_bypass_v1"
+          - if_sqli_signal_found: "switch_to_sql_injection_v1"
+
+    sql_injection:
+      path: "tools/playbooks/exploitation/sql_injection.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "parameter_miner"
+          support_personas: ["sqli_specialist", "api_endpoint_discoverer"]
+          tool: "caido"
+          fallback_persona: "directory_bruteforce_specialist"
+        step_2:
+          assigned_persona: "sqli_specialist"
+          support_personas: ["finding_triage_analyst", "evidence_collector"]
+          tool: "sqlmap"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "cve_matcher"
+          support_personas: ["cvss_scoring_specialist", "impact_demonstrator"]
+          tool: "nvd-nist"
+          fallback_persona: "finding_triage_analyst"
+        step_4:
+          assigned_persona: "report_writer"
+          support_personas: ["impact_demonstrator", "disclosure_coordinator"]
+          tool: "none"
+          fallback_persona: "evidence_collector"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4]
+        decision_branches:
+          - if_xss_signal_found: "switch_to_xss_discovery_v1"
+          - if_auth_weakness_found: "switch_to_auth_bypass_v1"
+          - if_graphql_sql_path_found: "switch_to_graphql_attacks_v1"
+
+    xss_discovery:
+      path: "tools/playbooks/exploitation/xss_discovery.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "xss_hunter"
+          support_personas: ["js_endpoint_extractor", "parameter_miner"]
+          tool: "caido"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "xss_hunter"
+          support_personas: ["api_security_tester", "evidence_collector"]
+          tool: "owasp-zap"
+          fallback_persona: "finding_triage_analyst"
+        step_3:
+          assigned_persona: "impact_demonstrator"
+          support_personas: ["cvss_scoring_specialist", "finding_triage_analyst"]
+          tool: "none"
+          fallback_persona: "report_writer"
+        step_4:
+          assigned_persona: "report_writer"
+          support_personas: ["disclosure_coordinator", "evidence_collector"]
+          tool: "none"
+          fallback_persona: "impact_demonstrator"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4]
+        decision_branches:
+          - if_auth_signal_found: "switch_to_auth_bypass_v1"
+          - if_graphql_signal_found: "switch_to_graphql_attacks_v1"
+          - if_sql_signal_found: "switch_to_sql_injection_v1"
+
+    auth_bypass:
+      path: "tools/playbooks/exploitation/auth_bypass.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "oauth_flow_analyst"
+          support_personas: ["auth_bypass_specialist", "api_security_tester"]
+          tool: "caido"
+          fallback_persona: "api_versioning_analyst"
+        step_2:
+          assigned_persona: "jwt_breaker"
+          support_personas: ["auth_bypass_specialist", "evidence_collector"]
+          tool: "jwt_tool"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "api_security_tester"
+          support_personas: ["auth_bypass_specialist", "graphql_introspector"]
+          tool: "graphql-cop"
+          fallback_persona: "api_versioning_analyst"
+        step_4:
+          assigned_persona: "impact_demonstrator"
+          support_personas: ["report_writer", "disclosure_coordinator"]
+          tool: "none"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4]
+        decision_branches:
+          - if_graphql_authz_issue_found: "switch_to_graphql_attacks_v1"
+          - if_sql_error_leak_found: "switch_to_sql_injection_v1"
+          - if_xss_on_auth_pages_found: "switch_to_xss_discovery_v1"
+
+    graphql_attacks:
+      path: "tools/playbooks/exploitation/graphql_attacks.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "graphql_introspector"
+          support_personas: ["api_endpoint_discoverer", "api_security_tester"]
+          tool: "graphql-cop"
+          fallback_persona: "api_versioning_analyst"
+        step_2:
+          assigned_persona: "graphql_introspector"
+          support_personas: ["api_security_tester", "finding_triage_analyst"]
+          tool: "clairvoyance"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "api_security_tester"
+          support_personas: ["jwt_breaker", "graphql_introspector"]
+          tool: "graphql-cop"
+          fallback_persona: "auth_bypass_specialist"
+        step_4:
+          assigned_persona: "jwt_breaker"
+          support_personas: ["oauth_flow_analyst", "evidence_collector"]
+          tool: "jwt_tool"
+          fallback_persona: "api_security_tester"
+        step_5:
+          assigned_persona: "report_writer"
+          support_personas: ["impact_demonstrator", "disclosure_coordinator"]
+          tool: "none"
+          fallback_persona: "impact_demonstrator"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+        decision_branches:
+          - if_cross_api_jwt_issue_found: "switch_to_auth_bypass_v1"
+          - if_graphql_ui_xss_signal_found: "switch_to_xss_discovery_v1"
+          - if_graphql_sql_signal_found: "switch_to_sql_injection_v1"
