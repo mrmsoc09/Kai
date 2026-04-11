@@ -35,3 +35,22 @@ class VaultClient:
             return response.get("data", {}).get("data")
         except hvac.exceptions.InvalidPath:
             return None
+
+    def list_secrets(self, path: str) -> List[str]:
+        try:
+            response = self.client.secrets.kv.v2.list_secrets(
+                path=path,
+                mount_point=self.mount_point,
+            )
+            return response.get("data", {}).get("keys", [])
+        except hvac.exceptions.InvalidPath:
+            return []
+
+    def delete_secret(self, path: str) -> None:
+        try:
+            self.client.secrets.kv.v2.delete_metadata_and_all_versions(
+                path=path,
+                mount_point=self.mount_point,
+            )
+        except hvac.exceptions.InvalidPath:
+            pass

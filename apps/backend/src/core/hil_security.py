@@ -25,7 +25,9 @@ class Permission(str, Enum):
     ORCHESTRATE_SCAN = "orchestrate:scan"
     MANAGE_USERS = "manage:users"
     VIEW_AUDIT_LOG = "view:audit_log"
+    VIEW_CONFIG = "view:config"
     MANAGE_CONFIG = "manage:config"
+    DELETE_CONFIG = "delete:config"
     INITIATE_SCAN = "initiate:scan"
     VIEW_FINDINGS = "view:findings"
     SUBMIT_FINDINGS = "submit:submissions"
@@ -40,15 +42,18 @@ ROLE_PERMISSIONS: dict[UserRole, list[Permission]] = {
         Permission.SUBMIT_FINDINGS,
         Permission.VIEW_DASHBOARD,
         Permission.VIEW_AUDIT_LOG,
+        Permission.VIEW_CONFIG,
     ],
     UserRole.ANALYST: [
         Permission.VIEW_FINDINGS,
         Permission.VIEW_DASHBOARD,
         Permission.VIEW_AUDIT_LOG,
+        Permission.VIEW_CONFIG,
     ],
     UserRole.VIEWER: [
         Permission.VIEW_FINDINGS,
         Permission.VIEW_DASHBOARD,
+        Permission.VIEW_CONFIG,
     ],
 }
 

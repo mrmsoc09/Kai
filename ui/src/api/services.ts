@@ -552,6 +552,34 @@ export const vaultService = {
       url: `/hil-api/providers/${encodeURIComponent(providerId)}/key`,
       data: payload,
     }),
+  // Enhanced Vault methods
+  listSecrets: (): Promise<any[]> =>
+    request<any[]>({
+      method: 'GET',
+      url: '/vault/secrets/list',
+    }),
+  storeSecret: (payload: {
+    name: string;
+    type: string;
+    value: string;
+    description?: string;
+    tags?: string[];
+  }): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: '/vault/secrets/store',
+      data: payload,
+    }),
+  deleteSecret: (name: string): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'DELETE',
+      url: `/vault/secrets/${encodeURIComponent(name)}`,
+    }),
+  getHealth: (): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/vault/health',
+    }),
 };
 
 export const orchestrationService = {

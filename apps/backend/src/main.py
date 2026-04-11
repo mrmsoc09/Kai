@@ -80,6 +80,7 @@ from apps.backend.src.routers import (
     system,
     tools,
     tasks,
+    vault,
     workflows,
 )
 from apps.backend.src.routers import triage
@@ -195,7 +196,28 @@ async def lifespan(app: FastAPI):
             validate_toolpacks_or_raise(get_registry().get_all_schemas().keys())
         if _env_bool("K1_STARTUP_VALIDATE_SECRETS", True):
             _validate_required_secrets()
-        
+
+        # Initialize Vault client for secret management
+        try:
+            from .routers.vault import init_vault_client
+            vault_addr = os.getenv("VAULT_ADDR")
+            vault_token = os.getenv("VAULT_TOKEN")
+            vault_namespace = os.getenv("VAULT_NAMESPACE")
+            vault_client = init_vault_client(vault_addr, vault_token, vault_namespace)
+            if vault_client:
+                health = vault_client.health_check()
+                if health.get("initialized") and not health.get("sealed"):
+                    logger.info("Vault client initialized and ready")
+                    # Sync secrets to environment variables for LLM providers and tools
+                    synced_count = vault_client.sync_secrets_to_env()
+                    logger.info(f"Synced {synced_count} secrets from Vault to environment")
+                else:
+                    logger.warning(f"Vault health check returned: {health}")
+            else:
+                logger.warning("Vault client initialization returned None")
+        except Exception as e:
+            logger.warning(f"Vault client initialization skipped: {str(e)}")
+
         # Task 41: Initialize column-level encryption key from Vault
         try:
             from .models.types import EncryptedText
@@ -404,6 +426,7 @@ app.include_router(artifacts.router)
 app.include_router(events.router)
 app.include_router(simulation.router)
 app.include_router(system.router)
+app.include_router(vault.router)
 
 # Model Bidding and Orchestration (v7.4)
 app.include_router(model_bidding.router)
