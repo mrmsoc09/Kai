@@ -1,0 +1,403 @@
+#!/usr/bin/env python3
+"""
+Generate 35 new security playbooks to reach 50 total.
+Focuses on advanced exploitation chains, multi-stage attacks, and failure recovery.
+"""
+
+import yaml
+from datetime import datetime
+
+PLAYBOOKS = [
+    {
+        "id": "zero_day_chain_v1",
+        "name": "Zero-Day Exploitation & Privilege Escalation Chain",
+        "category": "Advanced Exploitation",
+        "complexity": "Very High",
+        "duration": 180,
+        "phases": [1, 2, 3, 7, 8, 9],
+        "personas": ["recon_specialist", "zero_day_exploiter", "priv_esc_hunter", "impact_demonstrator"],
+        "tools": ["custom_exploit", "metasploit", "burp_suite"],
+    },
+    {
+        "id": "supply_chain_attack_v1",
+        "name": "Supply Chain Attack via Dependency Poisoning",
+        "category": "Supply Chain",
+        "complexity": "High",
+        "duration": 240,
+        "phases": [1, 3, 7, 8, 9],
+        "personas": ["supply_chain_attacker", "dependency_analyzer", "ci_cd_tester"],
+        "tools": ["dependency_checker", "custom_dropper"],
+    },
+    {
+        "id": "cloud_lateral_movement_v1",
+        "name": "AWS/Azure/GCP Lateral Movement & Privilege Escalation",
+        "category": "Cloud Infrastructure",
+        "complexity": "High",
+        "duration": 210,
+        "phases": [3, 7, 8, 9],
+        "personas": ["cloud_security_tester", "iam_analyzer", "lateral_movement_specialist"],
+        "tools": ["awscli", "azcli", "cloud_mapper"],
+    },
+    {
+        "id": "container_escape_rce_v1",
+        "name": "Kubernetes Container Escape & Cluster Takeover",
+        "category": "Container Security",
+        "complexity": "Very High",
+        "duration": 200,
+        "phases": [3, 7, 8, 9],
+        "personas": ["container_escape_specialist", "k8s_security_tester", "privilege_escalator"],
+        "tools": ["custom_container_tools", "kubectl", "docker"],
+    },
+    {
+        "id": "api_rce_chain_v1",
+        "name": "Chained API Vulnerabilities Leading to RCE",
+        "category": "API Security",
+        "complexity": "High",
+        "duration": 150,
+        "phases": [3, 7, 8, 9],
+        "personas": ["api_security_tester", "rce_specialist", "impact_demonstrator"],
+        "tools": ["burp_suite", "postman", "custom_api_fuzzer"],
+    },
+    {
+        "id": "database_exfiltration_v1",
+        "name": "Database Vulnerability Exploitation & Data Exfiltration",
+        "category": "Database Security",
+        "complexity": "High",
+        "duration": 180,
+        "phases": [3, 7, 8, 9],
+        "personas": ["db_security_tester", "sql_injection_specialist", "data_exfiltrator"],
+        "tools": ["sqlmap", "burp_suite", "custom_db_exploit"],
+    },
+    {
+        "id": "iam_privilege_escalation_v1",
+        "name": "Identity & Access Management Privilege Escalation",
+        "category": "IAM Security",
+        "complexity": "High",
+        "duration": 200,
+        "phases": [3, 7, 8, 9],
+        "personas": ["iam_analyzer", "priv_esc_specialist", "token_manipulator"],
+        "tools": ["custom_iam_tools", "jwt_tool", "oauth_analyzer"],
+    },
+    {
+        "id": "cryptographic_downgrade_v1",
+        "name": "Cryptographic Protocol Downgrade & Key Recovery",
+        "category": "Cryptography",
+        "complexity": "High",
+        "duration": 240,
+        "phases": [2, 3, 7, 9],
+        "personas": ["crypto_analyst", "tls_security_auditor", "key_recovery_specialist"],
+        "tools": ["testssl", "hashcat", "custom_crypto_tools"],
+    },
+    {
+        "id": "business_logic_bypass_v1",
+        "name": "Complex Business Logic Exploitation",
+        "category": "Business Logic",
+        "complexity": "Very High",
+        "duration": 200,
+        "phases": [3, 7, 8, 9],
+        "personas": ["business_logic_analyst", "workflow_abuser", "constraint_bypasser"],
+        "tools": ["burp_suite", "custom_logic_tester"],
+    },
+    {
+        "id": "network_lateral_movement_v1",
+        "name": "Network-based Lateral Movement & Persistence",
+        "category": "Network Security",
+        "complexity": "High",
+        "duration": 240,
+        "phases": [3, 7, 8, 9],
+        "personas": ["network_mapper", "lateral_movement_specialist", "persistence_engineer"],
+        "tools": ["nmap", "metasploit", "custom_c2"],
+    },
+    {
+        "id": "malware_delivery_v1",
+        "name": "Advanced Malware Delivery & Evasion",
+        "category": "Malware",
+        "complexity": "Very High",
+        "duration": 300,
+        "phases": [3, 7, 8, 9],
+        "personas": ["malware_author", "evasion_specialist", "obfuscation_engineer"],
+        "tools": ["custom_malware_gen", "metasploit", "evasion_tools"],
+    },
+    {
+        "id": "ransomware_simulation_v1",
+        "name": "Ransomware Attack Simulation & Impact Assessment",
+        "category": "Ransomware",
+        "complexity": "Very High",
+        "duration": 300,
+        "phases": [3, 7, 8, 9],
+        "personas": ["ransomware_specialist", "encryption_expert", "negotiation_simulator"],
+        "tools": ["custom_ransomware_sim", "encryption_tools"],
+    },
+    {
+        "id": "insider_threat_simulation_v1",
+        "name": "Insider Threat Attack Path Simulation",
+        "category": "Insider Threat",
+        "complexity": "High",
+        "duration": 200,
+        "phases": [7, 8, 9],
+        "personas": ["insider_threat_simulator", "data_theft_specialist", "monitoring_evader"],
+        "tools": ["custom_insider_tools"],
+    },
+    {
+        "id": "social_engineering_rce_v1",
+        "name": "Multi-Stage Social Engineering to RCE",
+        "category": "Social Engineering",
+        "complexity": "High",
+        "duration": 180,
+        "phases": [3, 7, 8, 9],
+        "personas": ["social_engineer", "payload_delivery_specialist", "rce_executor"],
+        "tools": ["gophish", "evilginx", "custom_phishing"],
+    },
+    {
+        "id": "firmware_rce_v1",
+        "name": "Firmware Exploitation & Hardware-Level Code Execution",
+        "category": "Firmware",
+        "complexity": "Very High",
+        "duration": 250,
+        "phases": [3, 7, 8, 9],
+        "personas": ["firmware_analyst", "hardware_hacker", "bios_expert"],
+        "tools": ["custom_firmware_tools", "ghidra", "binwalk"],
+    },
+    {
+        "id": "hypervisor_escape_v1",
+        "name": "Hypervisor Escape & Host Takeover",
+        "category": "Virtualization",
+        "complexity": "Very High",
+        "duration": 250,
+        "phases": [3, 7, 8, 9],
+        "personas": ["hypervisor_expert", "escape_specialist", "host_compromise_engineer"],
+        "tools": ["custom_hypervisor_tools"],
+    },
+    {
+        "id": "dga_botnet_sim_v1",
+        "name": "DGA Botnet Simulation & Command-Control Channel",
+        "category": "Botnet",
+        "complexity": "Very High",
+        "duration": 300,
+        "phases": [3, 7, 8, 9],
+        "personas": ["botnet_engineer", "dga_developer", "c2_operator"],
+        "tools": ["custom_dga", "custom_c2"],
+    },
+    {
+        "id": "apt_campaign_sim_v1",
+        "name": "APT Campaign Simulation (Multi-Stage, Multi-Vector)",
+        "category": "APT",
+        "complexity": "Very High",
+        "duration": 400,
+        "phases": [1, 2, 3, 7, 8, 9],
+        "personas": ["apt_operator", "infrastructure_builder", "campaign_coordinator"],
+        "tools": ["metasploit", "custom_apt_tools"],
+    },
+    {
+        "id": "quantum_safe_bypass_v1",
+        "name": "Quantum-Ready Cryptanalysis & Downgrade",
+        "category": "Cryptography",
+        "complexity": "Very High",
+        "duration": 300,
+        "phases": [3, 7, 8, 9],
+        "personas": ["quantum_cryptanalyst", "algorithm_expert"],
+        "tools": ["custom_crypto_analyzer"],
+    },
+    {
+        "id": "llm_model_extraction_v1",
+        "name": "LLM Model Extraction & Fine-Tuning Data Theft",
+        "category": "AI/LLM",
+        "complexity": "High",
+        "duration": 240,
+        "phases": [3, 7, 8, 9],
+        "personas": ["llm_reverse_engineer", "ml_model_thief"],
+        "tools": ["custom_llm_tools", "model_stealer"],
+    },
+    {
+        "id": "llm_poisoning_v1",
+        "name": "LLM Training Data Poisoning & Prompt Injection Chains",
+        "category": "AI/LLM",
+        "complexity": "High",
+        "duration": 200,
+        "phases": [3, 7, 8, 9],
+        "personas": ["llm_attacker", "prompt_engineer", "data_poisoner"],
+        "tools": ["custom_llm_tools"],
+    },
+    {
+        "id": "pixel_based_inference_v1",
+        "name": "AI Model Inference via Pixel & Timing Attacks",
+        "category": "AI/LLM",
+        "complexity": "High",
+        "duration": 180,
+        "phases": [3, 7, 8, 9],
+        "personas": ["ml_security_expert", "side_channel_analyst"],
+        "tools": ["custom_inference_tools"],
+    },
+    {
+        "id": "supply_chain_model_v1",
+        "name": "AI Model Supply Chain Attack",
+        "category": "AI/LLM",
+        "complexity": "High",
+        "duration": 200,
+        "phases": [1, 3, 7, 8, 9],
+        "personas": ["supply_chain_attacker", "model_poisoner"],
+        "tools": ["custom_model_tools"],
+    },
+    {
+        "id": "zero_trust_bypass_v1",
+        "name": "Zero Trust Architecture Bypass & Microsegmentation Escape",
+        "category": "Zero Trust",
+        "complexity": "Very High",
+        "duration": 250,
+        "phases": [3, 7, 8, 9],
+        "personas": ["zero_trust_breaker", "microsegmentation_attacker"],
+        "tools": ["custom_zero_trust_tools"],
+    },
+    {
+        "id": "sbom_vulnerability_chain_v1",
+        "name": "Vulnerability Chaining via SBOM Analysis",
+        "category": "Supply Chain",
+        "complexity": "High",
+        "duration": 180,
+        "phases": [1, 3, 7, 8, 9],
+        "personas": ["sbom_analyzer", "vulnerability_chainer"],
+        "tools": ["sbom_parser", "vulnerability_db"],
+    },
+    {
+        "id": "runtime_detection_evasion_v1",
+        "name": "Runtime Detection & EDR Evasion Techniques",
+        "category": "Detection Evasion",
+        "complexity": "Very High",
+        "duration": 200,
+        "phases": [3, 7, 8, 9],
+        "personas": ["edr_evasion_specialist", "detection_bypasser"],
+        "tools": ["custom_evasion_tools"],
+    },
+    {
+        "id": "log_deletion_forensic_v1",
+        "name": "Log Deletion & Forensic Evidence Destruction",
+        "category": "Post-Exploitation",
+        "complexity": "High",
+        "duration": 150,
+        "phases": [8, 9],
+        "personas": ["log_manipulation_expert", "forensic_destroyer"],
+        "tools": ["custom_log_tools"],
+    },
+    {
+        "id": "persistent_backdoor_v1",
+        "name": "Multi-Layer Persistent Backdoor Installation",
+        "category": "Persistence",
+        "complexity": "Very High",
+        "duration": 250,
+        "phases": [7, 8, 9],
+        "personas": ["backdoor_engineer", "persistence_specialist"],
+        "tools": ["metasploit", "custom_backdoor"],
+    },
+    {
+        "id": "mobile_compromise_v1",
+        "name": "Mobile Device Compromise & Data Exfiltration",
+        "category": "Mobile Security",
+        "complexity": "High",
+        "duration": 180,
+        "phases": [3, 7, 8, 9],
+        "personas": ["mobile_security_tester", "app_reverse_engineer"],
+        "tools": ["frida", "objection", "custom_mobile_tools"],
+    },
+    {
+        "id": "iot_botnet_v1",
+        "name": "IoT Device Compromise & Botnet Formation",
+        "category": "IoT",
+        "complexity": "High",
+        "duration": 200,
+        "phases": [3, 7, 8, 9],
+        "personas": ["iot_security_tester", "botnet_builder"],
+        "tools": ["custom_iot_tools"],
+    },
+    {
+        "id": "industrial_scada_v1",
+        "name": "Industrial SCADA/ICS System Compromise",
+        "category": "Industrial Control Systems",
+        "complexity": "Very High",
+        "duration": 300,
+        "phases": [1, 2, 3, 7, 8, 9],
+        "personas": ["scada_expert", "ics_attacker"],
+        "tools": ["custom_scada_tools"],
+    },
+    {
+        "id": "dns_cache_poisoning_v1",
+        "name": "DNS Infrastructure Attack & Traffic Redirection",
+        "category": "Infrastructure",
+        "complexity": "High",
+        "duration": 150,
+        "phases": [3, 7, 8, 9],
+        "personas": ["dns_attacker", "traffic_redirector"],
+        "tools": ["custom_dns_tools"],
+    },
+    {
+        "id": "vpn_ipsec_weakness_v1",
+        "name": "VPN & IPSec Protocol Weakness Exploitation",
+        "category": "Cryptography",
+        "complexity": "High",
+        "duration": 180,
+        "phases": [3, 7, 8, 9],
+        "personas": ["crypto_analyst", "vpn_attacker"],
+        "tools": ["custom_vpn_tools"],
+    },
+    {
+        "id": "5g_network_attack_v1",
+        "name": "5G Network Vulnerability Exploitation",
+        "category": "Telecommunications",
+        "complexity": "Very High",
+        "duration": 250,
+        "phases": [1, 3, 7, 8, 9],
+        "personas": ["telecom_security_expert", "5g_attacker"],
+        "tools": ["custom_5g_tools"],
+    },
+    {
+        "id": "air_gapped_network_v1",
+        "name": "Air-Gapped Network Penetration & Exfiltration",
+        "category": "Network Security",
+        "complexity": "Very High",
+        "duration": 300,
+        "phases": [3, 7, 8, 9],
+        "personas": ["advanced_penetrator", "covert_exfiltrator"],
+        "tools": ["custom_airgap_tools"],
+    },
+    {
+        "id": "geolocation_bypass_v1",
+        "name": "Geolocation Restrictions & Sanctions Bypass",
+        "category": "Evasion",
+        "complexity": "Medium",
+        "duration": 120,
+        "phases": [3, 7, 9],
+        "personas": ["evasion_specialist", "proxy_operator"],
+        "tools": ["proxy_tools", "vpn_tools"],
+    },
+]
+
+
+def main():
+    # Load existing playbook registry
+    with open("tools/playbooks/playbook_registry.yaml", "r") as f:
+        pb_data = yaml.safe_load(f)
+
+    existing = len(pb_data.get("playbook_registry", {}).get("playbooks", []))
+    print(f"[*] Loaded {existing} existing playbooks")
+
+    # Add new playbooks
+    new_added = 0
+    for pb in PLAYBOOKS:
+        # Check if playbook doesn't already exist
+        exists = any(p.get("id") == pb["id"] for p in pb_data["playbook_registry"]["playbooks"])
+        if not exists:
+            pb_data["playbook_registry"]["playbooks"].append(pb)
+            new_added += 1
+
+    # Update metadata
+    pb_data["playbook_registry"]["total_playbooks"] = len(pb_data["playbook_registry"]["playbooks"])
+    pb_data["playbook_registry"]["updated"] = datetime.now().strftime("%Y-%m-%d")
+
+    with open("tools/playbooks/playbook_registry.yaml", "w") as f:
+        yaml.dump(pb_data, f, default_flow_style=False, sort_keys=False)
+
+    print(f"[+] Added {new_added} new playbooks")
+    print(f"[+] Total playbooks: {len(pb_data['playbook_registry']['playbooks'])}")
+
+
+if __name__ == "__main__":
+    main()
