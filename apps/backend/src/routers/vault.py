@@ -14,11 +14,13 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from apps.backend.src.auth.security import get_current_user
+from apps.backend.src.core.auth import get_current_user, User
 from apps.backend.src.core.hil_security import (
-    assert_permission,
     Permission,
-    User,
+    RBAC,
+    ROLE_PERMISSIONS,
+    get_current_user_role,
+    UserRole,
 )
 from apps.backend.src.core.vault_client import (
     VaultClient,
@@ -42,6 +44,30 @@ from apps.backend.src.models.vault_models import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/vault", tags=["vault"])
+
+
+def assert_permission(user: User, required_permission: Permission) -> None:
+    """Check if user has required permission, raise HTTPException if not."""
+    # Map user roles to hil_security UserRole
+    from apps.backend.src.core.hil_security import _ROLE_MAP
+
+    user_roles = [_ROLE_MAP.get(role) for role in user.roles if role in _ROLE_MAP]
+    if not user_roles:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="No valid roles found in token",
+        )
+
+    # Check if any of user's roles have the required permission
+    for role in user_roles:
+        if required_permission in ROLE_PERMISSIONS.get(role, []):
+            return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=f"Permission denied. Requires: {required_permission.value}",
+    )
+
 
 # Global vault client instance
 _vault_client: Optional[VaultClient] = None
