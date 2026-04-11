@@ -83,7 +83,7 @@ curl -X POST http://localhost:8000/api/v1/programs/scrape/google_vrp
 **Secondary Color**: Deep Orange `#d4571e`
 
 **Location**:
-- Backend: `configs/branding.yaml`
+- Backend: `config/branding.yaml`
 - Frontend: `apps/frontend/src/theme/branding.ts` and `.css`
 
 ---
@@ -211,7 +211,7 @@ curl http://localhost:8000/health
 - Use environment variables for all secrets
 
 **For Customization**:
-- Edit `configs/branding.yaml` to change colors
+- Edit `config/branding.yaml` to change colors
 - Add new tools by extending `BaseTool` class
 - Add scrapers by extending `BaseProgramScraper` class
 - Customize LLM provider in `llm_client.py`

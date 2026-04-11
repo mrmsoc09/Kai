@@ -149,6 +149,7 @@ exec python3 sf.py "$@"
 EOF
 
     chmod +x "${bin_dir}/spiderfoot"
+    ln -sf "${bin_dir}/spiderfoot" "${bin_dir}/sf"
 }
 
 # Install graphql-cop from GitHub (binary or source)

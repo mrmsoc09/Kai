@@ -7,7 +7,7 @@ from jinja2 import Template, TemplateError, TemplateNotFound
 from .evidence_contract import normalize_report_evidence
 
 BASE = Path(__file__).resolve().parents[4]
-FMT_DIR = BASE / 'configs' / 'report_formats'
+FMT_DIR = BASE / 'config' / 'report_formats'
 FMT_DIR.mkdir(parents=True, exist_ok=True)
 
 

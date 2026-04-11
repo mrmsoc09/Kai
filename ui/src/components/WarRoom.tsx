@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { 
   Shield, 
   Terminal as TerminalIcon, 
   Globe, 
-  Cpu, 
   Zap, 
   Activity,
   User
@@ -15,16 +14,16 @@ import {
  */
 export const WarRoom = () => {
   const [logs, setLogs] = useState<string[]>([]);
-  const [activeFleet, setActiveFleet] = useState([
+  const activeFleet = [
     { id: 'aws-1', provider: 'AWS', ip: '3.x.x.x', status: 'active' },
     { id: 'gcp-1', provider: 'GCP', ip: '34.x.x.x', status: 'active' },
     { id: 'oci-1', provider: 'OCI', ip: '129.x.x.x', status: 'active' }
-  ]);
-  const [scans, setScans] = useState([
+  ];
+  const scans = [
     { id: 'scan-1', target: 'global-bank.com', progress: 65, status: 'exploiting' },
     { id: 'scan-2', target: 'social-connect.net', progress: 30, status: 'scanning' },
     { id: 'scan-3', target: 'crypto-ex.io', progress: 95, status: 'reporting' }
-  ]);
+  ];
   const logEndRef = useRef<HTMLDivElement>(null);
 
   const ralphQuotes = [
@@ -144,7 +143,7 @@ export const WarRoom = () => {
           <div className="flex-1 overflow-y-auto font-mono text-[11px] space-y-1 pr-4 custom-scrollbar">
             {logs.map((log, i) => (
               <div key={i} className="text-monokai-green/80 hover:text-monokai-green transition-colors">
-                <span className="opacity-40 mr-2">>>></span> {log}
+                <span className="opacity-40 mr-2">{">>>"}</span> {log}
               </div>
             ))}
             <div ref={logEndRef} />

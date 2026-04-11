@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 import yaml
 
 ROOT = Path(__file__).resolve().parents[4]
-RULES_DIR = ROOT / 'k1' / 'configs' / 'report_formats'
+RULES_DIR = ROOT / 'config' / 'report_formats'
 
 # Basic rules per stakeholder; pull from existing Jinja/meta where possible
 REQUIRED_FIELDS = {

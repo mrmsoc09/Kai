@@ -146,7 +146,7 @@ tools:
     category: vulnerability_scanning
     execution_mode: native
     binary_path: crlfuzz
-    install_verification_cmd: ["crlfuzz", "-version"]
+    install_verification_cmd: ["crlfuzz", "-h"]
     input_schema: {"target": "url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 300
@@ -241,6 +241,17 @@ tools:
     timeout_seconds: 360
     safety_classification: intrusive
 
+  - name: metasploit-framework
+    agent_class: MetasploitFrameworkAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: msfconsole
+    install_verification_cmd: ["msfconsole", "-v"]
+    input_schema: {"target": "host_or_url"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 900
+    safety_classification: intrusive
+
   - name: wafw00f
     agent_class: Wafw00fAgent
     category: http_live_host
@@ -268,7 +279,7 @@ tools:
     category: crawling_url_discovery
     execution_mode: native
     binary_path: eyewitness
-    install_verification_cmd: ["eyewitness", "--version"]
+    install_verification_cmd: ["eyewitness", "--help"]
     input_schema: {"target": "url_or_file"}
     output_schema: {"screenshots": "list[json]"}
     timeout_seconds: 600
@@ -401,7 +412,7 @@ tools:
     category: intelligence_osint
     execution_mode: native
     binary_path: social-analyzer
-    install_verification_cmd: ["social-analyzer", "--version"]
+    install_verification_cmd: ["social-analyzer", "--help"]
     input_schema: {"target": "username"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 600
@@ -512,7 +523,7 @@ tools:
     category: vulnerability_scanning
     execution_mode: native
     binary_path: searchsploit
-    install_verification_cmd: ["searchsploit", "--version"]
+    install_verification_cmd: ["searchsploit", "--help"]
     input_schema: {"target": "software_version"}
     output_schema: {"cve_matches": "list[dict]"}
     timeout_seconds: 30
@@ -565,7 +576,7 @@ tools:
   - name: faraday-community
     agent_class: FaradaycommunityAgent
     category: aggregation
-    execution_mode: native
+    execution_mode: integration_hook
     binary_path: ""
     install_verification_cmd: []
     input_schema: {"target": "any"}

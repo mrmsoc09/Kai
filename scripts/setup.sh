@@ -15,6 +15,8 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 BOOTSTRAP_MARKER="runtime/.bootstrap_ready"
+LOCAL_BIN_DIR="${HOME}/.local/bin"
+LOCAL_TOOLS_SRC_DIR="${REPO_ROOT}/opt/k1-tools/src"
 
 PYTHON_DEPS_OK=false
 UI_DEPS_OK=false
@@ -267,13 +269,29 @@ ensure_go() {
     return 1
 }
 
+ensure_local_bin() {
+    mkdir -p "${LOCAL_BIN_DIR}"
+    export PATH="${LOCAL_BIN_DIR}:${PATH}"
+}
+
+clone_or_update_repo() {
+    local repo_url="$1"
+    local dest_dir="$2"
+    mkdir -p "$(dirname "${dest_dir}")"
+    if [[ -d "${dest_dir}/.git" ]]; then
+        git -C "${dest_dir}" pull --ff-only >/dev/null 2>&1 || true
+    else
+        git clone --depth 1 "${repo_url}" "${dest_dir}" >/dev/null 2>&1
+    fi
+}
+
 install_go_tool() {
     local module="$1"
     if ! ensure_go; then
         return 1
     fi
-    export GOBIN="${HOME}/.local/bin"
-    export PATH="${GOBIN}:${PATH}"
+    ensure_local_bin
+    export GOBIN="${LOCAL_BIN_DIR}"
     mkdir -p "${GOBIN}"
     GO111MODULE=on go install "${module}"
 }
@@ -358,10 +376,10 @@ install_native_tool() {
         nuclei) install_go_tool github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest ;;
         katana) install_go_tool github.com/projectdiscovery/katana/cmd/katana@latest ;;
         dalfox) install_go_tool github.com/hahwul/dalfox/v2@latest ;;
-        feroxbuster) install_go_tool github.com/epi052/feroxbuster@latest ;;
+        feroxbuster) apt_install_packages feroxbuster ;;
         paramspider) install_go_tool github.com/devanshbatham/paramspider@latest ;;
         hakrawler) install_go_tool github.com/hakluke/hakrawler@latest ;;
-        gitleaks) install_go_tool github.com/zricethezav/gitleaks/v8@latest ;;
+        gitleaks) install_go_tool github.com/gitleaks/gitleaks/v8@latest ;;
         ffuf) install_go_tool github.com/ffuf/ffuf/v2@latest ;;
         gf) install_go_tool github.com/tomnomnom/gf@latest ;;
         trufflehog) install_go_tool github.com/trufflesecurity/trufflehog/v3@latest ;;
@@ -376,24 +394,28 @@ install_native_tool() {
         nikto) apt_install_packages nikto ;;
         whatweb) apt_install_packages whatweb ;;
         exploitdb) apt_install_packages exploitdb ;;
-        searchsploit) apt_install_packages exploitdb ;;
+        searchsploit) install_searchsploit ;;
         zaproxy) apt_install_packages zaproxy ;;
         wafw00f) apt_install_packages wafw00f ;;
 
         # Source builds
         testssl) install_testssl ;;
         spiderfoot) install_spiderfoot ;;
+        eyewitness) install_eyewitness ;;
         graphql-cop) install_graphql_cop ;;
         kiterunner) install_kiterunner ;;
         masscan) install_masscan ;;
+        metasploit-framework) install_metasploit_framework ;;
         reconftw) install_reconftw ;;
+        ahmia-client) install_ahmia_client ;;
+        searchsploit) install_searchsploit ;;
         caido) install_caido ;;
         faraday-community) install_faraday ;;
 
         # Python tools
-        arjun) pip install arjun ;;
-        social-analyzer) pip install social-analyzer ;;
-        torbot) pip install torbot ;;
+        arjun) pip install "git+https://github.com/s0md3v/Arjun.git" ;;
+        social-analyzer) pip install "git+https://github.com/qeeqbox/social-analyzer.git" ;;
+        torbot) pip install "git+https://github.com/DedSecInside/TorBot.git" ;;
         smuggler) pip install smuggler ;;
 
         *)
@@ -403,52 +425,152 @@ install_native_tool() {
 }
 
 install_kiterunner() {
-    local src_dir="${REPO_ROOT}/opt/k1-tools/src/kiterunner"
+    local src_dir="${LOCAL_TOOLS_SRC_DIR}/kiterunner"
+    ensure_local_bin
     if [[ ! -d "${src_dir}" ]]; then
-        mkdir -p "${REPO_ROOT}/opt/k1-tools/src"
+        mkdir -p "${LOCAL_TOOLS_SRC_DIR}"
         git clone https://github.com/assetnote/kiterunner "${src_dir}" 2>&1 | head -3
     fi
     cd "${src_dir}" && make build 2>&1 | tail -2
-    cp "${src_dir}/dist/kr" /usr/local/bin/kr && chmod +x /usr/local/bin/kr
+    cp "${src_dir}/dist/kr" "${LOCAL_BIN_DIR}/kr" && chmod +x "${LOCAL_BIN_DIR}/kr"
+}
+
+install_eyewitness() {
+    local src_dir="${LOCAL_TOOLS_SRC_DIR}/EyeWitness"
+    ensure_local_bin
+    clone_or_update_repo "https://github.com/RedSiege/EyeWitness.git" "${src_dir}" || return 1
+    if [[ -f "${src_dir}/Python/requirements.txt" ]]; then
+        (cd "${src_dir}/Python" && pip install -r requirements.txt >/dev/null 2>&1) || true
+    fi
+    cat > "${LOCAL_BIN_DIR}/eyewitness" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+ROOT="${src_dir}"
+if [[ -f "\${ROOT}/Python/EyeWitness.py" ]]; then
+  exec python3 "\${ROOT}/Python/EyeWitness.py" "\$@"
+fi
+exec python3 "\${ROOT}/EyeWitness.py" "\$@"
+EOF
+    chmod +x "${LOCAL_BIN_DIR}/eyewitness"
 }
 
 install_masscan() {
     if apt_install_packages masscan 2>/dev/null; then
         return 0
     fi
-    warn "Masscan: apt install failed, install pre-built binary manually"
-    return 1
+    local src_dir="${LOCAL_TOOLS_SRC_DIR}/masscan"
+    ensure_local_bin
+    clone_or_update_repo "https://github.com/robertdavidgraham/masscan.git" "${src_dir}" || return 1
+    apt_install_packages libpcap-dev >/dev/null 2>&1 || true
+    (cd "${src_dir}" && make -j"$(nproc)") || return 1
+    cp "${src_dir}/bin/masscan" "${LOCAL_BIN_DIR}/masscan" && chmod +x "${LOCAL_BIN_DIR}/masscan"
+}
+
+install_metasploit_framework() {
+    if has_cmd msfconsole; then
+        return 0
+    fi
+    if apt_install_packages metasploit-framework 2>/dev/null; then
+        return 0
+    fi
+    local src_dir="${LOCAL_TOOLS_SRC_DIR}/metasploit-framework"
+    ensure_local_bin
+    clone_or_update_repo "https://github.com/rapid7/metasploit-framework.git" "${src_dir}" || return 1
+    if [[ ! -x "${src_dir}/msfconsole" ]]; then
+        return 1
+    fi
+    cat > "${LOCAL_BIN_DIR}/msfconsole" <<EOF
+#!/usr/bin/env bash
+exec "${src_dir}/msfconsole" "\$@"
+EOF
+    chmod +x "${LOCAL_BIN_DIR}/msfconsole"
 }
 
 install_reconftw() {
-    local src_dir="${REPO_ROOT}/opt/k1-tools/src/reconftw"
-    if [[ ! -d "${src_dir}" ]]; then
-        mkdir -p "${REPO_ROOT}/opt/k1-tools/src"
-        git clone https://github.com/six2dez/reconftw "${src_dir}" 2>&1 | head -3
+    local src_dir="${LOCAL_TOOLS_SRC_DIR}/reconftw"
+    local script_path=""
+    ensure_local_bin
+    clone_or_update_repo "https://github.com/six2dez/reconftw.git" "${src_dir}" || return 1
+    if [[ -f "${src_dir}/reconftw.sh" ]]; then
+        script_path="${src_dir}/reconftw.sh"
+    elif [[ -f "${src_dir}/reconftw" ]]; then
+        script_path="${src_dir}/reconftw"
+    else
+        return 1
     fi
-    if [[ -f "${src_dir}/reconftw" ]]; then
-        cp "${src_dir}/reconftw" /usr/local/bin/reconftw && chmod +x /usr/local/bin/reconftw
+    cp "${script_path}" "${LOCAL_BIN_DIR}/reconftw.sh"
+    chmod +x "${LOCAL_BIN_DIR}/reconftw.sh"
+    ln -sf "${LOCAL_BIN_DIR}/reconftw.sh" "${LOCAL_BIN_DIR}/reconftw"
+}
+
+install_ahmia_client() {
+    local crawler_dir="${LOCAL_TOOLS_SRC_DIR}/ahmia-crawler"
+    local index_dir="${LOCAL_TOOLS_SRC_DIR}/ahmia-index"
+    ensure_local_bin
+    clone_or_update_repo "https://github.com/ahmia/ahmia-crawler.git" "${crawler_dir}" || true
+    clone_or_update_repo "https://github.com/ahmia/ahmia-index.git" "${index_dir}" || true
+    cat > "${LOCAL_BIN_DIR}/ahmia" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" || "${#}" -eq 0 ]]; then
+  echo "Usage: ahmia search <query>"
+  exit 0
+fi
+if [[ "${1:-}" != "search" || -z "${2:-}" ]]; then
+  echo "Usage: ahmia search <query>" >&2
+  exit 2
+fi
+python3 - "$2" <<'PY'
+import requests
+import sys
+q = sys.argv[1]
+r = requests.get("https://ahmia.fi/search/", params={"q": q}, timeout=30)
+r.raise_for_status()
+print(r.text[:50000])
+PY
+EOF
+    chmod +x "${LOCAL_BIN_DIR}/ahmia"
+}
+
+install_searchsploit() {
+    if apt_install_packages exploitdb 2>/dev/null; then
+        return 0
     fi
+    local src_dir="${LOCAL_TOOLS_SRC_DIR}/searchsploit"
+    ensure_local_bin
+    clone_or_update_repo "https://github.com/JitPatro/searchsploit.git" "${src_dir}" || return 1
+    if [[ -x "${src_dir}/searchsploit" ]]; then
+        ln -sf "${src_dir}/searchsploit" "${LOCAL_BIN_DIR}/searchsploit"
+        return 0
+    fi
+    if [[ -f "${src_dir}/searchsploit.py" ]]; then
+        cat > "${LOCAL_BIN_DIR}/searchsploit" <<EOF
+#!/usr/bin/env bash
+exec python3 "${src_dir}/searchsploit.py" "\$@"
+EOF
+        chmod +x "${LOCAL_BIN_DIR}/searchsploit"
+        return 0
+    fi
+    return 1
 }
 
 install_caido() {
-    warn "Caido: download endpoint unstable, manual install recommended"
-    warn "  Install manually: curl -L https://caido.io/download -o caido && chmod +x caido && mv caido /usr/local/bin/"
+    ensure_local_bin
+    if has_cmd npm && npm view @caido/cli version >/dev/null 2>&1; then
+        npm install -g @caido/cli >/dev/null 2>&1 || true
+    fi
+    if has_cmd caido; then
+        return 0
+    fi
+    warn "Caido CLI not auto-installed. Install manually from https://github.com/caido and ensure 'caido' is in PATH."
     return 1
 }
 
 install_faraday() {
-    warn "Faraday Community: requires additional setup, install manually if needed"
-    warn "  Docs: https://docs.faradaysec.com/en/dev/install-guide/"
-    return 1
-}
-
-install_go_tool() {
-    local pkg="$1"
-    export GO111MODULE=on
-    export GOPATH="${HOME}/go"
-    export PATH="${PATH}:${GOPATH}/bin"
-    go install "${pkg}" 2>&1 | grep -v "no matching files" || return 1
+    local src_dir="${LOCAL_TOOLS_SRC_DIR}/faraday"
+    clone_or_update_repo "https://github.com/infobyte/faraday.git" "${src_dir}" || true
+    info "Faraday source prepared at ${src_dir} (tool is used as internal aggregator in Kai)."
+    return 0
 }
 
 pip() {
@@ -583,6 +705,13 @@ if [[ -d ui ]]; then
         npm --prefix ui ci
     else
         npm --prefix ui install
+    fi
+    if [[ "${K1_BOOTSTRAP_UI_AUDIT_FIX:-true}" == "true" ]]; then
+        if npm --prefix ui audit fix --audit-level=critical; then
+            info "Applied npm audit fixes for UI (critical threshold)."
+        else
+            warn "npm audit fix did not complete (possibly offline). Run: npm --prefix ui audit fix"
+        fi
     fi
     UI_DEPS_OK=true
 else
@@ -766,6 +895,12 @@ for record in "${TOOL_RECORDS[@]}"; do
                 continue
             fi
         fi
+        if install_local_download_tool "${name}" 2>&1 | tail -1; then
+            if run_verify_cmd "${verify_json}"; then
+                info "Tool ${name}: installed successfully (local download source)"
+                continue
+            fi
+        fi
         TOOL_ERRORS+=("${name}: auto-install failed; install manually and re-run bootstrap.")
         continue
     fi
@@ -773,17 +908,8 @@ for record in "${TOOL_RECORDS[@]}"; do
     warn "Tool ${name}: optional mode not installed"
 done
 
-# Post-install: Copy Go binaries to /usr/local/bin for accessibility
-if [[ -d "${GOPATH}/bin" ]]; then
-    info "Copying Go binaries to /usr/local/bin for system-wide access..."
-    chmod -R a+rx "${GOPATH}" 2>/dev/null || true
-    for binary in "${GOPATH}"/bin/*; do
-        if [[ -x "${binary}" ]]; then
-            cp "${binary}" "/usr/local/bin/$(basename "${binary}")" 2>/dev/null || true
-            chmod +x "/usr/local/bin/$(basename "${binary}")" 2>/dev/null || true
-        fi
-    done
-fi
+# Security hardening: do not bulk-copy arbitrary binaries into /usr/local/bin.
+# All bootstrap-installed binaries are placed in ${HOME}/.local/bin.
 
 if [[ ${#TOOL_ERRORS[@]} -eq 0 ]]; then
     TOOLS_OK=true

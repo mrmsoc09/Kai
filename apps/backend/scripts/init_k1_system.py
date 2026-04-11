@@ -277,7 +277,7 @@ class K1SystemInitializer:
         logger.info("  1. Start the API server: python -m uvicorn src.main:app --reload")
         logger.info("  2. Access tools via: curl http://localhost:8000/api/v1/tools")
         logger.info("  3. Scrape programs via: curl -X POST http://localhost:8000/api/v1/programs/scrape-all")
-        logger.info("  4. Check branding: configs/branding.yaml and apps/frontend/src/theme/")
+        logger.info("  4. Check branding: config/branding.yaml and apps/frontend/src/theme/")
         logger.info("\n📖 Documentation: See PHASE_7_IMPLEMENTATION_STATUS.md")
 
 

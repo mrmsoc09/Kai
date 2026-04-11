@@ -3,7 +3,7 @@
 Goal: Let users selectively enable data sources and securely store credentials in Vault (KV v2). No keys in code or DB.
 
 Artifacts:
-- Registry: k1/configs/provider_registry.yaml (providers grouped by market with docs and signup links)
+- Registry: k1/config/provider_registry.yaml (providers grouped by market with docs and signup links)
 - Vault paths:
   - secret/data/osint/{provider_id} — key/token and metadata
   - secret/data/osint_selections/{market} — list of selected provider ids

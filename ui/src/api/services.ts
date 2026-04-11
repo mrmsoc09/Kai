@@ -648,6 +648,31 @@ export const orchestrationService = {
     new EventSource(`/api/v1/orchestration/stream/${encodeURIComponent(taskId)}`),
 };
 
+export const terminalService = {
+  getProviders: (): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/terminal/providers',
+    }),
+  execute: (payload: {
+    provider: 'codex' | 'gemini' | 'ollama';
+    prompt: string;
+    model?: string;
+    timeout_seconds?: number;
+  }): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: '/terminal/execute',
+      data: payload,
+    }),
+  getLogs: (limit = 50): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'GET',
+      url: '/terminal/logs',
+      params: { limit },
+    }),
+};
+
 export const realtimeService = {
   getRecentMissionEvents: (missionId: string, limit = 100): Promise<RealtimeMissionEvent[]> =>
     request<RealtimeRecentMissionEventsResponse>({

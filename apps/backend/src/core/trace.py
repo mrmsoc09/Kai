@@ -9,7 +9,7 @@ from typing import Any
 
 from .helpers import artifacts_root, repo_root
 
-_CONF_DIR = repo_root() / "configs"
+_CONF_DIR = repo_root() / "config"
 _CONF_POL = _CONF_DIR / "policies.yaml"
 _CONF_KNOW = _CONF_DIR / "knowledge.yaml"
 

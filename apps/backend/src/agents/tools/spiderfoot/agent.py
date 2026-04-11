@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 from typing import Any
 
 from ..base_tool_agent import BaseToolAgent
@@ -37,8 +38,9 @@ class SpiderfootAgent(BaseToolAgent):
             "sfp_dns,sfp_ssl,sfp_whois,sfp_crt,sfp_netcraft",
         )
         timeout_seconds = int(opts.get("timeout_seconds", 1800))
+        binary = "sf" if shutil.which("sf") else "spiderfoot"
         return [
-            "sf",
+            binary,
             "-s",
             target,
             "-m",

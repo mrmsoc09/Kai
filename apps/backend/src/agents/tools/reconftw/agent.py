@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import shutil
 from typing import Any
 
 from ..base_tool_agent import BaseToolAgent
@@ -14,8 +15,9 @@ class ReconftfwAgent(BaseToolAgent):
 
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
         opts = options or {}
+        binary = "reconftw.sh" if shutil.which("reconftw.sh") else "reconftw"
         return [
-            "reconftw.sh",
+            binary,
             "-d",
             target,
             "-r",

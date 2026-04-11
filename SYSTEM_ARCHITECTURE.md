@@ -638,7 +638,7 @@ Kaison_Latest_Build/
 │       ├── vite.config.ts
 │       └── Dockerfile
 │
-├── configs/
+├── config/
 │   └── branding.yaml                          # Branding config
 │
 ├── docs/

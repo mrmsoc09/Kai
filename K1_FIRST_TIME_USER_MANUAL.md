@@ -53,7 +53,7 @@ ls -la
 
 **You should see:**
 - `apps/` - Frontend and backend
-- `configs/` - Configuration files
+- `config/` - Configuration files
 - `docs/` - Documentation
 - `scripts/` - Setup scripts
 

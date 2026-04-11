@@ -54,7 +54,7 @@ Simulation modes rely on the **Fixture Registry** (`praison_simulation_fixtures.
 *   **Scenario Packs**: Collections of fixtures representing specific security scenarios.
 
 ### Customizing Fixtures
-Fixtures are stored as JSON files under `configs/fixtures/`. Developers can register new fixtures in `FixtureRegistry`.
+Fixtures are stored as JSON files under `config/fixtures/`. Developers can register new fixtures in `FixtureRegistry`.
 
 ---
 

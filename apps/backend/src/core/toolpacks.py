@@ -79,7 +79,7 @@ def _repo_root() -> Path:
 
 
 DEFAULT_TOOLPACKS_PATH = _repo_root() / "ops" / "toolpacks.yaml"
-FALLBACK_TOOLPACKS_PATH = _repo_root() / "configs" / "toolpacks.yaml"
+FALLBACK_TOOLPACKS_PATH = _repo_root() / "config" / "toolpacks.yaml"
 
 
 def _toolpacks_path_from_env_or_default() -> Path:

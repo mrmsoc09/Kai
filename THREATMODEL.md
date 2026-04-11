@@ -5,7 +5,7 @@ K1 is a plan-mode security research tool with policy gates for external executio
 This threat model focuses on policy enforcement, logging redaction, and evidence integrity.
 
 ## Assets
-- Policy configuration (configs/policies.yaml)
+- Policy configuration (config/policies.yaml)
 - Logs and audit trails (artifacts/logs)
 - Evidence artifacts (artifacts/evidence)
 - Run records (artifacts/dork_runs)
@@ -19,7 +19,7 @@ This threat model focuses on policy enforcement, logging redaction, and evidence
 - Unauthorized execute-mode requests
   - Mitigation: HiL approval required; policy gate blocks by default.
 - Secrets leaking into logs
-  - Mitigation: redaction patterns in configs/knowledge.yaml; redaction in trace logging.
+  - Mitigation: redaction patterns in config/knowledge.yaml; redaction in trace logging.
 - Evidence tampering after finalization
   - Mitigation: immutable finalize gate; update endpoint blocks finalized artifacts.
 - Over-broad CORS or auth misconfiguration

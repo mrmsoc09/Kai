@@ -25,7 +25,7 @@ from ..models.enums import ApprovalGateStatusEnum
 # Library and policy paths
 BASE = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
 LIB_DIR = os.path.join(BASE, "data", "dorks", "google")
-POLICY = os.path.join(BASE, "configs", "policies.yaml")
+POLICY = os.path.join(BASE, "config", "policies.yaml")
 
 # Optional executor (used only when allowed)
 try:
@@ -169,7 +169,7 @@ async def run(
         return JSONResponse(status_code=409, content={
             "status": "blocked",
             "reason": "policy_external_queries_disabled",
-            "next": "enable external_queries_enabled in configs/policies.yaml"
+            "next": "enable external_queries_enabled in config/policies.yaml"
         })
 
     # Approval status must be read from the database keyed to the dork run ID
@@ -233,7 +233,7 @@ def _external_queries_enabled() -> bool:
     if env is not None:
         return env.strip().lower() in ('1','true','yes')
     root = _P(__file__).resolve().parents[4]
-    pol = root / 'configs' / 'policies.yaml'
+    pol = root / 'config' / 'policies.yaml'
     try:
         import yaml  # type: ignore
         if pol.exists():

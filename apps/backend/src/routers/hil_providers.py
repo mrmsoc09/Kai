@@ -16,7 +16,7 @@ from ..core.hil_vault_client import VaultClient
 router = APIRouter(prefix="/providers", tags=["hil-providers"])
 
 
-DEFAULT_REGISTRY_PATH = Path(__file__).resolve().parents[4] / "configs" / "provider_registry.yaml"
+DEFAULT_REGISTRY_PATH = Path(__file__).resolve().parents[4] / "config" / "provider_registry.yaml"
 REGISTRY_PATH = Path(os.getenv("PROVIDER_REGISTRY_PATH", str(DEFAULT_REGISTRY_PATH))).resolve()
 
 

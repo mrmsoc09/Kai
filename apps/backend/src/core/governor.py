@@ -132,7 +132,7 @@ class StealthGovernor:
 
     @staticmethod
     def _load_config() -> dict[str, Any]:
-        path = os.getenv("K1_GOVERNOR_CONFIG_PATH", "configs/tools/stealth_defaults.json")
+        path = os.getenv("K1_GOVERNOR_CONFIG_PATH", "config/tools/stealth_defaults.json")
         cfg_path = Path(path).expanduser().resolve()
         if not cfg_path.exists():
             return {}

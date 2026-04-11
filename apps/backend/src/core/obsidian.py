@@ -6,7 +6,7 @@ from typing import Dict, Any, List, Tuple
 import yaml
 
 ROOT = Path(__file__).resolve().parents[4]
-CONF = ROOT / 'configs' / 'knowledge.yaml'
+CONF = ROOT / 'config' / 'knowledge.yaml'
 ART = ROOT / 'artifacts' / 'knowledge'
 ART.mkdir(parents=True, exist_ok=True)
 

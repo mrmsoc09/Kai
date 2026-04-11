@@ -6,7 +6,7 @@ import os, re
 from .scope_guardrails import evaluate_target_scope, load_scope_policy
 
 ROOT = Path(__file__).resolve().parents[4]
-CONFIG = ROOT / 'configs' / 'policies.yaml'
+CONFIG = ROOT / 'config' / 'policies.yaml'
 
 _POLICY: Dict[str, Any] = {
     'allowed_scopes': [],   # list of patterns or regex; default empty means deny unless header override

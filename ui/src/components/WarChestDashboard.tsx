@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Shield, 
   Activity, 
@@ -10,7 +10,14 @@ import {
 } from 'lucide-react';
 
 // Simplified UI Components (assuming Tailwind CSS)
-const Gauge = ({ label, used, limit, paused }) => {
+interface GaugeProps {
+  label: string;
+  used: number;
+  limit: number;
+  paused: boolean;
+}
+
+const Gauge = ({ label, used, limit, paused }: GaugeProps) => {
   const percentage = Math.min((used / limit) * 100, 100);
   const color = paused ? 'bg-red-500' : percentage > 80 ? 'bg-orange-500' : 'bg-green-500';
   
@@ -33,9 +40,8 @@ const Gauge = ({ label, used, limit, paused }) => {
 };
 
 export const WarChestDashboard = () => {
-  const [quotas, setQuotas] = useState({});
-  const [heartbeat, setHeartbeat] = useState('healthy');
-  const [loading, setLoading] = useState(true);
+  const [quotas, setQuotas] = useState<Record<string, { used: number; limit: number; paused: boolean }>>({});
+  const heartbeat = 'healthy';
 
   // Simulated API fetch from the Governor
   useEffect(() => {
@@ -48,7 +54,6 @@ export const WarChestDashboard = () => {
         virustotal: { used: 490, limit: 500, paused: true },
         binaryedge: { used: 5, limit: 250, paused: false },
       });
-      setLoading(false);
     };
     fetchQuotas();
     const interval = setInterval(fetchQuotas, 10000);

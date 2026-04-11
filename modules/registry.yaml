@@ -26,7 +26,3 @@ modules:
   - id: osint.censys
     kind: osint
     path: modules/osint/censys
-  - id: orchestrator.dag_runner
-    kind: orchestrator
-    path: apps/orchestrator
-    entry: runner.py

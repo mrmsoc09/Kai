@@ -1,8 +1,18 @@
-"""Shim package that exposes ai-kernel modules under a Python-safe name."""
+"""Python-safe alias package for modules stored under ``ai-kernel``.
 
-import sys
+The canonical source tree lives in ``ai-kernel/``. This package exposes that
+tree as ``ai_kernel`` so imports like ``ai_kernel.governance`` continue to
+work without duplicating module files.
+"""
+
 from pathlib import Path
 
-_ALT_ROOT = Path(__file__).resolve().parents[1] / "ai-kernel"
+
+_HERE = Path(__file__).resolve().parent
+_ALT_ROOT = _HERE.parent / "ai-kernel"
+
+# Search the canonical ai-kernel tree first for subpackages/modules.
 if _ALT_ROOT.exists():
-    sys.path.append(str(_ALT_ROOT))
+    __path__ = [str(_ALT_ROOT), str(_HERE)]
+else:
+    __path__ = [str(_HERE)]
