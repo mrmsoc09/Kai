@@ -22,6 +22,8 @@ from apps.backend.src.core.protocol import (
 from apps.backend.src.core.governor import StealthWrapper
 from apps.backend.src.agents.tools.handoff_report import HandoffReport
 from apps.backend.src.tools.knowledge.loader import ToolKnowledgeLoader
+from apps.backend.src.tools.knowledge.interpreter import ToolOutputInterpreter
+from apps.backend.src.tools.knowledge.executor import KnowledgeAwareExecutor
 
 
 @dataclass(slots=True)
@@ -98,12 +100,19 @@ class BaseToolAgent(ABC):
         # Initialize tool knowledge loader
         self._knowledge_loader = self._initialize_knowledge_loader()
         self._tool_knowledge: dict[str, Any] | None = None
+        self._interpreter: ToolOutputInterpreter | None = None
+        self._executor: KnowledgeAwareExecutor | None = None
+        self._last_interpretation_summary: str = ""
+
         if self._knowledge_loader:
             try:
                 self._tool_knowledge = self._knowledge_loader.get_tool_knowledge(self.TOOL_NAME)
                 import logging
 
                 logging.getLogger(__name__).debug(f"Loaded tool knowledge for {self.TOOL_NAME}")
+                # Initialize interpreter and executor
+                self._interpreter = ToolOutputInterpreter(self._knowledge_loader)
+                self._executor = KnowledgeAwareExecutor(self._knowledge_loader, self._interpreter)
             except KeyError:
                 import logging
 
@@ -158,6 +167,110 @@ class BaseToolAgent(ABC):
 
             logging.getLogger(__name__).warning(f"Failed to generate interpretation context: {e}")
             return ""
+
+    def execute_with_knowledge(
+        self,
+        target: str,
+        options: dict[str, Any] | None = None,
+        *,
+        mission_id: str = "mission-001",
+    ) -> dict[str, Any]:
+        """Execute this agent's tool using knowledge-aware execution.
+
+        Uses KnowledgeAwareExecutor to interpret tool output automatically,
+        returning structured findings with severity, confidence, and next steps.
+
+        Args:
+            target: Target domain/IP/host.
+            options: Optional execution options.
+            mission_id: Mission identifier for tracking.
+
+        Returns:
+            Dictionary containing:
+            - tool_name: str
+            - target: str
+            - status: 'success' | 'failure' | 'timeout'
+            - raw_output: str
+            - interpreted_findings: list[dict]
+            - summary: str
+            - execution_time: float
+            - knowledge_applied: bool
+            - severity_distribution: dict[str, int]
+        """
+        if not self._executor:
+            import logging
+
+            logging.getLogger(__name__).warning(
+                f"KnowledgeAwareExecutor not initialized for {self.TOOL_NAME}"
+            )
+            # Fallback to regular execution
+            result = self.execute(target, options, mission_id=mission_id)
+            return {
+                "tool_name": self.TOOL_NAME,
+                "target": target,
+                "status": result.status,
+                "raw_output": "",
+                "interpreted_findings": result.findings,
+                "summary": f"Executed {self.TOOL_NAME} with {len(result.findings)} findings",
+                "execution_time": result.metadata.runtime_ms / 1000.0,
+                "knowledge_applied": False,
+                "severity_distribution": self._count_findings_by_severity(result.findings),
+            }
+
+        # Create a tool executor function that uses self.execute()
+        def tool_executor(tool_name: str, target: str, context: dict, timeout: int) -> str:
+            result = self.execute(
+                target,
+                options=context.get("parameters", {}),
+                mission_id=mission_id,
+            )
+            return result.target_context.get("stdout", "")
+
+        # Execute with knowledge
+        result = self._executor.execute_with_knowledge(
+            self.TOOL_NAME,
+            target,
+            parameters=options,
+            timeout=self.DEFAULT_TIMEOUT_SECONDS,
+            tool_executor=tool_executor,
+        )
+
+        # Store summary for later retrieval
+        self._last_interpretation_summary = result.get("summary", "")
+
+        return result
+
+    def get_interpretation_summary(self) -> str:
+        """Return human-readable summary of latest execution interpretation.
+
+        Returns:
+            Summary string from last execute_with_knowledge() call,
+            or empty string if no interpretation has been run.
+        """
+        return self._last_interpretation_summary
+
+    @staticmethod
+    def _count_findings_by_severity(findings: list[KaisonFinding]) -> dict[str, int]:
+        """Count findings by severity level.
+
+        Args:
+            findings: List of findings.
+
+        Returns:
+            Dictionary with severity counts.
+        """
+        counts: dict[str, int] = {
+            "CRITICAL": 0,
+            "HIGH": 0,
+            "MEDIUM": 0,
+            "LOW": 0,
+            "INFO": 0,
+        }
+        for finding in findings:
+            severity = finding.severity.value.upper()
+            if severity in counts:
+                counts[severity] += 1
+        return counts
 
     @abstractmethod
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
