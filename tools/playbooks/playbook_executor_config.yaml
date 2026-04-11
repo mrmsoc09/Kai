@@ -1,5 +1,5 @@
 executor_config:
-  version: "1.0"
+  version: "2.0"
   executor_defaults:
     executor_class: "PlaybookExecutor"
     enforce_scope_guardrails: true
@@ -99,16 +99,12 @@ executor_config:
           fallback_persona: "report_writer"
         step_4:
           assigned_persona: "report_writer"
-          support_personas: ["disclosure_coordinator", "evidence_collector"]
+          support_personas: ["impact_demonstrator", "disclosure_coordinator"]
           tool: "none"
-          fallback_persona: "impact_demonstrator"
+          fallback_persona: "evidence_collector"
       execution_flow:
         parallel_steps: []
         sequential: [1, 2, 3, 4]
-        decision_branches:
-          - if_auth_signal_found: "switch_to_auth_bypass_v1"
-          - if_graphql_signal_found: "switch_to_graphql_attacks_v1"
-          - if_sql_signal_found: "switch_to_sql_injection_v1"
 
     auth_bypass:
       path: "tools/playbooks/exploitation/auth_bypass.yaml"
@@ -116,31 +112,32 @@ executor_config:
       persona_assignments:
         step_1:
           assigned_persona: "oauth_flow_analyst"
-          support_personas: ["auth_bypass_specialist", "api_security_tester"]
+          support_personas: ["jwt_breaker", "api_security_tester"]
           tool: "caido"
-          fallback_persona: "api_versioning_analyst"
+          fallback_persona: "api_security_tester"
         step_2:
           assigned_persona: "jwt_breaker"
-          support_personas: ["auth_bypass_specialist", "evidence_collector"]
+          support_personas: ["auth_bypass_specialist"]
           tool: "jwt_tool"
           fallback_persona: "api_security_tester"
         step_3:
           assigned_persona: "api_security_tester"
-          support_personas: ["auth_bypass_specialist", "graphql_introspector"]
-          tool: "graphql-cop"
-          fallback_persona: "api_versioning_analyst"
+          support_personas: ["oauth_flow_analyst"]
+          tool: "caido"
+          fallback_persona: "finding_triage_analyst"
         step_4:
           assigned_persona: "impact_demonstrator"
-          support_personas: ["report_writer", "disclosure_coordinator"]
+          support_personas: ["cvss_scoring_specialist"]
           tool: "none"
           fallback_persona: "report_writer"
+        step_5:
+          assigned_persona: "report_writer"
+          support_personas: ["evidence_collector"]
+          tool: "none"
+          fallback_persona: "evidence_collector"
       execution_flow:
         parallel_steps: []
-        sequential: [1, 2, 3, 4]
-        decision_branches:
-          - if_graphql_authz_issue_found: "switch_to_graphql_attacks_v1"
-          - if_sql_error_leak_found: "switch_to_sql_injection_v1"
-          - if_xss_on_auth_pages_found: "switch_to_xss_discovery_v1"
+        sequential: [1, 2, 3, 4, 5]
 
     graphql_attacks:
       path: "tools/playbooks/exploitation/graphql_attacks.yaml"
@@ -150,31 +147,354 @@ executor_config:
           assigned_persona: "graphql_introspector"
           support_personas: ["api_endpoint_discoverer", "api_security_tester"]
           tool: "graphql-cop"
-          fallback_persona: "api_versioning_analyst"
+          fallback_persona: "api_endpoint_discoverer"
         step_2:
           assigned_persona: "graphql_introspector"
-          support_personas: ["api_security_tester", "finding_triage_analyst"]
+          support_personas: ["api_security_tester"]
           tool: "clairvoyance"
           fallback_persona: "api_security_tester"
         step_3:
           assigned_persona: "api_security_tester"
-          support_personas: ["jwt_breaker", "graphql_introspector"]
-          tool: "graphql-cop"
-          fallback_persona: "auth_bypass_specialist"
+          support_personas: ["jwt_breaker"]
+          tool: "caido"
+          fallback_persona: "api_security_tester"
         step_4:
           assigned_persona: "jwt_breaker"
-          support_personas: ["oauth_flow_analyst", "evidence_collector"]
+          support_personas: ["oauth_flow_analyst", "api_security_tester"]
           tool: "jwt_tool"
           fallback_persona: "api_security_tester"
         step_5:
-          assigned_persona: "report_writer"
-          support_personas: ["impact_demonstrator", "disclosure_coordinator"]
+          assigned_persona: "impact_demonstrator"
+          support_personas: ["evidence_collector"]
           tool: "none"
-          fallback_persona: "impact_demonstrator"
+          fallback_persona: "report_writer"
       execution_flow:
         parallel_steps: []
         sequential: [1, 2, 3, 4, 5]
-        decision_branches:
-          - if_cross_api_jwt_issue_found: "switch_to_auth_bypass_v1"
-          - if_graphql_ui_xss_signal_found: "switch_to_xss_discovery_v1"
-          - if_graphql_sql_signal_found: "switch_to_sql_injection_v1"
+
+    # NEW OWASP PLAYBOOKS
+    owasp_a01_access_control:
+      path: "tools/playbooks/exploitation/OWASP-A01-Broken-Access-Control.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "authorization_tester"
+          support_personas: ["api_security_tester"]
+          tool: "burp_suite"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "idor_hunter"
+          support_personas: ["vulnerability_chainer"]
+          tool: "burp_suite"
+          fallback_persona: "authorization_tester"
+        step_3:
+          assigned_persona: "privilege_escalation_specialist"
+          support_personas: ["vulnerability_chainer"]
+          tool: "burp_suite"
+          fallback_persona: "authorization_tester"
+        step_4:
+          assigned_persona: "impact_demonstrator"
+          support_personas: ["threat_assessor"]
+          tool: "custom_authz_tester"
+          fallback_persona: "api_security_tester"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: []
+          tool: "custom_authz_tester"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+
+    owasp_a02_crypto:
+      path: "tools/playbooks/exploitation/OWASP-A02-Cryptographic-Failures.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "tls_security_auditor"
+          support_personas: ["cryptography_analyst"]
+          tool: "testssl"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "cryptography_analyst"
+          support_personas: ["vulnerability_chainer"]
+          tool: "testssl"
+          fallback_persona: "tls_security_auditor"
+        step_3:
+          assigned_persona: "tls_security_auditor"
+          support_personas: ["vulnerability_validator"]
+          tool: "openssl"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: ["impact_demonstrator"]
+          tool: "testssl"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4]
+
+    owasp_a03_injection:
+      path: "tools/playbooks/exploitation/OWASP-A03-Injection.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "api_security_tester"
+          support_personas: ["input_validator_tester"]
+          tool: "burp_suite"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "sqli_specialist"
+          support_personas: ["database_security_tester"]
+          tool: "sqlmap"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "command_injection_expert"
+          support_personas: ["template_injection_hunter"]
+          tool: "burp_suite"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "impact_demonstrator"
+          support_personas: ["data_exfiltrator"]
+          tool: "sqlmap"
+          fallback_persona: "report_writer"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: ["proof_of_concept_generator"]
+          tool: "burp_suite"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+
+    owasp_a04_design:
+      path: "tools/playbooks/exploitation/OWASP-A04-Insecure-Design.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "business_logic_analyst"
+          support_personas: ["workflow_tester"]
+          tool: "burp_suite"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "workflow_tester"
+          support_personas: ["vulnerability_chainer"]
+          tool: "burp_suite"
+          fallback_persona: "business_logic_analyst"
+        step_3:
+          assigned_persona: "race_condition_hunter"
+          support_personas: ["concurrency_tester"]
+          tool: "burp_suite"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "impact_demonstrator"
+          support_personas: ["threat_assessor"]
+          tool: "burp_suite"
+          fallback_persona: "report_writer"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: []
+          tool: "burp_suite"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+
+    owasp_a05_misconfig:
+      path: "tools/playbooks/exploitation/OWASP-A05-Misconfiguration.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "configuration_auditor"
+          support_personas: ["attack_surface_mapper"]
+          tool: "spiderfoot"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "default_credential_hunter"
+          support_personas: ["authentication_tester"]
+          tool: "burp_suite"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "api_endpoint_scanner"
+          support_personas: ["exposure_finder"]
+          tool: "burp_suite"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "impact_demonstrator"
+          support_personas: ["vulnerability_validator"]
+          tool: "burp_suite"
+          fallback_persona: "report_writer"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: []
+          tool: "burp_suite"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+
+    # NEW AI/LLM PLAYBOOKS
+    ai_llm_prompt_injection:
+      path: "tools/playbooks/exploitation/AI-LLM-Prompt-Injection.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "llm_jailbreak_specialist"
+          support_personas: ["api_security_tester"]
+          tool: "api_client"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "prompt_engineer_attacker"
+          support_personas: ["token_analyst"]
+          tool: "custom_llm_tester"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "token_analyst"
+          support_personas: ["information_extractor"]
+          tool: "custom_llm_tester"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "context_overflow_expert"
+          support_personas: ["vulnerability_chainer"]
+          tool: "custom_llm_tester"
+          fallback_persona: "api_security_tester"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: ["impact_demonstrator"]
+          tool: "custom_llm_tester"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+
+    ai_llm_model_extraction:
+      path: "tools/playbooks/exploitation/AI-LLM-Model-Extraction.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "api_fuzzer"
+          support_personas: ["ml_model_reverse_engineer"]
+          tool: "api_fuzzer"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "ml_model_reverse_engineer"
+          support_personas: ["information_extractor"]
+          tool: "api_fuzzer"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "statistical_analyzer"
+          support_personas: ["model_weight_analyzer"]
+          tool: "statistical_analyzer"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "fine_tuning_data_thief"
+          support_personas: ["credential_extractor"]
+          tool: "api_fuzzer"
+          fallback_persona: "api_security_tester"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: ["impact_demonstrator"]
+          tool: "statistical_analyzer"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+
+    ai_llm_vector_db:
+      path: "tools/playbooks/exploitation/AI-LLM-Vector-DB-Attacks.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "vector_db_security_tester"
+          support_personas: ["api_security_tester"]
+          tool: "api_client"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "embedding_space_analyzer"
+          support_personas: ["rag_poisoner"]
+          tool: "custom_vector_tools"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "semantic_search_attacker"
+          support_personas: ["vulnerability_chainer"]
+          tool: "semantic_analyzer"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "information_extractor"
+          support_personas: ["impact_demonstrator"]
+          tool: "custom_vector_tools"
+          fallback_persona: "report_writer"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: []
+          tool: "semantic_analyzer"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+
+    ai_llm_container_escape:
+      path: "tools/playbooks/exploitation/AI-LLM-Container-Escape.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "container_escape_specialist"
+          support_personas: ["system_hardener"]
+          tool: "custom_container_tools"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "kernel_hardener"
+          support_personas: ["privilege_escalation_specialist"]
+          tool: "exploit_tools"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "gpu_exploit_expert"
+          support_personas: ["resource_hijacker"]
+          tool: "custom_container_tools"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "privilege_escalation_specialist"
+          support_personas: ["lateral_movement_planner"]
+          tool: "exploit_tools"
+          fallback_persona: "api_security_tester"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: ["impact_demonstrator"]
+          tool: "custom_container_tools"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]
+
+    ai_llm_supply_chain:
+      path: "tools/playbooks/exploitation/AI-LLM-Supply-Chain.yaml"
+      executor_class: "PlaybookExecutor"
+      persona_assignments:
+        step_1:
+          assigned_persona: "supply_chain_attacker"
+          support_personas: ["attack_surface_mapper"]
+          tool: "dependency_checker"
+          fallback_persona: "api_security_tester"
+        step_2:
+          assigned_persona: "dependency_poisoner"
+          support_personas: ["vulnerability_validator"]
+          tool: "dependency_checker"
+          fallback_persona: "api_security_tester"
+        step_3:
+          assigned_persona: "model_checkpoint_analyst"
+          support_personas: ["backdoor_detector"]
+          tool: "checkpoint_analyzer"
+          fallback_persona: "api_security_tester"
+        step_4:
+          assigned_persona: "build_pipeline_tester"
+          support_personas: ["infrastructure_security_tester"]
+          tool: "dependency_checker"
+          fallback_persona: "api_security_tester"
+        step_5:
+          assigned_persona: "vulnerability_reporter"
+          support_personas: ["impact_demonstrator"]
+          tool: "checkpoint_analyzer"
+          fallback_persona: "report_writer"
+      execution_flow:
+        parallel_steps: []
+        sequential: [1, 2, 3, 4, 5]

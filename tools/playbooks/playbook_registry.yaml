@@ -1,9 +1,11 @@
 playbook_registry:
-  version: "1.0"
+  version: "2.0"
   updated: "2026-04-11"
   owner: "KAISON AI Security Team"
+  total_playbooks: 15
 
   playbooks:
+    # RECONNAISSANCE (1)
     - id: "web_app_recon_v1"
       name: "Web Application Reconnaissance"
       path: "tools/playbooks/reconnaissance/web_app_recon.yaml"
@@ -17,6 +19,7 @@ playbook_registry:
       success_rate: "High"
       tags: ["web", "osint", "fingerprinting", "cve-assessment", "authorized-validation"]
 
+    # EXISTING EXPLOITATION (4)
     - id: "sql_injection_v1"
       name: "SQL Injection Discovery and Validation"
       path: "tools/playbooks/exploitation/sql_injection.yaml"
@@ -69,24 +72,216 @@ playbook_registry:
       success_rate: "High"
       tags: ["graphql", "api", "introspection", "authz", "authorized-validation"]
 
+    # NEW OWASP EXPLOITATION (5)
+    - id: "owasp_a01_access_control_v1"
+      name: "OWASP A01 Broken Access Control Detection and Exploitation"
+      path: "tools/playbooks/exploitation/OWASP-A01-Broken-Access-Control.yaml"
+      category: "OWASP Exploitation"
+      complexity: "High"
+      duration_minutes: 75
+      phases: [2, 3, 7, 8, 9]
+      personas_used:
+        ["authorization_tester", "idor_hunter", "privilege_escalation_specialist", "impact_demonstrator", "vulnerability_chainer", "vulnerability_reporter"]
+      tools_used: ["burp_suite", "custom_authz_tester"]
+      success_rate: "High"
+      tags: ["access-control", "idor", "privilege-escalation", "owasp", "authorized-validation"]
+
+    - id: "owasp_a02_crypto_v1"
+      name: "OWASP A02 Cryptographic Failures Assessment"
+      path: "tools/playbooks/exploitation/OWASP-A02-Cryptographic-Failures.yaml"
+      category: "OWASP Exploitation"
+      complexity: "Medium"
+      duration_minutes: 60
+      phases: [2, 3, 7, 9]
+      personas_used:
+        ["tls_security_auditor", "cryptography_analyst", "vulnerability_validator", "impact_demonstrator", "vulnerability_reporter"]
+      tools_used: ["testssl", "openssl"]
+      success_rate: "High"
+      tags: ["cryptography", "tls", "ssl", "owasp", "authorized-validation"]
+
+    - id: "owasp_a03_injection_v1"
+      name: "OWASP A03 Injection Vulnerability Detection and Exploitation"
+      path: "tools/playbooks/exploitation/OWASP-A03-Injection.yaml"
+      category: "OWASP Exploitation"
+      complexity: "High"
+      duration_minutes: 90
+      phases: [3, 7, 8, 9]
+      personas_used:
+        ["sqli_specialist", "command_injection_expert", "template_injection_hunter", "impact_demonstrator", "vulnerability_chainer", "vulnerability_reporter"]
+      tools_used: ["sqlmap", "burp_suite"]
+      success_rate: "High"
+      tags: ["injection", "sql", "command-injection", "owasp", "authorized-validation"]
+
+    - id: "owasp_a04_design_v1"
+      name: "OWASP A04 Insecure Design Vulnerability Assessment"
+      path: "tools/playbooks/exploitation/OWASP-A04-Insecure-Design.yaml"
+      category: "OWASP Exploitation"
+      complexity: "Medium"
+      duration_minutes: 60
+      phases: [3, 7, 8, 9]
+      personas_used:
+        ["business_logic_analyst", "workflow_tester", "race_condition_hunter", "impact_demonstrator", "threat_assessor", "vulnerability_reporter"]
+      tools_used: ["burp_suite"]
+      success_rate: "Medium"
+      tags: ["business-logic", "workflow", "race-condition", "owasp", "authorized-validation"]
+
+    - id: "owasp_a05_misconfig_v1"
+      name: "OWASP A05 Security Misconfiguration Assessment"
+      path: "tools/playbooks/exploitation/OWASP-A05-Misconfiguration.yaml"
+      category: "OWASP Exploitation"
+      complexity: "Medium"
+      duration_minutes: 60
+      phases: [1, 2, 3, 7, 9]
+      personas_used:
+        ["configuration_auditor", "default_credential_hunter", "api_endpoint_scanner", "exposure_finder", "impact_demonstrator", "vulnerability_reporter"]
+      tools_used: ["spiderfoot", "burp_suite"]
+      success_rate: "High"
+      tags: ["misconfiguration", "default-credentials", "exposed-endpoints", "owasp", "authorized-validation"]
+
+    # NEW AI/LLM EXPLOITATION (5)
+    - id: "ai_llm_prompt_injection_v1"
+      name: "AI/LLM Prompt Injection and Jailbreak Assessment"
+      path: "tools/playbooks/exploitation/AI-LLM-Prompt-Injection.yaml"
+      category: "AI/LLM Exploitation"
+      complexity: "High"
+      duration_minutes: 90
+      phases: [3, 7, 8, 9]
+      personas_used:
+        ["llm_jailbreak_specialist", "prompt_engineer_attacker", "token_analyst", "context_overflow_expert", "information_extractor", "vulnerability_reporter"]
+      tools_used: ["custom_llm_tester", "token_analyzer", "api_client"]
+      success_rate: "Medium"
+      tags: ["llm", "prompt-injection", "jailbreak", "ai-security", "authorized-validation"]
+
+    - id: "ai_llm_model_extraction_v1"
+      name: "AI/LLM Model Extraction and IP Theft Assessment"
+      path: "tools/playbooks/exploitation/AI-LLM-Model-Extraction.yaml"
+      category: "AI/LLM Exploitation"
+      complexity: "High"
+      duration_minutes: 120
+      phases: [3, 7, 8, 9]
+      personas_used:
+        ["ml_model_reverse_engineer", "fine_tuning_data_thief", "api_fuzzer", "statistical_analyzer", "model_weight_analyzer", "vulnerability_reporter"]
+      tools_used: ["api_fuzzer", "statistical_analyzer"]
+      success_rate: "Medium"
+      tags: ["llm", "model-extraction", "ip-theft", "ai-security", "authorized-validation"]
+
+    - id: "ai_llm_vector_db_v1"
+      name: "AI/LLM Vector Database and RAG System Attacks"
+      path: "tools/playbooks/exploitation/AI-LLM-Vector-DB-Attacks.yaml"
+      category: "AI/LLM Exploitation"
+      complexity: "Medium"
+      duration_minutes: 60
+      phases: [3, 7, 8, 9]
+      personas_used:
+        ["vector_db_security_tester", "embedding_space_analyzer", "rag_poisoner", "semantic_search_attacker", "information_extractor", "vulnerability_reporter"]
+      tools_used: ["custom_vector_tools", "semantic_analyzer", "api_client"]
+      success_rate: "Medium"
+      tags: ["llm", "vector-database", "rag", "semantic-search", "ai-security", "authorized-validation"]
+
+    - id: "ai_llm_container_escape_v1"
+      name: "AI/LLM Container Escape and Host Compromise"
+      path: "tools/playbooks/exploitation/AI-LLM-Container-Escape.yaml"
+      category: "AI/LLM Exploitation"
+      complexity: "High"
+      duration_minutes: 90
+      phases: [3, 7, 8, 9]
+      personas_used:
+        ["container_escape_specialist", "gpu_exploit_expert", "kernel_hardener", "privilege_escalation_specialist", "lateral_movement_planner", "vulnerability_reporter"]
+      tools_used: ["custom_container_tools", "exploit_tools"]
+      success_rate: "Low-Medium"
+      tags: ["container", "kubernetes", "docker", "gpu", "kernel-exploit", "ai-infrastructure", "authorized-validation"]
+
+    - id: "ai_llm_supply_chain_v1"
+      name: "AI/LLM Supply Chain and Dependency Security Assessment"
+      path: "tools/playbooks/exploitation/AI-LLM-Supply-Chain.yaml"
+      category: "AI/LLM Exploitation"
+      complexity: "Medium"
+      duration_minutes: 75
+      phases: [1, 2, 3, 7, 9]
+      personas_used:
+        ["supply_chain_attacker", "dependency_poisoner", "model_checkpoint_analyst", "build_pipeline_tester", "vulnerability_validator", "vulnerability_reporter"]
+      tools_used: ["dependency_checker", "checkpoint_analyzer"]
+      success_rate: "Medium"
+      tags: ["supply-chain", "dependencies", "model-checkpoint", "ci-cd", "ai-security", "authorized-validation"]
+
   decision_trees:
+    # RECONNAISSANCE FLOWS
     - condition: "Web application reconnaissance complete"
       recommendations:
         - "If GraphQL API found -> graphql_attacks_v1"
-        - "If auth-control weakness found -> auth_bypass_v1"
-        - "If SQLi signals found -> sql_injection_v1"
+        - "If auth-control weakness found -> auth_bypass_v1 or owasp_a01_access_control_v1"
+        - "If SQLi signals found -> sql_injection_v1 or owasp_a03_injection_v1"
+        - "If crypto weakness found -> owasp_a02_crypto_v1"
+        - "If misconfiguration found -> owasp_a05_misconfig_v1"
 
+    # EXPLOITATION PROGRESSION
     - condition: "SQLi signal confirmed"
       recommendations:
         - "sql_injection_v1"
+        - "owasp_a03_injection_v1 (comprehensive injection testing)"
         - "xss_discovery_v1 (if shared input sinks)"
 
     - condition: "API endpoint with token auth discovered"
       recommendations:
         - "auth_bypass_v1"
+        - "owasp_a01_access_control_v1 (authorization testing)"
         - "graphql_attacks_v1"
 
-    - condition: "Client-side injection path discovered"
+    - condition: "Access control weakness found"
       recommendations:
-        - "xss_discovery_v1"
-        - "auth_bypass_v1 (if auth pages affected)"
+        - "owasp_a01_access_control_v1 (comprehensive IDOR/privilege escalation)"
+        - "auth_bypass_v1"
+
+    - condition: "TLS/Crypto weakness found"
+      recommendations:
+        - "owasp_a02_crypto_v1"
+
+    - condition: "Business logic or workflow weakness found"
+      recommendations:
+        - "owasp_a04_design_v1"
+
+    - condition: "Default credentials or misconfig found"
+      recommendations:
+        - "owasp_a05_misconfig_v1"
+
+    # AI/LLM FLOWS
+    - condition: "LLM application discovered"
+      recommendations:
+        - "ai_llm_prompt_injection_v1 (initial LLM security assessment)"
+        - "ai_llm_model_extraction_v1 (if API access available)"
+        - "ai_llm_vector_db_v1 (if RAG system detected)"
+        - "ai_llm_supply_chain_v1 (assess model dependencies)"
+
+    - condition: "Prompt injection successful"
+      recommendations:
+        - "ai_llm_model_extraction_v1 (attempt system prompt extraction)"
+        - "ai_llm_vector_db_v1 (test RAG for injection)"
+
+    - condition: "Containerized LLM inference detected"
+      recommendations:
+        - "ai_llm_container_escape_v1"
+
+    - condition: "Model or dependency supply chain concern"
+      recommendations:
+        - "ai_llm_supply_chain_v1"
+
+  orchestration_sequences:
+    # PHASE 1: RECONNAISSANCE
+    - phase: 1
+      playbooks: ["web_app_recon_v1", "ai_llm_supply_chain_v1"]
+      purpose: "Asset discovery and supply chain assessment"
+
+    # PHASE 2-3: ACTIVE VALIDATION
+    - phase: 2-3
+      playbooks: ["owasp_a02_crypto_v1", "owasp_a05_misconfig_v1"]
+      purpose: "Configuration and crypto assessment"
+
+    # PHASE 7: EXPLOITATION
+    - phase: 7
+      playbooks: ["owasp_a01_access_control_v1", "owasp_a03_injection_v1", "owasp_a04_design_v1", "sql_injection_v1", "xss_discovery_v1", "auth_bypass_v1", "graphql_attacks_v1", "ai_llm_prompt_injection_v1", "ai_llm_model_extraction_v1", "ai_llm_vector_db_v1", "ai_llm_container_escape_v1"]
+      purpose: "Active exploitation and vulnerability validation"
+
+    # PHASE 8-9: REPORTING
+    - phase: 8-9
+      playbooks: ["all"]
+      purpose: "Impact assessment and reporting"
