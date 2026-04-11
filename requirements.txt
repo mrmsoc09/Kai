@@ -61,7 +61,7 @@ openai==1.109.1
 google-generativeai==0.8.4
 
 # Orchestration Layer — Platform 1: PraisonAI Governance
-praisonaiagents==1.5.146
+praisonaiagents==1.5.148
 
 
 # Utilities
