@@ -50,6 +50,9 @@ All tools are classified into four risk bands.
 | **Band 2** | Approval required | State-modifying/Intrusive. | `nuclei_scan` | **HIL Approval Required**. |
 | **Band 3** | Never autonomous | Exploitation/Destructive. | `exploit_exec` | **Hard Blocked**. |
 
+Additional runtime guardrail:
+- `metasploit-framework` executes in **CHECK-only** mode in Kai (`check; exit -y`), with sanitized target/module input and no free-form `extra_args`.
+
 ---
 
 ## 3. Role-Based Access Control (RBAC)

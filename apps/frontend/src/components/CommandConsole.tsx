@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Terminal } from 'xterm';
-import { FitAddon } from 'xterm-addon-fit';
-import { WebLinksAddon } from 'xterm-addon-web-links';
-import 'xterm/css/xterm.css';
+import React, { useEffect, useRef } from 'react';
+import { Terminal } from '@xterm/xterm';
+import { FitAddon } from '@xterm/addon-fit';
+import { WebLinksAddon } from '@xterm/addon-web-links';
+import '@xterm/xterm/css/xterm.css';
 
 /**
  * K1 Stage 18: Sovereign Command Console.
@@ -102,3 +102,5 @@ export const CommandConsole: React.FC = () => {
     </div>
   );
 };
+
+export default CommandConsole;

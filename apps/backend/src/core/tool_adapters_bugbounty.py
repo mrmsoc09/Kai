@@ -10,6 +10,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import re
 import shutil
 import subprocess
 import threading
@@ -18,6 +19,7 @@ import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 from .evidence_objects import create_evidence_object
 from .kai_security_guardrails import ToolRiskTier, set_tool_tier
@@ -108,6 +110,9 @@ TOOL_PARSE_MODE: dict[str, str] = {
     "gitrob_alt": "jsonl",
 }
 
+_MSF_ALLOWED_MODULE_RE = re.compile(r"^(exploit|auxiliary)/[a-zA-Z0-9_./-]+$")
+_MSF_ALLOWED_TARGET_RE = re.compile(r"^[a-zA-Z0-9._:-]+$")
+
 
 @dataclass
 class CommandResult:
@@ -179,6 +184,16 @@ class CatalogBackedCLITool(BaseTool):
                 default=catalog_entry.retry_policy.max_attempts,
             ),
         ]
+        if self.catalog_name == "metasploit-framework":
+            params.append(
+                ToolParameter(
+                    "module",
+                    "string",
+                    "Metasploit module path (exploit/* or auxiliary/*). CHECK-only mode enforced.",
+                    required=False,
+                    default=None,
+                )
+            )
         super().__init__(
             id=tool_id,
             name=f"{catalog_entry.name} adapter",
@@ -274,6 +289,34 @@ class CatalogBackedCLITool(BaseTool):
 
         args.extend(extra_args)
         return args, stdin_text
+
+    @staticmethod
+    def _normalize_target_host(target: str) -> str:
+        text = (target or "").strip()
+        if not text:
+            return ""
+        if "://" in text:
+            parsed = urlparse(text)
+            return (parsed.hostname or "").strip()
+        return text.split("/", 1)[0].strip()
+
+    def _metasploit_check_only_args(self, target: str, module: str | None) -> list[str]:
+        safe_target = self._normalize_target_host(target)
+        if not safe_target or not _MSF_ALLOWED_TARGET_RE.fullmatch(safe_target):
+            raise ValueError("metasploit-framework target must be a host/domain/IP without shell metacharacters")
+
+        resolved_module = str(module or os.getenv("K1_METASPLOIT_CHECK_MODULE", "")).strip()
+        if not resolved_module:
+            raise ValueError(
+                "metasploit-framework requires 'module' (exploit/* or auxiliary/*) for CHECK-only execution"
+            )
+        if not _MSF_ALLOWED_MODULE_RE.fullmatch(resolved_module):
+            raise ValueError(
+                "metasploit-framework module must match exploit/* or auxiliary/* and contain only safe characters"
+            )
+
+        command_script = f"use {resolved_module}; setg RHOSTS {safe_target}; check; exit -y"
+        return ["-q", "-x", command_script]
 
     _MAX_STDOUT_CHARS = 100 * 1024 * 1024 // 4  # ~25 MB char limit (≈100 MB UTF-8 worst case)
 
@@ -425,6 +468,7 @@ class CatalogBackedCLITool(BaseTool):
             return ToolResult(self.id, ToolStatus.FAILED, {}, error=err)
 
         target = str(kwargs.get("target") or "").strip()
+        module = str(kwargs.get("module") or "").strip() or None
         run_id = kwargs.get("run_id")
         extra_args = kwargs.get("extra_args") if isinstance(kwargs.get("extra_args"), list) else []
         retries = int(kwargs.get("retries") or self.catalog_entry.retry_policy.max_attempts)
@@ -432,7 +476,7 @@ class CatalogBackedCLITool(BaseTool):
 
         # Reject extra_args entirely at the API level for Tier 2 tools
         if self.autonomy_tier == ToolAutonomyTier.TIER_2_APPROVE and extra_args:
-             return ToolResult(
+            return ToolResult(
                 self.id,
                 ToolStatus.FAILED,
                 {},
@@ -444,7 +488,7 @@ class CatalogBackedCLITool(BaseTool):
         for arg in extra_args:
             arg_str = str(arg)
             if arg_str not in allowed:
-                 return ToolResult(
+                return ToolResult(
                     self.id,
                     ToolStatus.FAILED,
                     {},
@@ -452,7 +496,19 @@ class CatalogBackedCLITool(BaseTool):
                 )
 
         binary = self._which()
-        args, stdin_text = self._build_command(target, [str(arg) for arg in extra_args])
+        try:
+            if self.catalog_name == "metasploit-framework":
+                args = self._metasploit_check_only_args(target=target, module=module)
+                stdin_text = None
+            else:
+                args, stdin_text = self._build_command(target, [str(arg) for arg in extra_args])
+        except ValueError as exc:
+            return ToolResult(
+                self.id,
+                ToolStatus.FAILED,
+                {},
+                error=str(exc),
+            )
         if binary is None and self.catalog_entry.execution_mode in {"docker", "optional"}:
             if self._docker_available() and self.catalog_entry.container_image:
                 result = self._run_via_docker(args, timeout_seconds=timeout_seconds, stdin_text=stdin_text)
@@ -508,6 +564,7 @@ class CatalogBackedCLITool(BaseTool):
         )
         output = {
             "target": target,
+            "module": module,
             "parsed": parsed,
             "stdout": result.stdout,
             "stderr": result.stderr,
@@ -516,6 +573,11 @@ class CatalogBackedCLITool(BaseTool):
             "attempts": attempts,
             "catalog_entry": self.catalog_entry.as_dict(),
             "evidence": evidence,
+            "guardrails": (
+                {"mode": "check_only", "enforced": True}
+                if self.catalog_name == "metasploit-framework"
+                else {"mode": "standard", "enforced": False}
+            ),
         }
         status = ToolStatus.COMPLETED if result.success else ToolStatus.FAILED
         return ToolResult(

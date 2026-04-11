@@ -75,6 +75,40 @@ GITHUB_TOKEN=your_token
 CHAOS_API_KEY=your_key
 ```
 
+## API Key Matrix (Front-Page Reference)
+
+This is the deduplicated key list for Kai's current toolchain, grouped in a SpiderFoot-style format.
+
+### Open Source (No API key required)
+
+These run without external account keys: `amass`, `subfinder`, `dnsx`, `naabu`, `nmap`, `masscan`, `reconftw`, `trufflehog`, `gitleaks`, `nikto`, `testssl`, `sqlmap`, `dalfox`, `feroxbuster`, `katana`, `arjun`, `ffuf`, `spiderfoot` (core local modules), `torbot`, `searchsploit`, `metasploit-framework` (local CLI, CHECK-only guardrails in Kai).
+
+### Free Tier Keys
+
+| Environment Variable | Tool(s) | Get API Key |
+|---|---|---|
+| `GITHUB_TOKEN` | `github-subdomains` (recommended for higher rate limits) | https://github.com/settings/tokens |
+| `CHAOS_API_KEY` (or `PDCP_API_KEY`) | `chaos` | https://chaos.projectdiscovery.io/docs/api-key |
+| `FULLHUNT_API_KEY` | `fullhunt` | https://docs.fullhunt.io/docs/ |
+| `LEAKIX_API_KEY` | `leakix` | https://docs.leakix.net/docs/api/authentication/ |
+| `NVD_NIST_API_KEY` | `nvd-nist` | https://nvd.nist.gov/developers/request-an-api-key |
+| `IPINFO_API_KEY` | `ipinfo` | https://ipinfo.io/docs |
+
+### Paid / Commercial Keys
+
+| Environment Variable | Tool(s) | Get API Key |
+|---|---|---|
+| `DEHASHED_API_KEY` | `dehashed` | https://www.dehashed.com/api |
+| `GRAYHATWARFARE_API_KEY` | `grayhatwarfare` | https://buckets.grayhatwarfare.com/early-access/docs/api/v2 |
+
+### Platform LLM Keys (At least one required)
+
+| Environment Variable | Purpose | Get API Key |
+|---|---|---|
+| `OPENAI_API_KEY` | Primary/fallback LLM provider | https://platform.openai.com/api-keys |
+| `ANTHROPIC_API_KEY` | Primary/fallback LLM provider | https://console.anthropic.com/settings/keys |
+| `GOOGLE_API_KEY` | Gemini provider | https://aistudio.google.com/app/apikey |
+
 ## Running a Hunt
 
 1. Navigate to http://localhost:8081

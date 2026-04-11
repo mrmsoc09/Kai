@@ -226,6 +226,61 @@ def test_register_bugbounty_tools_is_idempotent():
     assert after == middle
 
 
+def test_metasploit_enforces_check_only_command(monkeypatch, tmp_path):
+    monkeypatch.setenv("K1_ARTIFACTS_ROOT", str(tmp_path / "artifacts"))
+    entry = get_catalog_entry("metasploit-framework")
+    assert entry is not None
+    tool = CatalogBackedCLITool(entry)
+    monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/msfconsole")
+    captured: dict[str, list[str]] = {}
+
+    def _fake_run_with_retry(command, **kwargs):
+        captured["command"] = command
+        return (
+            CommandResult(
+                success=True,
+                stdout="",
+                stderr="",
+                exit_code=0,
+                command=command,
+                duration_ms=11.0,
+            ),
+            1,
+        )
+
+    monkeypatch.setattr(tool, "_run_with_retry", _fake_run_with_retry)
+
+    result = tool.execute(
+        target="api.example.com",
+        module="exploit/linux/http/sample_module",
+    )
+    assert result.status == ToolStatus.COMPLETED
+    assert result.output["guardrails"]["mode"] == "check_only"
+    command = captured["command"]
+    assert command[0] == "/usr/bin/msfconsole"
+    assert "-x" in command
+    script = command[command.index("-x") + 1]
+    assert "; check;" in script
+    assert "; run;" not in script
+    assert "; exploit;" not in script
+
+
+def test_metasploit_requires_safe_module_in_check_only_mode(monkeypatch, tmp_path):
+    monkeypatch.setenv("K1_ARTIFACTS_ROOT", str(tmp_path / "artifacts"))
+    entry = get_catalog_entry("metasploit-framework")
+    assert entry is not None
+    tool = CatalogBackedCLITool(entry)
+    monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/msfconsole")
+
+    result = tool.execute(target="api.example.com")
+    assert result.status == ToolStatus.FAILED
+    assert "requires 'module'" in (result.error or "")
+
+    bad = tool.execute(target="api.example.com", module="exploit/linux/http/mod; run")
+    assert bad.status == ToolStatus.FAILED
+    assert "safe characters" in (bad.error or "")
+
+
 def test_integration_hook_postman_reads_collection(monkeypatch, tmp_path):
     artifacts_root = tmp_path / "artifacts"
     artifacts_root.mkdir()
