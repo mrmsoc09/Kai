@@ -117,3 +117,48 @@ async def _async_on_complete(
         await rotator.complete_entry(db, pool_id, entry_id, success, workflow_run_id)
         await db.commit()
     return {"pool_id": str(pool_id), "entry_id": str(entry_id), "success": success}
+
+
+# ============================================================================
+# API Keys Orchestrator Task (6AM Daily Planning)
+# ============================================================================
+
+
+@celery_app.task(name="api_keys_orchestrator_6am", bind=True)
+def run_api_keys_orchestrator_task(self) -> dict:
+    """Beat task: Daily 6AM API keys orchestrator.
+
+    Runs at 6AM PT (2PM UTC) to plan API key usage across the scan queue.
+    Integrates with Vault-loaded API keys and ScanQueueRotator.
+
+    Returns:
+        Dict with orchestration result and queue status.
+    """
+    try:
+        from ..core.api_keys_orchestrator import APIKeysOrchestrator
+
+        session_maker = get_async_session_maker()
+        async def _run_orchestrator():
+            async with session_maker() as db:
+                orchestrator = APIKeysOrchestrator()
+                await orchestrator.run(db)
+                await db.commit()
+
+        asyncio.run(_run_orchestrator())
+        logger.info("API Keys Orchestrator task completed successfully")
+        return {
+            "status": "success",
+            "task": "api_keys_orchestrator_6am",
+            "message": "Daily API key planning completed",
+        }
+    except Exception as exc:
+        logger.error(
+            "API Keys Orchestrator task failed: %s",
+            exc,
+            exc_info=True,
+        )
+        return {
+            "status": "error",
+            "task": "api_keys_orchestrator_6am",
+            "error": str(exc),
+        }

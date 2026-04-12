@@ -422,11 +422,18 @@ except Exception as exc:
 # ---------------------------------------------------------------------------
 # Celery Beat schedule
 # ---------------------------------------------------------------------------
+from celery.schedules import crontab
+
 celery_app.conf.beat_schedule = {
     "advance-scan-queues": {
         "task": "scan_queue_advance_all",
         "schedule": 120.0,  # every 2 minutes
         "options": {"queue": "tools"},
+    },
+    "api-keys-orchestrator-6am": {
+        "task": "api_keys_orchestrator_6am",
+        "schedule": crontab(hour=14, minute=0),  # 6AM PT / 2PM UTC (during PDT)
+        "options": {"queue": "scheduled"},
     },
 }
 celery_app.conf.timezone = "UTC"
