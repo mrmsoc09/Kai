@@ -275,7 +275,8 @@ verify_ip_leak_protection() {
         return 1
     fi
 
-    if ! python3 - "${public_ip}" "${local_isp_cidrs}" <<'PY'
+    local check_rc=0
+    python3 - "${public_ip}" "${local_isp_cidrs}" <<'PY'
 import ipaddress
 import sys
 
@@ -296,9 +297,15 @@ for cidr in cidrs:
 
 raise SystemExit(0)
 PY
-    then
+    check_rc=$?
+    if [[ "${check_rc}" -eq 0 ]]; then
         info "Sovereign egress IP check passed: ${public_ip}"
         return 0
+    fi
+
+    if [[ "${check_rc}" -eq 2 ]]; then
+        error "Public IP '${public_ip}' returned by ${ip_api} is not a valid IP address."
+        return 1
     fi
 
     error "Egress IP ${public_ip} falls within configured local ISP CIDRs (${local_isp_cidrs})."
@@ -342,6 +349,14 @@ verify_proxy_tunnel() {
 }
 
 verify_sovereign_network() {
+    local enforce
+    enforce="$(read_env_value K1_ENFORCE_SOVEREIGN_NETWORK true)"
+    if ! env_truthy "${enforce}"; then
+        error "K1_ENFORCE_SOVEREIGN_NETWORK=false is not allowed in tunnel-first mode."
+        error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
+        return 1
+    fi
+
     info "Validating Sovereign Network Layer..."
     verify_vpn_interface || {
         error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."

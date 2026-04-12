@@ -401,6 +401,7 @@ install_native_tool() {
         exploitdb) apt_install_packages exploitdb ;;
         searchsploit) install_searchsploit ;;
         zaproxy) apt_install_packages zaproxy ;;
+        owasp-zap) _install_owasp_zap_sovereign ;;
         wafw00f) apt_install_packages wafw00f ;;
 
         # Source builds (Sovereign Build framework)
@@ -482,6 +483,10 @@ _install_searchsploit_sovereign() {
 
 _install_caido_sovereign() {
     install_caido "$@"
+}
+
+_install_owasp_zap_sovereign() {
+    install_owasp_zap "$@"
 }
 
 _install_faraday_sovereign() {
