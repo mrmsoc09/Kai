@@ -74,24 +74,36 @@ class CVEKnowledgeBase:
             self._severity_index[severity].append(cve_id)
 
             # Persona index
-            personas = cve_data.get("persona_mapping", {}).get("relevant_personas", [])
-            for persona_info in personas:
-                if isinstance(persona_info, dict):
-                    persona = persona_info.get("persona")
-                    if persona:
+            persona_mapping = cve_data.get("persona_mapping")
+            if isinstance(persona_mapping, dict):
+                # Standard format: persona_mapping is a dict with relevant_personas
+                personas = persona_mapping.get("relevant_personas", [])
+                for persona_info in personas:
+                    if isinstance(persona_info, dict):
+                        persona = persona_info.get("persona")
+                        if persona:
+                            if persona not in self._persona_index:
+                                self._persona_index[persona] = []
+                            self._persona_index[persona].append(cve_id)
+            elif isinstance(persona_mapping, list):
+                # Simplified format: persona_mapping is a list of persona names
+                for persona in persona_mapping:
+                    if isinstance(persona, str):
                         if persona not in self._persona_index:
                             self._persona_index[persona] = []
                         self._persona_index[persona].append(cve_id)
 
             # Playbook index
-            playbooks = cve_data.get("persona_mapping", {}).get("playbooks", [])
-            for playbook_info in playbooks:
-                if isinstance(playbook_info, dict):
-                    playbook = playbook_info.get("playbook")
-                    if playbook:
-                        if playbook not in self._playbook_index:
-                            self._playbook_index[playbook] = []
-                        self._playbook_index[playbook].append(cve_id)
+            if isinstance(persona_mapping, dict):
+                # Standard format: persona_mapping is a dict with playbooks
+                playbooks = persona_mapping.get("playbooks", [])
+                for playbook_info in playbooks:
+                    if isinstance(playbook_info, dict):
+                        playbook = playbook_info.get("playbook")
+                        if playbook:
+                            if playbook not in self._playbook_index:
+                                self._playbook_index[playbook] = []
+                            self._playbook_index[playbook].append(cve_id)
 
     def get_cve_by_id(self, cve_id: str) -> dict[str, Any]:
         """Retrieve complete CVE record by CVE ID.
@@ -270,7 +282,6 @@ class CVEKnowledgeBase:
             "exploitation": ["exploitability"],
             "impact": ["confidentiality"],
             "remediation": [],
-            "persona_mapping": ["relevant_personas"],
         }
 
         for cve_id, cve_data in self._cve_index.items():
@@ -282,6 +293,19 @@ class CVEKnowledgeBase:
                     for field in fields:
                         if field not in section_data:
                             issues.append(f"{cve_id} missing {section}.{field}")
+
+            # Validate persona_mapping (can be dict or list)
+            if "persona_mapping" not in cve_data:
+                issues.append(f"{cve_id} missing section: persona_mapping")
+            else:
+                persona_mapping = cve_data["persona_mapping"]
+                # Accept both dict format (with relevant_personas) and list format
+                if isinstance(persona_mapping, dict):
+                    # Standard format: should have relevant_personas
+                    if "relevant_personas" not in persona_mapping:
+                        issues.append(f"{cve_id} persona_mapping missing relevant_personas")
+                elif not isinstance(persona_mapping, list):
+                    issues.append(f"{cve_id} persona_mapping must be dict or list, got {type(persona_mapping).__name__}")
 
         return len(issues) == 0, issues
 
