@@ -72,6 +72,24 @@ class VaultSecretProvider(BaseSecretProvider):
             return raw.strip()
         return None
 
+    def get_secret_hierarchical(
+        self, category: str, service: str
+    ) -> Optional[str]:
+        """Retrieve secret from hierarchical path: k1/{category}/{service}"""
+        path = f"k1/{category}/{service}"
+        try:
+            response = self.client.secrets.kv.v2.read_secret_version(
+                path=path,
+                mount_point=self.mount,
+            )
+        except Exception:
+            return None
+        data = (response or {}).get("data", {}).get("data", {})
+        value = data.get("value")
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+        return None
+
 
 def _env_bool(name: str, default: bool = False) -> bool:
     raw = os.getenv(name)
@@ -129,6 +147,38 @@ class SecretManager:
         missing = [name for name in names if not self.get_optional(name)]
         if missing:
             raise SecretManagerError("required secrets missing: " + ", ".join(missing))
+
+    def get_hierarchical(
+        self, category: str, service: str
+    ) -> Optional[str]:
+        """Retrieve secret from hierarchical path: k1/{category}/{service}
+
+        Example:
+            get_hierarchical("ai", "openai") → secret/k1/ai/openai
+            get_hierarchical("osint", "shodan") → secret/k1/osint/shodan
+        """
+        if self._vault_provider:
+            value = self._vault_provider.get_secret_hierarchical(
+                category, service
+            )
+            if value:
+                return value
+        # Fallback: try flat environment variable format
+        if self._allow_env_fallback():
+            env_name = f"{service.upper()}_API_KEY"
+            return self._env_provider.get_secret(env_name)
+        return None
+
+    def get_hierarchical_required(
+        self, category: str, service: str
+    ) -> str:
+        """Retrieve required secret from hierarchical path."""
+        value = self.get_hierarchical(category, service)
+        if not value:
+            raise SecretManagerError(
+                f"required secret missing: k1/{category}/{service}"
+            )
+        return value
 
 
 _SECRET_MANAGER: Optional[SecretManager] = None
