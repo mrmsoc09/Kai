@@ -1,0 +1,349 @@
+/* ============================================================================
+ * ULTRAWIDE DISPLAY OPTIMIZATION (21:9 Aspect Ratio - 2560x1080)
+ * LG 29WP60G-B Configuration
+ * ============================================================================ */
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* ===== THEME VARIABLES ===== */
+:root {
+  /* Color Palette */
+  --color-void-black: #050505;
+  --color-gold: #D4AF37;
+  --color-cyber-purple: #6A0DAD;
+  --color-titanium: #2d2d30;
+  --color-carbon: #1a1a1a;
+
+  /* Typography */
+  --font-technical: 'IBM Plex Mono', 'Courier New', monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Spacing - Optimized for 21:9 */
+  --spacing-ultra-left: 40%;
+  --spacing-ultra-center: 35%;
+  --spacing-ultra-right: 25%;
+}
+
+/* ===== BASE STYLES ===== */
+* {
+  @apply antialiased;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  @apply bg-black text-white;
+  background-color: var(--color-void-black);
+  font-family: var(--font-sans);
+}
+
+/* ===== TYPOGRAPHY ===== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-technical);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.font-technical {
+  font-family: var(--font-technical);
+}
+
+.tracking-wider {
+  letter-spacing: 0.15em;
+}
+
+/* ===== BORDER & ACCENT ===== */
+.border-gold {
+  border-color: var(--color-gold);
+}
+
+.text-gold {
+  color: var(--color-gold);
+}
+
+.bg-void {
+  background-color: var(--color-void-black);
+}
+
+/* ===== LED GLOW EFFECTS ===== */
+.glow-green {
+  text-shadow: 0 0 10px #10b981, 0 0 20px #10b981;
+  box-shadow: inset 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.glow-amber {
+  text-shadow: 0 0 10px #f59e0b, 0 0 20px #f59e0b;
+  box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.3);
+}
+
+.glow-red {
+  text-shadow: 0 0 10px #ef4444, 0 0 20px #ef4444;
+  box-shadow: inset 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.glow-gold {
+  text-shadow: 0 0 15px var(--color-gold), 0 0 30px var(--color-gold);
+  box-shadow: inset 0 0 15px rgba(212, 175, 55, 0.2);
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px currentColor);
+  }
+  50% {
+    opacity: 0.7;
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+}
+
+@keyframes breathing {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(212, 175, 55, 0.8);
+  }
+}
+
+@keyframes waveform {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes scan-line {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.animate-breathing {
+  animation: breathing 3s ease-in-out infinite;
+}
+
+.animate-waveform {
+  animation: waveform 2s linear infinite;
+}
+
+/* ===== LAYOUT GRID FOR 21:9 ===== */
+.layout-ultrawide {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+}
+
+.grid-left {
+  grid-column: 1 / 3; /* 50% */
+}
+
+.grid-center {
+  grid-column: 3 / 4; /* 25% */
+}
+
+.grid-right {
+  grid-column: 4 / 5; /* 25% */
+}
+
+/* Adjust for 40/35/25 split */
+.layout-dashboard {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+}
+
+.section-left {
+  grid-column: 1 / 5; /* 40% */
+}
+
+.section-center {
+  grid-column: 5 / 8; /* 30% */
+}
+
+.section-right {
+  grid-column: 8 / 11; /* 30% */
+}
+
+/* ===== COMPONENT STYLES ===== */
+.card {
+  @apply rounded border p-4;
+  border-color: var(--color-gold);
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d30 100%);
+  backdrop-filter: blur(10px);
+}
+
+.card:hover {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.btn-system {
+  @apply px-3 py-1 rounded font-mono text-xs font-bold border;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.btn-system:hover {
+  filter: brightness(1.2);
+}
+
+.btn-system.active {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+}
+
+.gauge {
+  @apply flex flex-col items-center justify-center;
+  background: linear-gradient(180deg, #1a1a1a 0%, #050505 100%);
+  border-radius: 50%;
+}
+
+.led-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+}
+
+.led-segment {
+  flex: 1;
+  border-radius: 0.25rem;
+  transition: box-shadow 0.1s ease;
+}
+
+.led-segment.active {
+  animation: pulse-glow 1s ease-in-out infinite;
+}
+
+/* ===== SCROLLBAR CUSTOMIZATION ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gold);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #e8c547;
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+/* Fallback for non-ultrawide displays */
+@media (max-width: 2560px) {
+  :root {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 1920px) {
+  :root {
+    font-size: 14px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0.1em;
+  }
+}
+
+@media (max-width: 1280px) {
+  /* Stack layout vertically on smaller displays */
+  .layout-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .section-left,
+  .section-center,
+  .section-right {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  body {
+    background: white;
+    color: black;
+  }
+
+  .border-gold {
+    border-color: black;
+  }
+
+  .text-gold {
+    color: black;
+  }
+}
+
+/* ===== UTILITY CLASSES ===== */
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.shadow-glow {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+.shadow-glow-lg {
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.7);
+}
+
+.transition-glow {
+  transition: box-shadow 0.3s ease, filter 0.3s ease;
+}
+
+/* ===== FOCUS STATES ===== */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: 0 0 15px var(--color-gold);
+  border-color: var(--color-gold);
+}
+
+/* ===== DARK MODE ENHANCEMENTS ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-void-black);
+  }
+}
