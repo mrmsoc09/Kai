@@ -199,137 +199,164 @@ raise SystemExit(1)
 PY
 }
 
-run_virsh() {
-    local uri
-    uri="$(read_env_value K1_WHONIX_LIBVIRT_URI "")"
-    if [[ -n "${uri}" ]]; then
-        virsh -c "${uri}" "$@"
-    else
-        virsh "$@"
-    fi
+csv_contains() {
+    local needle="$1"
+    local csv="$2"
+    local item=""
+    IFS=',' read -r -a items <<< "${csv}"
+    for item in "${items[@]}"; do
+        item="$(echo "${item}" | xargs)"
+        if [[ -n "${item}" && "${item}" == "${needle}" ]]; then
+            return 0
+        fi
+    done
+    return 1
 }
 
-validate_whonix_kvm_proxy() {
-    local enforce
-    enforce="$(read_env_value K1_ENFORCE_WHONIX_KVM false)"
-    if ! env_truthy "${enforce}"; then
+detect_active_interface() {
+    local check_ip
+    check_ip="$(read_env_value K1_VPN_CHECK_IP 1.1.1.1)"
+    if has_cmd ip; then
+        ip -o route get "${check_ip}" 2>/dev/null | awk '{for (i=1; i<=NF; i++) if ($i=="dev") {print $(i+1); exit}}'
+        return 0
+    fi
+    return 1
+}
+
+verify_vpn_interface() {
+    local active_iface
+    active_iface="$(read_env_value K1_ACTIVE_VPN_INTERFACE "")"
+    if [[ -z "${active_iface}" ]]; then
+        active_iface="$(detect_active_interface || true)"
+    fi
+    if [[ -z "${active_iface}" ]]; then
+        error "Unable to detect active egress interface for sovereign network validation."
+        return 1
+    fi
+
+    local allowed_ifaces vpn_bridge_iface
+    allowed_ifaces="$(read_env_value K1_VPN_ALLOWED_INTERFACES "tun0,wg0")"
+    vpn_bridge_iface="$(read_env_value K1_VPN_BRIDGE_INTERFACE "")"
+    if [[ -n "${vpn_bridge_iface}" ]]; then
+        allowed_ifaces="${allowed_ifaces},${vpn_bridge_iface}"
+    fi
+
+    if ! csv_contains "${active_iface}" "${allowed_ifaces}"; then
+        error "Active interface '${active_iface}' is not an allowed sovereign tunnel interface (${allowed_ifaces})."
+        return 1
+    fi
+
+    if has_cmd ip && ! ip link show "${active_iface}" 2>/dev/null | grep -q "state UP"; then
+        error "Tunnel interface '${active_iface}' is not UP."
+        return 1
+    fi
+
+    info "Sovereign VPN interface verified: ${active_iface}"
+    return 0
+}
+
+verify_ip_leak_protection() {
+    if ! has_cmd curl; then
+        error "curl is required for sovereign IP leak validation."
+        return 1
+    fi
+
+    local ip_api public_ip local_isp_cidrs
+    ip_api="$(read_env_value K1_EGRESS_IP_API "https://ipinfo.io/ip")"
+    public_ip="$(curl -fsS --max-time 10 "${ip_api}" | tr -d '[:space:]' || true)"
+    if [[ -z "${public_ip}" ]]; then
+        error "Unable to resolve external egress IP from ${ip_api}."
+        return 1
+    fi
+
+    local_isp_cidrs="$(read_env_value K1_LOCAL_ISP_CIDRS "")"
+    if [[ -z "${local_isp_cidrs}" ]]; then
+        error "K1_LOCAL_ISP_CIDRS is empty; cannot enforce IP leak protection."
+        return 1
+    fi
+
+    if ! python3 - "${public_ip}" "${local_isp_cidrs}" <<'PY'
+import ipaddress
+import sys
+
+ip_text = sys.argv[1]
+cidrs = [c.strip() for c in sys.argv[2].split(",") if c.strip()]
+try:
+    ip_obj = ipaddress.ip_address(ip_text)
+except ValueError:
+    raise SystemExit(2)
+
+for cidr in cidrs:
+    try:
+        network = ipaddress.ip_network(cidr, strict=False)
+    except ValueError:
+        continue
+    if ip_obj in network:
+        raise SystemExit(1)
+
+raise SystemExit(0)
+PY
+    then
+        info "Sovereign egress IP check passed: ${public_ip}"
         return 0
     fi
 
-    if ! has_cmd virsh; then
-        error "Whonix/KVM enforcement is enabled but 'virsh' is not installed."
-        error "Install libvirt/virsh, start the Whonix Gateway VM, then retry."
+    error "Egress IP ${public_ip} falls within configured local ISP CIDRs (${local_isp_cidrs})."
+    return 1
+}
+
+verify_proxy_tunnel() {
+    local use_proxies
+    use_proxies="$(read_env_value K1_USE_PROXIES false)"
+    if ! env_truthy "${use_proxies}"; then
+        return 0
+    fi
+
+    if ! has_cmd curl; then
+        error "curl is required for proxy tunnel verification."
         return 1
     fi
 
-    local vm_names_csv
-    vm_names_csv="$(read_env_value K1_WHONIX_VM_NAMES "whonix-gateway,Whonix-Gateway,whonix_gateway")"
-    IFS=',' read -r -a vm_candidates <<< "${vm_names_csv}"
-    local running_vm=""
-    local configured_uri
-    configured_uri="$(read_env_value K1_WHONIX_LIBVIRT_URI "")"
-    local active_uri=""
-    local uri
-    local -a uri_candidates
-    uri_candidates=()
-    if [[ -n "${configured_uri}" ]]; then
-        uri_candidates+=("${configured_uri}")
+    local proxy_url health_url timeout_s
+    proxy_url="$(read_env_value K1_RESIDENTIAL_PROXY_URL "")"
+    if [[ -z "${proxy_url}" ]]; then
+        proxy_url="$(read_env_value HTTPS_PROXY "")"
     fi
-    if [[ "${configured_uri}" != "qemu:///system" ]]; then
-        uri_candidates+=("qemu:///system")
-    fi
-    if [[ "${configured_uri}" != "qemu:///session" ]]; then
-        uri_candidates+=("qemu:///session")
-    fi
-
-    for uri in "${uri_candidates[@]}"; do
-        virsh -c "${uri}" list --all >/dev/null 2>&1 || continue
-        for vm in "${vm_candidates[@]}"; do
-            vm="$(echo "${vm}" | xargs)"
-            [[ -z "${vm}" ]] && continue
-            state="$(virsh -c "${uri}" domstate "${vm}" 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
-            if [[ "${state}" == *"running"* ]]; then
-                running_vm="${vm}"
-                active_uri="${uri}"
-                break
-            fi
-        done
-        [[ -n "${running_vm}" ]] && break
-    done
-
-    if [[ -z "${running_vm}" ]]; then
-        error "Whonix/KVM enforcement is enabled but no configured Whonix VM is running."
-        error "Checked VMs: ${vm_names_csv}"
-        if [[ -n "${configured_uri}" ]]; then
-            error "Using libvirt URI: ${configured_uri}"
-        fi
-        return 1
-    fi
-
-    if [[ -n "${active_uri}" && -n "${configured_uri}" && "${active_uri}" != "${configured_uri}" ]]; then
-        warn "Configured libvirt URI ${configured_uri} does not contain a running Whonix VM; using ${active_uri}."
-        configured_uri="${active_uri}"
-    fi
-
-    local proxy_url proxy_host proxy_port
-    proxy_url="$(read_env_value HTTPS_PROXY "")"
     if [[ -z "${proxy_url}" ]]; then
         proxy_url="$(read_env_value HTTP_PROXY "")"
     fi
     if [[ -z "${proxy_url}" ]]; then
-        proxy_host="$(read_env_value K1_WHONIX_PROXY_HOST 127.0.0.1)"
-        proxy_port="$(read_env_value K1_WHONIX_PROXY_PORT 9050)"
-    else
-        proxy_host="$(PROXY_URL="${proxy_url}" python3 -c 'import os, urllib.parse; u = urllib.parse.urlparse(os.environ["PROXY_URL"]); print(u.hostname or "")')"
-        proxy_port="$(PROXY_URL="${proxy_url}" python3 -c 'import os, urllib.parse; u = urllib.parse.urlparse(os.environ["PROXY_URL"]); print(u.port or (443 if u.scheme == "https" else 80))')"
-    fi
-
-    if [[ -z "${proxy_host}" || -z "${proxy_port}" ]]; then
-        error "Unable to resolve Whonix proxy host/port from HTTP_PROXY/HTTPS_PROXY."
+        error "K1_USE_PROXIES=true but no proxy URL configured (K1_RESIDENTIAL_PROXY_URL/HTTPS_PROXY/HTTP_PROXY)."
         return 1
     fi
 
-    if ! wait_for_port "${proxy_host}" "${proxy_port}" 12; then
-        error "Whonix proxy ${proxy_host}:${proxy_port} is not reachable."
-        error "Ensure Whonix Gateway is running in KVM and proxy listener is active."
+    health_url="$(read_env_value K1_PROXY_HEALTHCHECK_URL "https://example.com")"
+    timeout_s="$(read_env_value K1_PROXY_HEAD_TIMEOUT_SECONDS 10)"
+    if ! curl -fsSI --max-time "${timeout_s}" --proxy "${proxy_url}" "${health_url}" >/dev/null 2>&1; then
+        error "Residential proxy tunnel HEAD check failed (${health_url})."
         return 1
     fi
 
-    if [[ -n "${configured_uri}" ]]; then
-        info "Whonix/KVM proxy enforcement passed (uri=${configured_uri}, vm=${running_vm}, proxy=${proxy_host}:${proxy_port})."
-    else
-        info "Whonix/KVM proxy enforcement passed (vm=${running_vm}, proxy=${proxy_host}:${proxy_port})."
-    fi
+    info "Sovereign proxy tunnel verified."
+    return 0
 }
 
-ensure_whonix_kvm_proxy() {
-    local enforce
-    enforce="$(read_env_value K1_ENFORCE_WHONIX_KVM false)"
-    if ! env_truthy "${enforce}"; then
-        return 0
-    fi
-
-    if validate_whonix_kvm_proxy; then
-        return 0
-    fi
-
-    if [[ -x "${REPO_ROOT}/scripts/setup_whonix_kvm.sh" ]]; then
-        warn "Whonix proxy check failed; attempting auto-setup via scripts/setup_whonix_kvm.sh"
-        if ! "${REPO_ROOT}/scripts/setup_whonix_kvm.sh"; then
-            error "Automatic Whonix setup failed."
-            return 1
-        fi
-        # Reload .env because setup_whonix_kvm.sh may update URI/VM/proxy vars.
-        set -a
-        # shellcheck disable=SC1091
-        source .env
-        set +a
-        validate_whonix_kvm_proxy
-        return $?
-    fi
-
-    error "Whonix enforcement failed and setup helper script is unavailable."
-    return 1
+verify_sovereign_network() {
+    info "Validating Sovereign Network Layer..."
+    verify_vpn_interface || {
+        error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
+        return 1
+    }
+    verify_ip_leak_protection || {
+        error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
+        return 1
+    }
+    verify_proxy_tunnel || {
+        error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
+        return 1
+    }
+    info "Sovereign Network Layer: UP"
+    return 0
 }
 
 if [[ ! -f "${BOOTSTRAP_MARKER}" ]]; then
@@ -360,9 +387,18 @@ set -a
 # shellcheck disable=SC1091
 source .env
 set +a
+
+NETWORK_ENV_SH="${REPO_ROOT}/apps/backend/src/config/network_env.sh"
+if [[ -f "${NETWORK_ENV_SH}" ]]; then
+    set -a
+    # shellcheck disable=SC1091
+    source "${NETWORK_ENV_SH}"
+    set +a
+fi
+
 mkdir -p runtime/logs runtime/pids
 
-ensure_whonix_kvm_proxy || exit 1
+verify_sovereign_network || exit 1
 
 BACKEND_HOST="$(read_env_value BACKEND_HOST 0.0.0.0)"
 BACKEND_PORT="$(read_env_value BACKEND_PORT 8080)"
