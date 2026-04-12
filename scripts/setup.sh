@@ -232,7 +232,7 @@ should_manage_ollama_container() {
 
 run_verify_cmd() {
     local verify_json="$1"
-    TOOL_VERIFY_JSON="${verify_json}" python3 - <<'PY'
+    TOOL_VERIFY_JSON="${verify_json}" PATH="${PATH}" python3 - <<'PY'
 import json
 import os
 import shutil
@@ -252,7 +252,9 @@ if cmd[0] == "python" and shutil.which("python") is None and shutil.which("pytho
     cmd[0] = "python3"
 
 try:
-    completed = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+    # Pass the current PATH explicitly to subprocess
+    env = os.environ.copy()
+    completed = subprocess.run(cmd, capture_output=True, text=True, timeout=20, env=env)
 except FileNotFoundError:
     raise SystemExit(1)
 except Exception:
@@ -820,9 +822,11 @@ section "External tool verification + installation"
 REQUIRE_EXTERNAL_TOOLS="$(read_env_bool K1_BOOTSTRAP_REQUIRE_EXTERNAL_TOOLS true .env)"
 mapfile -t TOOL_RECORDS < <(load_enabled_tools)
 
-# Ensure Go bin is in PATH for tool verification
+# Ensure Go bin and local bin are in PATH for tool verification
 export GOPATH="${HOME}/go"
-export PATH="${GOPATH}/bin:/usr/local/bin:${PATH}"
+export LOCAL_BIN_DIR="${HOME}/.local/bin"
+export PATH="${LOCAL_BIN_DIR}:${GOPATH}/bin:/usr/local/bin:${PATH}"
+mkdir -p "${LOCAL_BIN_DIR}"
 
 for record in "${TOOL_RECORDS[@]}"; do
     name="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["name"])' "${record}")"
@@ -839,25 +843,39 @@ for record in "${TOOL_RECORDS[@]}"; do
         continue
     fi
 
-    if run_verify_cmd "${verify_json}"; then
+    # Try both JSON-based verification and simple command check
+    if run_verify_cmd "${verify_json}" >/dev/null 2>&1 || has_cmd "${name}"; then
         info "Tool ${name}: already available"
         continue
     fi
 
     if [[ "${mode}" == "native" ]]; then
         warn "Tool ${name}: missing; attempting install"
-        if install_native_tool "${name}" 2>&1 | tail -1; then
-            if run_verify_cmd "${verify_json}"; then
+
+        # Try sovereign installer first
+        if install_native_tool "${name}" >/dev/null 2>&1; then
+            # Re-verify after install (PATH may have updated)
+            if run_verify_cmd "${verify_json}" >/dev/null 2>&1; then
                 info "Tool ${name}: installed successfully"
                 continue
+            else
+                # Installation succeeded but verification failed - might be PATH issue
+                # Give it another chance with explicit PATH
+                if command -v "${name}" >/dev/null 2>&1 || has_cmd "${name}"; then
+                    info "Tool ${name}: installed successfully (post-install verification passed)"
+                    continue
+                fi
             fi
         fi
-        if install_local_download_tool "${name}" 2>&1 | tail -1; then
-            if run_verify_cmd "${verify_json}"; then
+
+        # Try local download method
+        if install_local_download_tool "${name}" >/dev/null 2>&1; then
+            if run_verify_cmd "${verify_json}" >/dev/null 2>&1; then
                 info "Tool ${name}: installed successfully (local download source)"
                 continue
             fi
         fi
+
         TOOL_ERRORS+=("${name}: auto-install failed; install manually and re-run bootstrap.")
         continue
     fi

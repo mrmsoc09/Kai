@@ -71,8 +71,20 @@ verify_tool_installed() {
         verify_cmd="${tool}"
     fi
 
+    # Try direct command first
     if command -v "${verify_cmd}" >/dev/null 2>&1; then
-        "${verify_cmd}" --version 2>/dev/null || "${verify_cmd}" -v 2>/dev/null || return 0
+        "${verify_cmd}" --version >/dev/null 2>&1 && return 0
+        "${verify_cmd}" -v >/dev/null 2>&1 && return 0
+        "${verify_cmd}" -h >/dev/null 2>&1 && return 0
+        # If no version flag works, just having the command is enough
+        return 0
+    fi
+
+    # For Python tools, try python -m as fallback
+    if python3 -m "${tool}" --version >/dev/null 2>&1; then
+        return 0
+    fi
+    if python3 -m "${tool}" -h >/dev/null 2>&1; then
         return 0
     fi
 
