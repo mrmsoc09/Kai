@@ -1,0 +1,71 @@
+{
+  "tools": {
+    "shodan": {
+      "api_key": "shodan"
+    },
+    "censys": {
+      "api_key_uid": "censys",
+      "api_key_secret": "censys_app_secret"
+    },
+    "fullhunt": {
+      "api_key": "fullhunt"
+    },
+    "nuclei": {
+      "api_token": "projectdiscovery",
+      "team_id": "projectdiscovery_teamid"
+    },
+    "virustotal": {
+      "api_key": "virustotal"
+    },
+    "hunter": {
+      "api_key": "hunter_io"
+    },
+    "leakix": {
+      "api_key": "leakix"
+    },
+    "dehashed": {
+      "api_key": "dehashed"
+    },
+    "urlscan": {
+      "api_key": "urlscan"
+    },
+    "zoomeye": {
+      "api_key": "zoomeye"
+    },
+    "github": {
+      "token": "github_developer",
+      "username": "github_username"
+    }
+  },
+  "ai_providers": {
+    "openai": {
+      "api_key": "openai"
+    },
+    "anthropic": {
+      "api_key": "anthropicai"
+    },
+    "google": {
+      "api_key": "geminiai"
+    },
+    "groq": {
+      "api_key": "grokai"
+    },
+    "mistral": {
+      "api_key": "mistralai"
+    },
+    "perplexity": {
+      "api_key": "perplexityai"
+    },
+    "openrouter": {
+      "api_key": "openrouter"
+    }
+  },
+  "bugbounty": {
+    "hackerone": {
+      "api_key": "hackerone"
+    },
+    "intigriti": {
+      "api_key": "intigriti"
+    }
+  }
+}

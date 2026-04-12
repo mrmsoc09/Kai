@@ -1,0 +1,343 @@
+#!/usr/bin/env python3
+"""
+K1 API Keys Integration Script
+
+Loads API keys from CSV into Vault and generates configuration.
+Usage: python3 scripts/integrate_api_keys.py --keys-file /path/to/keys.csv
+"""
+
+import csv
+import json
+import os
+import sys
+import argparse
+from pathlib import Path
+from typing import Dict, List, Tuple
+import subprocess
+import re
+
+
+class K1APIKeysIntegrator:
+    """Integrates API keys into K1 Vault and configuration."""
+
+    # Service category mapping
+    CATEGORIES = {
+        'osint': [
+            'fullhunt', 'abuse_ch', 'abuseipdb', 'leakix', 'grayhatwarfare',
+            'dehashed', 'intelx', 'zoomeye', 'hunter_io', 'hunter_how'
+        ],
+        'search': [
+            'ipinfo', 'projectdiscovery', 'projectdiscovery_teamid', 'urlscan',
+            'securitytrails', 'shodan', 'censys', 'censys_app_id', 'censys_app_secret'
+        ],
+        'ai': [
+            'openai', 'anthropicai', 'geminiai', 'grokai', 'vertexai',
+            'mistralai', 'perplexityai', 'openrouter', 'deepseek', 'litellm', 'aimlapi'
+        ],
+        'security': ['virustotal', 'otx_alienvault', 'nvd_nist'],
+        'bugbounty': ['hackerone', 'intigriti'],
+        'developer': [
+            'github_username', 'github_developer', 'google_developer', 'google_workspace',
+            'gitkraken', 'agentops', 'huggingface', 'coinbase_id', 'coinbase_id_secret'
+        ],
+        'communication': [
+            'x_com', 'x_com_secret', 'x_com_bearer_token', 'x_com_access_token',
+            'x_com_access_token_secret', 'x_com_app_id', 'twilio', 'proton_me'
+        ],
+        'other': ['deepl', 'serp', 'serper_dev']
+    }
+
+    def __init__(self, vault_addr: str = 'http://127.0.0.1:8200'):
+        """Initialize integrator with Vault address."""
+        self.vault_addr = vault_addr
+        self.vault_token = os.getenv('VAULT_TOKEN', '')
+        self.keys: Dict[str, str] = {}
+        self.k1_root = Path(__file__).parent.parent
+
+    def load_keys_from_csv(self, csv_file: str) -> bool:
+        """Load API keys from CSV file."""
+        if not Path(csv_file).exists():
+            print(f"❌ Error: CSV file not found: {csv_file}")
+            return False
+
+        try:
+            with open(csv_file, 'r') as f:
+                reader = csv.reader(f)
+                for line_num, row in enumerate(reader, 1):
+                    if len(row) < 2:
+                        continue
+                    service, key = row[0].strip(), row[1].strip()
+                    if service and key:
+                        self.keys[service] = key
+
+            print(f"✓ Loaded {len(self.keys)} API keys from CSV")
+            return True
+        except Exception as e:
+            print(f"❌ Error loading CSV: {e}")
+            return False
+
+    def get_vault_path(self, service: str) -> str:
+        """Get Vault secret path for a service."""
+        category = self.get_category(service)
+        return f"secret/k1/{category}/{service}"
+
+    def get_category(self, service: str) -> str:
+        """Get category for a service."""
+        for cat, services in self.CATEGORIES.items():
+            if service in services:
+                return cat
+        return 'other'
+
+    def load_to_vault(self) -> bool:
+        """Load all keys into Vault."""
+        if not self.vault_token:
+            print("⚠️  Warning: VAULT_TOKEN not set. Skipping Vault load.")
+            print("   Set VAULT_TOKEN=<token> and run again to load to Vault.")
+            return False
+
+        print("\n📦 Loading keys into Vault...")
+        failed = []
+
+        for service, key in self.keys.items():
+            path = self.get_vault_path(service)
+            try:
+                cmd = [
+                    'vault', 'kv', 'put', path,
+                    f'key={key}'
+                ]
+                result = subprocess.run(
+                    cmd,
+                    env={**os.environ, 'VAULT_ADDR': self.vault_addr, 'VAULT_TOKEN': self.vault_token},
+                    capture_output=True,
+                    timeout=10
+                )
+
+                if result.returncode == 0:
+                    print(f"  ✓ {service:30} → {path}")
+                else:
+                    print(f"  ✗ {service:30} → ERROR")
+                    failed.append(service)
+            except Exception as e:
+                print(f"  ✗ {service:30} → {e}")
+                failed.append(service)
+
+        if failed:
+            print(f"\n⚠️  {len(failed)} keys failed to load")
+            return len(failed) < len(self.keys)
+
+        print(f"\n✓ All {len(self.keys)} keys loaded to Vault")
+        return True
+
+    def generate_env_file(self, output_file: str = None) -> bool:
+        """Generate environment configuration file."""
+        if not output_file:
+            output_file = str(self.k1_root / '.env.api-keys')
+
+        print(f"\n📝 Generating environment file: {output_file}")
+
+        env_content = "# K1 API Keys Configuration\n"
+        env_content += "# Generated by integrate_api_keys.py\n"
+        env_content += "# IMPORTANT: Keep this file secure - contains sensitive credentials\n\n"
+
+        # Group by category
+        for category, services in self.CATEGORIES.items():
+            env_content += f"\n# {category.upper()} SERVICES\n"
+            for service in services:
+                if service in self.keys:
+                    key_name = self._key_env_name(service)
+                    env_content += f"{key_name}={self.keys[service]}\n"
+
+        try:
+            Path(output_file).write_text(env_content)
+            os.chmod(output_file, 0o600)  # Secure permissions
+            print(f"✓ Environment file created: {output_file}")
+            return True
+        except Exception as e:
+            print(f"❌ Error writing env file: {e}")
+            return False
+
+    def generate_vault_config(self, output_file: str = None) -> bool:
+        """Generate Vault configuration YAML."""
+        if not output_file:
+            output_file = str(self.k1_root / 'config' / 'vault' / 'api_keys_config.yaml')
+
+        print(f"\n⚙️  Generating Vault config: {output_file}")
+
+        config = {
+            'api_keys': {
+                'vault': {
+                    'address': self.vault_addr,
+                    'mount_path': 'secret/k1',
+                    'token_env': 'VAULT_TOKEN'
+                },
+                'categories': {}
+            }
+        }
+
+        # Build category config
+        for category, services in self.CATEGORIES.items():
+            config['api_keys']['categories'][category] = {
+                'services': [s for s in services if s in self.keys],
+                'vault_paths': {s: self.get_vault_path(s) for s in services if s in self.keys}
+            }
+
+        try:
+            import yaml
+            output_path = Path(output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_file, 'w') as f:
+                yaml.dump(config, f, default_flow_style=False)
+            print(f"✓ Vault config created: {output_file}")
+            return True
+        except Exception as e:
+            print(f"⚠️  Skipping Vault YAML config: {e}")
+            return False
+
+    def generate_tool_config(self, output_file: str = None) -> bool:
+        """Generate tool-specific API key mappings."""
+        if not output_file:
+            output_file = str(self.k1_root / 'config' / 'tool_api_keys.json')
+
+        print(f"\n🛠️  Generating tool config: {output_file}")
+
+        tool_config = {
+            'tools': {
+                'shodan': {'api_key': 'shodan'},
+                'censys': {'api_key_uid': 'censys', 'api_key_secret': 'censys_app_secret'},
+                'fullhunt': {'api_key': 'fullhunt'},
+                'nuclei': {'api_token': 'projectdiscovery', 'team_id': 'projectdiscovery_teamid'},
+                'virustotal': {'api_key': 'virustotal'},
+                'hunter': {'api_key': 'hunter_io'},
+                'leakix': {'api_key': 'leakix'},
+                'dehashed': {'api_key': 'dehashed'},
+                'urlscan': {'api_key': 'urlscan'},
+                'zoomeye': {'api_key': 'zoomeye'},
+                'github': {'token': 'github_developer', 'username': 'github_username'},
+            },
+            'ai_providers': {
+                'openai': {'api_key': 'openai'},
+                'anthropic': {'api_key': 'anthropicai'},
+                'google': {'api_key': 'geminiai'},
+                'groq': {'api_key': 'grokai'},
+                'mistral': {'api_key': 'mistralai'},
+                'perplexity': {'api_key': 'perplexityai'},
+                'openrouter': {'api_key': 'openrouter'},
+            },
+            'bugbounty': {
+                'hackerone': {'api_key': 'hackerone'},
+                'intigriti': {'api_key': 'intigriti'},
+            }
+        }
+
+        try:
+            output_path = Path(output_file)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_file, 'w') as f:
+                json.dump(tool_config, f, indent=2)
+            os.chmod(output_file, 0o600)
+            print(f"✓ Tool config created: {output_file}")
+            return True
+        except Exception as e:
+            print(f"❌ Error writing tool config: {e}")
+            return False
+
+    def _key_env_name(self, service: str) -> str:
+        """Convert service name to environment variable name."""
+        return f"K1_{service.upper()}_API_KEY"
+
+    def generate_summary(self) -> None:
+        """Generate integration summary."""
+        print("\n" + "="*70)
+        print("📊 INTEGRATION SUMMARY")
+        print("="*70)
+
+        by_category = {}
+        for service, key in self.keys.items():
+            cat = self.get_category(service)
+            if cat not in by_category:
+                by_category[cat] = []
+            by_category[cat].append(service)
+
+        for cat in sorted(by_category.keys()):
+            services = by_category[cat]
+            print(f"\n{cat.upper():15} ({len(services):2} keys)")
+            for svc in sorted(services):
+                print(f"  ✓ {svc}")
+
+        print(f"\n{'TOTAL':15} ({len(self.keys):2} keys)")
+        print("\n" + "="*70)
+        print("NEXT STEPS:")
+        print("="*70)
+        print("1. Set VAULT_TOKEN environment variable:")
+        print("   export VAULT_TOKEN=<your-vault-token>")
+        print("\n2. Load keys to Vault:")
+        print("   python3 scripts/integrate_api_keys.py --keys-file <csv-path> --vault-load")
+        print("\n3. Configure K1 to use API keys:")
+        print("   export $(cat .env.api-keys | xargs)")
+        print("\n4. Restart K1 services:")
+        print("   ./k1 restart")
+        print("\n5. Test integrations:")
+        print("   pytest tests/test_api_connectivity.py -v")
+        print("="*70)
+
+
+def main():
+    """Main entry point."""
+    parser = argparse.ArgumentParser(
+        description='K1 API Keys Integration Tool'
+    )
+    parser.add_argument(
+        '--keys-file',
+        default='/home/k1-admin/Documents/API-KEYS Hashi-Corp_Vault.csv',
+        help='Path to API keys CSV file'
+    )
+    parser.add_argument(
+        '--vault-address',
+        default='http://127.0.0.1:8200',
+        help='Vault server address'
+    )
+    parser.add_argument(
+        '--vault-load',
+        action='store_true',
+        help='Load keys to Vault (requires VAULT_TOKEN)'
+    )
+    parser.add_argument(
+        '--env-file',
+        help='Output environment file path'
+    )
+    parser.add_argument(
+        '--vault-config',
+        help='Output Vault config path'
+    )
+    parser.add_argument(
+        '--tool-config',
+        help='Output tool config path'
+    )
+
+    args = parser.parse_args()
+
+    # Create integrator
+    integrator = K1APIKeysIntegrator(vault_addr=args.vault_address)
+
+    # Load keys
+    if not integrator.load_keys_from_csv(args.keys_file):
+        sys.exit(1)
+
+    # Load to Vault if requested
+    if args.vault_load:
+        integrator.load_to_vault()
+
+    # Generate configurations
+    integrator.generate_env_file(args.env_file)
+    integrator.generate_vault_config(args.vault_config)
+    integrator.generate_tool_config(args.tool_config)
+
+    # Print summary
+    integrator.generate_summary()
+
+    print("\n✅ Integration preparation complete!")
+    print("   Run with --vault-load to load keys to Vault")
+
+
+if __name__ == '__main__':
+    main()

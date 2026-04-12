@@ -1,0 +1,140 @@
+api_keys:
+  categories:
+    ai:
+      services:
+      - openai
+      - anthropicai
+      - geminiai
+      - grokai
+      - vertexai
+      - mistralai
+      - perplexityai
+      - openrouter
+      - deepseek
+      - litellm
+      - aimlapi
+      vault_paths:
+        aimlapi: secret/k1/ai/aimlapi
+        anthropicai: secret/k1/ai/anthropicai
+        deepseek: secret/k1/ai/deepseek
+        geminiai: secret/k1/ai/geminiai
+        grokai: secret/k1/ai/grokai
+        litellm: secret/k1/ai/litellm
+        mistralai: secret/k1/ai/mistralai
+        openai: secret/k1/ai/openai
+        openrouter: secret/k1/ai/openrouter
+        perplexityai: secret/k1/ai/perplexityai
+        vertexai: secret/k1/ai/vertexai
+    bugbounty:
+      services:
+      - hackerone
+      - intigriti
+      vault_paths:
+        hackerone: secret/k1/bugbounty/hackerone
+        intigriti: secret/k1/bugbounty/intigriti
+    communication:
+      services:
+      - x_com
+      - x_com_secret
+      - x_com_bearer_token
+      - x_com_access_token
+      - x_com_access_token_secret
+      - x_com_app_id
+      - twilio
+      - proton_me
+      vault_paths:
+        proton_me: secret/k1/communication/proton_me
+        twilio: secret/k1/communication/twilio
+        x_com: secret/k1/communication/x_com
+        x_com_access_token: secret/k1/communication/x_com_access_token
+        x_com_access_token_secret: secret/k1/communication/x_com_access_token_secret
+        x_com_app_id: secret/k1/communication/x_com_app_id
+        x_com_bearer_token: secret/k1/communication/x_com_bearer_token
+        x_com_secret: secret/k1/communication/x_com_secret
+    developer:
+      services:
+      - github_username
+      - github_developer
+      - google_developer
+      - google_workspace
+      - gitkraken
+      - agentops
+      - huggingface
+      - coinbase_id
+      - coinbase_id_secret
+      vault_paths:
+        agentops: secret/k1/developer/agentops
+        coinbase_id: secret/k1/developer/coinbase_id
+        coinbase_id_secret: secret/k1/developer/coinbase_id_secret
+        github_developer: secret/k1/developer/github_developer
+        github_username: secret/k1/developer/github_username
+        gitkraken: secret/k1/developer/gitkraken
+        google_developer: secret/k1/developer/google_developer
+        google_workspace: secret/k1/developer/google_workspace
+        huggingface: secret/k1/developer/huggingface
+    osint:
+      services:
+      - fullhunt
+      - abuse_ch
+      - abuseipdb
+      - leakix
+      - grayhatwarfare
+      - dehashed
+      - intelx
+      - zoomeye
+      - hunter_io
+      - hunter_how
+      vault_paths:
+        abuse_ch: secret/k1/osint/abuse_ch
+        abuseipdb: secret/k1/osint/abuseipdb
+        dehashed: secret/k1/osint/dehashed
+        fullhunt: secret/k1/osint/fullhunt
+        grayhatwarfare: secret/k1/osint/grayhatwarfare
+        hunter_how: secret/k1/osint/hunter_how
+        hunter_io: secret/k1/osint/hunter_io
+        intelx: secret/k1/osint/intelx
+        leakix: secret/k1/osint/leakix
+        zoomeye: secret/k1/osint/zoomeye
+    other:
+      services:
+      - deepl
+      - serp
+      - serper_dev
+      vault_paths:
+        deepl: secret/k1/other/deepl
+        serp: secret/k1/other/serp
+        serper_dev: secret/k1/other/serper_dev
+    search:
+      services:
+      - ipinfo
+      - projectdiscovery
+      - projectdiscovery_teamid
+      - urlscan
+      - securitytrails
+      - shodan
+      - censys
+      - censys_app_id
+      - censys_app_secret
+      vault_paths:
+        censys: secret/k1/search/censys
+        censys_app_id: secret/k1/search/censys_app_id
+        censys_app_secret: secret/k1/search/censys_app_secret
+        ipinfo: secret/k1/search/ipinfo
+        projectdiscovery: secret/k1/search/projectdiscovery
+        projectdiscovery_teamid: secret/k1/search/projectdiscovery_teamid
+        securitytrails: secret/k1/search/securitytrails
+        shodan: secret/k1/search/shodan
+        urlscan: secret/k1/search/urlscan
+    security:
+      services:
+      - virustotal
+      - otx_alienvault
+      - nvd_nist
+      vault_paths:
+        nvd_nist: secret/k1/security/nvd_nist
+        otx_alienvault: secret/k1/security/otx_alienvault
+        virustotal: secret/k1/security/virustotal
+  vault:
+    address: http://127.0.0.1:8200
+    mount_path: secret/k1
+    token_env: VAULT_TOKEN
