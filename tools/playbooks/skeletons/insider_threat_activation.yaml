@@ -1,0 +1,74 @@
+metadata:
+  name: Insider Threat Activation
+  id: insider_threat_activation
+  version: '1.0'
+  cluster: PERSISTENCE
+  complexity: MEDIUM
+  created: '2026-04-12T02:45:29.969482'
+objective:
+  primary: 'Execute persistence phase: insider_threat_activation'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: credential_theft_chain, auth_bypass_chain
+  required_input:
+  - target_profile
+  - recon_data
+outputs_and_targets:
+  primary_output_target: long_game_persistence_chain
+  fallback_target: physical_exploitation
+  alternate_targets:
+  - data_exfiltration_chain
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2025-15432
+  - CVE-2025-14321
+  - CVE-2025-13210
+  - CVE-2025-12109
+  - CVE-2024-51874
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: threat_intelligence_integrator
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: lateral_movement_planner
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: threat_intelligence_integrator
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call long_game_persistence_chain
+- condition: If execution fails
+  action: Call physical_exploitation
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - long_game_persistence_chain
+  - data_exfiltration_chain
+  called_by_these_playbooks: []
+  can_pivot_to:
+  - long_game_persistence_chain
+  - data_exfiltration_chain
+  - physical_exploitation
+  is_entry_point: false
+  is_terminal: false
+personas_assigned:
+- threat_intelligence_integrator
+- lateral_movement_planner

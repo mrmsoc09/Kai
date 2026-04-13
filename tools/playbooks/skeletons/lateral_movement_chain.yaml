@@ -1,0 +1,89 @@
+metadata:
+  name: Lateral Movement Chain
+  id: lateral_movement_chain
+  version: '1.0'
+  cluster: PERSISTENCE
+  complexity: HIGH
+  created: '2026-04-12T02:45:29.807505'
+objective:
+  primary: 'Execute persistence phase: lateral_movement_chain'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: establish_persistence_chain, auth_bypass_chain
+  required_input:
+  - target_profile
+  - recon_data
+outputs_and_targets:
+  primary_output_target: database_exploitation
+  fallback_target: log_removal_chain
+  alternate_targets:
+  - credential_storage_exploitation
+  - domain_compromise_chain
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2024-21567
+  - CVE-2024-20889
+  - CVE-2024-21998
+  - CVE-2024-20999
+  - CVE-2023-50287
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: lateral_movement_planner
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: privilege_escalation_specialist
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: lateral_movement_planner
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call database_exploitation
+- condition: If execution fails
+  action: Call log_removal_chain
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - database_exploitation
+  - credential_storage_exploitation
+  - domain_compromise_chain
+  called_by_these_playbooks:
+  - dark_web_leaks_research
+  - auth_bypass_chain
+  - privilege_escalation_chain
+  - credential_theft_chain
+  - api_abuse_chain
+  - database_exploitation
+  - container_escape_chain
+  - establish_persistence_chain
+  - domain_compromise_chain
+  - credential_storage_exploitation
+  - iot_expansion_chain
+  - incident_responder_evasion
+  can_pivot_to:
+  - database_exploitation
+  - credential_storage_exploitation
+  - domain_compromise_chain
+  - log_removal_chain
+  is_entry_point: false
+  is_terminal: false
+personas_assigned:
+- lateral_movement_planner
+- privilege_escalation_specialist

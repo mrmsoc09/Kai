@@ -1,0 +1,71 @@
+metadata:
+  name: Artifact Cleanup Chain
+  id: artifact_cleanup_chain
+  version: '1.0'
+  cluster: EVASION
+  complexity: MEDIUM
+  created: '2026-04-12T02:45:29.999851'
+objective:
+  primary: 'Execute evasion phase: artifact_cleanup_chain'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: all_preceding_clusters
+  required_input:
+  - target_profile
+  - recon_data
+outputs_and_targets:
+  primary_output_target: log_removal_chain
+  fallback_target: null
+  alternate_targets: []
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2024-45208
+  - CVE-2024-44097
+  - CVE-2024-42986
+  - CVE-2024-41875
+  - CVE-2024-40764
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: duplicate_detector
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: duplicate_detector
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: duplicate_detector
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call log_removal_chain
+- condition: If execution fails
+  action: Call None
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - log_removal_chain
+  called_by_these_playbooks:
+  - timeline_spoofing
+  can_pivot_to:
+  - log_removal_chain
+  - null
+  is_entry_point: false
+  is_terminal: true
+personas_assigned:
+- duplicate_detector

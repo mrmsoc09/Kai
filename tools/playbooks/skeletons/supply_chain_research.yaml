@@ -1,0 +1,75 @@
+metadata:
+  name: Supply Chain Research
+  id: supply_chain_research
+  version: '1.0'
+  cluster: RECONNAISSANCE
+  complexity: MEDIUM
+  created: '2026-04-12T02:45:29.608171'
+objective:
+  primary: 'Execute reconnaissance phase: supply_chain_research'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: master_orchestrator
+  required_input:
+  - mission_objective
+outputs_and_targets:
+  primary_output_target: supply_chain_attack
+  fallback_target: social_engineering_chain
+  alternate_targets:
+  - supply_chain_persistence
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2016-10555
+  - CVE-2019-5736
+  - CVE-2020-14386
+  - CVE-2021-22911
+  - CVE-2019-1010022
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: supply_chain_mapper
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: supply_chain_mapper
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: supply_chain_mapper
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call supply_chain_attack
+- condition: If execution fails
+  action: Call social_engineering_chain
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - supply_chain_attack
+  - supply_chain_persistence
+  called_by_these_playbooks:
+  - master_orchestrator
+  - active_fingerprinting
+  - physical_access_reconnaissance
+  can_pivot_to:
+  - supply_chain_attack
+  - supply_chain_persistence
+  - social_engineering_chain
+  is_entry_point: true
+  is_terminal: false
+personas_assigned:
+- supply_chain_mapper

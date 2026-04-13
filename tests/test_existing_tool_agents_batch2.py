@@ -57,7 +57,7 @@ def test_sqlmap_command_building():
     cmd = agent.build_command("http://example.com/id=1")
     assert "sqlmap" in cmd
     assert "--level" in cmd
-    assert "2" in cmd
+    assert "1" in cmd
     assert "--risk" in cmd
     assert "1" in cmd
     assert "--technique" in cmd

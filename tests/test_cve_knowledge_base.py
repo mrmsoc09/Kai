@@ -324,3 +324,213 @@ def persona_cve_mapping_file() -> Path:
     if not mapping_path.exists():
         pytest.skip("persona_cve_mapping.yaml not found")
     return mapping_path
+
+
+# ============================================================================
+# INTEGRATION TESTS FOR EXPANDED KNOWLEDGE BASE (PROMPT 2)
+# ============================================================================
+
+class TestExpandedKnowledgeBase:
+    """Test suite for expanded CVE knowledge base (250+ CVEs after integration)."""
+
+    @pytest.fixture
+    def expanded_kb_file(self) -> Path:
+        """Provide path to expanded CVE knowledge base."""
+        kai_root = Path(__file__).resolve().parents[1]
+        expanded_path = kai_root / "tools" / "knowledge" / "cve_knowledge_expanded.yaml"
+        if not expanded_path.exists():
+            pytest.skip("cve_knowledge_expanded.yaml not found")
+        return expanded_path
+
+    @pytest.fixture
+    def integration_metadata_file(self) -> Path:
+        """Provide path to integration metadata."""
+        kai_root = Path(__file__).resolve().parents[1]
+        metadata_path = kai_root / "tools" / "knowledge" / "cve_integration_metadata.json"
+        if not metadata_path.exists():
+            pytest.skip("cve_integration_metadata.json not found")
+        return metadata_path
+
+    def test_expanded_kb_exists(self, expanded_kb_file: Path) -> None:
+        """Verify expanded knowledge base file exists."""
+        assert expanded_kb_file.exists()
+
+    def test_integration_metadata_exists(self, integration_metadata_file: Path) -> None:
+        """Verify integration metadata file exists."""
+        assert integration_metadata_file.exists()
+
+    def test_expanded_kb_valid_yaml(self, expanded_kb_file: Path) -> None:
+        """Verify expanded YAML file is valid."""
+        import yaml
+
+        try:
+            with expanded_kb_file.open("r") as f:
+                data = yaml.safe_load(f)
+                assert "cve_index" in data
+        except yaml.YAMLError as e:
+            pytest.fail(f"Invalid YAML: {e}")
+
+    def test_expanded_kb_no_placeholders(self, expanded_kb_file: Path) -> None:
+        """Verify expanded KB has no placeholder CVEs (CVE-2024-99xxx)."""
+        import yaml
+
+        with expanded_kb_file.open("r") as f:
+            data = yaml.safe_load(f)
+
+        for cve_id in data.get("cve_index", {}).keys():
+            assert not cve_id.startswith("CVE-2024-99"), f"Placeholder found: {cve_id}"
+
+    def test_expanded_kb_minimum_cves(self, expanded_kb_file: Path) -> None:
+        """Verify expanded KB has minimum required CVEs (209 real)."""
+        import yaml
+
+        with expanded_kb_file.open("r") as f:
+            data = yaml.safe_load(f)
+
+        total_cves = len(data.get("cve_index", {}))
+        assert total_cves >= 209, f"Expected >= 209 real CVEs, got {total_cves}"
+
+    def test_integration_metadata_valid_json(self, integration_metadata_file: Path) -> None:
+        """Verify integration metadata is valid JSON."""
+        import json
+
+        try:
+            with integration_metadata_file.open("r") as f:
+                json.load(f)
+        except json.JSONDecodeError as e:
+            pytest.fail(f"Invalid JSON: {e}")
+
+    def test_integration_metadata_has_summary(self, integration_metadata_file: Path) -> None:
+        """Verify integration metadata contains summary information."""
+        import json
+
+        with integration_metadata_file.open("r") as f:
+            metadata = json.load(f)
+
+        required_fields = [
+            "total_cves",
+            "cves_from_existing_base",
+            "deduplication_summary",
+            "cisa_kev_status"
+        ]
+
+        for field in required_fields:
+            assert field in metadata, f"Missing field: {field}"
+
+    def test_no_duplicate_cves(self, expanded_kb_file: Path) -> None:
+        """Verify no duplicate CVE IDs in expanded KB."""
+        import yaml
+
+        with expanded_kb_file.open("r") as f:
+            data = yaml.safe_load(f)
+
+        cve_ids = list(data.get("cve_index", {}).keys())
+        assert len(cve_ids) == len(set(cve_ids)), "Duplicate CVE IDs found"
+
+    def test_deduplication_documented(self, integration_metadata_file: Path) -> None:
+        """Verify deduplication summary is documented."""
+        import json
+
+        with integration_metadata_file.open("r") as f:
+            metadata = json.load(f)
+
+        dedup = metadata.get("deduplication_summary", {})
+        assert "duplicate_cves_found" in dedup
+        assert "total_unique_cves" in dedup
+
+    def test_cisa_kev_status_tracked(self, integration_metadata_file: Path) -> None:
+        """Verify CISA KEV status is tracked in metadata."""
+        import json
+
+        with integration_metadata_file.open("r") as f:
+            metadata = json.load(f)
+
+        cisa_status = metadata.get("cisa_kev_status", {})
+        assert "actively_exploited" in cisa_status
+        assert isinstance(cisa_status.get("actively_exploited"), int)
+
+    def test_severity_distribution_present(self, integration_metadata_file: Path) -> None:
+        """Verify severity distribution is documented."""
+        import json
+
+        with integration_metadata_file.open("r") as f:
+            metadata = json.load(f)
+
+        severity_dist = metadata.get("severity_distribution", {})
+        assert len(severity_dist) > 0, "No severity distribution data"
+
+    def test_source_distribution_present(self, integration_metadata_file: Path) -> None:
+        """Verify source distribution is documented."""
+        import json
+
+        with integration_metadata_file.open("r") as f:
+            metadata = json.load(f)
+
+        source_dist = metadata.get("source_distribution", {})
+        assert len(source_dist) > 0, "No source distribution data"
+
+    def test_integration_timestamp_present(self, integration_metadata_file: Path) -> None:
+        """Verify integration timestamp is recorded."""
+        import json
+
+        with integration_metadata_file.open("r") as f:
+            metadata = json.load(f)
+
+        assert "integration_timestamp" in metadata
+        assert metadata["integration_timestamp"] is not None
+
+    def test_critical_cves_in_expanded(self, expanded_kb_file: Path) -> None:
+        """Verify expanded KB has CRITICAL severity CVEs."""
+        import yaml
+
+        with expanded_kb_file.open("r") as f:
+            data = yaml.safe_load(f)
+
+        critical_count = sum(
+            1 for cve in data.get("cve_index", {}).values()
+            if cve.get("metadata", {}).get("severity") == "CRITICAL"
+        )
+
+        assert critical_count > 0, "No CRITICAL CVEs found in expanded KB"
+
+    def test_rce_cves_in_expanded(self, expanded_kb_file: Path) -> None:
+        """Verify expanded KB has RCE vulnerabilities."""
+        import yaml
+
+        with expanded_kb_file.open("r") as f:
+            data = yaml.safe_load(f)
+
+        rce_count = 0
+        for cve in data.get("cve_index", {}).values():
+            vuln_type = cve.get("vulnerability", {}).get("vulnerability_type", "")
+            if "Remote Code" in vuln_type or "RCE" in vuln_type:
+                rce_count += 1
+
+        assert rce_count > 0, "No RCE CVEs found in expanded KB"
+
+    def test_integration_summary_report(self, expanded_kb_file: Path, integration_metadata_file: Path) -> None:
+        """Generate and verify integration summary report."""
+        import yaml
+        import json
+
+        with expanded_kb_file.open("r") as f:
+            kb_data = yaml.safe_load(f)
+
+        with integration_metadata_file.open("r") as f:
+            metadata = json.load(f)
+
+        total = len(kb_data.get("cve_index", {}))
+        existing = metadata.get("cves_from_existing_base", 0)
+        from_prompt1 = metadata.get("cves_from_prompt1", 0)
+
+        print(f"\n\n{'='*70}")
+        print(f"INTEGRATION SUMMARY REPORT")
+        print(f"{'='*70}")
+        print(f"Total CVEs in Expanded KB: {total}")
+        print(f"CVEs from existing base: {existing}")
+        print(f"CVEs from PROMPT 1 (validated): {from_prompt1}")
+        print(f"Integration timestamp: {metadata.get('integration_timestamp')}")
+        print(f"{'='*70}")
+
+        # Verify consistency
+        assert total >= existing, "Total should be >= existing"

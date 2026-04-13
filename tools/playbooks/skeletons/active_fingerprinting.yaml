@@ -1,0 +1,70 @@
+metadata:
+  name: Active Fingerprinting
+  id: active_fingerprinting
+  version: '1.0'
+  cluster: RECONNAISSANCE
+  complexity: MEDIUM
+  created: '2026-04-12T02:45:29.545726'
+objective:
+  primary: 'Execute reconnaissance phase: active_fingerprinting'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: passive_reconnaissance
+  required_input:
+  - mission_objective
+outputs_and_targets:
+  primary_output_target: vulnerability_discovery
+  fallback_target: supply_chain_research
+  alternate_targets: []
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2019-11045
+  - CVE-2020-5410
+  - CVE-2021-25744
+  - CVE-2021-3807
+  - CVE-2021-4034
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: vulnerability_validator
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: vulnerability_validator
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: vulnerability_validator
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call vulnerability_discovery
+- condition: If execution fails
+  action: Call supply_chain_research
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - vulnerability_discovery
+  called_by_these_playbooks:
+  - passive_reconnaissance
+  can_pivot_to:
+  - vulnerability_discovery
+  - supply_chain_research
+  is_entry_point: true
+  is_terminal: false
+personas_assigned:
+- vulnerability_validator

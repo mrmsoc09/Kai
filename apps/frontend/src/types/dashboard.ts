@@ -327,16 +327,56 @@ export interface NodesApiResponse extends ApiResponse<ResearchNode[]> {}
 export interface EventsApiResponse extends ApiResponse<VulnerabilityEvent[]> {}
 
 // ============================================================================
+// ASYNC STATE WRAPPER (for loading/error handling)
+// ============================================================================
+
+export interface AsyncState<T> {
+  /** Data payload */
+  data?: T;
+
+  /** Loading state indicator */
+  loading: boolean;
+
+  /** Error state (null if no error) */
+  error?: ComponentError | null;
+
+  /** ISO timestamp of last successful update */
+  lastUpdated?: string;
+
+  /** Automatic retry count on failure */
+  retryCount?: number;
+}
+
+export interface ComponentError {
+  /** Error code for categorization */
+  code: DashboardErrorCode;
+
+  /** Human-readable error message */
+  message: string;
+
+  /** Additional context for debugging */
+  context?: Record<string, unknown>;
+
+  /** Whether error is recoverable */
+  retryable: boolean;
+
+  /** Stack trace (development only) */
+  stack?: string;
+}
+
+// ============================================================================
 // CONTEXT & STATE MANAGEMENT
 // ============================================================================
 
 export interface DashboardContextType {
-  // State
-  telemetry: TelemetryMetrics;
-  nodes: ResearchNode[];
-  events: VulnerabilityEvent[];
+  // Async-wrapped state (with loading/error)
+  telemetry: AsyncState<TelemetryMetrics>;
+  nodes: AsyncState<ResearchNode[]>;
+  events: AsyncState<VulnerabilityEvent[]>;
+  systemStatus: AsyncState<SystemStatus>;
+
+  // Synchronous state
   viewState: DashboardViewState;
-  systemStatus: SystemStatus;
 
   // Actions
   updateTelemetry: (metrics: TelemetryMetrics) => void;
@@ -345,6 +385,7 @@ export interface DashboardContextType {
   setZoomLevel: (level: ZoomLevel) => void;
   updateFilters: (filters: Partial<DashboardFilters>) => void;
   refresh: () => Promise<void>;
+  clearError: (section: keyof Omit<DashboardContextType, 'viewState' | 'updateTelemetry' | 'selectNode' | 'selectVulnerability' | 'setZoomLevel' | 'updateFilters' | 'refresh' | 'clearError'>) => void;
 }
 
 export interface DashboardProviderProps {

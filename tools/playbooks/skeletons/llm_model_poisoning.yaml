@@ -1,0 +1,73 @@
+metadata:
+  name: Llm Model Poisoning
+  id: llm_model_poisoning
+  version: '1.0'
+  cluster: EXPLOITATION
+  complexity: HIGH
+  created: '2026-04-12T02:45:29.777502'
+objective:
+  primary: 'Execute exploitation phase: llm_model_poisoning'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: api_abuse_chain
+  required_input:
+  - target_profile
+  - recon_data
+outputs_and_targets:
+  primary_output_target: data_exfiltration_chain
+  fallback_target: api_abuse_chain
+  alternate_targets:
+  - establish_persistence_chain
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2024-20833
+  - CVE-2024-21234
+  - CVE-2023-49073
+  - CVE-2024-22445
+  - CVE-2024-21789
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: threat_intelligence_integrator
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: threat_intelligence_integrator
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: threat_intelligence_integrator
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call data_exfiltration_chain
+- condition: If execution fails
+  action: Call api_abuse_chain
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - data_exfiltration_chain
+  - establish_persistence_chain
+  called_by_these_playbooks: []
+  can_pivot_to:
+  - data_exfiltration_chain
+  - establish_persistence_chain
+  - api_abuse_chain
+  is_entry_point: false
+  is_terminal: false
+personas_assigned:
+- threat_intelligence_integrator

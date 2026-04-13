@@ -1,52 +1,213 @@
 from __future__ import annotations
 
-from typing import Any
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any, Callable
+
+from apps.backend.src.core.protocol import KaisonResult, KaisonResultMetadata
+from apps.backend.src.core.scope_guardrails import (
+    audit_scope_decision,
+    evaluate_target_scope,
+    load_scope_policy,
+)
 
 from ..base_tool_agent import BaseToolAgent
+from ..osint_schemas import DiscoveryRegistry
 
 
-_HIGH_VALUE_KEYWORDS = {"internal", "dev", "staging", "api", "admin", "backend", "service", "micro"}
+_HIGH_VALUE_KEYWORDS = {
+    "internal",
+    "dev",
+    "staging",
+    "api",
+    "admin",
+    "backend",
+    "service",
+    "micro",
+}
+_APPROVED_SCOPE_LABEL = "Approved Research Scope"
+_ALLOWED_SNL_INTERFACES = {"tun0", "wg0", "vpn0", "snl0"}
 
 
 class GithubSubdomainsAgent(BaseToolAgent):
+    """Fixture-driven architectural stub for GitHub-derived subdomain intel."""
+
     TOOL_NAME = "github-subdomains"
+
+    def __init__(self, memory_root: str | Path | None = None) -> None:
+        super().__init__(memory_root=memory_root)
+        self._telemetry_events: list[dict[str, Any]] = []
+        self._telemetry_hook: Callable[[dict[str, Any]], None] | None = None
+
     def _get_tool_name(self) -> str:
         return self.TOOL_NAME
 
+    def register_telemetry_hook(self, hook: Callable[[dict[str, Any]], None]) -> None:
+        self._telemetry_hook = hook
+
+    def get_telemetry_events(self) -> list[dict[str, Any]]:
+        return list(self._telemetry_events)
+
+    def _emit_telemetry(self, metric: str, value: Any) -> None:
+        event = {
+            "tool": self.TOOL_NAME,
+            "metric": metric,
+            "value": value,
+            "timestamp": datetime.now(UTC).isoformat(),
+        }
+        self._telemetry_events.append(event)
+        if self._telemetry_hook:
+            try:
+                self._telemetry_hook(event)
+            except Exception:
+                return
+
+    def check_policy(self, target: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
+        opts = options or {}
+        scope_label = str(opts.get("research_scope", _APPROVED_SCOPE_LABEL)).strip()
+        policy = load_scope_policy(opts.get("scope_policy_path"))
+        decision = evaluate_target_scope(target, policy, safe_mode=True)
+        audit_scope_decision(decision)
+        snl_interface = str(opts.get("snl_interface", "tun0")).strip()
+        snl_ok = snl_interface in _ALLOWED_SNL_INTERFACES
+
+        allowed = decision.allowed and scope_label == _APPROVED_SCOPE_LABEL and snl_ok
+        reason = decision.reason
+        if scope_label != _APPROVED_SCOPE_LABEL:
+            reason = "missing_approved_research_scope"
+        elif not snl_ok:
+            reason = f"snl_interface_not_allowed:{snl_interface}"
+
+        return {
+            "allowed": allowed,
+            "reason": reason,
+            "target": decision.normalized_host,
+            "matched_rule": decision.matched_rule,
+            "snl_interface": snl_interface,
+        }
+
+    @staticmethod
+    def _select_token(options: dict[str, Any]) -> str:
+        token = str(options.get("github_token", "")).strip()
+        if token:
+            return token
+
+        pool = options.get("github_token_pool")
+        if isinstance(pool, list):
+            for candidate in pool:
+                token = str(candidate or "").strip()
+                if token:
+                    return token
+        return ""
 
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
         opts = options or {}
-        output_file = opts.get(
-            "output_file",
-            f"{opts.get('artifact_dir', '/tmp')}/github_subdomains_output.txt",
-        )
-        # github-subdomains doesn't have a direct timeout flag. 
-        # BaseToolAgent's subprocess.communicate(timeout=...) handles it.
-        cmd = ["github-subdomains", "-d", target, "-o", str(output_file)]
-        # Token injected by Celery worker from Vault — never read env directly
-        token = str(opts.get("github_token", "")).strip()
+        cmd = ["github-subdomains", "-d", target, "-oJ"]
+        token = self._select_token(opts)
         if token:
             cmd.extend(["-t", token])
         return cmd
 
+    def ingest_fixture(
+        self,
+        fixture: str | dict[str, Any] | list[Any],
+        *,
+        target: str,
+        options: dict[str, Any] | None = None,
+    ) -> list[DiscoveryRegistry]:
+        policy = self.check_policy(target, options)
+        if not policy["allowed"]:
+            raise PermissionError(f"target blocked by scope policy: {policy['reason']}")
+
+        records: list[DiscoveryRegistry] = []
+        for domain in self._extract_domains(fixture):
+            try:
+                records.append(
+                    DiscoveryRegistry.model_validate(
+                        {
+                            "discovered_domain": domain,
+                            "intel_source": "github_code_search",
+                            "timestamp": datetime.now(UTC),
+                        }
+                    )
+                )
+            except Exception:
+                continue
+
+        self._emit_telemetry("AGENT_STATUS", "PASSIVE_ENUMERATION")
+        self._emit_telemetry("PASSIVE_ASSETS_FOUND", len(records))
+        if records:
+            self._emit_telemetry("EventLog", "CLOUD_BURST")
+        return records
+
+    def _extract_domains(self, fixture: str | dict[str, Any] | list[Any]) -> list[str]:
+        values: list[str] = []
+
+        def _add_candidate(candidate: Any) -> None:
+            token = str(candidate or "").strip().lower()
+            if token:
+                values.append(token)
+
+        if isinstance(fixture, dict):
+            _add_candidate(fixture.get("subdomain") or fixture.get("domain") or fixture.get("host"))
+            domains = fixture.get("domains")
+            if isinstance(domains, list):
+                for item in domains:
+                    _add_candidate(item)
+            return values
+
+        if isinstance(fixture, list):
+            for item in fixture:
+                if isinstance(item, dict):
+                    _add_candidate(item.get("subdomain") or item.get("domain") or item.get("host"))
+                else:
+                    _add_candidate(item)
+            return values
+
+        for line in str(fixture).splitlines():
+            token = line.strip()
+            if not token or token.startswith("["):
+                continue
+            if token.startswith("{"):
+                try:
+                    payload = json.loads(token)
+                except json.JSONDecodeError:
+                    payload = None
+                if isinstance(payload, dict):
+                    _add_candidate(payload.get("subdomain") or payload.get("domain") or payload.get("host"))
+                    continue
+            _add_candidate(token)
+
+        return values
+
     def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:
         findings: list[dict[str, Any]] = []
-        for line in raw_output.strip().splitlines():
-            value = line.strip()
-            if not value or value.startswith("[") or "." not in value:
+        for domain in self._extract_domains(raw_output):
+            try:
+                registry = DiscoveryRegistry.model_validate(
+                    {
+                        "discovered_domain": domain,
+                        "intel_source": "github_code_search",
+                        "timestamp": datetime.now(UTC),
+                    }
+                )
+            except Exception:
                 continue
+
             findings.append(
                 {
                     "type": "subdomain",
-                    "value": value,
+                    "value": registry.discovered_domain,
                     "target": target,
                     "severity": "info",
                     "confidence": 0.85,
                     "source_tool": self.TOOL_NAME,
-                    "raw_evidence": line,
+                    "raw_evidence": domain,
                     "context": {
-                        "source": "github_code_search",
-                        "note": "Subdomain leaked in repository content.",
+                        "source": registry.intel_source,
+                        "discovery_registry": registry.model_dump(mode="json"),
+                        "snl_mode": "fixture_only",
                     },
                     "recommended_next_tools": ["dnsx", "httpx_probe", "trufflehog"],
                     "recommended_next_actions": ["resolve_dns", "check_for_secrets_in_repo"],
@@ -81,13 +242,81 @@ class GithubSubdomainsAgent(BaseToolAgent):
         target: str,
     ) -> dict[str, Any]:
         high_value = [
-            item for item in signal if str(item.get("severity", "")).lower() in {"medium", "high", "critical"}
+            item
+            for item in signal
+            if str(item.get("severity", "")).lower() in {"medium", "high", "critical"}
         ]
         return {
             "next_agents": ["dnsx", "httpx_probe", "trufflehog"],
             "priority_targets": [f["value"] for f in high_value[:10]],
             "operator_summary": (
-                f"GitHub Subdomains found {len(signal)} candidate subdomains for {target}. "
-                "Trigger trufflehog on associated repositories and prioritize internal environment labels."
+                f"GitHub fixture ingestion produced {len(signal)} candidate subdomains for {target}. "
+                "Cloud Burst telemetry emitted for passive asset expansion."
             ),
         }
+
+    def execute(
+        self,
+        target: str,
+        options: dict[str, Any] | None = None,
+        *,
+        mission_id: str = "mission-001",
+    ) -> KaisonResult:
+        opts = dict(options or {})
+        fixture = opts.get("fixture_data")
+        if fixture is None and isinstance(opts.get("fixture_path"), str):
+            fixture = Path(opts["fixture_path"]).read_text(encoding="utf-8")
+
+        started_at = datetime.now(UTC)
+        if fixture is None:
+            ended_at = datetime.now(UTC)
+            return KaisonResult(
+                mission_id=mission_id,
+                source_agent=self.TOOL_NAME,
+                status="failure",
+                target_context={
+                    "target": target,
+                    "mode": "stub_only",
+                    "error": "fixture_data is required; live execution disabled",
+                },
+                metadata=KaisonResultMetadata(
+                    started_at=started_at,
+                    ended_at=ended_at,
+                    runtime_ms=max(0, int((ended_at - started_at).total_seconds() * 1000)),
+                ),
+                findings=[],
+            )
+
+        records = self.ingest_fixture(fixture, target=target, options=opts)
+        stdout = "\n".join(record.discovered_domain for record in records)
+        ended_at = datetime.now(UTC)
+        runtime_ms = max(0, int((ended_at - started_at).total_seconds() * 1000))
+
+        result = self.map_output(
+            target=target,
+            command=["fixture://github-subdomains"],
+            stdout=stdout,
+            stderr="",
+            exit_code=0,
+            started_at=started_at,
+            ended_at=ended_at,
+            runtime_ms=runtime_ms,
+            mission_id=mission_id,
+            status="success",
+            options=opts,
+        )
+
+        context = dict(result.target_context)
+        context.update(
+            {
+                "mode": "stub_fixture",
+                "normalized_records": [record.model_dump(mode="json") for record in records],
+                "snl_interface": policy["snl_interface"],
+                "telemetry": self.get_telemetry_events(),
+            }
+        )
+        return result.model_copy(update={"target_context": context})
+
+
+class GithubSubAgent(GithubSubdomainsAgent):
+    """Architectural alias used by orchestration briefs."""

@@ -1,0 +1,75 @@
+metadata:
+  name: Api Abuse Chain
+  id: api_abuse_chain
+  version: '1.0'
+  cluster: EXPLOITATION
+  complexity: MEDIUM
+  created: '2026-04-12T02:45:29.714713'
+objective:
+  primary: 'Execute exploitation phase: api_abuse_chain'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: active_fingerprinting
+  required_input:
+  - target_profile
+  - recon_data
+outputs_and_targets:
+  primary_output_target: data_exfiltration_chain
+  fallback_target: rce_chain
+  alternate_targets:
+  - lateral_movement_chain
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2018-1000201
+  - CVE-2019-9490
+  - CVE-2019-9740
+  - CVE-2021-21342
+  - CVE-2020-14750
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: graphql_cop_specialist
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: xss_hunter
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: graphql_cop_specialist
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call data_exfiltration_chain
+- condition: If execution fails
+  action: Call rce_chain
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - data_exfiltration_chain
+  - lateral_movement_chain
+  called_by_these_playbooks:
+  - llm_model_poisoning
+  can_pivot_to:
+  - data_exfiltration_chain
+  - lateral_movement_chain
+  - rce_chain
+  is_entry_point: false
+  is_terminal: false
+personas_assigned:
+- graphql_cop_specialist
+- xss_hunter

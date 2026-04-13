@@ -1,4 +1,12 @@
 tools:
+  - id: assetfinder
+    adapter: assetfinder_adapter
+    capabilities: [recon, passive_recon]
+    opsec: low
+  - id: findomain
+    adapter: findomain_adapter
+    capabilities: [recon, subdomain_enumeration]
+    opsec: medium
   - id: amass
     adapter: amass_adapter
     capabilities: [recon]
@@ -7,7 +15,91 @@ tools:
     adapter: httpx_adapter
     capabilities: [recon, validation]
     opsec: low
+  - id: naabu
+    adapter: naabu_adapter
+    capabilities: [recon, network_enumeration]
+    opsec: medium
   - id: nuclei
     adapter: nuclei_adapter
-    capabilities: [validation]
+    capabilities: [validation, vulnerability_assessment]
+    opsec: medium
+  - id: sqlmap
+    adapter: sqlmap_adapter
+    capabilities: [validation, database_exploitation]
+    opsec: high
+  - id: corsy
+    adapter: corsy_adapter
+    capabilities: [validation, access_control_audit]
+    opsec: medium
+  - id: kiterunner
+    adapter: kiterunner_adapter
+    capabilities: [recon, endpoint_enumeration]
+    opsec: medium
+  - id: chaos
+    adapter: chaos_adapter
+    capabilities: [recon, passive_recon, osint]
+    opsec: low
+  - id: github-subdomains
+    adapter: github_subdomains_adapter
+    capabilities: [recon, passive_recon, code_intelligence]
+    opsec: low
+  - id: sherlock
+    adapter: sherlock_adapter
+    capabilities: [osint, identity_discovery]
+    opsec: low
+  - id: social-analyzer
+    adapter: social_analyzer_adapter
+    capabilities: [osint, identity_enrichment]
+    opsec: low
+  - id: nmap
+    adapter: nmap_adapter
+    capabilities: [network_enumeration, service_fingerprinting]
+    opsec: medium
+  - id: masscan
+    adapter: masscan_adapter
+    capabilities: [network_enumeration, cidr_scan]
+    opsec: medium
+  - id: wafw00f
+    adapter: wafw00f_adapter
+    capabilities: [waf_detection, pre_scan_gate]
+    opsec: low
+  - id: whatweb
+    adapter: whatweb_adapter
+    capabilities: [technology_fingerprinting, stack_mapping]
+    opsec: low
+  - id: feroxbuster
+    adapter: feroxbuster_adapter
+    capabilities: [content_discovery, recursive_busting]
+    opsec: medium
+  - id: katana
+    adapter: katana_adapter
+    capabilities: [content_discovery, headless_crawling]
+    opsec: low
+  - id: paramspider
+    adapter: paramspider_adapter
+    capabilities: [parameter_discovery, injection_handoff]
+    opsec: low
+  - id: ffuf
+    adapter: ffuf_adapter
+    capabilities: [content_discovery, recursive_busting]
+    opsec: medium
+  - id: torbot
+    adapter: torbot_adapter
+    capabilities: [darknet_intelligence, tor_discovery]
+    opsec: low
+  - id: onionsearch
+    adapter: onionsearch_adapter
+    capabilities: [darknet_intelligence, tor_search]
+    opsec: low
+  - id: ahmia-client
+    adapter: ahmia_client_adapter
+    capabilities: [darknet_intelligence, indexed_onion_search]
+    opsec: low
+  - id: trufflehog
+    adapter: trufflehog_adapter
+    capabilities: [secret_detection, source_scan]
+    opsec: medium
+  - id: gitleaks
+    adapter: gitleaks_adapter
+    capabilities: [secret_detection, source_scan]
     opsec: medium

@@ -1,0 +1,79 @@
+metadata:
+  name: Auth Bypass Chain
+  id: auth_bypass_chain
+  version: '1.0'
+  cluster: EXPLOITATION
+  complexity: MEDIUM
+  created: '2026-04-12T02:45:29.652857'
+objective:
+  primary: 'Execute exploitation phase: auth_bypass_chain'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: vulnerability_discovery, dark_web_leaks_research
+  required_input:
+  - target_profile
+  - recon_data
+outputs_and_targets:
+  primary_output_target: establish_persistence_chain
+  fallback_target: privilege_escalation_chain
+  alternate_targets:
+  - lateral_movement_chain
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2017-10271
+  - CVE-2019-11358
+  - CVE-2017-5689
+  - CVE-2019-13956
+  - CVE-2020-11738
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: auth_bypass_specialist
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: jwt_breaker
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: auth_bypass_specialist
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call establish_persistence_chain
+- condition: If execution fails
+  action: Call privilege_escalation_chain
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - establish_persistence_chain
+  - lateral_movement_chain
+  called_by_these_playbooks:
+  - vulnerability_discovery
+  - dark_web_leaks_research
+  - rce_chain
+  - credential_theft_chain
+  - credential_storage_exploitation
+  can_pivot_to:
+  - establish_persistence_chain
+  - lateral_movement_chain
+  - privilege_escalation_chain
+  is_entry_point: false
+  is_terminal: false
+personas_assigned:
+- auth_bypass_specialist
+- jwt_breaker

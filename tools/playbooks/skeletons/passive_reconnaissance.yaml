@@ -1,0 +1,74 @@
+metadata:
+  name: Passive Reconnaissance
+  id: passive_reconnaissance
+  version: '1.0'
+  cluster: RECONNAISSANCE
+  complexity: LOW
+  created: '2026-04-12T02:45:29.529434'
+objective:
+  primary: 'Execute reconnaissance phase: passive_reconnaissance'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: master_orchestrator
+  required_input:
+  - mission_objective
+outputs_and_targets:
+  primary_output_target: active_fingerprinting
+  fallback_target: dark_web_leaks_research
+  alternate_targets:
+  - vulnerability_discovery
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2021-42013
+  - CVE-2017-5645
+  - CVE-2016-4974
+  - CVE-2018-6389
+  - CVE-2019-17671
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: osint_orchestrator
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: geoint_analyst
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: osint_orchestrator
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call active_fingerprinting
+- condition: If execution fails
+  action: Call dark_web_leaks_research
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - active_fingerprinting
+  - vulnerability_discovery
+  called_by_these_playbooks:
+  - master_orchestrator
+  can_pivot_to:
+  - active_fingerprinting
+  - vulnerability_discovery
+  - dark_web_leaks_research
+  is_entry_point: true
+  is_terminal: false
+personas_assigned:
+- osint_orchestrator
+- geoint_analyst

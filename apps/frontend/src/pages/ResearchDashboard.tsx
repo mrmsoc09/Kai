@@ -88,17 +88,28 @@ const ResearchDashboard: React.FC = () => {
     researchValidator: true,
   });
 
-  // Simulate telemetry updates
+  // Simulate telemetry updates (STRICTLY CLAMPED TO PREVENT OVERFLOW)
   useEffect(() => {
     const interval = setInterval(() => {
-      setTelemetry(prev => ({
-        cpuLoad: Math.max(30, Math.min(95, prev.cpuLoad + (Math.random() - 0.5) * 10)),
-        coreTemp: Math.max(60, Math.min(100, prev.coreTemp + (Math.random() - 0.5) * 5)),
-        vramUtilization: Math.max(40, Math.min(90, prev.vramUtilization + (Math.random() - 0.5) * 8)),
-        bandwidthThroughput: Math.max(1000, Math.min(5000, prev.bandwidthThroughput + (Math.random() - 0.5) * 500)),
-        analysisThreads: Math.max(100, Math.min(200, prev.analysisThreads + Math.floor((Math.random() - 0.5) * 20))),
-        rateLimitLevel: Math.max(10, Math.min(80, prev.rateLimitLevel + (Math.random() - 0.5) * 15)),
-      }));
+      setTelemetry(prev => {
+        const updateTelemetry = {
+          cpuLoad: Math.max(0, Math.min(100, prev.cpuLoad + (Math.random() - 0.5) * 10)),
+          coreTemp: Math.max(0, Math.min(100, prev.coreTemp + (Math.random() - 0.5) * 5)),
+          vramUtilization: Math.max(0, Math.min(100, prev.vramUtilization + (Math.random() - 0.5) * 8)),
+          bandwidthThroughput: Math.max(0, Math.min(5000, prev.bandwidthThroughput + (Math.random() - 0.5) * 500)),
+          analysisThreads: Math.max(0, Math.min(200, prev.analysisThreads + Math.floor((Math.random() - 0.5) * 20))),
+          rateLimitLevel: Math.max(0, Math.min(100, prev.rateLimitLevel + (Math.random() - 0.5) * 15)),
+        };
+
+        // VERIFY ALL VALUES ARE WITHIN BOUNDS
+        Object.entries(updateTelemetry).forEach(([key, value]) => {
+          if (typeof value === 'number' && (value < 0 || isNaN(value))) {
+            console.warn(`[TELEMETRY] Invalid value for ${key}:`, value);
+          }
+        });
+
+        return updateTelemetry;
+      });
     }, 2000);
 
     return () => clearInterval(interval);
@@ -107,10 +118,10 @@ const ResearchDashboard: React.FC = () => {
   return (
     <div className="w-screen h-screen bg-black text-white overflow-hidden" style={{ backgroundColor: '#050505' }}>
       {/* ===== PRIMARY HEADER ===== */}
-      <header className="h-20 border-b border-yellow-600 flex items-center justify-between px-8" style={{ borderColor: '#D4AF37' }}>
+      <header className="h-20 border-b border-yellow-600 flex items-center justify-between px-8 z-50" style={{ borderColor: '#D4AF37' }}>
         <div className="flex items-center gap-4">
-          {/* KaisonOne Medallion Logo */}
-          <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center" style={{ borderColor: '#D4AF37' }}>
+          {/* KaisonOne Medallion Logo - with rotational gold shimmer */}
+          <div className="w-12 h-12 rounded-full border-2 flex items-center justify-center animate-coin-glow" style={{ borderColor: '#D4AF37' }}>
             <div className="w-10 h-10 rounded-full bg-gradient-to-b from-yellow-600 to-yellow-800 flex items-center justify-center text-xs font-bold">
               K1
             </div>
@@ -128,21 +139,21 @@ const ResearchDashboard: React.FC = () => {
         </div>
       </header>
 
-      {/* ===== MAIN CONTENT GRID (21:9 Distribution) ===== */}
-      <div className="flex h-[calc(100vh-80px)] gap-4 p-4">
+      {/* ===== MAIN CONTENT GRID (21:9 Distribution - STRICT 40/35/25) ===== */}
+      <div className="h-[calc(100vh-80px)] gap-4 p-4 relative" style={{ display: 'grid', gridTemplateColumns: '40% 35% 25%', columnGap: '1rem' }}>
         {/* ===== LEFT SECTION: Global Threat Intelligence (40%) ===== */}
-        <div className="flex-1 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 relative z-10">
           {/* Holographic Globe & World Map */}
-          <div className="flex-1 rounded border" style={{ borderColor: '#D4AF37' }} className="bg-gray-900 border border-yellow-600 rounded p-4 relative overflow-hidden">
+          <div className="flex-1 rounded p-4 relative overflow-hidden glassmorphic-panel">
             <GlobeVisualization nodes={researchNodes} />
           </div>
 
           {/* Event Logs Sidebar */}
-          <div className="h-48 rounded border border-yellow-600 bg-gray-900 p-4 overflow-y-auto" style={{ borderColor: '#D4AF37' }}>
+          <div className="h-48 p-4 overflow-y-auto glassmorphic-panel" style={{ borderColor: '#D4AF37' }}>
             <h3 className="text-sm font-bold mb-3" style={{ color: '#D4AF37' }}>GLOBAL EVENT LOG</h3>
             <div className="space-y-2">
-              {globalEvents.map(event => (
-                <div key={event.id} className="text-xs border-l-2 pl-2" style={{ borderColor: getSeverityColor(event.severity) }}>
+              {globalEvents.map((event, idx) => (
+                <div key={event.id} className="text-xs border-l-2 pl-2 animate-data-jitter" style={{ borderColor: getSeverityColor(event.severity), animationDelay: `${idx * 0.05}s` }}>
                   <div className="flex justify-between items-start">
                     <span className="font-mono">{event.title}</span>
                     <span className="text-gray-500 text-[10px]">{new Date(event.timestamp).toLocaleTimeString()}</span>
@@ -155,13 +166,13 @@ const ResearchDashboard: React.FC = () => {
         </div>
 
         {/* ===== CENTER SECTION: Research Nodes & Details (35%) ===== */}
-        <div className="w-80 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 relative z-10">
           {/* Top 10 High-Risk Vulnerabilities */}
-          <div className="flex-1 rounded border border-yellow-600 bg-gray-900 p-4 overflow-y-auto" style={{ borderColor: '#D4AF37' }}>
-            <h3 className="text-sm font-bold mb-3 sticky top-0 bg-gray-900" style={{ color: '#D4AF37' }}>TOP 10 VULNERABILITIES</h3>
+          <div className="flex-1 p-4 overflow-y-auto min-h-0 glassmorphic-panel">
+            <h3 className="text-sm font-bold mb-3 sticky top-0" style={{ color: '#D4AF37', backgroundColor: 'rgba(26, 26, 26, 0.7)' }}>TOP 10 VULNERABILITIES</h3>
             <div className="space-y-2">
               {researchNodes.map((node, idx) => (
-                <div key={node.id} className="flex justify-between items-center text-xs border-b border-gray-700 pb-2">
+                <div key={node.id} className="flex justify-between items-center text-xs border-b border-gray-700 pb-2 animate-data-jitter" style={{ animationDelay: `${idx * 0.06}s` }}>
                   <span className="font-mono">#{idx + 1} {node.name}</span>
                   <span className="text-red-400 font-bold">{node.vulnerabilityCount}</span>
                 </div>
@@ -170,8 +181,8 @@ const ResearchDashboard: React.FC = () => {
           </div>
 
           {/* Research Nodes Status */}
-          <div className="flex-1 rounded border border-yellow-600 bg-gray-900 p-4 overflow-y-auto" style={{ borderColor: '#D4AF37' }}>
-            <h3 className="text-sm font-bold mb-3 sticky top-0 bg-gray-900" style={{ color: '#D4AF37' }}>VERIFIED RESEARCH NODES</h3>
+          <div className="flex-1 p-4 overflow-y-auto glassmorphic-panel">
+            <h3 className="text-sm font-bold mb-3 sticky top-0" style={{ color: '#D4AF37', backgroundColor: 'rgba(26, 26, 26, 0.7)' }}>VERIFIED RESEARCH NODES</h3>
             <div className="space-y-2">
               {researchNodes.map(node => (
                 <div key={node.id} className="flex items-center justify-between text-xs">
@@ -187,30 +198,30 @@ const ResearchDashboard: React.FC = () => {
         </div>
 
         {/* ===== RIGHT SECTION: Hardware Telemetry (25%) ===== */}
-        <div className="w-72 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 relative z-10">
           {/* Left Vertical LED Bar - Analysis Intensity */}
-          <div className="h-32 rounded border border-yellow-600 bg-gray-900 p-3 flex flex-col justify-between" style={{ borderColor: '#D4AF37' }}>
+          <div className="h-32 p-3 flex flex-col justify-between glassmorphic-panel">
             <div className="text-xs font-bold" style={{ color: '#D4AF37' }}>ANALYSIS INTENSITY</div>
             <div className="flex-1 flex flex-col justify-center gap-1">
               <LEDBar value={telemetry.analysisThreads} max={200} color="green" />
             </div>
-            <div className="text-xs text-gray-400 text-center">{telemetry.analysisThreads} THREADS</div>
+            <div className="text-xs text-gray-400 text-center animate-telemetry-pulse">{telemetry.analysisThreads} THREADS</div>
           </div>
 
           {/* Right Vertical LED Bar - Rate Limiter */}
-          <div className="h-32 rounded border border-yellow-600 bg-gray-900 p-3 flex flex-col justify-between" style={{ borderColor: '#D4AF37' }}>
+          <div className="h-32 p-3 flex flex-col justify-between glassmorphic-panel">
             <div className="text-xs font-bold" style={{ color: '#D4AF37' }}>RATE LIMITER</div>
             <div className="flex-1 flex flex-col justify-center gap-1">
               <LEDBar value={telemetry.rateLimitLevel} max={100} color="amber" />
             </div>
-            <div className="text-xs text-gray-400 text-center">{telemetry.rateLimitLevel}% THROTTLE</div>
+            <div className="text-xs text-gray-400 text-center animate-telemetry-pulse">{telemetry.rateLimitLevel}% THROTTLE</div>
           </div>
 
           {/* Circular Gauge - CPU Load */}
           <CircularGauge label="CPU LOAD" value={telemetry.cpuLoad} max={100} unit="%" color="blue" />
 
           {/* Circular Gauge - Core Temp & VRAM */}
-          <div className="rounded border border-yellow-600 bg-gray-900 p-3" style={{ borderColor: '#D4AF37' }}>
+          <div className="p-3 glassmorphic-panel">
             <div className="text-xs font-bold mb-2" style={{ color: '#D4AF37' }}>CORE METRICS</div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="border-l-2 border-orange-500 pl-2">
@@ -225,11 +236,11 @@ const ResearchDashboard: React.FC = () => {
           </div>
 
           {/* Circular Gauge - Bandwidth Throughput */}
-          <div className="rounded border border-yellow-600 bg-gray-900 p-3" style={{ borderColor: '#D4AF37' }}>
+          <div className="p-3 glassmorphic-panel">
             <div className="text-xs font-bold mb-2" style={{ color: '#D4AF37' }}>BANDWIDTH</div>
             <div className="flex items-center justify-between">
               <div className="text-xs text-gray-400">THROUGHPUT</div>
-              <div className="font-bold text-blue-400">{(telemetry.bandwidthThroughput / 1000).toFixed(1)} GB/s</div>
+              <div className="font-bold text-blue-400 animate-telemetry-pulse">{(telemetry.bandwidthThroughput / 1000).toFixed(1)} GB/s</div>
             </div>
             <div className="mt-2 h-12 rounded bg-gray-800 p-1 overflow-hidden">
               <WaveformVisualizer />
@@ -237,7 +248,7 @@ const ResearchDashboard: React.FC = () => {
           </div>
 
           {/* System Status Controls */}
-          <div className="rounded border border-yellow-600 bg-gray-900 p-3" style={{ borderColor: '#D4AF37' }}>
+          <div className="p-3 glassmorphic-panel">
             <div className="text-xs font-bold mb-2" style={{ color: '#D4AF37' }}>SYSTEM CONTROLS</div>
             <div className="grid grid-cols-2 gap-2">
               <SystemButton label="OLLAMA" active={systemStatus.ollamaFallback} />
@@ -248,8 +259,8 @@ const ResearchDashboard: React.FC = () => {
           </div>
 
           {/* Platform Metadata */}
-          <div className="text-center text-xs text-gray-500 py-2" style={{ borderTop: '1px solid #D4AF37' }}>
-            <div>UNIT: KAISON_01 | DEV: 2024</div>
+          <div className="text-center text-xs text-gray-500 py-2 glassmorphic-panel">
+            <div className="animate-telemetry-pulse">UNIT: KAISON_01 | DEV: 2026</div>
           </div>
         </div>
       </div>
@@ -334,42 +345,59 @@ const GlobeVisualization: React.FC<{ nodes: any[] }> = ({ nodes }) => {
   }, [nodes]);
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-center">
-      <canvas ref={canvasRef} className="w-full h-full" />
-      <div className="absolute bottom-4 left-4 text-xs text-gray-400 flex gap-4">
-        <button className="px-3 py-1 border border-yellow-600 rounded hover:bg-yellow-900" style={{ borderColor: '#D4AF37' }}>
+    <div className="w-full h-full flex flex-col items-center justify-center relative">
+      <canvas ref={canvasRef} className="w-full h-full absolute inset-0 z-0" />
+      {/* CRT Scanline Overlay - very faint hardware-monitor aesthetic */}
+      <div className="scanline-overlay z-5" />
+      <div className="absolute bottom-4 left-4 text-xs text-gray-400 flex gap-4 z-20">
+        <button className="px-3 py-1 border border-yellow-600 rounded hover:bg-yellow-900 transition-colors" style={{ borderColor: '#D4AF37' }}>
           GLOBAL
         </button>
-        <button className="px-3 py-1 border border-gray-600 rounded hover:bg-gray-700">REGION</button>
-        <button className="px-3 py-1 border border-gray-600 rounded hover:bg-gray-700">LOCAL</button>
+        <button className="px-3 py-1 border border-gray-600 rounded hover:bg-gray-700 transition-colors">REGION</button>
+        <button className="px-3 py-1 border border-gray-600 rounded hover:bg-gray-700 transition-colors">LOCAL</button>
       </div>
     </div>
   );
 };
 
 // ============================================================================
-// COMPONENT: LED Bar
+// COMPONENT: LED Bar (with clamping and critical state)
 // ============================================================================
 const LEDBar: React.FC<{ value: number; max: number; color: string }> = ({ value, max, color }) => {
-  const percentage = Math.min(100, (value / max) * 100);
+  // CLAMP VALUE TO [0, max] TO PREVENT OVERFLOW
+  const clampedValue = Math.max(0, Math.min(max, value));
+  const percentage = (clampedValue / max) * 100;
   const segments = 7;
   const activeSegments = Math.ceil((percentage / 100) * segments);
 
+  // Determine if in critical state (>90%) for visual feedback
+  const isCritical = percentage > 90;
+  const isWarning = percentage > 70 && percentage <= 90;
+
   const colorMap = {
-    green: 'bg-green-500',
-    amber: 'bg-amber-500',
+    green: isCritical ? 'bg-red-600' : isWarning ? 'bg-amber-500' : 'bg-green-500',
+    amber: isCritical ? 'bg-red-600' : isWarning ? 'bg-amber-600' : 'bg-amber-500',
     red: 'bg-red-500',
   };
 
+  const glowColor = isCritical ? '#ef4444' : color === 'green' ? '#10b981' : color === 'amber' ? '#f59e0b' : '#ef4444';
+
   return (
-    <div className="flex gap-1 h-16">
+    <div className={`flex gap-1 h-16 ${isCritical ? 'animate-telemetry-pulse' : ''}`}>
       {Array.from({ length: segments }).map((_, i) => (
         <div
           key={i}
           className={`flex-1 rounded transition-all ${i < activeSegments ? colorMap[color as keyof typeof colorMap] : 'bg-gray-700'} ${
             i < activeSegments ? 'shadow-lg' : ''
           }`}
-          style={i < activeSegments ? { boxShadow: `0 0 10px ${color === 'green' ? '#10b981' : color === 'amber' ? '#f59e0b' : '#ef4444'}` } : {}}
+          style={
+            i < activeSegments
+              ? {
+                  boxShadow: `0 0 ${isCritical ? '15px' : '10px'} ${glowColor}`,
+                  filter: isCritical ? 'brightness(1.2)' : 'brightness(1)',
+                }
+              : {}
+          }
         />
       ))}
     </div>
@@ -377,7 +405,7 @@ const LEDBar: React.FC<{ value: number; max: number; color: string }> = ({ value
 };
 
 // ============================================================================
-// COMPONENT: Circular Gauge
+// COMPONENT: Circular Gauge (with clamping and critical state)
 // ============================================================================
 const CircularGauge: React.FC<{ label: string; value: number; max: number; unit: string; color: string }> = ({
   label,
@@ -386,10 +414,34 @@ const CircularGauge: React.FC<{ label: string; value: number; max: number; unit:
   unit,
   color,
 }) => {
-  const percentage = (value / max) * 100;
+  // CLAMP VALUE TO [0, max] TO PREVENT ARC OVERFLOW
+  const clampedValue = Math.max(0, Math.min(max, value));
+  const percentage = (clampedValue / max) * 100;
+
+  // Determine critical/warning states
+  const isCritical = percentage > 90;
+  const isWarning = percentage > 70 && percentage <= 90;
+
+  // Color determination with state-based styling
+  let arcColor = color === 'blue' ? '#3b82f6' : color === 'red' ? '#ef4444' : '#10b981';
+  let textColor = arcColor;
+  let borderColor = '#D4AF37';
+
+  if (isCritical) {
+    arcColor = '#ef4444';
+    textColor = '#ef4444';
+    borderColor = '#dc2626';
+  } else if (isWarning) {
+    arcColor = '#f59e0b';
+    textColor = '#f59e0b';
+    borderColor = '#d97706';
+  }
 
   return (
-    <div className="rounded border border-yellow-600 bg-gray-900 p-4 flex flex-col items-center" style={{ borderColor: '#D4AF37' }}>
+    <div
+      className={`p-4 flex flex-col items-center transition-all glassmorphic-panel ${isCritical ? 'animate-pulse shadow-lg' : ''}`}
+      style={{ borderColor: borderColor, boxShadow: isCritical ? `0 0 20px ${borderColor}` : '' }}
+    >
       <div className="text-xs font-bold mb-3" style={{ color: '#D4AF37' }}>
         {label}
       </div>
@@ -403,19 +455,23 @@ const CircularGauge: React.FC<{ label: string; value: number; max: number; unit:
           cy="40"
           r="35"
           fill="none"
-          stroke={color === 'blue' ? '#3b82f6' : color === 'red' ? '#ef4444' : '#10b981'}
-          strokeWidth="3"
+          stroke={arcColor}
+          strokeWidth={isCritical ? 4 : 3}
           strokeDasharray={`${2 * Math.PI * 35 * (percentage / 100)} ${2 * Math.PI * 35}`}
           strokeLinecap="round"
           transform="rotate(-90 40 40)"
+          style={{ filter: isCritical ? 'drop-shadow(0 0 8px ' + arcColor + ')' : '' }}
         />
 
         {/* Center text */}
-        <text x="40" y="45" textAnchor="middle" fontSize="20" fontWeight="bold" fill={color === 'blue' ? '#3b82f6' : '#ef4444'}>
-          {value.toFixed(0)}
+        <text x="40" y="45" textAnchor="middle" fontSize="20" fontWeight="bold" fill={textColor}>
+          {clampedValue.toFixed(0)}
         </text>
       </svg>
       <div className="text-xs text-gray-400">{unit}</div>
+      {/* Show warning/critical indicator */}
+      {isCritical && <div className="text-xs text-red-500 mt-1 font-bold">⚠ CRITICAL</div>}
+      {isWarning && <div className="text-xs text-amber-500 mt-1 font-bold">⚡ WARNING</div>}
     </div>
   );
 };

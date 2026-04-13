@@ -1,0 +1,77 @@
+metadata:
+  name: Social Engineering Chain
+  id: social_engineering_chain
+  version: '1.0'
+  cluster: RECONNAISSANCE
+  complexity: MEDIUM
+  created: '2026-04-12T02:45:29.622562'
+objective:
+  primary: 'Execute reconnaissance phase: social_engineering_chain'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: master_orchestrator
+  required_input:
+  - mission_objective
+outputs_and_targets:
+  primary_output_target: credential_theft_chain
+  fallback_target: long_game_persistence_chain
+  alternate_targets:
+  - physical_exploitation
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2021-21985
+  - CVE-2018-1000073
+  - CVE-2019-14287
+  - CVE-2020-27580
+  - CVE-2021-24409
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: social_engineer
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: credential_extractor
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: social_engineer
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call credential_theft_chain
+- condition: If execution fails
+  action: Call long_game_persistence_chain
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - credential_theft_chain
+  - physical_exploitation
+  called_by_these_playbooks:
+  - physical_access_reconnaissance
+  - supply_chain_research
+  - supply_chain_attack
+  - physical_exploitation
+  can_pivot_to:
+  - credential_theft_chain
+  - physical_exploitation
+  - long_game_persistence_chain
+  is_entry_point: true
+  is_terminal: false
+personas_assigned:
+- social_engineer
+- credential_extractor

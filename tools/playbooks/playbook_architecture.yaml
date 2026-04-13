@@ -1,0 +1,147 @@
+architecture:
+  version: '1.0'
+  design_timestamp: '2026-04-12T02:45:29.430181'
+  clusters: 4
+  playbooks: 35
+  cvE_bindings_per_playbook: 5
+  total_cves_bound: 175
+  fully_interconnected: true
+clusters:
+  RECONNAISSANCE:
+    count: 8
+    purpose: 'Entry point: OSINT, scanning, vulnerability discovery'
+    playbooks:
+    - master_orchestrator
+    - passive_reconnaissance
+    - active_fingerprinting
+    - vulnerability_discovery
+    - dark_web_leaks_research
+    - physical_access_reconnaissance
+    - supply_chain_research
+    - social_engineering_chain
+  EXPLOITATION:
+    count: 10
+    purpose: 'Execute attacks: RCE, auth bypass, privilege escalation'
+    playbooks:
+    - rce_chain
+    - auth_bypass_chain
+    - privilege_escalation_chain
+    - credential_theft_chain
+    - supply_chain_attack
+    - api_abuse_chain
+    - database_exploitation
+    - container_escape_chain
+    - physical_exploitation
+    - llm_model_poisoning
+  PERSISTENCE:
+    count: 12
+    purpose: 'Maintain access: backdoors, persistence, lateral movement'
+    playbooks:
+    - establish_persistence_chain
+    - lateral_movement_chain
+    - data_exfiltration_chain
+    - domain_compromise_chain
+    - long_game_persistence_chain
+    - credential_storage_exploitation
+    - supply_chain_persistence
+    - iot_expansion_chain
+    - data_destruction_chain
+    - incident_responder_evasion
+    - ransomware_deployment
+    - insider_threat_activation
+  EVASION:
+    count: 5
+    purpose: 'Cover tracks: log removal, forensic evasion, re-compromise'
+    playbooks:
+    - log_removal_chain
+    - artifact_cleanup_chain
+    - timeline_spoofing
+    - detection_evasion
+    - re_compromise_chain
+cross_link_graph:
+  master_orchestrator:
+    calls:
+    - passive_reconnaissance
+    - dark_web_leaks_research
+    - supply_chain_research
+    input_source: EXTERNAL (mission brief)
+    decision_logic: Route based on target profile and threat model
+  passive_reconnaissance:
+    calls:
+    - active_fingerprinting
+    - vulnerability_discovery
+    input_source: master_orchestrator
+    fallback: dark_web_leaks_research
+  active_fingerprinting:
+    calls:
+    - vulnerability_discovery
+    input_source: passive_reconnaissance
+    fallback: supply_chain_research
+  vulnerability_discovery:
+    calls:
+    - rce_chain
+    - auth_bypass_chain
+    - privilege_escalation_chain
+    input_source: active_fingerprinting
+    decision_logic: Route based on CVE type (RCE/Auth/LPE) found
+    fallback: supply_chain_attack
+  rce_chain:
+    calls:
+    - establish_persistence_chain
+    input_source: vulnerability_discovery
+    fallback: auth_bypass_chain
+  auth_bypass_chain:
+    calls:
+    - establish_persistence_chain
+    - lateral_movement_chain
+    input_source: vulnerability_discovery
+    fallback: privilege_escalation_chain
+  privilege_escalation_chain:
+    calls:
+    - establish_persistence_chain
+    - lateral_movement_chain
+    input_source: rce_chain
+    fallback: supply_chain_attack
+  establish_persistence_chain:
+    calls:
+    - lateral_movement_chain
+    - data_exfiltration_chain
+    input_source: rce_chain, auth_bypass_chain, privilege_escalation_chain
+    fallback: log_removal_chain
+  lateral_movement_chain:
+    calls:
+    - database_exploitation
+    - credential_storage_exploitation
+    - domain_compromise_chain
+    input_source: establish_persistence_chain
+    fallback: log_removal_chain (if detected)
+  data_exfiltration_chain:
+    calls:
+    - log_removal_chain
+    input_source: lateral_movement_chain, database_exploitation
+    fallback: long_game_persistence_chain
+  log_removal_chain:
+    calls: []
+    input_source: all_preceding_clusters
+    output: mission_exit_or_re_compromise_chain
+complete_attack_lifecycle:
+  example_mission: Compromise internal database
+  execution_flow:
+  - 1. master_orchestrator (receives mission brief)
+  - 2. passive_reconnaissance (discovers target stack)
+  - 3. active_fingerprinting (service enumeration)
+  - 4. vulnerability_discovery (identifies CVE-2021-41773)
+  - 5. rce_chain (executes exploit, achieves shell)
+  - 6. privilege_escalation_chain (escalates to root)
+  - 7. lateral_movement_chain (finds internal PostgreSQL)
+  - 8. database_exploitation (connects to DB, extracts data)
+  - 9. establish_persistence_chain (installs backdoor)
+  - 10. data_exfiltration_chain (exfils 10GB data)
+  - 11. log_removal_chain (covers tracks, removes evidence)
+  - 12. mission_complete
+  adaptive_pivoting:
+    if_rce_fails: Try auth_bypass_chain instead
+    if_auth_bypass_fails: Try privilege_escalation_chain
+    if_detected_during_lateral_movement: Call incident_responder_evasion
+    if_persistence_fails: Call long_game_persistence_chain
+    if_exfil_blocked: Call ransomware_deployment for extortion

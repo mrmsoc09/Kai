@@ -24,9 +24,12 @@ tools:
     binary_path: subfinder
     install_verification_cmd: ["subfinder", "-version"]
     input_schema: {"target": "domain"}
-    output_schema: {"subdomains": "list[str]"}
+    output_schema: {"intel_registry": "list[json]"}
     timeout_seconds: 600
     safety_classification: passive
+    tags: ["RECON_PASSIVE", "passive_discovery", "one-agent-one-tool"]
+    dependencies: ["provider-config.yaml"]
+    api_keys_required: ["CHAOS_API_KEY", "GITHUB_TOKEN", "SHODAN_API_KEY", "TRILIUM_FREE_TIER_API_KEY"]
 
   - name: dnsx
     agent_class: DnsxAgent
@@ -67,34 +70,43 @@ tools:
     execution_mode: native
     binary_path: httpx
     install_verification_cmd: ["httpx", "-version"]
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"records": "list[json]"}
+    input_schema: {"target": "url_or_host_or_domain_list"}
+    output_schema: {"service_registry": "list[json]"}
     timeout_seconds: 180
     safety_classification: active
+    tags: ["SERVICE_ENUMERATION", "web_probing", "one-agent-one-tool"]
+    service_category: SERVICE_ENUMERATION
+    dependencies: ["vpn_or_socks5_tunnel"]
 
   - name: naabu
     agent_class: NaabuAgent
-    category: http_live_host
+    category: network_enumeration
     execution_mode: native
     binary_path: naabu
     install_verification_cmd: ["naabu", "-version"]
-    input_schema: {"target": "host"}
-    output_schema: {"open_ports": "list[str]"}
+    input_schema: {"target": "ip_or_fqdn_or_cidr_or_list"}
+    output_schema: {"port_registry": "list[json]"}
     timeout_seconds: 240
     safety_classification: active
+    tags: ["NETWORK_ENUMERATION", "port_scanning", "one-agent-one-tool"]
+    service_category: NETWORK_ENUMERATION
+    dependencies: ["vpn_or_socks5_tunnel"]
 
   # Wave 0 - Vulnerability Scanning (3 tools)
   - name: nuclei_scan
     agent_class: NucleiScanAgent
-    category: vulnerability_scanning
+    category: vulnerability_assessment
     execution_mode: docker
     binary_path: nuclei
     container_image: projectdiscovery/nuclei:latest
     install_verification_cmd: ["nuclei", "-version"]
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"findings": "list[json]"}
+    input_schema: {"target": "url_or_host_or_list"}
+    output_schema: {"vulnerability_registry": "list[json]"}
     timeout_seconds: 600
     safety_classification: intrusive
+    tags: ["VULNERABILITY_ASSESSMENT", "template_scanning", "one-agent-one-tool"]
+    service_category: VULNERABILITY_ASSESSMENT
+    dependencies: ["sovereign_network_layer", "nuclei_templates_repo"]
 
   - name: dalfox
     agent_class: DalfoxAgent
@@ -109,14 +121,17 @@ tools:
 
   - name: sqlmap
     agent_class: SqlmapAgent
-    category: validation_support
+    category: database_exploitation
     execution_mode: native
     binary_path: sqlmap
     install_verification_cmd: ["sqlmap", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"result": "json_or_text"}
+    input_schema: {"target": "url_or_candidate_list"}
+    output_schema: {"database_security_registry": "list[json]"}
     timeout_seconds: 900
     safety_classification: intrusive
+    tags: ["DATABASE_EXPLOITATION", "sqli_validation", "one-agent-one-tool"]
+    service_category: DATABASE_EXPLOITATION
+    dependencies: ["sovereign_network_layer", "sqlmap_session_store"]
 
   # Wave 0 - Advanced Vulns (5 tools)
   - name: ssrfmap
@@ -137,9 +152,12 @@ tools:
     binary_path: corsy
     install_verification_cmd: ["corsy", "-h"]
     input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
+    output_schema: {"web_policy_registry": "list[json]"}
     timeout_seconds: 300
     safety_classification: intrusive
+    tags: ["ACCESS_CONTROL_AUDIT", "cors", "one-agent-one-tool"]
+    service_category: ACCESS_CONTROL_AUDIT
+    dependencies: ["sovereign_network_layer", "httpx_probe_output"]
 
   - name: crlfuzz
     agent_class: CrlfuzzAgent
@@ -165,14 +183,17 @@ tools:
 
   - name: kiterunner
     agent_class: KiterunnerAgent
-    category: api_auth_testing
+    category: endpoint_enumeration
     execution_mode: native
     binary_path: kr
     install_verification_cmd: ["kr", "version"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
+    input_schema: {"target": "url_or_host_or_port_list"}
+    output_schema: {"endpoint_registry": "list[json]"}
     timeout_seconds: 600
     safety_classification: intrusive
+    tags: ["ENDPOINT_ENUMERATION", "api_discovery", "one-agent-one-tool"]
+    service_category: ENDPOINT_ENUMERATION
+    dependencies: ["sovereign_network_layer", "kiterunner_wordlists"]
 
   # Wave 1 (10 tools)
   - name: assetfinder
@@ -182,9 +203,12 @@ tools:
     binary_path: assetfinder
     install_verification_cmd: ["assetfinder", "--help"]
     input_schema: {"target": "domain"}
-    output_schema: {"subdomains": "list[str]"}
+    output_schema: {"discovery_registry": "list[json]"}
     timeout_seconds: 180
     safety_classification: passive
+    tags: ["PASSIVE_RECON", "subdomain_discovery", "one-agent-one-tool"]
+    service_category: PASSIVE_RECON
+    dependencies: ["sovereign_network_layer_proxy_config"]
 
   - name: findomain
     agent_class: FindomainAgent
@@ -193,53 +217,65 @@ tools:
     binary_path: findomain
     install_verification_cmd: ["findomain", "--help"]
     input_schema: {"target": "domain"}
-    output_schema: {"subdomains": "list[str]"}
+    output_schema: {"discovery_registry": "list[json]"}
     timeout_seconds: 180
     safety_classification: passive
+    tags: ["SUBDOMAIN_ENUMERATION", "passive_active_bridge", "one-agent-one-tool"]
+    service_category: SUBDOMAIN_ENUMERATION
+    dependencies: ["secret_manager_env_injection", "sovereign_network_layer"]
+    api_keys_required: ["SPYSE_API_KEY", "SECURITYTRAILS_API_KEY", "VIRUSTOTAL_API_KEY"]
 
   - name: chaos
     agent_class: ChaosAgent
     category: recon_asset_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: chaos
     install_verification_cmd: ["chaos", "-version"]
     input_schema: {"target": "domain"}
-    output_schema: {"subdomains": "list[str]"}
+    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
     timeout_seconds: 180
     safety_classification: passive
+    tags: ["PASSIVE_RECON", "osint_stub", "snl_guarded"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: github-subdomains
     agent_class: GithubSubdomainsAgent
     category: recon_asset_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: github-subdomains
     install_verification_cmd: ["github-subdomains", "-h"]
     input_schema: {"target": "domain"}
-    output_schema: {"subdomains": "list[str]"}
+    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
     timeout_seconds: 300
     safety_classification: passive
+    tags: ["PASSIVE_RECON", "osint_stub", "snl_guarded"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: nmap
     agent_class: NmapAgent
     category: network_service_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: nmap
     install_verification_cmd: ["nmap", "--version"]
     input_schema: {"target": "host_or_cidr"}
-    output_schema: {"services": "list[json]"}
+    output_schema: {"port_service_registry": "list[PortServiceRegistry]"}
     timeout_seconds: 900
     safety_classification: active
+    tags: ["NETWORK_ENUMERATION", "service_fingerprinting", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: masscan
     agent_class: MasscanAgent
     category: network_service_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: masscan
     install_verification_cmd: ["masscan", "--version"]
     input_schema: {"target": "host_or_cidr"}
-    output_schema: {"open_ports": "list[json]"}
+    output_schema: {"port_service_registry": "list[PortServiceRegistry]"}
     timeout_seconds: 360
     safety_classification: intrusive
+    tags: ["NETWORK_ENUMERATION", "cidr_discovery_buffer", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: metasploit-framework
     agent_class: MetasploitFrameworkAgent
@@ -255,13 +291,15 @@ tools:
   - name: wafw00f
     agent_class: Wafw00fAgent
     category: http_live_host
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: wafw00f
     install_verification_cmd: ["wafw00f", "--version"]
     input_schema: {"target": "url"}
-    output_schema: {"waf_fingerprint": "list[json]"}
+    output_schema: {"target_registry": "list[TargetRegistry]"}
     timeout_seconds: 180
     safety_classification: active
+    tags: ["WAF_DETECTION", "pre_scan_gate", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: gowitness
     agent_class: GoWitnessAgent
@@ -288,47 +326,55 @@ tools:
   - name: whatweb
     agent_class: WhatwebAgent
     category: http_live_host
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: whatweb
     install_verification_cmd: ["whatweb", "--version"]
     input_schema: {"target": "url"}
-    output_schema: {"fingerprint": "list[json]"}
+    output_schema: {"techstack_registry": "list[TechStackRegistry]"}
     timeout_seconds: 300
     safety_classification: active
+    tags: ["TECH_FINGERPRINTING", "stack_mapping", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   # Wave 2 (12 tools)
   - name: feroxbuster
     agent_class: FeroxbusterAgent
     category: crawling_url_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: feroxbuster
     install_verification_cmd: ["feroxbuster", "--version"]
     input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
+    output_schema: {"crawl_registry": "list[CrawlRegistry]"}
     timeout_seconds: 600
     safety_classification: intrusive
+    tags: ["CONTENT_DISCOVERY", "recursive_busting", "async_stub"]
+    dependencies: ["scope_guardrails", "wordlist_manager"]
 
   - name: katana
     agent_class: KatanaAgent
     category: crawling_url_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: katana
     install_verification_cmd: ["katana", "-version"]
     input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
+    output_schema: {"crawl_registry": "list[CrawlRegistry]"}
     timeout_seconds: 600
     safety_classification: active
+    tags: ["CONTENT_DISCOVERY", "headless_crawl", "js_mapping", "async_stub"]
+    dependencies: ["scope_guardrails", "wordlist_manager"]
 
   - name: paramspider
     agent_class: ParamspiderAgent
     category: crawling_url_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: paramspider
     install_verification_cmd: ["paramspider", "--help"]
     input_schema: {"target": "domain"}
-    output_schema: {"findings": "list[str]"}
+    output_schema: {"parameter_registry": "list[ParameterRegistry]"}
     timeout_seconds: 300
     safety_classification: passive
+    tags: ["PARAM_DISCOVERY", "dalfox_sqlmap_handoff", "async_stub"]
+    dependencies: ["scope_guardrails"]
 
   - name: arjun
     agent_class: ArjunAgent
@@ -355,13 +401,15 @@ tools:
   - name: ffuf
     agent_class: FfufAgent
     category: crawling_url_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: ffuf
     install_verification_cmd: ["ffuf", "-V"]
     input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
+    output_schema: {"crawl_registry": "list[CrawlRegistry]"}
     timeout_seconds: 600
     safety_classification: intrusive
+    tags: ["CONTENT_DISCOVERY", "recursive_busting", "async_stub"]
+    dependencies: ["scope_guardrails", "wordlist_manager"]
 
   - name: gf
     agent_class: GfAgent
@@ -388,13 +436,15 @@ tools:
   - name: sherlock
     agent_class: SherlockAgent
     category: intelligence_osint
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: sherlock
     install_verification_cmd: ["sherlock", "--version"]
     input_schema: {"target": "username"}
-    output_schema: {"findings": "list[str]"}
+    output_schema: {"identity_registry": "list[IdentityRegistry]"}
     timeout_seconds: 300
     safety_classification: passive
+    tags: ["IDENTITY_OSINT", "osint_stub", "snl_guarded"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: phoneinfoga
     agent_class: PhoneinfogaAgent
@@ -410,13 +460,15 @@ tools:
   - name: social-analyzer
     agent_class: SocialAnalyzerAgent
     category: intelligence_osint
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: social-analyzer
     install_verification_cmd: ["social-analyzer", "--help"]
     input_schema: {"target": "username"}
-    output_schema: {"findings": "list[json]"}
+    output_schema: {"identity_registry": "list[IdentityRegistry]"}
     timeout_seconds: 600
     safety_classification: passive
+    tags: ["IDENTITY_OSINT", "osint_stub", "snl_guarded"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: reconftw
     agent_class: ReconftfwAgent
@@ -433,57 +485,67 @@ tools:
   - name: torbot
     agent_class: TorbotAgent
     category: dark_web_intelligence
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: torbot
     install_verification_cmd: ["torbot", "--help"]
     input_schema: {"target": "url_or_domain"}
-    output_schema: {"findings": "list[dict]"}
+    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
     timeout_seconds: 300
     safety_classification: passive
+    tags: ["DARKNET_INTEL", "tor_proxy_required", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer", "tor_proxy"]
 
   - name: onionsearch
     agent_class: OnionsearchAgent
     category: dark_web_intelligence
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: onionsearch
     install_verification_cmd: ["onionsearch", "--help"]
     input_schema: {"target": "url_or_domain"}
-    output_schema: {"results": "list[dict]"}
+    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
     timeout_seconds: 180
     safety_classification: passive
+    tags: ["DARKNET_INTEL", "engine_aggregation", "tor_proxy_required", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer", "tor_proxy"]
 
   - name: ahmia-client
     agent_class: AhmiaClientAgent
     category: dark_web_intelligence
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: ahmia
     install_verification_cmd: ["ahmia", "--help"]
     input_schema: {"target": "url_or_domain"}
-    output_schema: {"indexed_results": "list[dict]"}
+    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
     timeout_seconds: 60
     safety_classification: passive
+    tags: ["DARKNET_INTEL", "index_lookup", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer", "tor_proxy"]
 
   - name: trufflehog
     agent_class: TrufflehogAgent
     category: secret_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: trufflehog
     install_verification_cmd: ["trufflehog", "version"]
-    input_schema: {"target": "git_repo_url"}
-    output_schema: {"secrets": "list[dict]"}
+    input_schema: {"target": "git_repo_url_or_local_path"}
+    output_schema: {"vulnerability_registry": "list[VulnerabilityRegistry]"}
     timeout_seconds: 600
     safety_classification: passive
+    tags: ["SECRET_DETECTION", "masked_output", "v2_v3_compatible", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: gitleaks
     agent_class: GitleaksAgent
     category: secret_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: gitleaks
     install_verification_cmd: ["gitleaks", "version"]
     input_schema: {"target": "git_repo_url_or_path"}
-    output_schema: {"secrets": "list[dict]"}
+    output_schema: {"vulnerability_registry": "list[VulnerabilityRegistry]"}
     timeout_seconds: 300
     safety_classification: passive
+    tags: ["SECRET_DETECTION", "masked_output", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: nikto
     agent_class: NiktoAgent
@@ -591,22 +653,26 @@ tools:
     execution_mode: native
     binary_path: httpx
     install_verification_cmd: ["httpx", "-version"]
-    input_schema: {"target": "host"}
-    output_schema: {"findings": "list[json]"}
+    input_schema: {"target": "url_or_host_or_domain_list"}
+    output_schema: {"service_registry": "list[json]"}
     timeout_seconds: 300
     safety_classification: active
+    tags: ["SERVICE_ENUMERATION", "web_probing", "alias"]
+    service_category: SERVICE_ENUMERATION
 
   - name: nuclei
     agent_class: NucleiScanAgent
-    category: vulnerability_scanning
-    execution_mode: native
+    category: vulnerability_assessment
+    execution_mode: docker
     binary_path: nuclei
     container_image: projectdiscovery/nuclei:latest
     install_verification_cmd: ["nuclei", "-version"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
+    input_schema: {"target": "url_or_host_or_list"}
+    output_schema: {"vulnerability_registry": "list[json]"}
     timeout_seconds: 1800
     safety_classification: intrusive
+    tags: ["VULNERABILITY_ASSESSMENT", "template_scanning", "alias"]
+    service_category: VULNERABILITY_ASSESSMENT
 
   - name: tlsx
     agent_class: TlsxAgent

@@ -1,0 +1,71 @@
+metadata:
+  name: Ransomware Deployment
+  id: ransomware_deployment
+  version: '1.0'
+  cluster: PERSISTENCE
+  complexity: HIGH
+  created: '2026-04-12T02:45:29.953172'
+objective:
+  primary: 'Execute persistence phase: ransomware_deployment'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: domain_compromise_chain, widespread_persistence
+  required_input:
+  - target_profile
+  - recon_data
+outputs_and_targets:
+  primary_output_target: long_game_persistence_chain
+  fallback_target: data_destruction_chain
+  alternate_targets: []
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2024-25169
+  - CVE-2025-21456
+  - CVE-2025-20789
+  - CVE-2025-18765
+  - CVE-2025-16543
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: impact_demonstrator
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: lateral_movement_planner
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: impact_demonstrator
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call long_game_persistence_chain
+- condition: If execution fails
+  action: Call data_destruction_chain
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - long_game_persistence_chain
+  called_by_these_playbooks: []
+  can_pivot_to:
+  - long_game_persistence_chain
+  - data_destruction_chain
+  is_entry_point: false
+  is_terminal: false
+personas_assigned:
+- impact_demonstrator
+- lateral_movement_planner

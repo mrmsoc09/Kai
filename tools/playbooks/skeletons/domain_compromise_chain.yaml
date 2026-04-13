@@ -1,0 +1,72 @@
+metadata:
+  name: Domain Compromise Chain
+  id: domain_compromise_chain
+  version: '1.0'
+  cluster: PERSISTENCE
+  complexity: HIGH
+  created: '2026-04-12T02:45:29.842309'
+objective:
+  primary: 'Execute persistence phase: domain_compromise_chain'
+  secondary:
+  - Minimize detection
+  - Enable adaptive pivoting
+  - Prepare next phase
+inputs_and_sources:
+  input_source: lateral_movement_chain, privilege_escalation_chain
+  required_input:
+  - target_profile
+  - recon_data
+outputs_and_targets:
+  primary_output_target: long_game_persistence_chain
+  fallback_target: lateral_movement_chain
+  alternate_targets: []
+cve_bindings:
+  count: 5
+  cves:
+  - CVE-2024-20445
+  - CVE-2024-21678
+  - CVE-2023-50289
+  - CVE-2024-22234
+  - CVE-2024-21890
+  distributed_across_types:
+  - RCE
+  - Auth-Bypass
+  - LPE
+  - Data-Breach
+  - Web-API
+attack_sequence:
+  step_1:
+    title: Initialize
+    executor_persona: auth_bypass_specialist
+    input: From input_source
+    output: Ready for step_2
+  step_2:
+    title: Execute
+    executor_persona: privilege_escalation_specialist
+    input: From step_1
+    output: To step_3
+  step_3:
+    title: Validate
+    executor_persona: auth_bypass_specialist
+    input: From step_2
+    output: Success or fallback
+decision_branches:
+- condition: If execution succeeds
+  action: Call long_game_persistence_chain
+- condition: If execution fails
+  action: Call lateral_movement_chain
+- condition: If detected
+  action: Call incident_responder_evasion or detection_evasion
+cross_link_graph:
+  calls_these_playbooks:
+  - long_game_persistence_chain
+  called_by_these_playbooks:
+  - lateral_movement_chain
+  can_pivot_to:
+  - long_game_persistence_chain
+  - lateral_movement_chain
+  is_entry_point: false
+  is_terminal: false
+personas_assigned:
+- auth_bypass_specialist
+- privilege_escalation_specialist
