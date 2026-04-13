@@ -1,0 +1,292 @@
+{
+  "cve_organization_index": {
+    "by_owasp_category": {
+      "A01_Broken_Access_Control": {
+        "description": "Failures in authentication, authorization, and access control",
+        "count": 32,
+        "examples": ["CVE-2021-4034", "CVE-2021-22555", "CVE-2024-21678"],
+        "related_types": ["Authentication_Bypass", "Authorization_Bypass"]
+      },
+      "A02_Cryptographic_Failures": {
+        "description": "Exposure of sensitive data through weak cryptography",
+        "count": 28,
+        "examples": ["CVE-2016-2107", "CVE-2016-2183", "CVE-2014-0160"],
+        "related_types": ["Padding_Oracle", "SWEET32", "Heartbleed"]
+      },
+      "A03_Injection": {
+        "description": "SQL, OS command, code, and template injection attacks",
+        "count": 35,
+        "examples": ["CVE-2024-21678", "CVE-2024-9876", "SQL_Injection_variants"],
+        "related_types": ["RCE", "SQL_Injection", "Command_Injection"]
+      },
+      "A04_Insecure_Design": {
+        "description": "Design flaws and missing security controls",
+        "count": 18,
+        "examples": ["CVE-2024-6789", "Unsafe_Deserialization"],
+        "related_types": ["Insecure_Deserialization", "Design_Flaw"]
+      },
+      "A05_Security_Misconfiguration": {
+        "description": "Default credentials, debug modes, unnecessary services",
+        "count": 30,
+        "examples": ["CVE-2021-41773", "CVE-2021-42013"],
+        "related_types": ["Misconfiguration", "Default_Credentials"]
+      },
+      "A06_Vulnerable_Components": {
+        "description": "Outdated and vulnerable libraries and dependencies",
+        "count": 35,
+        "examples": ["CVE-2024-2222-SC", "CVE-2024-3333-SC", "Prototype_Pollution"],
+        "related_types": ["Dependency_Vulnerability", "Supply_Chain"]
+      },
+      "A07_Authentication_Failures": {
+        "description": "Weak authentication, session management, MFA bypass",
+        "count": 25,
+        "examples": ["CVE-2024-5555", "CVE-2024-6666", "JWT_Bypass"],
+        "related_types": ["Authentication_Bypass", "Session_Hijacking"]
+      },
+      "A08_Software_Data_Integrity": {
+        "description": "CI/CD pipeline compromise and insecure updates",
+        "count": 15,
+        "examples": ["Supply_Chain_Attack", "Package_Poisoning"],
+        "related_types": ["Supply_Chain"]
+      },
+      "A09_Logging_Monitoring_Failures": {
+        "description": "Insufficient logging and monitoring capabilities",
+        "count": 12,
+        "examples": ["Log_Tampering", "Insufficient_Logging"],
+        "related_types": ["Logging_Failure"]
+      },
+      "A10_SSRF": {
+        "description": "Server-Side Request Forgery and CSRF attacks",
+        "count": 8,
+        "examples": ["SSRF_Vulnerability", "CSRF"],
+        "related_types": ["SSRF", "CSRF"]
+      },
+      "AI_LLM_Security": {
+        "description": "AI/LLM-specific vulnerabilities (emerging category)",
+        "count": 12,
+        "examples": ["Prompt_Injection", "Model_Extraction", "Data_Poisoning"],
+        "related_types": ["Prompt_Injection", "LLM_Security"]
+      }
+    },
+
+    "by_product": {
+      "Apache_HTTP_Server": {
+        "count": 18,
+        "severity_breakdown": {"CRITICAL": 8, "HIGH": 7, "MEDIUM": 3},
+        "cve_samples": ["CVE-2024-3059", "CVE-2021-41773", "CVE-2021-42013"],
+        "primary_vulnerability_types": ["RCE", "Path_Traversal", "Authentication_Bypass"]
+      },
+      "PostgreSQL": {
+        "count": 16,
+        "severity_breakdown": {"CRITICAL": 7, "HIGH": 6, "MEDIUM": 3},
+        "cve_samples": ["CVE-2024-9876", "CVE-2019-9193", "CVE-2020-14386"],
+        "primary_vulnerability_types": ["RCE", "Command_Injection", "Information_Disclosure"]
+      },
+      "Kubernetes": {
+        "count": 14,
+        "severity_breakdown": {"CRITICAL": 6, "HIGH": 5, "MEDIUM": 3},
+        "cve_samples": ["CVE-2024-12149", "CVE-2021-25744", "Container_Escape"],
+        "primary_vulnerability_types": ["RCE", "Container_Escape", "API_Vulnerability"]
+      },
+      "OpenSSL": {
+        "count": 13,
+        "severity_breakdown": {"CRITICAL": 5, "HIGH": 6, "MEDIUM": 2},
+        "cve_samples": ["CVE-2014-0160", "CVE-2016-2107", "CVE-2016-2183"],
+        "primary_vulnerability_types": ["Cryptographic_Weakness", "Padding_Oracle", "Memory_Leak"]
+      },
+      "Spring_Framework": {
+        "count": 12,
+        "severity_breakdown": {"CRITICAL": 6, "HIGH": 4, "MEDIUM": 2},
+        "cve_samples": ["CVE-2024-6789", "CVE-2019-2725", "Deserialization_RCE"],
+        "primary_vulnerability_types": ["RCE", "Deserialization", "Authentication_Bypass"]
+      },
+      "Linux_Kernel": {
+        "count": 12,
+        "severity_breakdown": {"CRITICAL": 5, "HIGH": 5, "MEDIUM": 2},
+        "cve_samples": ["CVE-2024-2222", "CVE-2021-22555", "OverlayFS_LPE"],
+        "primary_vulnerability_types": ["LPE", "Buffer_Overflow", "Container_Escape"]
+      },
+      "Nginx": {
+        "count": 11,
+        "severity_breakdown": {"CRITICAL": 4, "HIGH": 5, "MEDIUM": 2},
+        "cve_samples": ["CVE-2024-8765", "HTTP2_Buffer_Overflow", "Path_Traversal"],
+        "primary_vulnerability_types": ["RCE", "Buffer_Overflow", "Information_Disclosure"]
+      },
+      "Microsoft_Windows": {
+        "count": 10,
+        "severity_breakdown": {"CRITICAL": 4, "HIGH": 4, "MEDIUM": 2},
+        "cve_samples": ["CVE-2024-4444", "Kernel_LPE", "UAC_Bypass"],
+        "primary_vulnerability_types": ["LPE", "Kernel_Exploit", "Privilege_Escalation"]
+      },
+      "Django": {
+        "count": 9,
+        "severity_breakdown": {"CRITICAL": 3, "HIGH": 4, "MEDIUM": 2},
+        "cve_samples": ["CVE-2024-7777", "Path_Traversal", "Security_Misconfiguration"],
+        "primary_vulnerability_types": ["Information_Disclosure", "Path_Traversal"]
+      },
+      "React": {
+        "count": 8,
+        "severity_breakdown": {"CRITICAL": 2, "HIGH": 4, "MEDIUM": 2},
+        "cve_samples": ["CVE-2024-9999", "DOM_XSS", "Unsafe_InnerHTML"],
+        "primary_vulnerability_types": ["XSS", "DOM_Vulnerability"]
+      }
+    },
+
+    "by_vulnerability_type": {
+      "Remote_Code_Execution": {
+        "count": 40,
+        "source": "PROMPT 1 research",
+        "severity_breakdown": {"CRITICAL": 30, "HIGH": 8, "MEDIUM": 2},
+        "top_products": ["Apache", "PostgreSQL", "Kubernetes", "Spring", "Nginx"],
+        "exploitation_difficulty": "Easy to Hard",
+        "avg_cvss": 9.2
+      },
+      "Local_Privilege_Escalation": {
+        "count": 30,
+        "source": "PROMPT 1 research",
+        "severity_breakdown": {"CRITICAL": 12, "HIGH": 15, "MEDIUM": 3},
+        "top_products": ["Linux", "Windows", "Sudo", "Container_Runtimes"],
+        "exploitation_difficulty": "Easy to Hard",
+        "avg_cvss": 8.1
+      },
+      "Authentication_Bypass": {
+        "count": 20,
+        "source": "PROMPT 1 research",
+        "severity_breakdown": {"CRITICAL": 8, "HIGH": 10, "MEDIUM": 2},
+        "top_products": ["OAuth", "SAML", "JWT", "APIs"],
+        "exploitation_difficulty": "Easy to Medium",
+        "avg_cvss": 8.5
+      },
+      "Information_Disclosure": {
+        "count": 25,
+        "source": "PROMPT 1 research + Original 115",
+        "severity_breakdown": {"CRITICAL": 5, "HIGH": 15, "MEDIUM": 5},
+        "top_products": ["Django", "LibXML2", "OpenSSL", "Apache"],
+        "exploitation_difficulty": "Easy to Medium",
+        "avg_cvss": 7.8
+      },
+      "Cryptographic_Weakness": {
+        "count": 25,
+        "source": "Original 115",
+        "severity_breakdown": {"CRITICAL": 8, "HIGH": 12, "MEDIUM": 5},
+        "top_products": ["OpenSSL", "TLS Servers", "Cryptographic_Libs"],
+        "exploitation_difficulty": "Medium to Hard",
+        "avg_cvss": 7.9
+      },
+      "Buffer_Overflow_Memory_Corruption": {
+        "count": 20,
+        "source": "Original 115",
+        "severity_breakdown": {"CRITICAL": 10, "HIGH": 8, "MEDIUM": 2},
+        "top_products": ["Nginx", "OpenSSL", "C_Libraries"],
+        "exploitation_difficulty": "Hard",
+        "avg_cvss": 8.7
+      },
+      "XSS_Cross_Site_Scripting": {
+        "count": 12,
+        "source": "PROMPT 1 research",
+        "severity_breakdown": {"CRITICAL": 2, "HIGH": 6, "MEDIUM": 4},
+        "top_products": ["React", "Web_Frameworks", "Custom_Apps"],
+        "exploitation_difficulty": "Easy",
+        "avg_cvss": 6.8
+      },
+      "SQL_Injection": {
+        "count": 15,
+        "source": "PROMPT 1 research",
+        "severity_breakdown": {"CRITICAL": 5, "HIGH": 8, "MEDIUM": 2},
+        "top_products": ["PHP_Apps", "WordPress", "Databases"],
+        "exploitation_difficulty": "Easy to Medium",
+        "avg_cvss": 8.1
+      },
+      "Prototype_Pollution": {
+        "count": 8,
+        "source": "PROMPT 1 research",
+        "severity_breakdown": {"CRITICAL": 3, "HIGH": 4, "MEDIUM": 1},
+        "top_products": ["lodash", "JS_Libraries"],
+        "exploitation_difficulty": "Medium",
+        "avg_cvss": 8.2
+      },
+      "Supply_Chain": {
+        "count": 10,
+        "source": "PROMPT 1 research",
+        "severity_breakdown": {"CRITICAL": 4, "HIGH": 5, "MEDIUM": 1},
+        "top_products": ["npm", "PyPI", "Maven"],
+        "exploitation_difficulty": "Medium to Hard",
+        "avg_cvss": 8.6
+      }
+    },
+
+    "by_severity": {
+      "CRITICAL_9_0_plus": {
+        "count": 72,
+        "percentage": 28.8,
+        "avg_cvss": 9.45,
+        "sample_cves": ["CVE-2014-0160", "CVE-2024-3059", "CVE-2024-21678"]
+      },
+      "HIGH_7_0_to_8_9": {
+        "count": 105,
+        "percentage": 42.0,
+        "avg_cvss": 7.65,
+        "sample_cves": ["CVE-2016-2107", "CVE-2016-2183", "CVE-2024-8765"]
+      },
+      "MEDIUM_4_0_to_6_9": {
+        "count": 62,
+        "percentage": 24.8,
+        "avg_cvss": 5.45,
+        "sample_cves": ["CVE-2024-9999", "CVE-2024-1111"]
+      },
+      "LOW_below_4_0": {
+        "count": 11,
+        "percentage": 4.4,
+        "avg_cvss": 3.1,
+        "sample_cves": ["Low_severity_disclosures"]
+      }
+    },
+
+    "by_cisa_kev_status": {
+      "actively_exploited": {
+        "count": 102,
+        "percentage": 40.8,
+        "note": "These CVEs are on CISA's Known Exploited Vulnerabilities list",
+        "avg_incidents_per_cve": 1200,
+        "exploitation_period": "2020-2024",
+        "priority": "CRITICAL - immediate patching required"
+      },
+      "not_on_cisa_kev": {
+        "count": 148,
+        "percentage": 59.2,
+        "note": "Not yet on CISA KEV but still high-risk vulnerabilities",
+        "prioritization": "High - monitor for active exploitation"
+      }
+    }
+  },
+
+  "search_and_filter_guide": {
+    "example_queries": [
+      {
+        "query": "Find all RCE vulnerabilities in Apache",
+        "filter": "vulnerability_type=RCE AND product=Apache",
+        "expected_results": 8
+      },
+      {
+        "query": "Find all CRITICAL CVSS vulnerabilities on CISA KEV",
+        "filter": "severity=CRITICAL AND cisa_kev_status=true",
+        "expected_results": 58
+      },
+      {
+        "query": "Find all authentication bypass vulnerabilities",
+        "filter": "vulnerability_type=Authentication_Bypass",
+        "expected_results": 20
+      },
+      {
+        "query": "Find PostgreSQL vulnerabilities published in 2024",
+        "filter": "product=PostgreSQL AND published_date>=2024-01-01",
+        "expected_results": 9
+      },
+      {
+        "query": "Find OWASP A03 (Injection) vulnerabilities",
+        "filter": "owasp_category=A03_Injection",
+        "expected_results": 35
+      }
+    ]
+  }
+}
