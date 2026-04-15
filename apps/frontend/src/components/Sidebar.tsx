@@ -14,7 +14,8 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { to: '/dashboard', icon: '◉', label: 'COMMAND CTR', sub: 'Mission Control' },
+  { to: '/dashboard',   icon: '◉', label: 'COMMAND CTR',  sub: 'Mission Control' },
+  { to: '/operational', icon: '⊞', label: 'OPS CENTER',   sub: 'Ultrawide Dashboard' },
   {
     icon: '◈',
     label: 'HUNT OPS',
@@ -74,6 +75,7 @@ const NAV: NavItem[] = [
       { to: '/orchestrator', label: 'Orchestrator' },
       { to: '/scans', label: 'Scan Operations' },
       { to: '/reports', label: 'Analytics' },
+      { to: '/viz', label: 'Heat Map & Charts' },
     ],
   },
   { to: '/settings', icon: '⚙', label: 'SETTINGS', sub: 'Platform Config' },

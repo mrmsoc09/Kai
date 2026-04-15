@@ -1,124 +1,148 @@
 /**
- * Operational Dashboard - Real-time Scan Monitoring & Control
+ * OperationalDashboard — KAISON AI Command Center
  *
- * Main dashboard for monitoring active scans, controlling scan lifecycle,
- * and viewing real-time log streams. Supports multiple simultaneous scans
- * with WebSocket-based real-time updates.
+ * Full-viewport operational interface optimized for 2560×1080
+ * ultrawide (21:9 LG 29WP60G-B).  Three-column layout:
+ *   Left   → Active scans & scan control (ScanControlPanel)
+ *   Center → Mission overview & selected scan detail (MissionOverviewPanel)
+ *   Right  → Real-time log stream (LogStreamViewer)
+ *
+ * Renders outside the main Layout shell (no sidebar/topbar) so it
+ * owns the full viewport — route: /operational
  */
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { ScanControlPanel } from '@/components/ScanControlPanel';
-import { LogStreamViewer } from '@/components/LogStreamViewer';
-import { SystemHealthIndicator } from '@/components/SystemHealthIndicator';
-import '@/styles/dashboard.css';
+import React, { useState, useCallback } from 'react';
 
+import { DashboardHeader }       from '@/components/DashboardHeader';
+import { DashboardLayout }       from '@/components/DashboardLayout';
+import { MissionOverviewPanel }  from '@/components/MissionOverviewPanel';
+import { ScanControlPanel }      from '@/components/ScanControlPanel';
+import { LogStreamViewer }       from '@/components/LogStreamViewer';
+
+/* Import new branding/layout styles first, then existing dashboard styles */
+import '@/styles/branding.css';
+import '@/styles/typography.css';
+import '@/styles/responsive.css';
+import '@/styles/dashboard.css';  /* keeps existing ScanControlPanel / LogStreamViewer styles */
+
+/* ── State ──────────────────────────────────────────────────────────────── */
 interface DashboardState {
   selectedScanId: string | null;
   viewMode: 'split' | 'full' | 'single';
   autoRefresh: boolean;
+  activeScansCount: number;
 }
 
+/* ── Component ──────────────────────────────────────────────────────────── */
 export default function OperationalDashboard() {
   const [state, setState] = useState<DashboardState>({
-    selectedScanId: null,
-    viewMode: 'split',
-    autoRefresh: true,
+    selectedScanId:  null,
+    viewMode:        'split',
+    autoRefresh:     true,
+    activeScansCount: 0,
   });
 
   const handleSelectScan = useCallback((scanId: string) => {
     setState(prev => ({ ...prev, selectedScanId: scanId }));
   }, []);
 
-  const handleViewModeChange = useCallback((mode: 'split' | 'full' | 'single') => {
-    setState(prev => ({ ...prev, viewMode: mode }));
-  }, []);
-
   const handleAutoRefreshToggle = useCallback(() => {
     setState(prev => ({ ...prev, autoRefresh: !prev.autoRefresh }));
   }, []);
 
-  return (
-    <div className="operational-dashboard">
-      {/* Dashboard Header */}
-      <header className="dashboard-header">
-        <div className="header-left">
-          <h1 className="dashboard-title">KAISON AI - Operational Dashboard</h1>
-          <SystemHealthIndicator autoRefresh={state.autoRefresh} />
-        </div>
-        <div className="header-right">
-          <label className="auto-refresh-toggle">
-            <input
-              type="checkbox"
-              checked={state.autoRefresh}
-              onChange={handleAutoRefreshToggle}
-            />
-            <span>Real-time: {state.autoRefresh ? 'ON' : 'OFF'}</span>
-          </label>
-          <div className="view-mode-selector">
-            <button
-              className={`view-btn ${state.viewMode === 'split' ? 'active' : ''}`}
-              onClick={() => handleViewModeChange('split')}
-              title="Split View: Control Panel + Logs"
-            >
-              Split
-            </button>
-            <button
-              className={`view-btn ${state.viewMode === 'full' ? 'active' : ''}`}
-              onClick={() => handleViewModeChange('full')}
-              title="Full View: Maximize Log Viewer"
-            >
-              Logs
-            </button>
-            <button
-              className={`view-btn ${state.viewMode === 'single' ? 'active' : ''}`}
-              onClick={() => handleViewModeChange('single')}
-              title="Single View: Control Panel Only"
-            >
-              Control
-            </button>
-          </div>
-        </div>
-      </header>
+  const handleViewModeChange = useCallback((mode: 'split' | 'full' | 'single') => {
+    setState(prev => ({ ...prev, viewMode: mode }));
+  }, []);
 
-      {/* Main Dashboard Content */}
-      <main className="dashboard-content">
-        {(state.viewMode === 'split' || state.viewMode === 'single') && (
-          <section className="control-section">
+  /* Right panel: only rendered when a scan is selected or in full-log mode */
+  const showLogs = state.selectedScanId !== null;
+
+  return (
+    <div className="k1-operational-shell">
+
+      {/* ── BRANDED HEADER ──────────────────────────────────────────── */}
+      <DashboardHeader
+        autoRefresh={state.autoRefresh}
+        onAutoRefreshToggle={handleAutoRefreshToggle}
+        viewMode={state.viewMode}
+        onViewModeChange={handleViewModeChange}
+        activeScansCount={state.activeScansCount}
+      />
+
+      {/* ── ULTRAWIDE THREE-COLUMN CONTENT ──────────────────────────── */}
+      {state.viewMode !== 'full' && (
+        <DashboardLayout
+          leftPanel={
             <ScanControlPanel
               selectedScanId={state.selectedScanId}
               onSelectScan={handleSelectScan}
             />
-          </section>
-        )}
+          }
+          centerPanel={
+            <MissionOverviewPanel
+              selectedScanId={state.selectedScanId}
+              totalActiveScans={state.activeScansCount}
+            />
+          }
+          rightPanel={
+            showLogs ? (
+              <LogStreamViewer
+                scanId={state.selectedScanId}
+                fullScreen={false}
+              />
+            ) : (
+              <div className="k1-no-selection">
+                <div className="k1-no-selection-icon" aria-hidden="true">≡</div>
+                <p>Select a scan to stream logs</p>
+              </div>
+            )
+          }
+        />
+      )}
 
-        {(state.viewMode === 'split' || state.viewMode === 'full') && state.selectedScanId && (
-          <section className="logs-section">
+      {/* ── FULL LOG VIEW (viewMode === 'full') ─────────────────────── */}
+      {state.viewMode === 'full' && (
+        <div
+          style={{
+            flex: 1,
+            padding: '14px',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
+          {state.selectedScanId ? (
             <LogStreamViewer
               scanId={state.selectedScanId}
-              fullScreen={state.viewMode === 'full'}
+              fullScreen={true}
             />
-          </section>
-        )}
-
-        {state.viewMode === 'full' && !state.selectedScanId && (
-          <div className="logs-placeholder">
-            <p>Select a scan from the control panel to view logs</p>
-          </div>
-        )}
-      </main>
-
-      {/* Footer with Status */}
-      <footer className="dashboard-footer">
-        <div className="footer-content">
-          <span className="status-text">
-            {state.selectedScanId ? `Viewing: ${state.selectedScanId}` : 'Ready'}
-          </span>
-          <span className="timestamp">
-            Last update: {new Date().toLocaleTimeString()}
-          </span>
+          ) : (
+            <div className="k1-no-selection" style={{ flex: 1 }}>
+              <div className="k1-no-selection-icon" aria-hidden="true">≡</div>
+              <p>Select a scan from Control mode to view its logs</p>
+            </div>
+          )}
         </div>
+      )}
+
+      {/* ── FOOTER ──────────────────────────────────────────────────── */}
+      <footer className="k1-dashboard-footer" role="contentinfo">
+        <span className="k1-footer-item">
+          KAISON AI&nbsp;<span className="k1-accent">◆</span>&nbsp;Operational Command
+        </span>
+        <div className="k1-footer-divider" aria-hidden="true" />
+        <span className="k1-footer-item">
+          {state.selectedScanId
+            ? <>Monitoring: <span className="k1-accent">{state.selectedScanId.slice(0, 8)}…</span></>
+            : 'No active target'}
+        </span>
+        <div className="k1-footer-spacer" />
+        <span className="k1-footer-item k1-footer-optional">
+          {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+        </span>
       </footer>
+
     </div>
   );
 }

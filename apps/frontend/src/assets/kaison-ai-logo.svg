@@ -1,0 +1,38 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shield background fill -->
+  <path d="M64 6 L112 30 L112 82 Q112 108 64 122 Q16 108 16 82 L16 30 Z" fill="#0a0a0a"/>
+
+  <!-- Outer gold border -->
+  <path d="M64 6 L112 30 L112 82 Q112 108 64 122 Q16 108 16 82 L16 30 Z"
+        fill="none" stroke="#D4AF37" stroke-width="2.5" stroke-linejoin="round"/>
+
+  <!-- Inner accent ring (subtle) -->
+  <path d="M64 14 L104 34 L104 80 Q104 100 64 114 Q24 100 24 80 L24 34 Z"
+        fill="none" stroke="rgba(212,175,55,0.2)" stroke-width="1" stroke-linejoin="round"/>
+
+  <!-- Crosshair lines (very subtle) -->
+  <line x1="20" y1="64" x2="108" y2="64" stroke="#D4AF37" stroke-width="0.5" stroke-dasharray="4 3" opacity="0.22"/>
+  <line x1="64" y1="10" x2="64" y2="118" stroke="#D4AF37" stroke-width="0.5" stroke-dasharray="4 3" opacity="0.22"/>
+
+  <!-- "K" letter — left vertical + two diagonals -->
+  <line x1="36" y1="44" x2="36" y2="84" stroke="#D4AF37" stroke-width="6" stroke-linecap="round"/>
+  <line x1="36" y1="64" x2="58" y2="44" stroke="#D4AF37" stroke-width="6" stroke-linecap="round"/>
+  <line x1="36" y1="64" x2="58" y2="84" stroke="#D4AF37" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- "1" letter — vertical + small flag -->
+  <line x1="79" y1="50" x2="79" y2="84" stroke="#D4AF37" stroke-width="5" stroke-linecap="round"/>
+  <line x1="73" y1="57" x2="79" y2="50" stroke="#D4AF37" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Corner accent dots on shield vertices -->
+  <circle cx="64" cy="6" r="2.5" fill="#D4AF37"/>
+  <circle cx="112" cy="30" r="2.5" fill="#D4AF37"/>
+  <circle cx="16" cy="30" r="2.5" fill="#D4AF37"/>
+
+  <!-- Tech corner brackets (top-left) -->
+  <path d="M26 22 L38 22 L38 32" fill="none" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+  <!-- Tech corner brackets (top-right) -->
+  <path d="M90 22 L102 22 L102 32" fill="none" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round" opacity="0.55"/>
+
+  <!-- Bottom accent line -->
+  <line x1="44" y1="112" x2="84" y2="112" stroke="#D4AF37" stroke-width="1" opacity="0.35"/>
+</svg>

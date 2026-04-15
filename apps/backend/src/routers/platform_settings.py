@@ -1,6 +1,6 @@
 """
 Platform Settings Router — LLM provider configuration + runtime API key management.
-Saves to artifacts/settings/platform.json and sets env vars so Agent Zero picks them up.
+Saves to artifacts/settings/platform.json and sets env vars so the platform picks them up.
 """
 from __future__ import annotations
 

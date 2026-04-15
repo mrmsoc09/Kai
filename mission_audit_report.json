@@ -1,58 +1,51 @@
 {
-  "generated_at": "2026-04-15T01:50:16.245475+00:00",
+  "generated_at": "2026-04-15T03:35:50.388727+00:00",
+  "mode": "defensive_simulation",
   "status": "PASS",
   "checks": {
     "reflection_obfuscation_handshake": {
       "pass": true,
       "details": {
         "mutation": "ast_mutation",
-        "strategy": "AST Mutation",
-        "target_context": "Nginx/Cloudflare",
-        "mutated_payload": "# target_context=Nginx/Cloudflare strategy=AST Mutation\nGET /?q=<svg/onload=1>\n# 4PRRVVe2P0cin2l2\n_ = 1624 + 9992\n",
         "attempt": 1,
         "hard_blocked": false,
-        "reason": "The WAF blocked the request based on fingerprinting."
+        "target_context": "Nginx/Cloudflare",
+        "mutated_probe_plan": "context-aware detection probe variant"
       }
     },
     "adversarial_critic_retry_threshold": {
       "pass": true,
       "details": {
         "first_three_allowed": true,
-        "fourth_blocked": true,
-        "hard_blocked_in_graph": true,
+        "fourth_hard_blocked": true,
+        "node_marked_hard_blocked": true,
         "attempt_records": [
           {
             "mutation": "ast_mutation",
-            "strategy": "AST Mutation",
-            "target_context": "Nginx/Cloudflare",
-            "mutated_payload": "# target_context=Nginx/Cloudflare strategy=AST Mutation\nGET /?q=<probe>\n# fJ7stbp22gKG8bN9\n_ = 2960 + 3276\n",
             "attempt": 1,
             "hard_blocked": false,
-            "reason": "The WAF blocked the request based on fingerprinting."
+            "target_context": "Nginx/Cloudflare",
+            "mutated_probe_plan": "context-aware detection probe variant"
           },
           {
             "mutation": "ast_mutation",
-            "strategy": "AST Mutation",
-            "target_context": "Nginx/Cloudflare",
-            "mutated_payload": "# target_context=Nginx/Cloudflare strategy=AST Mutation\nGET /?q=<probe>\n# NdGA1XzBcpmEqRqF\n_ = 9621 + 5131\n",
             "attempt": 2,
             "hard_blocked": false,
-            "reason": "The WAF blocked the request based on fingerprinting."
+            "target_context": "Nginx/Cloudflare",
+            "mutated_probe_plan": "context-aware detection probe variant"
           },
           {
             "mutation": "ast_mutation",
-            "strategy": "AST Mutation",
-            "target_context": "Nginx/Cloudflare",
-            "mutated_payload": "# target_context=Nginx/Cloudflare strategy=AST Mutation\nGET /?q=<probe>\n# JyBVAGnpZjTGU2Sz\n_ = 7767 + 2828\n",
             "attempt": 3,
             "hard_blocked": false,
-            "reason": "The WAF blocked the request based on fingerprinting."
+            "target_context": "Nginx/Cloudflare",
+            "mutated_probe_plan": "context-aware detection probe variant"
           },
           {
             "mutation": "hard_blocked",
+            "attempt": 4,
             "hard_blocked": true,
-            "attempts": 3,
-            "reason": "The WAF blocked the request based on fingerprinting."
+            "reason": "Maximum safe adaptation attempts reached."
           }
         ]
       }
@@ -61,47 +54,24 @@
       "pass": true,
       "details": {
         "target_class": "nginx:cloudflare",
-        "reward_attribution": {
-          "outcome": "Success",
-          "base_reward": 0.0,
-          "total_reward": 8.0,
-          "variant_label": "Polymorphic Variant C",
-          "target_class": "nginx:cloudflare",
-          "ast_mutation_delta": 0.35,
-          "strategy": "AST Mutation"
-        },
+        "ast_mutation_delta": 0.35,
         "policy_weights": {
           "AST Mutation": 0.35
-        },
-        "ast_mutation_boosted": true
+        }
       }
     },
-    "smoke_loop_vrad_sequence": {
+    "v_rad_visual_sequence": {
       "pass": true,
       "details": {
-        "expected_sequence": [
+        "expected": [
           "AMBER_PULSE",
           "WHITE_FLARE",
           "IRIDESCENT_SHIMMER"
         ],
-        "observed_visuals": [
-          "DYNAMIC_LINKING_LINE",
+        "observed": [
           "AMBER_PULSE",
           "WHITE_FLARE",
-          "IRIDESCENT_SHIMMER",
-          "AMBER_PULSE",
-          "WHITE_FLARE",
-          "IRIDESCENT_SHIMMER",
-          "AMBER_PULSE",
-          "WHITE_FLARE",
-          "IRIDESCENT_SHIMMER",
-          "AMBER_PULSE",
-          "WHITE_FLARE",
-          "IRIDESCENT_SHIMMER",
-          "AMBER_LOCK",
-          "",
-          "",
-          ""
+          "IRIDESCENT_SHIMMER"
         ],
         "sequence_verified": true
       }
@@ -110,8 +80,32 @@
   "simulation_steps": [
     "Discover mock service",
     "Map to CVE playbook",
-    "Generate polymorphic payload",
-    "Simulate 403 -> Reflection -> Mutated payload",
+    "Generate polymorphic detection probe",
+    "Simulate 403/WAF block -> reflection -> mutated detection probe plan",
     "Verify V-RAD Amber -> White -> Iridescent sequence"
-  ]
+  ],
+  "safety_constraints": {
+    "exploitation_payloads_generated": false,
+    "destructive_actions_performed": false,
+    "scope_external_calls_made": false
+  },
+  "context": {
+    "service": {
+      "node_id": "mock-node-001",
+      "service": "Nginx",
+      "waf": "Cloudflare",
+      "version": "1.25",
+      "status": "discovered"
+    },
+    "playbook": {
+      "playbook_id": "defensive_detection_playbook_nginx_cloudflare",
+      "target_class": "nginx:cloudflare",
+      "mapped_cve": "CVE-2026-SIM-0001"
+    },
+    "probe_variant": {
+      "variant_label": "Polymorphic Variant C",
+      "probe_type": "detection_only",
+      "description": "Non-destructive adaptive detection probe"
+    }
+  }
 }

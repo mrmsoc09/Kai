@@ -1,0 +1,473 @@
+/* ============================================================
+ * KAISON AI — Responsive Layout System
+ * Primary target: 2560x1080 (21:9 ultrawide, LG 29WP60G-B)
+ * Graceful fallback: 1920 → 1440 → 1280 → 1024 → 768 → 480
+ * ============================================================ */
+
+/* ===== ULTRAWIDE THREE-COLUMN GRID ===== */
+.k1-ultrawide-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  gap: 14px;
+  padding: 14px;
+  height: calc(100vh - var(--k1-header-height, 110px) - var(--k1-footer-height, 36px));
+  background: var(--k1-dark-base, #0a0a0a);
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* All three panels share the same base layout */
+.k1-panel-left,
+.k1-panel-center,
+.k1-panel-right {
+  min-height: 0;       /* Required — prevents flex/grid child overflow */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inner content of each panel scrolls independently */
+.k1-panel-left  > .k1-panel,
+.k1-panel-center > .k1-panel,
+.k1-panel-right > .k1-panel {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Thin custom scrollbars inside panels */
+.k1-panel-left  *,
+.k1-panel-center *,
+.k1-panel-right * {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, 0.3) transparent;
+}
+
+.k1-panel-left  ::-webkit-scrollbar,
+.k1-panel-center ::-webkit-scrollbar,
+.k1-panel-right ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.k1-panel-left  ::-webkit-scrollbar-track,
+.k1-panel-center ::-webkit-scrollbar-track,
+.k1-panel-right ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.k1-panel-left  ::-webkit-scrollbar-thumb,
+.k1-panel-center ::-webkit-scrollbar-thumb,
+.k1-panel-right ::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.28);
+  border-radius: 3px;
+}
+
+.k1-panel-left  ::-webkit-scrollbar-thumb:hover,
+.k1-panel-center ::-webkit-scrollbar-thumb:hover,
+.k1-panel-right ::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.55);
+}
+
+/* ===== 2560px+ (NATIVE ULTRAWIDE TARGET) ===== */
+@media (min-width: 2560px) {
+  :root {
+    --k1-header-height: 120px;
+  }
+
+  .k1-ultrawide-layout {
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .k1-logo-section {
+    min-width: 360px;
+    padding: 18px 36px 18px 24px;
+  }
+
+  .k1-brand-name {
+    font-size: 26px !important;
+    letter-spacing: 4px !important;
+  }
+
+  .k1-brand-motto {
+    font-size: 12px !important;
+  }
+
+  .k1-brand-subtitle {
+    font-size: 9.5px !important;
+    letter-spacing: 3.5px !important;
+  }
+
+  .k1-status-item {
+    padding: 0 28px;
+  }
+
+  .k1-scan-count {
+    font-size: 22px !important;
+  }
+}
+
+/* ===== 1920px (FULL HD — STANDARD DESKTOP) ===== */
+@media (max-width: 1920px) {
+  :root {
+    --k1-header-height: 105px;
+  }
+
+  .k1-ultrawide-layout {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 13px;
+    padding: 13px;
+  }
+
+  .k1-logo-section {
+    min-width: 290px;
+    padding: 14px 28px 14px 20px;
+  }
+
+  .k1-brand-name {
+    font-size: 20px !important;
+  }
+}
+
+/* ===== 1600px (WIDE MONITOR / LARGE LAPTOP) ===== */
+@media (max-width: 1600px) {
+  :root {
+    --k1-header-height: 96px;
+  }
+
+  .k1-logo-section {
+    min-width: 256px;
+    padding: 12px 22px 12px 16px;
+  }
+
+  .k1-logo-emblem svg {
+    width: 58px !important;
+    height: 58px !important;
+  }
+
+  .k1-brand-name {
+    font-size: 18px !important;
+    letter-spacing: 3px !important;
+  }
+
+  .k1-status-item {
+    padding: 0 14px;
+    font-size: 10.5px !important;
+  }
+}
+
+/* ===== 1440px (MACBOOK / LAPTOP — TWO-COLUMN FALLBACK) ===== */
+@media (max-width: 1440px) {
+  :root {
+    --k1-header-height: 90px;
+  }
+
+  /* Collapse to 2-column: Left + Center on row 1, Right spans full row 2 */
+  .k1-ultrawide-layout {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 12px;
+    height: auto;
+    max-height: calc(100vh - var(--k1-header-height, 90px) - var(--k1-footer-height, 36px));
+    overflow-y: auto;
+  }
+
+  .k1-panel-left  { grid-column: 1; grid-row: 1; min-height: 380px; }
+  .k1-panel-center { grid-column: 2; grid-row: 1; min-height: 380px; }
+  .k1-panel-right { grid-column: 1 / -1; grid-row: 2; min-height: 320px; }
+
+  .k1-logo-section {
+    min-width: 230px;
+    padding: 12px 20px 12px 14px;
+  }
+
+  .k1-logo-emblem svg {
+    width: 52px !important;
+    height: 52px !important;
+  }
+
+  .k1-brand-name {
+    font-size: 17px !important;
+  }
+
+  /* Trim long status section */
+  .k1-status-section {
+    overflow-x: hidden;
+  }
+}
+
+/* ===== 1280px (SMALL DESKTOP — SINGLE COLUMN) ===== */
+@media (max-width: 1280px) {
+  :root {
+    --k1-header-height: 84px;
+  }
+
+  .k1-ultrawide-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  .k1-panel-left,
+  .k1-panel-center,
+  .k1-panel-right {
+    grid-column: 1;
+    min-height: 340px;
+    max-height: 500px;
+  }
+
+  .k1-logo-section {
+    min-width: 210px;
+    padding: 10px 16px 10px 14px;
+  }
+
+  .k1-logo-emblem svg {
+    width: 46px !important;
+    height: 46px !important;
+  }
+
+  .k1-brand-motto {
+    display: none;
+  }
+
+  .k1-brand-name {
+    font-size: 16px !important;
+    letter-spacing: 2.5px !important;
+  }
+}
+
+/* ===== 1024px (TABLET LANDSCAPE / SMALL LAPTOP) ===== */
+@media (max-width: 1024px) {
+  :root {
+    --k1-header-height: auto;
+  }
+
+  /* Stack header vertically */
+  .k1-dashboard-header {
+    flex-direction: column;
+    height: auto !important;
+    min-height: unset !important;
+    padding: 12px 16px 8px !important;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .k1-logo-section {
+    border-right: none;
+    border-bottom: 1px solid var(--k1-gold-border, rgba(212,175,55,0.32));
+    width: 100%;
+    padding-bottom: 10px !important;
+    min-width: unset !important;
+  }
+
+  .k1-status-section {
+    width: 100%;
+    overflow-x: auto;
+    padding: 0 !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .k1-controls-section {
+    border-left: none;
+    border-top: 1px solid var(--k1-dark-border, #2a2a2a);
+    width: 100%;
+    padding: 6px 0 2px !important;
+    flex-wrap: wrap;
+    gap: 6px !important;
+  }
+
+  .k1-ultrawide-layout {
+    padding: 10px;
+    gap: 10px;
+  }
+}
+
+/* ===== 768px (TABLET PORTRAIT) ===== */
+@media (max-width: 768px) {
+  .k1-status-divider {
+    display: none;
+  }
+
+  .k1-status-item {
+    padding: 0 10px !important;
+    font-size: 10px !important;
+  }
+
+  /* Hide low-priority status items */
+  .k1-status-item.k1-status-optional {
+    display: none;
+  }
+
+  .k1-view-toggle {
+    display: none;
+  }
+
+  .k1-scan-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  .k1-metrics-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .k1-dashboard-footer {
+    padding: 0 12px;
+  }
+
+  .k1-footer-item.k1-footer-optional {
+    display: none;
+  }
+}
+
+/* ===== 480px (MOBILE) ===== */
+@media (max-width: 480px) {
+  .k1-logo-emblem {
+    display: none;
+  }
+
+  .k1-brand-name {
+    font-size: 16px !important;
+    letter-spacing: 2px !important;
+  }
+
+  .k1-brand-subtitle {
+    display: none;
+  }
+
+  .k1-status-section {
+    display: none;
+  }
+
+  .k1-controls-section {
+    flex-wrap: wrap;
+    gap: 5px !important;
+  }
+
+  .k1-btn-primary,
+  .k1-btn-secondary,
+  .k1-btn-danger,
+  .k1-btn-default {
+    font-size: 10px !important;
+    padding: 7px 10px !important;
+  }
+
+  .k1-ultrawide-layout {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .k1-panel-left,
+  .k1-panel-center,
+  .k1-panel-right {
+    min-height: 280px;
+    max-height: 420px;
+  }
+
+  .k1-scan-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* ===== 21:9 ASPECT RATIO — ULTRAWIDE VERTICAL FILL ===== */
+@media (min-aspect-ratio: 21/9) {
+  .k1-ultrawide-layout {
+    /* Lock to remaining viewport height — no scrolling */
+    height: calc(100vh - var(--k1-header-height, 110px) - var(--k1-footer-height, 36px));
+    overflow: hidden;
+  }
+
+  /* Each panel fills its column height exactly */
+  .k1-panel-left,
+  .k1-panel-center,
+  .k1-panel-right {
+    height: 100%;
+    max-height: 100%;
+  }
+
+  /* Stat grids can go wider */
+  .k1-scan-stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* ===== STANDARD 16:9 OR NARROWER — OVERFLOW SCROLL ===== */
+@media (max-aspect-ratio: 16/9) and (max-width: 1440px) {
+  .k1-ultrawide-layout {
+    height: auto;
+    min-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+}
+
+/* ===== HIGH DPI / RETINA ===== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  /* Crisp borders on retina screens */
+  .k1-panel {
+    border-width: 0.5px;
+  }
+
+  .k1-dashboard-header {
+    border-bottom-width: 1px;
+  }
+}
+
+/* ===== PRINT ===== */
+@media print {
+  .k1-operational-shell {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  .k1-dashboard-header {
+    background: white !important;
+    border-bottom: 2px solid #333 !important;
+    box-shadow: none !important;
+    color: #000 !important;
+    page-break-after: avoid;
+  }
+
+  .k1-brand-name {
+    color: #000 !important;
+    text-shadow: none !important;
+  }
+
+  .k1-brand-motto {
+    color: #444 !important;
+  }
+
+  .k1-controls-section,
+  .k1-view-toggle {
+    display: none !important;
+  }
+
+  .k1-ultrawide-layout {
+    grid-template-columns: 1fr 1fr;
+    height: auto !important;
+    overflow: visible;
+    gap: 12px;
+  }
+
+  .k1-panel-right {
+    grid-column: 1 / -1;
+    page-break-before: always;
+  }
+
+  .k1-panel {
+    border: 1px solid #333 !important;
+    break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  .k1-dashboard-footer {
+    border-top: 1px solid #333 !important;
+    background: white !important;
+  }
+
+  .k1-footer-item {
+    color: #333 !important;
+  }
+}

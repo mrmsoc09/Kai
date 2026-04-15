@@ -1,0 +1,293 @@
+/* ============================================================
+ * KAISON AI — Typography System
+ * Optimized for IPS displays (LG 29WP60G-B, sRGB 99%, HDR10)
+ * Font stack: IBM Plex Mono / Inter / Roboto
+ * ============================================================ */
+
+/* ===== GOOGLE FONTS IMPORT ===== */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700;800&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap');
+
+/* ===== TYPOGRAPHY CUSTOM PROPERTIES ===== */
+:root {
+  /* Font families */
+  --k1-font-display:  'IBM Plex Mono', 'Fira Code', 'Courier New', monospace;
+  --k1-font-heading:  'Inter', 'Segoe UI', system-ui, sans-serif;
+  --k1-font-body:     'Roboto', 'Segoe UI', system-ui, sans-serif;
+  --k1-font-mono:     'IBM Plex Mono', 'Fira Code', 'Courier New', monospace;
+  --k1-font-serif:    'Georgia', 'Times New Roman', serif;
+
+  /* Type scale — IPS density-optimized (13px base) */
+  --k1-text-2xs:  8px;
+  --k1-text-xs:   9px;
+  --k1-text-sm:   10px;
+  --k1-text-base: 11px;
+  --k1-text-md:   12px;
+  --k1-text-lg:   13px;
+  --k1-text-xl:   15px;
+  --k1-text-2xl:  18px;
+  --k1-text-3xl:  22px;
+  --k1-text-4xl:  28px;
+  --k1-text-5xl:  36px;
+
+  /* Line heights */
+  --k1-leading-none:    1;
+  --k1-leading-tight:   1.15;
+  --k1-leading-snug:    1.3;
+  --k1-leading-normal:  1.5;
+  --k1-leading-relaxed: 1.65;
+  --k1-leading-loose:   1.85;
+
+  /* Letter spacing */
+  --k1-tracking-tighter: -0.04em;
+  --k1-tracking-tight:   -0.02em;
+  --k1-tracking-normal:  0;
+  --k1-tracking-wide:    0.04em;
+  --k1-tracking-wider:   0.08em;
+  --k1-tracking-widest:  0.16em;
+  --k1-tracking-ultra:   0.28em;
+}
+
+/* ===== GLOBAL FONT RENDERING (IPS-OPTIMIZED) ===== */
+html {
+  font-size: 13px;
+  -webkit-font-smoothing:  antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering:          optimizeLegibility;
+  font-feature-settings:   'kern' 1, 'liga' 1, 'calt' 1;
+}
+
+/* ===== HEADING UTILITY CLASSES ===== */
+
+/* Brand / display — IBM Plex Mono, all-caps gold */
+.k1-h-display {
+  font-family: var(--k1-font-display);
+  font-size:   var(--k1-text-4xl);
+  font-weight: 700;
+  letter-spacing: var(--k1-tracking-ultra);
+  line-height: var(--k1-leading-tight);
+  text-transform: uppercase;
+  color: var(--k1-gold, #D4AF37);
+}
+
+/* Section heading — Inter bold */
+.k1-h1 {
+  font-family:    var(--k1-font-heading);
+  font-size:      var(--k1-text-3xl);
+  font-weight:    700;
+  letter-spacing: var(--k1-tracking-wide);
+  line-height:    var(--k1-leading-tight);
+  color: var(--k1-text-primary, #eaeaea);
+}
+
+.k1-h2 {
+  font-family:    var(--k1-font-heading);
+  font-size:      var(--k1-text-2xl);
+  font-weight:    600;
+  letter-spacing: var(--k1-tracking-wide);
+  line-height:    var(--k1-leading-snug);
+  color: var(--k1-text-primary, #eaeaea);
+}
+
+.k1-h3 {
+  font-family:    var(--k1-font-heading);
+  font-size:      var(--k1-text-xl);
+  font-weight:    600;
+  letter-spacing: var(--k1-tracking-wide);
+  line-height:    var(--k1-leading-snug);
+  color: var(--k1-text-primary, #eaeaea);
+}
+
+/* Panel title — IBM Plex Mono, small-caps */
+.k1-h-panel {
+  font-family:    var(--k1-font-display);
+  font-size:      var(--k1-text-sm);
+  font-weight:    700;
+  letter-spacing: var(--k1-tracking-ultra);
+  text-transform: uppercase;
+  line-height:    1;
+  color: var(--k1-gold, #D4AF37);
+}
+
+/* ===== BODY TEXT ===== */
+
+.k1-body {
+  font-family:  var(--k1-font-body);
+  font-size:    var(--k1-text-lg);
+  line-height:  var(--k1-leading-relaxed);
+  color: var(--k1-text-primary, #eaeaea);
+}
+
+.k1-body-sm {
+  font-family: var(--k1-font-body);
+  font-size:   var(--k1-text-md);
+  line-height: var(--k1-leading-normal);
+  color: var(--k1-text-secondary, #9a9a9a);
+}
+
+.k1-body-xs {
+  font-family: var(--k1-font-body);
+  font-size:   var(--k1-text-base);
+  line-height: var(--k1-leading-normal);
+  color: var(--k1-text-muted, #585858);
+}
+
+/* ===== LABEL / CAPTION ===== */
+
+.k1-label {
+  font-family:    var(--k1-font-display);
+  font-size:      var(--k1-text-xs);
+  font-weight:    500;
+  letter-spacing: var(--k1-tracking-widest);
+  text-transform: uppercase;
+  color: var(--k1-text-muted, #585858);
+  line-height: 1;
+}
+
+.k1-caption {
+  font-family: var(--k1-font-body);
+  font-size:   var(--k1-text-sm);
+  font-weight: 400;
+  line-height: var(--k1-leading-normal);
+  color: var(--k1-text-muted, #585858);
+}
+
+/* ===== MONOSPACE / LOG ===== */
+
+.k1-mono {
+  font-family:    var(--k1-font-mono);
+  font-size:      var(--k1-text-md);
+  line-height:    var(--k1-leading-relaxed);
+  letter-spacing: 0.02em;
+}
+
+/* Log stream lines — tight leading, max density */
+.k1-log-line {
+  font-family:    var(--k1-font-mono);
+  font-size:      var(--k1-text-base);
+  line-height:    var(--k1-leading-normal);
+  letter-spacing: 0.01em;
+  word-break:     break-all;
+}
+
+/* Inline code snippet */
+.k1-code {
+  font-family:  var(--k1-font-mono);
+  font-size:    0.92em;
+  background:   rgba(212, 175, 55, 0.07);
+  padding:      1px 5px;
+  border-radius: 3px;
+  border:        1px solid rgba(212, 175, 55, 0.16);
+  color: var(--k1-gold, #D4AF37);
+}
+
+/* ===== NUMERIC / METRIC DISPLAY ===== */
+
+/* Large data counters */
+.k1-num-lg {
+  font-family:        var(--k1-font-display);
+  font-size:          var(--k1-text-4xl);
+  font-weight:        700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing:     var(--k1-tracking-tight);
+  line-height:        1;
+  color: var(--k1-gold, #D4AF37);
+}
+
+.k1-num-md {
+  font-family:        var(--k1-font-display);
+  font-size:          var(--k1-text-2xl);
+  font-weight:        700;
+  font-variant-numeric: tabular-nums;
+  line-height:        1;
+}
+
+.k1-num-sm {
+  font-family:        var(--k1-font-display);
+  font-size:          var(--k1-text-xl);
+  font-weight:        600;
+  font-variant-numeric: tabular-nums;
+  line-height:        1;
+}
+
+/* ===== TIMESTAMP ===== */
+.k1-timestamp {
+  font-family:        var(--k1-font-mono);
+  font-size:          var(--k1-text-xs);
+  color: var(--k1-text-muted, #585858);
+  letter-spacing:     0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ===== STATUS / BADGE TEXT ===== */
+.k1-badge-text {
+  font-family:    var(--k1-font-display);
+  font-size:      var(--k1-text-xs);
+  font-weight:    700;
+  letter-spacing: var(--k1-tracking-wider);
+  text-transform: uppercase;
+  line-height:    1;
+}
+
+/* ===== MOTTO STYLE (serif italic) ===== */
+.k1-motto {
+  font-family:    var(--k1-font-serif);
+  font-style:     italic;
+  font-size:      var(--k1-text-md);
+  letter-spacing: 0.02em;
+  color: var(--k1-text-secondary, #9a9a9a);
+}
+
+/* ===== TEXT UTILITIES ===== */
+
+.k1-truncate {
+  overflow:      hidden;
+  text-overflow: ellipsis;
+  white-space:   nowrap;
+}
+
+.k1-clamp-2 {
+  display:            -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow:           hidden;
+}
+
+.k1-clamp-3 {
+  display:            -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow:           hidden;
+}
+
+.k1-uppercase { text-transform: uppercase; }
+.k1-italic    { font-style: italic; }
+.k1-bold      { font-weight: 700; }
+.k1-medium    { font-weight: 500; }
+
+/* ===== LINK STYLE ===== */
+.k1-link {
+  color: var(--k1-gold, #D4AF37);
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.18s ease;
+}
+
+.k1-link:hover {
+  opacity: 0.75;
+  text-decoration: underline;
+}
+
+/* ===== 2560px+ IPS ULTRAWIDE TUNING ===== */
+@media (min-width: 2560px) {
+  html {
+    font-size: 14px; /* Slightly larger base on very high-res */
+  }
+
+  .k1-h-display {
+    font-size: var(--k1-text-5xl);
+  }
+
+  .k1-log-line {
+    font-size: var(--k1-text-md);
+  }
+}

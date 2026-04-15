@@ -96,6 +96,7 @@ from apps.backend.src.routers import (
 )
 from apps.backend.src.routers import platform_settings as platform_settings_router
 from apps.backend.src.routers import scan_pool as scan_pool_router
+from apps.backend.src.routers import visualization as visualization_router
 
 
 services = Services()
@@ -461,6 +462,9 @@ app.include_router(platform_settings_router.router)
 
 # Rotating Opportunity Scan Pool
 app.include_router(scan_pool_router.router)
+
+# Visualization — Global Heat Map + Analytics Dashboard (PROMPT 10)
+app.include_router(visualization_router.router)
 
 # Evidence and findings lifecycle
 app.include_router(evidence.router)

@@ -35,6 +35,8 @@ import Planner from './pages/Planner'
 import Outbox from './pages/Outbox'
 import HiLReview from './pages/HiLReview'
 import ApprovalsDashboard from './pages/ApprovalsDashboard'
+import OperationalDashboard from './pages/OperationalDashboard'
+import VisualizationPage from './pages/VisualizationPage'
 
 // Layout
 import Layout from './components/Layout'
@@ -97,6 +99,13 @@ export default function App() {
         {/* Public: Login (no sidebar) */}
         <Route path='/login' element={<Login />} />
 
+        {/* Operational Command Center — full-viewport, no Layout chrome */}
+        <Route path='/operational' element={
+          <PrivateRoute>
+            <OperationalDashboard />
+          </PrivateRoute>
+        } />
+
         {/* All authenticated routes inside PrivateRoute + Layout */}
         <Route path='/*' element={
           <PrivateRoute>
@@ -156,6 +165,9 @@ export default function App() {
                 {/* Legacy routes — keep for deep-link compatibility */}
                 <Route path='/opportunities' element={<Opportunities />} />
                 <Route path='/workflows' element={<WorkflowDashboard />} />
+
+                {/* Visualization — Heat Map + Analytics */}
+                <Route path='/viz' element={<VisualizationPage />} />
 
                 {/* Platform Management */}
                 <Route path='/programs' element={<Programs />} />
