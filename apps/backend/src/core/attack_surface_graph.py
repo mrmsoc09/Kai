@@ -181,3 +181,44 @@ class AttackSurfaceGraph:
             )
         except Exception:
             pass
+
+    def mark_node_hard_blocked(
+        self,
+        node_id: str,
+        *,
+        playbook_id: str,
+        reason: str,
+        attempts: int,
+    ) -> bool:
+        """
+        Mark a node as hard blocked after reflection retries are exhausted.
+        """
+        with self._lock:
+            if not self._graph.has_node(node_id):
+                return False
+            metadata = dict(self._graph.nodes[node_id].get("metadata") or {})
+            metadata["hard_blocked"] = True
+            metadata["hard_block_reason"] = reason
+            metadata["hard_block_playbook"] = playbook_id
+            metadata["hard_block_attempts"] = attempts
+            self._graph.nodes[node_id]["metadata"] = metadata
+            self._graph.nodes[node_id]["block_state"] = "HARD_BLOCKED"
+            self._graph.nodes[node_id]["blocked_at"] = datetime.now(UTC).isoformat()
+
+        try:
+            get_event_bus().emit(
+                MissionEvent(
+                    event_type="NODE_HARD_BLOCKED",
+                    phase="attack_surface_graph",
+                    node_id=node_id,
+                    detail={
+                        "playbook_id": playbook_id,
+                        "reason": reason,
+                        "attempts": attempts,
+                        "v-rad_visual": "AMBER_LOCK",
+                    },
+                )
+            )
+        except Exception:
+            pass
+        return True

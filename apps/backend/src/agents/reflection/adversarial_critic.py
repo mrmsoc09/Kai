@@ -1,14 +1,11 @@
 from __future__ import annotations
 
 import logging
-import json
-from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any, Dict, List, Optional
-from ..core.protocol import KaisonResult, KaisonFinding, FindingType, Severity
-from ..core.praison_execution_events import MissionEvent, get_event_bus
-from ..core.experience_engine import ExperienceEngine
-from ..core.vault_auth import VaultCredentialProvider
+from typing import Any, Dict, Optional
+
+from ...core.experience_engine import ExperienceEngine
+from ...core.praison_execution_events import MissionEvent, get_event_bus
+from ...core.vault_auth import VaultCredentialProvider
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +18,13 @@ class AdversarialCritic:
     def __init__(self) -> None:
         self.memory = ExperienceEngine.get_instance()
         self.vault = VaultCredentialProvider()
+        self.hard_block_threshold = 3
+
+    def allow_mutation_attempt(self, attempt_number: int) -> bool:
+        """
+        Allow at least 3 mutation attempts before declaring a hard block.
+        """
+        return attempt_number <= self.hard_block_threshold
 
     def audit_instruction(self, instruction: Dict[str, Any], target: str) -> Dict[str, Any]:
         """

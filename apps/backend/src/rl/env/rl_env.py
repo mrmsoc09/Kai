@@ -7,7 +7,7 @@ from typing import Any, Dict, Tuple
 
 from ..core.attack_surface_graph import AttackSurfaceGraph
 from ..core.experience_engine import ExperienceEngine
-from .optimization.reward_function import StrategicReward
+from .optimization.reward_function import RewardEngine
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ class K1OffensiveEnv:
     def __init__(self, graph: AttackSurfaceGraph, engine: ExperienceEngine):
         self.graph = graph
         self.engine = engine
-        self.rewarder = StrategicReward()
+        self.rewarder = RewardEngine()
         self.replay_path = Path("artifacts/rl/replay_buffer.json")
         self.replay_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -43,7 +43,8 @@ class K1OffensiveEnv:
         outcome = "Exploitation_Success" # Logic to be filled by tool runner
         
         # Calculate Reward
-        reward = self.rewarder.calculate_reward(outcome, {})
+        attribution = self.rewarder.attribute_reward(outcome, action_data.get("metadata", {}))
+        reward = float(attribution["total_reward"])
         
         # Store in Replay Buffer
         self._record_to_buffer(self.get_state(), action_data, reward, outcome)

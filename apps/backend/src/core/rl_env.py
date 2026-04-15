@@ -42,8 +42,8 @@ class K1OffensiveEnv:
         outcome = "Exploitation_Success" # Placeholder for actual outcome
         
         # 3. Reward Calculation
-        from .reward_function import StrategicReward
-        reward = StrategicReward().calculate_reward(outcome, {})
+        from .reward_function import RewardEngine
+        reward = RewardEngine().attribute_reward(outcome, {}).get("total_reward", 0.0)
         
         # 4. State Update
         next_state = self.get_state()

@@ -11,6 +11,7 @@ REWARD_ASSET_DISCOVERY = 2.0
 PENALTY_WAF_BLOCK = -10.0
 PENALTY_SNL_FAIL = -20.0
 PENALTY_TIMEOUT = -5.0
+REWARD_POLYMORPHIC_BREAKTHROUGH = 8.0
 
 @dataclass
 class StrategicReward:
@@ -36,3 +37,33 @@ class StrategicReward:
 
     def compute_cumulative(self, outcomes: List[str]) -> float:
         return sum(self.calculate_reward(o, {}) for o in outcomes)
+
+
+@dataclass
+class RewardEngine(StrategicReward):
+    """
+    Variant-aware reward attribution for RL policy feedback.
+    """
+
+    def attribute_reward(self, outcome: str, metadata: Dict[str, Any]) -> Dict[str, Any]:
+        base_reward = self.calculate_reward(outcome, metadata)
+        total_reward = base_reward
+        ast_mutation_delta = 0.0
+
+        variant = str(metadata.get("variant_label") or "").strip().lower()
+        standard_failed = bool(metadata.get("standard_variant_a_failed"))
+        target_class = str(metadata.get("target_class") or "unknown:unknown")
+
+        if variant == "polymorphic variant c" and outcome == "Success" and standard_failed:
+            total_reward += REWARD_POLYMORPHIC_BREAKTHROUGH
+            ast_mutation_delta = 0.35
+
+        return {
+            "outcome": outcome,
+            "base_reward": base_reward,
+            "total_reward": total_reward,
+            "variant_label": metadata.get("variant_label"),
+            "target_class": target_class,
+            "ast_mutation_delta": ast_mutation_delta,
+            "strategy": "AST Mutation",
+        }

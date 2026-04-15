@@ -26,6 +26,8 @@ class ExperienceEngine:
             cls._instance._hot_cache = collections.OrderedDict()
             cls._instance._cache_limit = 1000
             cls._instance._storage = StorageManager()
+            cls._instance._strategy_weights = collections.defaultdict(dict)
+            cls._instance._variant_outcomes = {}
         return cls._instance
 
     @classmethod
@@ -91,11 +93,19 @@ class ExperienceEngine:
         avg_weight = total_weight / len(similar)
         best_mutation = mutations.most_common(1)[0][0] if mutations else "default"
 
+        target_class = self._derive_target_class(target_fingerprint)
+        strategy_weights = self._strategy_weights.get(target_class, {})
+        ast_weight = float(strategy_weights.get("AST Mutation", 0.0))
+        if ast_weight > 0.0 and best_mutation in {"default", "user_agent_spoofing"}:
+            best_mutation = "ast_mutation"
+
         recommendation = {
             "score": avg_weight,
             "suggested_mutation": best_mutation,
             "reason": "historical_recall",
-            "recall_latency_ms": latency
+            "recall_latency_ms": latency,
+            "target_class": target_class,
+            "strategy_weights": strategy_weights,
         }
 
         # Update Hot-Cache
@@ -117,7 +127,8 @@ class ExperienceEngine:
         target_fingerprint: Dict[str, Any], 
         playbook_id: str, 
         mutation_used: str, 
-        outcome: str
+        outcome: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         """
         Post-Execution Learning: Record experience in both layers.
@@ -142,7 +153,8 @@ class ExperienceEngine:
             "mutation_used": mutation_used,
             "outcome": outcome,
             "result_weight": weight,
-            "timestamp": datetime.now(UTC).isoformat()
+            "timestamp": datetime.now(UTC).isoformat(),
+            **(metadata or {}),
         }
 
         # 1. Update Persistent Storage
@@ -164,3 +176,74 @@ class ExperienceEngine:
             "outcome": outcome,
             "weight": weight
         })
+        self._update_variant_strategy_weights(
+            target_fingerprint=target_fingerprint,
+            playbook_id=playbook_id,
+            mutation_used=mutation_used,
+            outcome=outcome,
+            metadata=metadata or {},
+        )
+
+    def _derive_target_class(self, target_fingerprint: Dict[str, Any]) -> str:
+        service = str(target_fingerprint.get("service") or "unknown_service").strip().lower()
+        waf = str(target_fingerprint.get("waf") or "unknown_waf").strip().lower()
+        return f"{service}:{waf}"
+
+    def promote_strategy_for_target_class(
+        self,
+        target_class: str,
+        strategy: str,
+        *,
+        delta: float,
+        reason: str,
+    ) -> None:
+        current = float(self._strategy_weights[target_class].get(strategy, 0.0))
+        updated = max(-2.0, min(2.0, current + delta))
+        self._strategy_weights[target_class][strategy] = updated
+        self._emit_vrad_telemetry(
+            "RL_POLICY_WEIGHT_UPDATED",
+            {
+                "target_class": target_class,
+                "strategy": strategy,
+                "previous_weight": round(current, 4),
+                "new_weight": round(updated, 4),
+                "delta": round(delta, 4),
+                "reason": reason,
+            },
+        )
+
+    def get_strategy_weights(self, target_class: str) -> Dict[str, float]:
+        return dict(self._strategy_weights.get(target_class, {}))
+
+    def _update_variant_strategy_weights(
+        self,
+        *,
+        target_fingerprint: Dict[str, Any],
+        playbook_id: str,
+        mutation_used: str,
+        outcome: str,
+        metadata: Dict[str, Any],
+    ) -> None:
+        """
+        RL consistency rule:
+        If Polymorphic Variant C succeeds where Standard Variant A failed,
+        increase AST Mutation strategy weight for the same target class.
+        """
+        target_class = str(metadata.get("target_class") or self._derive_target_class(target_fingerprint))
+        variant_label = str(metadata.get("variant_label") or mutation_used).strip().lower()
+        key = f"{target_class}:{playbook_id}"
+        bucket = self._variant_outcomes.setdefault(key, {})
+
+        if "standard variant a" in variant_label:
+            bucket["standard_variant_a_outcome"] = outcome
+            return
+
+        if "polymorphic variant c" in variant_label and outcome == "Success":
+            standard_outcome = str(bucket.get("standard_variant_a_outcome") or "")
+            if standard_outcome in {"WAF_Trigger", "Timeout", "Rate_Limit", "Silence"}:
+                self.promote_strategy_for_target_class(
+                    target_class,
+                    "AST Mutation",
+                    delta=0.35,
+                    reason="Polymorphic Variant C succeeded after Standard Variant A failed",
+                )
