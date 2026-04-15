@@ -451,12 +451,22 @@ class EventBus:
 
     def emit(self, event: MissionEvent) -> None:
         """Emit event to all subscribers and persist to disk."""
+        # Visual Synthesis Throttling: Check SILENT_MODE
+        from ..executive.executive_manager import ExecutiveManager
+        is_silent = ExecutiveManager().silent_mode
+        
+        # High-intensity visual events to skip in silent mode
+        visual_event_types = {"tool_execution", "phase_transition", "node_entered", "node_completed"}
+        
         with self._lock:
             self._events.append(event)
             subscribers = list(self._subscribers)
 
         for sub in subscribers:
             try:
+                # If silent mode is on, skip broadcasting visual-only telemetry
+                if is_silent and event.event_type in visual_event_types:
+                    continue
                 sub(event)
             except Exception as exc:
                 logger.warning("Event subscriber error for %s: %s", event.event_type, exc)

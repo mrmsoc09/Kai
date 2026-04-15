@@ -1,0 +1,22 @@
+playbook:
+  metadata:
+    name: Archetype Classifier v1
+    id: archetype_classifier_v1
+    version: '1.0'
+    execution_time_minutes: 2
+    purpose: Classify startup | enterprise | government | unknown from fingerprint
+      signals
+    scope_lock_required: true
+  classification_rules:
+    startup:
+    - node/python + postgres/mysql + cloud-managed edge + low control density
+    enterprise:
+    - mixed legacy + modern stack + strong IAM + complex network segmentation
+    government:
+    - hardened baseline + strict edge controls + narrow exposed surface
+    unknown:
+    - insufficient or conflicting indicators
+  output_schema:
+    archetype: startup|enterprise|government|unknown
+    confidence_score: 0.0-1.0
+    reasoning: top stack signals used for classification

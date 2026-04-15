@@ -1,0 +1,69 @@
+playbook:
+  metadata:
+    id: vuln-discovery
+    name: Vulnerability Discovery
+    cluster: RECONNAISSANCE
+    complexity: HIGH
+    version: '1.0'
+    status: skeleton
+  objective:
+    primary: Match discovered services against CVE database
+    secondary:
+    - Find RCE vectors
+    - Find auth bypass vectors
+    - Find LPE vectors
+  inputs_and_sources:
+    input_source: active-fingerprinting
+    required_inputs:
+    - service_inventory
+    - versions
+  outputs_and_targets:
+    primary_output_target: rce-chain
+    alternative_targets:
+    - auth-bypass
+    - priv-esc
+    - supply-chain-attack
+    fallback_target: social-engineering
+  cve_bindings:
+    count: 5
+    cves:
+    - CVE-2024-7654
+    - CVE-2024-2222
+    - CVE-2024-3333
+    - CVE-2024-4444
+    - CVE-2024-5555
+    note: Each binding is from cve_knowledge_expanded.yaml
+  persona_assignments:
+    count: 2
+    personas:
+    - vulnerability_validator
+    - threat_intelligence_integrator
+    note: Each persona from persona_cve_mapping.yaml
+  attack_sequence:
+    step_1:
+      title: Match services to CVEs
+      persona: vulnerability_validator
+    step_2:
+      title: Prioritize by CVSS
+      persona: threat_intelligence_integrator
+    step_3:
+      title: Determine exploitation path
+      persona: vulnerability_validator
+  decision_branches:
+  - condition: If step succeeds
+    action: Call rce-chain
+  - condition: If step fails
+    action: Call social-engineering
+  - condition: If detected
+    action: Call incident-responder-evasion
+  cross_link_graph:
+    calls_these_playbooks:
+    - rce-chain
+    - auth-bypass
+    - priv-esc
+    - supply-chain-attack
+    called_by_these_playbooks:
+    - active-fingerprinting
+    can_pivot_to:
+    - social-engineering
+  notes: 'SKELETON: Logic implementation pending. Cross-linking complete.'

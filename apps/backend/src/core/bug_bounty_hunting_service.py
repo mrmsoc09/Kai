@@ -2,17 +2,21 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+logger = logging.getLogger(__name__)
+
 from sqlalchemy import Select, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .audit_events import record_transition_event
 from .bugbounty_workflow_engine import WORKFLOW_TEMPLATES
+from .credentials_manager import CredentialsManager
 from .evidence_qualification_engine import qualify_evidence
 from .helpers import workflow_output_root
 from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
@@ -589,6 +593,24 @@ class BugBountyHuntingService:
                 details=details,
             )
             return await self._persist_readiness(decision, schedule, target, trigger_source, persist)
+
+        # Check available scanning modes based on stored credentials (Option C: return + filter)
+        try:
+            creds_mgr = CredentialsManager(self.db)
+            scanning_modes_info = await creds_mgr.get_scanning_modes(program.id)
+            details["scanning_modes"] = {
+                "available_modes": scanning_modes_info["available_modes"],
+                "warnings": scanning_modes_info["warnings"],
+                "recommendation": scanning_modes_info["recommendation"],
+            }
+        except Exception as e:
+            # If credential checking fails, log but don't block the scan
+            logger.warning(f"Failed to check scanning modes for {program.id}: {str(e)}")
+            details["scanning_modes"] = {
+                "available_modes": ["unauthenticated"],
+                "warnings": [{"type": "CREDENTIAL_CHECK_FAILED", "message": str(e)}],
+                "recommendation": "Only unauthenticated scanning available (credential check failed)",
+            }
 
         policy = await self._build_program_scope_policy(program.id)
         scope_decision = evaluate_target_scope(target.target, policy, safe_mode=schedule.safe_mode)

@@ -1,0 +1,52 @@
+version: '1.0'
+created_at: '2026-04-13T08:24:18.181186+00:00'
+records:
+- finding_id: RF-001
+  vulnerability_type: weak_auth
+  estimated_severity_score: 7.25
+  estimated_payout_usd: 4644
+  actual_payout_usd: 4179
+  platform_decision: accepted
+  analyst_feedback: validation sample
+  pattern_names:
+  - cors_xss_chain
+  timestamp: '2026-04-13T08:24:18.181231+00:00'
+- finding_id: RF-002
+  vulnerability_type: weak_auth
+  estimated_severity_score: 7.25
+  estimated_payout_usd: 4644
+  actual_payout_usd: 4411
+  platform_decision: rejected
+  analyst_feedback: validation sample
+  pattern_names:
+  - cors_xss_chain
+  timestamp: '2026-04-13T08:24:18.184126+00:00'
+- finding_id: RF-003
+  vulnerability_type: weak_auth
+  estimated_severity_score: 7.25
+  estimated_payout_usd: 4644
+  actual_payout_usd: 4644
+  platform_decision: accepted
+  analyst_feedback: validation sample
+  pattern_names:
+  - cors_xss_chain
+  timestamp: '2026-04-13T08:24:18.187662+00:00'
+vuln_correction_factors:
+  weak_auth: 0.95
+pattern_confidence_overrides:
+  xss_csrf_chain: 0.95
+  sqli_info_disclosure_chain: 0.88
+  auth_privesc_chain: 0.92
+  api_abuse_chain: 0.85
+  idor_scale_pattern: 0.9
+  ssrf_misconfig_chain: 0.84
+  graphql_authz_chain: 0.81
+  secret_exposure_abuse_chain: 0.93
+  open_redirect_auth_flow_chain: 0.79
+  cors_xss_chain: 0.83
+  path_traversal_disclosure_chain: 0.82
+  tls_auth_chain: 0.77
+  misconfig_info_chain: 0.86
+  rate_limit_auth_chain: 0.8
+  upload_injection_chain: 0.76
+  subdomain_takeover_secret_chain: 0.78

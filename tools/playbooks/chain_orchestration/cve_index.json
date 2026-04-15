@@ -1,0 +1,644 @@
+{
+  "CVE-2016-2107": [
+    {
+      "playbook_id": "TLS Weakness Exploitation",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2014-0160": [
+    {
+      "playbook_id": "Credential Extraction Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 10.0
+    }
+  ],
+  "CVE-2021-41773": [
+    {
+      "playbook_id": "CVE-Based Exploitation Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    },
+    {
+      "playbook_id": "Remote Code Execution Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2017-5645": [
+    {
+      "playbook_id": "AuthBypass Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2018-6389": [
+    {
+      "playbook_id": "DoS Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2019-11045": [
+    {
+      "playbook_id": "SQLi Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2020-5410": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2019-2725": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2017-9822": [
+    {
+      "playbook_id": "Deser Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2019-9193": [
+    {
+      "playbook_id": "PrivEsc Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2020-1938": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2021-21985": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2018-1000073": [
+    {
+      "playbook_id": "CmdInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.6
+    }
+  ],
+  "CVE-2019-14287": [
+    {
+      "playbook_id": "PrivEsc Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.5
+    }
+  ],
+  "CVE-2020-27580": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2021-24409": [
+    {
+      "playbook_id": "IDOR Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.1
+    }
+  ],
+  "CVE-2020-5902": [
+    {
+      "playbook_id": "AuthBypass Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2018-10933": [
+    {
+      "playbook_id": "AuthBypass Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2016-9296": [
+    {
+      "playbook_id": "SQLi Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.1
+    }
+  ],
+  "CVE-2019-0604": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2018-14335": [
+    {
+      "playbook_id": "AuthBypass Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.6
+    }
+  ],
+  "CVE-2017-10271": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2019-11358": [
+    {
+      "playbook_id": "XSS Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.1
+    }
+  ],
+  "CVE-2017-5689": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2019-13956": [
+    {
+      "playbook_id": "SQLi Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2020-11738": [
+    {
+      "playbook_id": "AuthBypass Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2018-11052": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2021-44228": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 10.0
+    }
+  ],
+  "CVE-2019-3822": [
+    {
+      "playbook_id": "AuthInj Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2020-10693": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.9
+    }
+  ],
+  "CVE-2018-18389": [
+    {
+      "playbook_id": "SQLi Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2019-15107": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2020-3452": [
+    {
+      "playbook_id": "PathTrav Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2019-6340": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2018-11776": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 10.0
+    }
+  ],
+  "CVE-2020-26919": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2021-21224": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2020-1045": [
+    {
+      "playbook_id": "InfoDisclosure Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.5
+    }
+  ],
+  "CVE-2017-12794": [
+    {
+      "playbook_id": "InfoDisclosure Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2019-18218": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2020-13945": [
+    {
+      "playbook_id": "InfoDisclosure Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2018-1000201": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.3
+    }
+  ],
+  "CVE-2019-9490": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.8
+    }
+  ],
+  "CVE-2019-9740": [
+    {
+      "playbook_id": "SSRF Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.5
+    }
+  ],
+  "CVE-2021-21342": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.9
+    }
+  ],
+  "CVE-2020-14750": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2019-0211": [
+    {
+      "playbook_id": "PrivEsc Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2018-7600": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2018-3250": [
+    {
+      "playbook_id": "CmdInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2020-11278": [
+    {
+      "playbook_id": "AuthBypass Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2023-46805": [
+    {
+      "playbook_id": "PromptInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2023-49070": [
+    {
+      "playbook_id": "PromptInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2024-21193": [
+    {
+      "playbook_id": "PromptInj Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.5
+    }
+  ],
+  "CVE-2023-50299": [
+    {
+      "playbook_id": "PromptInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.8
+    }
+  ],
+  "CVE-2024-20942": [
+    {
+      "playbook_id": "PromptInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.1
+    }
+  ],
+  "CVE-2024-21847": [
+    {
+      "playbook_id": "PromptInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2023-49069": [
+    {
+      "playbook_id": "PromptInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2024-22123": [
+    {
+      "playbook_id": "SupplyChain Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.0
+    }
+  ],
+  "CVE-2024-19832": [
+    {
+      "playbook_id": "PromptInj Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.2
+    }
+  ],
+  "CVE-2024-21456": [
+    {
+      "playbook_id": "DataPoisoning Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.9
+    }
+  ],
+  "CVE-2023-50288": [
+    {
+      "playbook_id": "IPTheft Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.5
+    }
+  ],
+  "CVE-2024-20833": [
+    {
+      "playbook_id": "IPTheft Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.9
+    }
+  ],
+  "CVE-2024-21234": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.8
+    }
+  ],
+  "CVE-2023-49073": [
+    {
+      "playbook_id": "IPTheft Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.6
+    }
+  ],
+  "CVE-2024-22445": [
+    {
+      "playbook_id": "IPTheft Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.1
+    }
+  ],
+  "CVE-2024-21789": [
+    {
+      "playbook_id": "IPTheft Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.4
+    }
+  ],
+  "CVE-2023-50290": [
+    {
+      "playbook_id": "IPTheft Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.0
+    }
+  ],
+  "CVE-2024-20567": [
+    {
+      "playbook_id": "Evasion Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.1
+    }
+  ],
+  "CVE-2024-21345": [
+    {
+      "playbook_id": "VectorDB Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2024-20456": [
+    {
+      "playbook_id": "SupplyChain Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2023-50298": [
+    {
+      "playbook_id": "VectorDB Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.8
+    }
+  ],
+  "CVE-2024-21567": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2024-20889": [
+    {
+      "playbook_id": "VectorDB Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.5
+    }
+  ],
+  "CVE-2024-21998": [
+    {
+      "playbook_id": "VectorDB Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.2
+    }
+  ],
+  "CVE-2024-20999": [
+    {
+      "playbook_id": "DataPoisoning Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.8
+    }
+  ],
+  "CVE-2023-50287": [
+    {
+      "playbook_id": "DataPoisoning Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.2
+    }
+  ],
+  "CVE-2024-22567": [
+    {
+      "playbook_id": "DataPoisoning Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.6
+    }
+  ],
+  "CVE-2024-20678": [
+    {
+      "playbook_id": "DataPoisoning Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.9
+    }
+  ],
+  "CVE-2023-50286": [
+    {
+      "playbook_id": "DataPoisoning Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.5
+    }
+  ],
+  "CVE-2024-22089": [
+    {
+      "playbook_id": "DataPoisoning Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.8
+    }
+  ],
+  "CVE-2024-21999": [
+    {
+      "playbook_id": "Evasion Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.5
+    }
+  ],
+  "CVE-2024-20445": [
+    {
+      "playbook_id": "Evasion Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.9
+    }
+  ],
+  "CVE-2024-21678": [
+    {
+      "playbook_id": "SupplyChain Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.1
+    }
+  ],
+  "CVE-2023-50289": [
+    {
+      "playbook_id": "Evasion Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.3
+    }
+  ],
+  "CVE-2024-22234": [
+    {
+      "playbook_id": "Evasion Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.8
+    }
+  ],
+  "CVE-2024-21890": [
+    {
+      "playbook_id": "Evasion Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.6
+    }
+  ],
+  "CVE-2024-20123": [
+    {
+      "playbook_id": "Evasion Playbook",
+      "severity": "MEDIUM",
+      "cvss_score": 6.9
+    }
+  ],
+  "CVE-2024-22456": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "CRITICAL",
+      "cvss_score": 9.1
+    }
+  ],
+  "CVE-2024-20890": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.5
+    }
+  ],
+  "CVE-2024-20234": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 8.2
+    }
+  ],
+  "CVE-2024-21445": [
+    {
+      "playbook_id": "RCE Playbook",
+      "severity": "HIGH",
+      "cvss_score": 7.9
+    }
+  ]
+}

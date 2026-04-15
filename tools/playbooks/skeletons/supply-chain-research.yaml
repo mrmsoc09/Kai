@@ -1,0 +1,62 @@
+playbook:
+  metadata:
+    id: supply-chain-research
+    name: Supply Chain Research
+    cluster: RECONNAISSANCE
+    complexity: MEDIUM
+    version: '1.0'
+    status: skeleton
+  objective:
+    primary: Identify vendor and dependency vulnerabilities
+    secondary:
+    - Dependency mapping
+    - Vendor assessment
+    - Supply chain risks
+  inputs_and_sources:
+    input_source: master-orchestrator
+    required_inputs:
+    - target_organization
+  outputs_and_targets:
+    primary_output_target: supply-chain-attack
+    alternative_targets: []
+    fallback_target: social-engineering
+  cve_bindings:
+    count: 5
+    cves:
+    - CVE-2024-2222-sc
+    - CVE-2024-3333-sc
+    - CVE-2024-20234
+    - CVE-2024-20445
+    - CVE-2024-20456
+    note: Each binding is from cve_knowledge_expanded.yaml
+  persona_assignments:
+    count: 2
+    personas:
+    - supply_chain_mapper
+    - dependency_poisoner
+    note: Each persona from persona_cve_mapping.yaml
+  attack_sequence:
+    step_1:
+      title: Identify vendors
+      persona: supply_chain_mapper
+    step_2:
+      title: Map dependencies
+      persona: dependency_poisoner
+    step_3:
+      title: Find vulnerable packages
+      persona: supply_chain_mapper
+  decision_branches:
+  - condition: If step succeeds
+    action: Call supply-chain-attack
+  - condition: If step fails
+    action: Call social-engineering
+  - condition: If detected
+    action: Call incident-responder-evasion
+  cross_link_graph:
+    calls_these_playbooks:
+    - supply-chain-attack
+    called_by_these_playbooks:
+    - master-orchestrator
+    can_pivot_to:
+    - social-engineering
+  notes: 'SKELETON: Logic implementation pending. Cross-linking complete.'

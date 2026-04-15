@@ -1,0 +1,67 @@
+playbook:
+  metadata:
+    name: 'Detection Profile: GraphQL API Security Validation (Optimized Detection
+      v2)'
+    id: det_graphql_attacks_v1_optimized_v2
+    version: '2.0'
+    base_detection_playbook_id: det_graphql_attacks_v1
+    operation_type: detection_only
+    scope_lock_required: true
+    non_destructive_only: true
+  guardrails:
+    forbidden_operations:
+    - exploitation
+    - persistence
+    - destruction
+    - evasion
+    - lateral_movement
+    required_preconditions:
+    - authorized_scope_verified
+    - opportunity_active
+    - safe_mode_enabled
+    reporting_mode: proof_of_concept_evidence_only
+  optimization_baseline:
+    baseline_execution_minutes: 18
+    optimized_execution_minutes: 6
+    baseline_network_requests: 396
+    optimized_network_requests: 190
+    time_reduction_percent: 66.67
+    noise_reduction_percent: 52.02
+  target_aware_scanning_strategy:
+    early_stage_saas:
+      detection_patterns:
+      - session_fixation_detection
+      - token_predictability_check
+      - account_enum_signal_scan
+      scan_depth: thorough
+      timeout_seconds: 17
+      max_requests: 128
+      expected_detection_probability: 0.3217
+    enterprise_multi_property:
+      detection_patterns:
+      - role_boundary_validation_scan
+      - sso_flow_session_check
+      - privileged_endpoint_authz_scan
+      scan_depth: moderate
+      timeout_seconds: 26
+      max_requests: 112
+      expected_detection_probability: 0.2911
+    fintech_regulated:
+      detection_patterns:
+      - transaction_auth_flow_validation
+      - step_up_auth_gap_scan
+      - session_invalidation_check
+      scan_depth: deep
+      timeout_seconds: 38
+      max_requests: 96
+      expected_detection_probability: 0.2757
+  execution_logic:
+    selection_rule: Classify target archetype, then execute only listed high-frequency
+      detection patterns.
+    batching: Group compatible endpoint checks by route to reduce duplicate requests.
+    early_stop: Stop when confidence threshold reached for vulnerability reportability.
+    fallback: If archetype unknown, use early_stage_saas patterns with enterprise
+      timeout.
+  optimization_rationale: Focuses scanning effort on high-frequency-detection vectors
+    and removes low-probability pattern sweeps to reduce time and network noise while
+    preserving finding quality.

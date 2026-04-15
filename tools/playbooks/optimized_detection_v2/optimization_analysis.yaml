@@ -1,0 +1,179 @@
+optimization_analysis:
+  analysis_date: '2026-04-13'
+  operation_mode: detection_only
+  selection_criteria:
+  - detection-only playbook type
+  - high-frequency vulnerability coverage from Prompt 5
+  - execution_time > 10 minutes preferred
+  - network request overhead reduction opportunity
+  optimized_playbooks_count: 15
+  average_baseline_execution_minutes: 19.67
+  average_optimized_execution_minutes: 6.87
+  average_time_reduction_percent: 64.88
+  average_noise_reduction_percent: 52.0
+  playbooks:
+  - optimized_playbook_id: det_owasp_a05_misconfig_v1_optimized_v2
+    base_detection_playbook_id: det_owasp_a05_misconfig_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 27
+    optimized_execution_minutes: 9
+    time_reduction_percent: 66.67
+    baseline_network_requests: 594
+    optimized_network_requests: 285
+    noise_reduction_percent: 52.02
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_graphql_attacks_v1_optimized_v2
+    base_detection_playbook_id: det_graphql_attacks_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 18
+    optimized_execution_minutes: 6
+    time_reduction_percent: 66.67
+    baseline_network_requests: 396
+    optimized_network_requests: 190
+    noise_reduction_percent: 52.02
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_owasp_a02_crypto_v1_optimized_v2
+    base_detection_playbook_id: det_owasp_a02_crypto_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 27
+    optimized_execution_minutes: 9
+    time_reduction_percent: 66.67
+    baseline_network_requests: 594
+    optimized_network_requests: 285
+    noise_reduction_percent: 52.02
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_owasp_a04_design_v1_optimized_v2
+    base_detection_playbook_id: det_owasp_a04_design_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 27
+    optimized_execution_minutes: 9
+    time_reduction_percent: 66.67
+    baseline_network_requests: 594
+    optimized_network_requests: 285
+    noise_reduction_percent: 52.02
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_xss_discovery_v1_optimized_v2
+    base_detection_playbook_id: det_xss_discovery_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 20
+    optimized_execution_minutes: 7
+    time_reduction_percent: 65.0
+    baseline_network_requests: 440
+    optimized_network_requests: 211
+    noise_reduction_percent: 52.05
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_web_app_recon_v1_optimized_v2
+    base_detection_playbook_id: det_web_app_recon_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 20
+    optimized_execution_minutes: 7
+    time_reduction_percent: 65.0
+    baseline_network_requests: 440
+    optimized_network_requests: 211
+    noise_reduction_percent: 52.05
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_owasp_a01_access_control_v1_optimized_v2
+    base_detection_playbook_id: det_owasp_a01_access_control_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 34
+    optimized_execution_minutes: 12
+    time_reduction_percent: 64.71
+    baseline_network_requests: 748
+    optimized_network_requests: 359
+    noise_reduction_percent: 52.01
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_vpn_ipsec_weakness_v1_optimized_v2
+    base_detection_playbook_id: det_vpn_ipsec_weakness_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 14
+    optimized_execution_minutes: 5
+    time_reduction_percent: 64.29
+    baseline_network_requests: 308
+    optimized_network_requests: 148
+    noise_reduction_percent: 51.95
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_business_logic_bypass_v1_optimized_v2
+    base_detection_playbook_id: det_business_logic_bypass_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 14
+    optimized_execution_minutes: 5
+    time_reduction_percent: 64.29
+    baseline_network_requests: 308
+    optimized_network_requests: 148
+    noise_reduction_percent: 51.95
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_dns_cache_poisoning_v1_optimized_v2
+    base_detection_playbook_id: det_dns_cache_poisoning_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 14
+    optimized_execution_minutes: 5
+    time_reduction_percent: 64.29
+    baseline_network_requests: 308
+    optimized_network_requests: 148
+    noise_reduction_percent: 51.95
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_sbom_vulnerability_chain_v1_optimized_v2
+    base_detection_playbook_id: det_sbom_vulnerability_chain_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 14
+    optimized_execution_minutes: 5
+    time_reduction_percent: 64.29
+    baseline_network_requests: 308
+    optimized_network_requests: 148
+    noise_reduction_percent: 51.95
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_database_exfiltration_v1_optimized_v2
+    base_detection_playbook_id: det_database_exfiltration_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 14
+    optimized_execution_minutes: 5
+    time_reduction_percent: 64.29
+    baseline_network_requests: 308
+    optimized_network_requests: 148
+    noise_reduction_percent: 51.95
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_iam_privilege_escalation_v1_optimized_v2
+    base_detection_playbook_id: det_iam_privilege_escalation_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 14
+    optimized_execution_minutes: 5
+    time_reduction_percent: 64.29
+    baseline_network_requests: 308
+    optimized_network_requests: 148
+    noise_reduction_percent: 51.95
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_auth_bypass_v1_optimized_v2
+    base_detection_playbook_id: det_auth_bypass_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 22
+    optimized_execution_minutes: 8
+    time_reduction_percent: 63.64
+    baseline_network_requests: 484
+    optimized_network_requests: 232
+    noise_reduction_percent: 52.07
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.
+  - optimized_playbook_id: det_sql_injection_v1_optimized_v2
+    base_detection_playbook_id: det_sql_injection_v1
+    vulnerability_focus: target-aware high-frequency detection patterns
+    baseline_execution_minutes: 16
+    optimized_execution_minutes: 6
+    time_reduction_percent: 62.5
+    baseline_network_requests: 352
+    optimized_network_requests: 169
+    noise_reduction_percent: 51.99
+    roi_summary: Reduced low-probability pattern sweeps while preserving reportable
+      evidence coverage.

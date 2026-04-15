@@ -1,0 +1,23 @@
+[
+  {
+    "cve": "CVE-2024-36985",
+    "mutation": "chunked_transfer",
+    "outcome": "Success",
+    "weight": 1.0,
+    "confidence": 0.95
+  },
+  {
+    "cve": "CVE-2021-44529",
+    "mutation": "user_agent_spoofing",
+    "outcome": "Success",
+    "weight": 0.85,
+    "confidence": 0.90
+  },
+  {
+    "cve": "CVE-2024-37032",
+    "mutation": "randomized_timing",
+    "outcome": "Success",
+    "weight": 0.92,
+    "confidence": 0.88
+  }
+]

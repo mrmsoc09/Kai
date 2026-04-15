@@ -1,0 +1,62 @@
+playbook:
+  metadata:
+    id: passive-recon
+    name: Passive Reconnaissance
+    cluster: RECONNAISSANCE
+    complexity: LOW
+    version: '1.0'
+    status: skeleton
+  objective:
+    primary: Gather public intelligence about target
+    secondary:
+    - DNS enumeration
+    - Public database search
+    - WHOIS lookups
+  inputs_and_sources:
+    input_source: master-orchestrator
+    required_inputs:
+    - target_domain
+  outputs_and_targets:
+    primary_output_target: active-fingerprinting
+    alternative_targets: []
+    fallback_target: darkweb-leaks
+  cve_bindings:
+    count: 5
+    cves:
+    - CVE-2023-50286
+    - CVE-2023-50287
+    - CVE-2023-50288
+    - CVE-2023-50289
+    - CVE-2023-50290
+    note: Each binding is from cve_knowledge_expanded.yaml
+  persona_assignments:
+    count: 2
+    personas:
+    - osint_orchestrator
+    - geoint_analyst
+    note: Each persona from persona_cve_mapping.yaml
+  attack_sequence:
+    step_1:
+      title: Query public databases
+      persona: osint_orchestrator
+    step_2:
+      title: DNS enumeration
+      persona: geoint_analyst
+    step_3:
+      title: Compile intelligence
+      persona: osint_orchestrator
+  decision_branches:
+  - condition: If step succeeds
+    action: Call active-fingerprinting
+  - condition: If step fails
+    action: Call darkweb-leaks
+  - condition: If detected
+    action: Call incident-responder-evasion
+  cross_link_graph:
+    calls_these_playbooks:
+    - active-fingerprinting
+    called_by_these_playbooks:
+    - master-orchestrator
+    can_pivot_to:
+    - darkweb-leaks
+  notes: 'SKELETON: Logic implementation pending. Cross-linking complete.'

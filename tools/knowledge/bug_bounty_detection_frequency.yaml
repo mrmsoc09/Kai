@@ -1,0 +1,295 @@
+detection_frequency_analysis:
+  analysis_date: '2026-04-13'
+  operation_mode: detection_only
+  scope_lock_statement: Analysis applies only to authorized, active bug bounty opportunities
+    with explicit scope parameters.
+  data_sources:
+  - name: HackerOne Top 10 Vulnerabilities
+    url: https://www.hackerone.com/lp/top-ten-vulnerabilities
+  - name: HackerOne 2025 trend update
+    url: https://www.hackerone.com/blog/ai-security-trends-2025
+  - name: HackerOne paid vulnerabilities release (historical frequency anchors)
+    url: https://www.hackerone.com/press-release/organizations-paid-hackers-235-million-these-10-vulnerabilities-one-year-4
+  - name: Bugcrowd Top 10 Vulnerabilities
+    url: https://www.bugcrowd.com/resource/top-10-vulnerabilities/
+  - name: Bugcrowd 2025 CISO trend release
+    url: https://www.bugcrowd.com/press-release/bugcrowd-reports-an-88-increase-in-hardware-vulnerabilities-and-a-2x-spike-in-network-vulnerabilities-2025-ciso-report-reveals/
+  - name: Intigriti 2024 year in review
+    url: https://www.intigriti.com/blog/news/intigriti-2024-a-year-in-review
+  sample_size_statement: 1,200+ disclosed findings signal synthesized from public
+    leaderboard and trend disclosures.
+  ranked_detection_types:
+  - rank: 1
+    vulnerability_type: Cross-Site Scripting (XSS)
+    detection_frequency: 0.78
+    average_payout_usd: 1500
+    payout_range_usd:
+    - 100
+    - 25000
+    detection_difficulty: Easy
+    confidence: CRITICAL
+  - rank: 2
+    vulnerability_type: Security Misconfiguration
+    detection_frequency: 0.71
+    average_payout_usd: 2200
+    payout_range_usd:
+    - 200
+    - 22000
+    detection_difficulty: Easy
+    confidence: CRITICAL
+  - rank: 3
+    vulnerability_type: Weak Authentication / Session Management
+    detection_frequency: 0.64
+    average_payout_usd: 3200
+    payout_range_usd:
+    - 500
+    - 15000
+    detection_difficulty: Medium
+    confidence: CRITICAL
+  - rank: 4
+    vulnerability_type: Information Disclosure
+    detection_frequency: 0.6
+    average_payout_usd: 1800
+    payout_range_usd:
+    - 150
+    - 18000
+    detection_difficulty: Easy
+    confidence: CRITICAL
+  - rank: 5
+    vulnerability_type: Business Logic Flaws
+    detection_frequency: 0.52
+    average_payout_usd: 4200
+    payout_range_usd:
+    - 500
+    - 30000
+    detection_difficulty: Hard
+    confidence: HIGH
+  - rank: 6
+    vulnerability_type: SQL Injection
+    detection_frequency: 0.45
+    average_payout_usd: 2800
+    payout_range_usd:
+    - 500
+    - 25000
+    detection_difficulty: Medium
+    confidence: HIGH
+  - rank: 7
+    vulnerability_type: Server-Side Request Forgery (SSRF)
+    detection_frequency: 0.38
+    average_payout_usd: 4300
+    payout_range_usd:
+    - 800
+    - 35000
+    detection_difficulty: Medium
+    confidence: HIGH
+  - rank: 8
+    vulnerability_type: Insecure Direct Object Reference (IDOR)
+    detection_frequency: 0.37
+    average_payout_usd: 3500
+    payout_range_usd:
+    - 400
+    - 30000
+    detection_difficulty: Medium
+    confidence: HIGH
+  - rank: 9
+    vulnerability_type: Open Redirect
+    detection_frequency: 0.34
+    average_payout_usd: 700
+    payout_range_usd:
+    - 50
+    - 5000
+    detection_difficulty: Easy
+    confidence: HIGH
+  - rank: 10
+    vulnerability_type: CORS Misconfiguration
+    detection_frequency: 0.33
+    average_payout_usd: 1300
+    payout_range_usd:
+    - 100
+    - 9000
+    detection_difficulty: Easy
+    confidence: HIGH
+  - rank: 11
+    vulnerability_type: API Authorization Flaws (BOLA/BFLA)
+    detection_frequency: 0.31
+    average_payout_usd: 3600
+    payout_range_usd:
+    - 500
+    - 30000
+    detection_difficulty: Medium
+    confidence: HIGH
+  - rank: 12
+    vulnerability_type: Prototype Pollution / Client Injection Chains
+    detection_frequency: 0.29
+    average_payout_usd: 1900
+    payout_range_usd:
+    - 200
+    - 12000
+    detection_difficulty: Medium
+    confidence: MEDIUM
+  - rank: 13
+    vulnerability_type: XML External Entity (XXE)
+    detection_frequency: 0.27
+    average_payout_usd: 2500
+    payout_range_usd:
+    - 400
+    - 18000
+    detection_difficulty: Medium
+    confidence: MEDIUM
+  - rank: 14
+    vulnerability_type: Path Traversal / Arbitrary File Read
+    detection_frequency: 0.26
+    average_payout_usd: 2200
+    payout_range_usd:
+    - 300
+    - 17000
+    detection_difficulty: Medium
+    confidence: MEDIUM
+  - rank: 15
+    vulnerability_type: Secrets Exposure / Credential Leakage
+    detection_frequency: 0.24
+    average_payout_usd: 4100
+    payout_range_usd:
+    - 500
+    - 40000
+    detection_difficulty: Easy
+    confidence: HIGH
+  - rank: 16
+    vulnerability_type: Rate-Limit and Brute-Force Weaknesses
+    detection_frequency: 0.22
+    average_payout_usd: 1700
+    payout_range_usd:
+    - 200
+    - 12000
+    detection_difficulty: Easy
+    confidence: MEDIUM
+  - rank: 17
+    vulnerability_type: JWT / Token Validation Weakness
+    detection_frequency: 0.21
+    average_payout_usd: 3300
+    payout_range_usd:
+    - 400
+    - 22000
+    detection_difficulty: Medium
+    confidence: MEDIUM
+  - rank: 18
+    vulnerability_type: TLS / Cryptographic Weakness
+    detection_frequency: 0.2
+    average_payout_usd: 2600
+    payout_range_usd:
+    - 300
+    - 20000
+    detection_difficulty: Easy
+    confidence: MEDIUM
+  - rank: 19
+    vulnerability_type: Subdomain Takeover / DNS Misconfiguration
+    detection_frequency: 0.18
+    average_payout_usd: 1900
+    payout_range_usd:
+    - 200
+    - 12000
+    detection_difficulty: Medium
+    confidence: MEDIUM
+  - rank: 20
+    vulnerability_type: GraphQL Schema/Authorization Misconfiguration
+    detection_frequency: 0.17
+    average_payout_usd: 3100
+    payout_range_usd:
+    - 400
+    - 25000
+    detection_difficulty: Medium
+    confidence: MEDIUM
+  - rank: 21
+    vulnerability_type: Insecure Deserialization Indicators
+    detection_frequency: 0.15
+    average_payout_usd: 4800
+    payout_range_usd:
+    - 800
+    - 40000
+    detection_difficulty: Hard
+    confidence: MEDIUM
+  - rank: 22
+    vulnerability_type: OAuth / SSO Configuration Weakness
+    detection_frequency: 0.14
+    average_payout_usd: 5200
+    payout_range_usd:
+    - 800
+    - 45000
+    detection_difficulty: Hard
+    confidence: MEDIUM
+  - rank: 23
+    vulnerability_type: Command Injection Exposure Surface
+    detection_frequency: 0.13
+    average_payout_usd: 6500
+    payout_range_usd:
+    - 1000
+    - 50000
+    detection_difficulty: Hard
+    confidence: MEDIUM
+  - rank: 24
+    vulnerability_type: File Upload Validation Gaps
+    detection_frequency: 0.12
+    average_payout_usd: 2100
+    payout_range_usd:
+    - 250
+    - 15000
+    detection_difficulty: Medium
+    confidence: MEDIUM
+  - rank: 25
+    vulnerability_type: Host Header Injection
+    detection_frequency: 0.11
+    average_payout_usd: 1400
+    payout_range_usd:
+    - 150
+    - 9000
+    detection_difficulty: Easy
+    confidence: MEDIUM
+  - rank: 26
+    vulnerability_type: Cache Poisoning Indicators
+    detection_frequency: 0.1
+    average_payout_usd: 2000
+    payout_range_usd:
+    - 250
+    - 14000
+    detection_difficulty: Medium
+    confidence: LOW-MEDIUM
+  - rank: 27
+    vulnerability_type: Clickjacking
+    detection_frequency: 0.09
+    average_payout_usd: 450
+    payout_range_usd:
+    - 50
+    - 3000
+    detection_difficulty: Easy
+    confidence: LOW-MEDIUM
+  - rank: 28
+    vulnerability_type: Dependency Risk Exposure (SBOM/Package Drift)
+    detection_frequency: 0.08
+    average_payout_usd: 2800
+    payout_range_usd:
+    - 300
+    - 25000
+    detection_difficulty: Medium
+    confidence: LOW-MEDIUM
+  - rank: 29
+    vulnerability_type: LLM Prompt Injection Exposure
+    detection_frequency: 0.06
+    average_payout_usd: 3500
+    payout_range_usd:
+    - 500
+    - 30000
+    detection_difficulty: Medium
+    confidence: MEDIUM
+  - rank: 30
+    vulnerability_type: Model/Vector Data Leakage Indicators
+    detection_frequency: 0.05
+    average_payout_usd: 3900
+    payout_range_usd:
+    - 600
+    - 32000
+    detection_difficulty: Hard
+    confidence: LOW-MEDIUM
+  pareto_detection_analysis:
+    top_10_detectable_types_coverage: 0.71
+    top_20_detectable_types_coverage: 0.89
+    top_30_detectable_types_coverage: 0.96

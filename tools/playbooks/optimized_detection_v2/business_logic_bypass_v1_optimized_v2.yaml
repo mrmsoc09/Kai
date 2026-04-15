@@ -1,0 +1,67 @@
+playbook:
+  metadata:
+    name: 'Detection Profile: Complex Business Logic Detection (Optimized Detection
+      v2)'
+    id: det_business_logic_bypass_v1_optimized_v2
+    version: '2.0'
+    base_detection_playbook_id: det_business_logic_bypass_v1
+    operation_type: detection_only
+    scope_lock_required: true
+    non_destructive_only: true
+  guardrails:
+    forbidden_operations:
+    - exploitation
+    - persistence
+    - destruction
+    - evasion
+    - lateral_movement
+    required_preconditions:
+    - authorized_scope_verified
+    - opportunity_active
+    - safe_mode_enabled
+    reporting_mode: proof_of_concept_evidence_only
+  optimization_baseline:
+    baseline_execution_minutes: 14
+    optimized_execution_minutes: 5
+    baseline_network_requests: 308
+    optimized_network_requests: 148
+    time_reduction_percent: 64.29
+    noise_reduction_percent: 51.95
+  target_aware_scanning_strategy:
+    early_stage_saas:
+      detection_patterns:
+      - workflow_step_skip_detection
+      - coupon_logic_abuse_scan
+      - state_transition_gap_scan
+      scan_depth: thorough
+      timeout_seconds: 17
+      max_requests: 128
+      expected_detection_probability: 0.1856
+    enterprise_multi_property:
+      detection_patterns:
+      - approval_chain_logic_scan
+      - cross_role_logic_boundary_check
+      - idempotency_logic_validation
+      scan_depth: moderate
+      timeout_seconds: 26
+      max_requests: 112
+      expected_detection_probability: 0.1679
+    fintech_regulated:
+      detection_patterns:
+      - transaction_ordering_logic_scan
+      - risk_control_logic_gap_detection
+      - timing_logic_consistency_check
+      scan_depth: deep
+      timeout_seconds: 38
+      max_requests: 96
+      expected_detection_probability: 0.159
+  execution_logic:
+    selection_rule: Classify target archetype, then execute only listed high-frequency
+      detection patterns.
+    batching: Group compatible endpoint checks by route to reduce duplicate requests.
+    early_stop: Stop when confidence threshold reached for vulnerability reportability.
+    fallback: If archetype unknown, use early_stage_saas patterns with enterprise
+      timeout.
+  optimization_rationale: Focuses scanning effort on high-frequency-detection vectors
+    and removes low-probability pattern sweeps to reduce time and network noise while
+    preserving finding quality.

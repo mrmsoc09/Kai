@@ -1,0 +1,39 @@
+tool:
+  name: reconftw
+  agent_class: ReconftwAgent
+  category: RECON_ORCHESTRATION
+  mode: selective
+  selective_flags:
+    subdomains: "--subdomains"
+    web: "--web"
+    deep: "--deep"
+    all: "default"
+  snl_enforcement:
+    required: true
+    allowed_interfaces: ["tun0", "wg0", "vpn0", "snl0"]
+    tunnel_first: true
+  config:
+    module: apps.backend.src.agents.tools.reconftw.reconftw_config
+    dynamic_cfg: reconftw.cfg
+    disable_managed_tools:
+      - nuclei
+      - findomain
+      - subfinder
+      - httpx
+      - naabu
+      - amass
+  parsing:
+    output_directory_ingestion: true
+    maps_to:
+      - DiscoveryRegistry
+      - AssetInventoryRegistry
+  playbook_handshake:
+    enabled: true
+    hook_option: phase_hook
+    library_default: tools/playbooks
+  telemetry:
+    event: SATELLITE_SWEEP_LARGE_ARCS
+    metrics:
+      - TOTAL_ASSETS_MAPPED
+      - RECON_COMPLETION_PERCENTAGE
+      - CURRENT_PHASE

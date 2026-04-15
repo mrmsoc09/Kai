@@ -1,0 +1,33 @@
+playbook:
+  metadata:
+    name: Target Fingerprinter v1
+    id: target_fingerprinter_v1
+    version: '1.0'
+    execution_time_minutes: 5
+    purpose: Rapid stack detection for archetype-aware playbook routing
+    scope_lock_required: true
+  steps:
+  - step_id: 1
+    title: Service banner and transport hints
+    method: passive headers + lightweight probe metadata
+  - step_id: 2
+    title: Web/API framework indicators
+    method: server headers, known routes, stack fingerprints
+  - step_id: 3
+    title: Data and infrastructure hints
+    method: database/service signatures, cloud edge patterns
+  output_schema:
+    detected_services:
+    - http
+    - https
+    - api
+    detected_versions:
+    - server_version
+    - framework_version
+    detected_frameworks:
+    - backend_framework
+    - frontend_framework
+    detected_stack_signals:
+    - cloud_provider
+    - containerization
+    - auth_stack

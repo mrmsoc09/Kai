@@ -1,0 +1,5543 @@
+metadata:
+  analysis_date: '2026-04-13'
+  formula: success_probability = frequency_in_target * scope_likelihood * payout_value_norm
+    * playbook_quality
+  scope_lock_note: Scores are meaningful only after per-opportunity scope validation
+    and policy checks.
+  playbooks_ranked_total: 85
+  existing_registry_playbooks_used: 50
+  chain_playbooks_used: 35
+  source_registry_total_detected: 51
+  alignment_note: Chain integration metadata indicates 85 total ecosystem playbooks
+    (50 existing + 35 chain); ranking follows that contract.
+playbook_rankings_by_target_type:
+  early_stage_saas:
+  - playbook: owasp_a01_access_control_v1
+    name: OWASP A01 Broken Access Control Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.16
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.8
+    success_probability: 0.072653
+    expected_findings_per_100_exec: 7.27
+    expected_payout_per_finding_usd: 6440
+    rank: 1
+  - playbook: chain-exploit-privilege-escalation-01
+    name: Privilege Escalation & Post-Exploitation Access
+    source: chain_integration
+    category: Chain
+    vulnerability_family: access_control
+    frequency_in_target: 0.16
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.72
+    success_probability: 0.065388
+    expected_findings_per_100_exec: 6.54
+    expected_payout_per_finding_usd: 6440
+    rank: 2
+  - playbook: chain-exploit-auth-bypass-01
+    name: Authentication Bypass & Credential Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: auth
+    frequency_in_target: 0.17
+    scope_likelihood: 0.84
+    payout_value_norm: 0.62
+    playbook_quality: 0.72
+    success_probability: 0.063746
+    expected_findings_per_100_exec: 6.37
+    expected_payout_per_finding_usd: 6080
+    rank: 3
+  - playbook: auth_bypass_v1
+    name: Authentication and Authorization Bypass Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.16
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.05903
+    expected_findings_per_100_exec: 5.9
+    expected_payout_per_finding_usd: 6440
+    rank: 4
+  - playbook: iam_privilege_escalation_v1
+    name: Identity & Access Management Privilege Escalation
+    source: registry
+    category: IAM Security
+    vulnerability_family: access_control
+    frequency_in_target: 0.16
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.05903
+    expected_findings_per_100_exec: 5.9
+    expected_payout_per_finding_usd: 6440
+    rank: 5
+  - playbook: cloud_lateral_movement_v1
+    name: AWS/Azure/GCP Lateral Movement & Privilege Escalation
+    source: registry
+    category: Cloud Infrastructure
+    vulnerability_family: access_control
+    frequency_in_target: 0.16
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.62
+    success_probability: 0.056306
+    expected_findings_per_100_exec: 5.63
+    expected_payout_per_finding_usd: 6440
+    rank: 6
+  - playbook: xss_discovery_v1
+    name: Cross-Site Scripting Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: xss
+    frequency_in_target: 0.22
+    scope_likelihood: 0.88
+    payout_value_norm: 0.3
+    playbook_quality: 0.85
+    success_probability: 0.049368
+    expected_findings_per_100_exec: 4.94
+    expected_payout_per_finding_usd: 3200
+    rank: 7
+  - playbook: zero_day_chain_v1
+    name: Zero-Day Exploitation & Privilege Escalation Chain
+    source: registry
+    category: Advanced Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.16
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.5
+    success_probability: 0.045408
+    expected_findings_per_100_exec: 4.54
+    expected_payout_per_finding_usd: 6440
+    rank: 8
+  - playbook: graphql_attacks_v1
+    name: GraphQL API Security Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: api
+    frequency_in_target: 0.1
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.8
+    success_probability: 0.038512
+    expected_findings_per_100_exec: 3.85
+    expected_payout_per_finding_usd: 5720
+    rank: 9
+  - playbook: owasp_a05_misconfig_v1
+    name: OWASP A05 Security Misconfiguration Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.11
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.85
+    success_probability: 0.035268
+    expected_findings_per_100_exec: 3.53
+    expected_payout_per_finding_usd: 4640
+    rank: 10
+  - playbook: chain-exploit-api-abuse-01
+    name: API Abuse & Endpoint Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: api
+    frequency_in_target: 0.1
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.72
+    success_probability: 0.034661
+    expected_findings_per_100_exec: 3.47
+    expected_payout_per_finding_usd: 5720
+    rank: 11
+  - playbook: chain-recon-darkweb-intelligence-01
+    name: Dark Web Leaks & Breach Intelligence Research
+    source: chain_integration
+    category: Chain
+    vulnerability_family: info_disclosure
+    frequency_in_target: 0.14
+    scope_likelihood: 0.9
+    payout_value_norm: 0.42
+    playbook_quality: 0.56
+    success_probability: 0.029635
+    expected_findings_per_100_exec: 2.96
+    expected_payout_per_finding_usd: 4280
+    rank: 12
+  - playbook: dns_cache_poisoning_v1
+    name: DNS Infrastructure Attack & Traffic Redirection
+    source: registry
+    category: Infrastructure
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.11
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.54
+    success_probability: 0.022406
+    expected_findings_per_100_exec: 2.24
+    expected_payout_per_finding_usd: 4640
+    rank: 13
+  - playbook: sql_injection_v1
+    name: SQL Injection Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.06
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.02038
+    expected_findings_per_100_exec: 2.04
+    expected_payout_per_finding_usd: 5360
+    rank: 14
+  - playbook: owasp_a03_injection_v1
+    name: OWASP A03 Injection Vulnerability Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.06
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.02038
+    expected_findings_per_100_exec: 2.04
+    expected_payout_per_finding_usd: 5360
+    rank: 15
+  - playbook: owasp_a04_design_v1
+    name: OWASP A04 Insecure Design Vulnerability Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: business_logic
+    frequency_in_target: 0.06
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.65
+    success_probability: 0.020155
+    expected_findings_per_100_exec: 2.02
+    expected_payout_per_finding_usd: 6620
+    rank: 16
+  - playbook: business_logic_bypass_v1
+    name: Complex Business Logic Exploitation
+    source: registry
+    category: Business Logic
+    vulnerability_family: business_logic
+    frequency_in_target: 0.06
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.54
+    success_probability: 0.016744
+    expected_findings_per_100_exec: 1.67
+    expected_payout_per_finding_usd: 6620
+    rank: 17
+  - playbook: chain-exploit-rce-escalation-01
+    name: Remote Code Execution & Initial Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.72
+    success_probability: 0.006566
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 9050
+    rank: 18
+  - playbook: api_rce_chain_v1
+    name: Chained API Vulnerabilities Leading to RCE
+    source: registry
+    category: API Security
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.68
+    success_probability: 0.006202
+    expected_findings_per_100_exec: 0.62
+    expected_payout_per_finding_usd: 9050
+    rank: 19
+  - playbook: web_app_recon_v1
+    name: Web Application Reconnaissance
+    source: registry
+    category: Reconnaissance
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.8
+    success_probability: 0.005824
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 3650
+    rank: 20
+  - playbook: owasp_a02_crypto_v1
+    name: OWASP A02 Cryptographic Failures Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: crypto
+    frequency_in_target: 0.02
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.85
+    success_probability: 0.00527
+    expected_findings_per_100_exec: 0.53
+    expected_payout_per_finding_usd: 5000
+    rank: 21
+  - playbook: database_exfiltration_v1
+    name: Database Vulnerability Exploitation & Data Exfiltration
+    source: registry
+    category: Database Security
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.005242
+    expected_findings_per_100_exec: 0.52
+    expected_payout_per_finding_usd: 3650
+    rank: 22
+  - playbook: chain-exploit-credential-theft-01
+    name: Credential Theft & Password Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.005242
+    expected_findings_per_100_exec: 0.52
+    expected_payout_per_finding_usd: 3650
+    rank: 23
+  - playbook: chain-exploit-database-extraction-01
+    name: Database Exploitation & Data Extraction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.005242
+    expected_findings_per_100_exec: 0.52
+    expected_payout_per_finding_usd: 3650
+    rank: 24
+  - playbook: chain-exploit-container-escape-01
+    name: Container Escape & Kubernetes Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.005242
+    expected_findings_per_100_exec: 0.52
+    expected_payout_per_finding_usd: 3650
+    rank: 25
+  - playbook: chain-exploit-physical-access-01
+    name: Physical Access & Hardware Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.005242
+    expected_findings_per_100_exec: 0.52
+    expected_payout_per_finding_usd: 3650
+    rank: 26
+  - playbook: chain-exploit-zeroday-exploitation-01
+    name: Zero-Day Exploitation & Advanced Payload Delivery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.005242
+    expected_findings_per_100_exec: 0.52
+    expected_payout_per_finding_usd: 3650
+    rank: 27
+  - playbook: sbom_vulnerability_chain_v1
+    name: Vulnerability Chaining via SBOM Analysis
+    source: registry
+    category: Supply Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.7
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 28
+  - playbook: container_escape_rce_v1
+    name: Kubernetes Container Escape & Cluster Takeover
+    source: registry
+    category: Container Security
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.52
+    success_probability: 0.004742
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 9050
+    rank: 29
+  - playbook: chain-persist-establish-access-01
+    name: Establish Persistence & Backdoor Installation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.004659
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 3650
+    rank: 30
+  - playbook: chain-persist-lateral-movement-01
+    name: Lateral Movement & Network Pivoting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.004659
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 3650
+    rank: 31
+  - playbook: chain-persist-data-exfiltration-01
+    name: Data Exfiltration & Sensitive Information Theft
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.004659
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 3650
+    rank: 32
+  - playbook: chain-persist-domain-compromise-01
+    name: Domain Controller Compromise & Active Directory Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.004659
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 3650
+    rank: 33
+  - playbook: chain-persist-long-game-01
+    name: Long Game Persistence & Multi-Year Dwell Time
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.004659
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 3650
+    rank: 34
+  - playbook: chain-persist-iot-expansion-01
+    name: IoT Device Network Expansion & Bot Recruitment
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.004659
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 3650
+    rank: 35
+  - playbook: chain-evasion-timeline-spoofing-01
+    name: Timeline Spoofing & Timestamp Manipulation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: open_redirect
+    frequency_in_target: 0.06
+    scope_likelihood: 0.91
+    payout_value_norm: 0.18
+    playbook_quality: 0.46
+    success_probability: 0.004521
+    expected_findings_per_100_exec: 0.45
+    expected_payout_per_finding_usd: 2120
+    rank: 36
+  - playbook: log_deletion_forensic_v1
+    name: Log Deletion & Forensic Evidence Destruction
+    source: registry
+    category: Post-Exploitation
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.62
+    success_probability: 0.004514
+    expected_findings_per_100_exec: 0.45
+    expected_payout_per_finding_usd: 3650
+    rank: 37
+  - playbook: chain-exploit-supply-chain-attack-01
+    name: Supply Chain Attack & Dependency Poisoning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.02
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.72
+    success_probability: 0.004514
+    expected_findings_per_100_exec: 0.45
+    expected_payout_per_finding_usd: 5630
+    rank: 38
+  - playbook: social_engineering_rce_v1
+    name: Multi-Stage Social Engineering to RCE
+    source: registry
+    category: Social Engineering
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.48
+    success_probability: 0.004378
+    expected_findings_per_100_exec: 0.44
+    expected_payout_per_finding_usd: 9050
+    rank: 39
+  - playbook: mobile_compromise_v1
+    name: Mobile Device Compromise & Data Exfiltration
+    source: registry
+    category: Mobile Security
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.6
+    success_probability: 0.004368
+    expected_findings_per_100_exec: 0.44
+    expected_payout_per_finding_usd: 3650
+    rank: 40
+  - playbook: iot_botnet_v1
+    name: IoT Device Compromise & Botnet Formation
+    source: registry
+    category: IoT
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.004222
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 41
+  - playbook: chain-impact-ransomware-deployment-01
+    name: Ransomware Deployment & Impact Maximization
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.004222
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 42
+  - playbook: chain-impact-insider-threat-01
+    name: Insider Threat Activation & Fraud Execution
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.004222
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 43
+  - playbook: vpn_ipsec_weakness_v1
+    name: VPN & IPSec Protocol Weakness Exploitation
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.57
+    success_probability: 0.00415
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 44
+  - playbook: network_lateral_movement_v1
+    name: Network-based Lateral Movement & Persistence
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.004077
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 45
+  - playbook: persistent_backdoor_v1
+    name: Multi-Layer Persistent Backdoor Installation
+    source: registry
+    category: Persistence
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.004077
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 46
+  - playbook: chain-recon-master-orchestration-01
+    name: Master Orchestrator & Mission Planning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.004077
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 47
+  - playbook: chain-recon-passive-discovery-01
+    name: Passive Reconnaissance & Asset Discovery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.004077
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 48
+  - playbook: chain-recon-active-fingerprinting-01
+    name: Active Fingerprinting & Service Detection
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.004077
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 49
+  - playbook: chain-recon-vulnerability-discovery-01
+    name: Vulnerability Discovery & CVE Matching
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.004077
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 50
+  - playbook: chain-recon-physical-access-01
+    name: Physical Access & Facility Reconnaissance
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.004077
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 51
+  - playbook: chain-recon-social-engineering-01
+    name: Social Engineering & Credential Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.004077
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 52
+  - playbook: chain-persist-supply-chain-backdoor-01
+    name: Supply Chain Persistence & Dependency Backdoors
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.02
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.64
+    success_probability: 0.004013
+    expected_findings_per_100_exec: 0.4
+    expected_payout_per_finding_usd: 5630
+    rank: 53
+  - playbook: supply_chain_model_v1
+    name: AI Model Supply Chain Attack
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.54
+    success_probability: 0.003931
+    expected_findings_per_100_exec: 0.39
+    expected_payout_per_finding_usd: 3650
+    rank: 54
+  - playbook: cryptographic_downgrade_v1
+    name: Cryptographic Protocol Downgrade & Key Recovery
+    source: registry
+    category: Cryptography
+    vulnerability_family: crypto
+    frequency_in_target: 0.02
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.62
+    success_probability: 0.003844
+    expected_findings_per_100_exec: 0.38
+    expected_payout_per_finding_usd: 5000
+    rank: 55
+  - playbook: insider_threat_simulation_v1
+    name: Insider Threat Attack Path Simulation
+    source: registry
+    category: Insider Threat
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.52
+    success_probability: 0.003786
+    expected_findings_per_100_exec: 0.38
+    expected_payout_per_finding_usd: 3650
+    rank: 56
+  - playbook: firmware_rce_v1
+    name: Firmware Exploitation & Hardware-Level Code Execution
+    source: registry
+    category: Firmware
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.4
+    success_probability: 0.003648
+    expected_findings_per_100_exec: 0.36
+    expected_payout_per_finding_usd: 9050
+    rank: 57
+  - playbook: runtime_detection_evasion_v1
+    name: Runtime Detection & EDR Evasion Techniques
+    source: registry
+    category: Detection Evasion
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.5
+    success_probability: 0.00364
+    expected_findings_per_100_exec: 0.36
+    expected_payout_per_finding_usd: 3650
+    rank: 58
+  - playbook: supply_chain_attack_v1
+    name: Supply Chain Attack via Dependency Poisoning
+    source: registry
+    category: Supply Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.02
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.58
+    success_probability: 0.003637
+    expected_findings_per_100_exec: 0.36
+    expected_payout_per_finding_usd: 5630
+    rank: 59
+  - playbook: chain-exploit-llm-poisoning-01
+    name: LLM Model Poisoning & AI System Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.72
+    success_probability: 0.003514
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 5990
+    rank: 60
+  - playbook: chain-recon-supply-chain-research-01
+    name: Supply Chain Research & Dependency Analysis
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.02
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.56
+    success_probability: 0.003511
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 5630
+    rank: 61
+  - playbook: pixel_based_inference_v1
+    name: AI Model Inference via Pixel & Timing Attacks
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.48
+    success_probability: 0.003494
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 62
+  - playbook: ai_llm_supply_chain_v1
+    name: AI/LLM Supply Chain and Dependency Security Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.7
+    success_probability: 0.003416
+    expected_findings_per_100_exec: 0.34
+    expected_payout_per_finding_usd: 5990
+    rank: 63
+  - playbook: ransomware_simulation_v1
+    name: Ransomware Attack Simulation & Impact Assessment
+    source: registry
+    category: Ransomware
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.003349
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 64
+  - playbook: chain-evasion-log-removal-01
+    name: Log Removal & Event Trail Destruction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.003349
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 65
+  - playbook: chain-evasion-artifact-cleanup-01
+    name: Artifact Cleanup & Residual Evidence Removal
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.003349
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 66
+  - playbook: chain-evasion-detection-evasion-01
+    name: Detection & EDR Evasion Techniques
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.003349
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 67
+  - playbook: chain-evasion-incident-responder-01
+    name: Incident Responder Evasion & Interference
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.003349
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 68
+  - playbook: chain-evasion-forensic-antianalysis-01
+    name: Forensic Anti-Analysis & Evidence Tampering
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.003349
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 69
+  - playbook: malware_delivery_v1
+    name: Advanced Malware Delivery & Evasion
+    source: registry
+    category: Malware
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.45
+    success_probability: 0.003276
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 70
+  - playbook: dga_botnet_sim_v1
+    name: DGA Botnet Simulation & Command-Control Channel
+    source: registry
+    category: Botnet
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.44
+    success_probability: 0.003203
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 3650
+    rank: 71
+  - playbook: ai_llm_prompt_injection_v1
+    name: AI/LLM Prompt Injection and Jailbreak Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.65
+    success_probability: 0.003172
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 5990
+    rank: 72
+  - playbook: chain-persist-credential-storage-01
+    name: Credential Storage & Password Manager Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.64
+    success_probability: 0.003123
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 5990
+    rank: 73
+  - playbook: industrial_scada_v1
+    name: Industrial SCADA/ICS System Compromise
+    source: registry
+    category: Industrial Control Systems
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.42
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 74
+  - playbook: 5g_network_attack_v1
+    name: 5G Network Vulnerability Exploitation
+    source: registry
+    category: Telecommunications
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.41
+    success_probability: 0.002985
+    expected_findings_per_100_exec: 0.3
+    expected_payout_per_finding_usd: 3650
+    rank: 75
+  - playbook: ai_llm_model_extraction_v1
+    name: AI/LLM Model Extraction and IP Theft Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.6
+    success_probability: 0.002928
+    expected_findings_per_100_exec: 0.29
+    expected_payout_per_finding_usd: 5990
+    rank: 76
+  - playbook: air_gapped_network_v1
+    name: Air-Gapped Network Penetration & Exfiltration
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.39
+    success_probability: 0.002839
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 3650
+    rank: 77
+  - playbook: ai_llm_vector_db_v1
+    name: AI/LLM Vector Database and RAG System Attacks
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.00283
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 5990
+    rank: 78
+  - playbook: llm_model_extraction_v1
+    name: LLM Model Extraction & Fine-Tuning Data Theft
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.00283
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 5990
+    rank: 79
+  - playbook: hypervisor_escape_v1
+    name: Hypervisor Escape & Host Takeover
+    source: registry
+    category: Virtualization
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.38
+    success_probability: 0.002766
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 3650
+    rank: 80
+  - playbook: ai_llm_container_escape_v1
+    name: AI/LLM Container Escape and Host Compromise
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.55
+    success_probability: 0.002684
+    expected_findings_per_100_exec: 0.27
+    expected_payout_per_finding_usd: 5990
+    rank: 81
+  - playbook: zero_trust_bypass_v1
+    name: Zero Trust Architecture Bypass & Microsegmentation Escape
+    source: registry
+    category: Zero Trust
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.36
+    success_probability: 0.002621
+    expected_findings_per_100_exec: 0.26
+    expected_payout_per_finding_usd: 3650
+    rank: 82
+  - playbook: apt_campaign_sim_v1
+    name: APT Campaign Simulation (Multi-Stage, Multi-Vector)
+    source: registry
+    category: APT
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.35
+    success_probability: 0.002548
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 83
+  - playbook: llm_poisoning_v1
+    name: LLM Training Data Poisoning & Prompt Injection Chains
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.52
+    success_probability: 0.002538
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 5990
+    rank: 84
+  - playbook: quantum_safe_bypass_v1
+    name: Quantum-Ready Cryptanalysis & Downgrade
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.04
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.32
+    success_probability: 0.00233
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 85
+  established_saas:
+  - playbook: owasp_a01_access_control_v1
+    name: OWASP A01 Broken Access Control Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.19
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.8
+    success_probability: 0.086275
+    expected_findings_per_100_exec: 8.63
+    expected_payout_per_finding_usd: 6440
+    rank: 1
+  - playbook: chain-exploit-privilege-escalation-01
+    name: Privilege Escalation & Post-Exploitation Access
+    source: chain_integration
+    category: Chain
+    vulnerability_family: access_control
+    frequency_in_target: 0.19
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.72
+    success_probability: 0.077648
+    expected_findings_per_100_exec: 7.76
+    expected_payout_per_finding_usd: 6440
+    rank: 2
+  - playbook: auth_bypass_v1
+    name: Authentication and Authorization Bypass Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.19
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.070099
+    expected_findings_per_100_exec: 7.01
+    expected_payout_per_finding_usd: 6440
+    rank: 3
+  - playbook: iam_privilege_escalation_v1
+    name: Identity & Access Management Privilege Escalation
+    source: registry
+    category: IAM Security
+    vulnerability_family: access_control
+    frequency_in_target: 0.19
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.070099
+    expected_findings_per_100_exec: 7.01
+    expected_payout_per_finding_usd: 6440
+    rank: 4
+  - playbook: cloud_lateral_movement_v1
+    name: AWS/Azure/GCP Lateral Movement & Privilege Escalation
+    source: registry
+    category: Cloud Infrastructure
+    vulnerability_family: access_control
+    frequency_in_target: 0.19
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.62
+    success_probability: 0.066863
+    expected_findings_per_100_exec: 6.69
+    expected_payout_per_finding_usd: 6440
+    rank: 5
+  - playbook: graphql_attacks_v1
+    name: GraphQL API Security Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: api
+    frequency_in_target: 0.17
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.8
+    success_probability: 0.06547
+    expected_findings_per_100_exec: 6.55
+    expected_payout_per_finding_usd: 5720
+    rank: 6
+  - playbook: chain-exploit-api-abuse-01
+    name: API Abuse & Endpoint Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: api
+    frequency_in_target: 0.17
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.72
+    success_probability: 0.058923
+    expected_findings_per_100_exec: 5.89
+    expected_payout_per_finding_usd: 5720
+    rank: 7
+  - playbook: zero_day_chain_v1
+    name: Zero-Day Exploitation & Privilege Escalation Chain
+    source: registry
+    category: Advanced Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.19
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.5
+    success_probability: 0.053922
+    expected_findings_per_100_exec: 5.39
+    expected_payout_per_finding_usd: 6440
+    rank: 8
+  - playbook: owasp_a04_design_v1
+    name: OWASP A04 Insecure Design Vulnerability Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: business_logic
+    frequency_in_target: 0.14
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.65
+    success_probability: 0.047029
+    expected_findings_per_100_exec: 4.7
+    expected_payout_per_finding_usd: 6620
+    rank: 9
+  - playbook: chain-exploit-auth-bypass-01
+    name: Authentication Bypass & Credential Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: auth
+    frequency_in_target: 0.12
+    scope_likelihood: 0.84
+    payout_value_norm: 0.62
+    playbook_quality: 0.72
+    success_probability: 0.044997
+    expected_findings_per_100_exec: 4.5
+    expected_payout_per_finding_usd: 6080
+    rank: 10
+  - playbook: business_logic_bypass_v1
+    name: Complex Business Logic Exploitation
+    source: registry
+    category: Business Logic
+    vulnerability_family: business_logic
+    frequency_in_target: 0.14
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.54
+    success_probability: 0.03907
+    expected_findings_per_100_exec: 3.91
+    expected_payout_per_finding_usd: 6620
+    rank: 11
+  - playbook: owasp_a05_misconfig_v1
+    name: OWASP A05 Security Misconfiguration Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.1
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.85
+    success_probability: 0.032062
+    expected_findings_per_100_exec: 3.21
+    expected_payout_per_finding_usd: 4640
+    rank: 12
+  - playbook: chain-recon-darkweb-intelligence-01
+    name: Dark Web Leaks & Breach Intelligence Research
+    source: chain_integration
+    category: Chain
+    vulnerability_family: info_disclosure
+    frequency_in_target: 0.12
+    scope_likelihood: 0.9
+    payout_value_norm: 0.42
+    playbook_quality: 0.56
+    success_probability: 0.025402
+    expected_findings_per_100_exec: 2.54
+    expected_payout_per_finding_usd: 4280
+    rank: 13
+  - playbook: xss_discovery_v1
+    name: Cross-Site Scripting Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: xss
+    frequency_in_target: 0.1
+    scope_likelihood: 0.88
+    payout_value_norm: 0.3
+    playbook_quality: 0.85
+    success_probability: 0.02244
+    expected_findings_per_100_exec: 2.24
+    expected_payout_per_finding_usd: 3200
+    rank: 14
+  - playbook: dns_cache_poisoning_v1
+    name: DNS Infrastructure Attack & Traffic Redirection
+    source: registry
+    category: Infrastructure
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.1
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.54
+    success_probability: 0.020369
+    expected_findings_per_100_exec: 2.04
+    expected_payout_per_finding_usd: 4640
+    rank: 15
+  - playbook: sql_injection_v1
+    name: SQL Injection Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.04
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.013586
+    expected_findings_per_100_exec: 1.36
+    expected_payout_per_finding_usd: 5360
+    rank: 16
+  - playbook: owasp_a03_injection_v1
+    name: OWASP A03 Injection Vulnerability Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.04
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.013586
+    expected_findings_per_100_exec: 1.36
+    expected_payout_per_finding_usd: 5360
+    rank: 17
+  - playbook: chain-exploit-rce-escalation-01
+    name: Remote Code Execution & Initial Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: rce
+    frequency_in_target: 0.03
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.72
+    success_probability: 0.00985
+    expected_findings_per_100_exec: 0.98
+    expected_payout_per_finding_usd: 9050
+    rank: 18
+  - playbook: api_rce_chain_v1
+    name: Chained API Vulnerabilities Leading to RCE
+    source: registry
+    category: API Security
+    vulnerability_family: rce
+    frequency_in_target: 0.03
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.68
+    success_probability: 0.009302
+    expected_findings_per_100_exec: 0.93
+    expected_payout_per_finding_usd: 9050
+    rank: 19
+  - playbook: owasp_a02_crypto_v1
+    name: OWASP A02 Cryptographic Failures Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: crypto
+    frequency_in_target: 0.03
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.85
+    success_probability: 0.007905
+    expected_findings_per_100_exec: 0.79
+    expected_payout_per_finding_usd: 5000
+    rank: 20
+  - playbook: container_escape_rce_v1
+    name: Kubernetes Container Escape & Cluster Takeover
+    source: registry
+    category: Container Security
+    vulnerability_family: rce
+    frequency_in_target: 0.03
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.52
+    success_probability: 0.007114
+    expected_findings_per_100_exec: 0.71
+    expected_payout_per_finding_usd: 9050
+    rank: 21
+  - playbook: chain-exploit-supply-chain-attack-01
+    name: Supply Chain Attack & Dependency Poisoning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.03
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.72
+    success_probability: 0.006772
+    expected_findings_per_100_exec: 0.68
+    expected_payout_per_finding_usd: 5630
+    rank: 22
+  - playbook: social_engineering_rce_v1
+    name: Multi-Stage Social Engineering to RCE
+    source: registry
+    category: Social Engineering
+    vulnerability_family: rce
+    frequency_in_target: 0.03
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.48
+    success_probability: 0.006566
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 9050
+    rank: 23
+  - playbook: chain-persist-supply-chain-backdoor-01
+    name: Supply Chain Persistence & Dependency Backdoors
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.03
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.64
+    success_probability: 0.006019
+    expected_findings_per_100_exec: 0.6
+    expected_payout_per_finding_usd: 5630
+    rank: 24
+  - playbook: cryptographic_downgrade_v1
+    name: Cryptographic Protocol Downgrade & Key Recovery
+    source: registry
+    category: Cryptography
+    vulnerability_family: crypto
+    frequency_in_target: 0.03
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.62
+    success_probability: 0.005766
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 5000
+    rank: 25
+  - playbook: firmware_rce_v1
+    name: Firmware Exploitation & Hardware-Level Code Execution
+    source: registry
+    category: Firmware
+    vulnerability_family: rce
+    frequency_in_target: 0.03
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.4
+    success_probability: 0.005472
+    expected_findings_per_100_exec: 0.55
+    expected_payout_per_finding_usd: 9050
+    rank: 26
+  - playbook: supply_chain_attack_v1
+    name: Supply Chain Attack via Dependency Poisoning
+    source: registry
+    category: Supply Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.03
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.58
+    success_probability: 0.005455
+    expected_findings_per_100_exec: 0.55
+    expected_payout_per_finding_usd: 5630
+    rank: 27
+  - playbook: chain-recon-supply-chain-research-01
+    name: Supply Chain Research & Dependency Analysis
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.03
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.56
+    success_probability: 0.005267
+    expected_findings_per_100_exec: 0.53
+    expected_payout_per_finding_usd: 5630
+    rank: 28
+  - playbook: chain-exploit-llm-poisoning-01
+    name: LLM Model Poisoning & AI System Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.72
+    success_probability: 0.003514
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 5990
+    rank: 29
+  - playbook: ai_llm_supply_chain_v1
+    name: AI/LLM Supply Chain and Dependency Security Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.7
+    success_probability: 0.003416
+    expected_findings_per_100_exec: 0.34
+    expected_payout_per_finding_usd: 5990
+    rank: 30
+  - playbook: ai_llm_prompt_injection_v1
+    name: AI/LLM Prompt Injection and Jailbreak Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.65
+    success_probability: 0.003172
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 5990
+    rank: 31
+  - playbook: chain-persist-credential-storage-01
+    name: Credential Storage & Password Manager Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.64
+    success_probability: 0.003123
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 5990
+    rank: 32
+  - playbook: chain-evasion-timeline-spoofing-01
+    name: Timeline Spoofing & Timestamp Manipulation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: open_redirect
+    frequency_in_target: 0.04
+    scope_likelihood: 0.91
+    payout_value_norm: 0.18
+    playbook_quality: 0.46
+    success_probability: 0.003014
+    expected_findings_per_100_exec: 0.3
+    expected_payout_per_finding_usd: 2120
+    rank: 33
+  - playbook: ai_llm_model_extraction_v1
+    name: AI/LLM Model Extraction and IP Theft Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.6
+    success_probability: 0.002928
+    expected_findings_per_100_exec: 0.29
+    expected_payout_per_finding_usd: 5990
+    rank: 34
+  - playbook: web_app_recon_v1
+    name: Web Application Reconnaissance
+    source: registry
+    category: Reconnaissance
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.8
+    success_probability: 0.002912
+    expected_findings_per_100_exec: 0.29
+    expected_payout_per_finding_usd: 3650
+    rank: 35
+  - playbook: ai_llm_vector_db_v1
+    name: AI/LLM Vector Database and RAG System Attacks
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.00283
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 5990
+    rank: 36
+  - playbook: llm_model_extraction_v1
+    name: LLM Model Extraction & Fine-Tuning Data Theft
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.00283
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 5990
+    rank: 37
+  - playbook: ai_llm_container_escape_v1
+    name: AI/LLM Container Escape and Host Compromise
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.55
+    success_probability: 0.002684
+    expected_findings_per_100_exec: 0.27
+    expected_payout_per_finding_usd: 5990
+    rank: 38
+  - playbook: database_exfiltration_v1
+    name: Database Vulnerability Exploitation & Data Exfiltration
+    source: registry
+    category: Database Security
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.002621
+    expected_findings_per_100_exec: 0.26
+    expected_payout_per_finding_usd: 3650
+    rank: 39
+  - playbook: chain-exploit-credential-theft-01
+    name: Credential Theft & Password Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.002621
+    expected_findings_per_100_exec: 0.26
+    expected_payout_per_finding_usd: 3650
+    rank: 40
+  - playbook: chain-exploit-database-extraction-01
+    name: Database Exploitation & Data Extraction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.002621
+    expected_findings_per_100_exec: 0.26
+    expected_payout_per_finding_usd: 3650
+    rank: 41
+  - playbook: chain-exploit-container-escape-01
+    name: Container Escape & Kubernetes Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.002621
+    expected_findings_per_100_exec: 0.26
+    expected_payout_per_finding_usd: 3650
+    rank: 42
+  - playbook: chain-exploit-physical-access-01
+    name: Physical Access & Hardware Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.002621
+    expected_findings_per_100_exec: 0.26
+    expected_payout_per_finding_usd: 3650
+    rank: 43
+  - playbook: chain-exploit-zeroday-exploitation-01
+    name: Zero-Day Exploitation & Advanced Payload Delivery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.002621
+    expected_findings_per_100_exec: 0.26
+    expected_payout_per_finding_usd: 3650
+    rank: 44
+  - playbook: sbom_vulnerability_chain_v1
+    name: Vulnerability Chaining via SBOM Analysis
+    source: registry
+    category: Supply Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.7
+    success_probability: 0.002548
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 45
+  - playbook: llm_poisoning_v1
+    name: LLM Training Data Poisoning & Prompt Injection Chains
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.52
+    success_probability: 0.002538
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 5990
+    rank: 46
+  - playbook: chain-persist-establish-access-01
+    name: Establish Persistence & Backdoor Installation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.00233
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 47
+  - playbook: chain-persist-lateral-movement-01
+    name: Lateral Movement & Network Pivoting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.00233
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 48
+  - playbook: chain-persist-data-exfiltration-01
+    name: Data Exfiltration & Sensitive Information Theft
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.00233
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 49
+  - playbook: chain-persist-domain-compromise-01
+    name: Domain Controller Compromise & Active Directory Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.00233
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 50
+  - playbook: chain-persist-long-game-01
+    name: Long Game Persistence & Multi-Year Dwell Time
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.00233
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 51
+  - playbook: chain-persist-iot-expansion-01
+    name: IoT Device Network Expansion & Bot Recruitment
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.00233
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 52
+  - playbook: log_deletion_forensic_v1
+    name: Log Deletion & Forensic Evidence Destruction
+    source: registry
+    category: Post-Exploitation
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.62
+    success_probability: 0.002257
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 53
+  - playbook: mobile_compromise_v1
+    name: Mobile Device Compromise & Data Exfiltration
+    source: registry
+    category: Mobile Security
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.6
+    success_probability: 0.002184
+    expected_findings_per_100_exec: 0.22
+    expected_payout_per_finding_usd: 3650
+    rank: 54
+  - playbook: iot_botnet_v1
+    name: IoT Device Compromise & Botnet Formation
+    source: registry
+    category: IoT
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.002111
+    expected_findings_per_100_exec: 0.21
+    expected_payout_per_finding_usd: 3650
+    rank: 55
+  - playbook: chain-impact-ransomware-deployment-01
+    name: Ransomware Deployment & Impact Maximization
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.002111
+    expected_findings_per_100_exec: 0.21
+    expected_payout_per_finding_usd: 3650
+    rank: 56
+  - playbook: chain-impact-insider-threat-01
+    name: Insider Threat Activation & Fraud Execution
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.002111
+    expected_findings_per_100_exec: 0.21
+    expected_payout_per_finding_usd: 3650
+    rank: 57
+  - playbook: vpn_ipsec_weakness_v1
+    name: VPN & IPSec Protocol Weakness Exploitation
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.57
+    success_probability: 0.002075
+    expected_findings_per_100_exec: 0.21
+    expected_payout_per_finding_usd: 3650
+    rank: 58
+  - playbook: network_lateral_movement_v1
+    name: Network-based Lateral Movement & Persistence
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.002038
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 59
+  - playbook: persistent_backdoor_v1
+    name: Multi-Layer Persistent Backdoor Installation
+    source: registry
+    category: Persistence
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.002038
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 60
+  - playbook: chain-recon-master-orchestration-01
+    name: Master Orchestrator & Mission Planning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.002038
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 61
+  - playbook: chain-recon-passive-discovery-01
+    name: Passive Reconnaissance & Asset Discovery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.002038
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 62
+  - playbook: chain-recon-active-fingerprinting-01
+    name: Active Fingerprinting & Service Detection
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.002038
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 63
+  - playbook: chain-recon-vulnerability-discovery-01
+    name: Vulnerability Discovery & CVE Matching
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.002038
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 64
+  - playbook: chain-recon-physical-access-01
+    name: Physical Access & Facility Reconnaissance
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.002038
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 65
+  - playbook: chain-recon-social-engineering-01
+    name: Social Engineering & Credential Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.002038
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 66
+  - playbook: supply_chain_model_v1
+    name: AI Model Supply Chain Attack
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.54
+    success_probability: 0.001966
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 67
+  - playbook: insider_threat_simulation_v1
+    name: Insider Threat Attack Path Simulation
+    source: registry
+    category: Insider Threat
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.52
+    success_probability: 0.001893
+    expected_findings_per_100_exec: 0.19
+    expected_payout_per_finding_usd: 3650
+    rank: 68
+  - playbook: runtime_detection_evasion_v1
+    name: Runtime Detection & EDR Evasion Techniques
+    source: registry
+    category: Detection Evasion
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.5
+    success_probability: 0.00182
+    expected_findings_per_100_exec: 0.18
+    expected_payout_per_finding_usd: 3650
+    rank: 69
+  - playbook: pixel_based_inference_v1
+    name: AI Model Inference via Pixel & Timing Attacks
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.48
+    success_probability: 0.001747
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 3650
+    rank: 70
+  - playbook: ransomware_simulation_v1
+    name: Ransomware Attack Simulation & Impact Assessment
+    source: registry
+    category: Ransomware
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.001674
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 3650
+    rank: 71
+  - playbook: chain-evasion-log-removal-01
+    name: Log Removal & Event Trail Destruction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.001674
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 3650
+    rank: 72
+  - playbook: chain-evasion-artifact-cleanup-01
+    name: Artifact Cleanup & Residual Evidence Removal
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.001674
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 3650
+    rank: 73
+  - playbook: chain-evasion-detection-evasion-01
+    name: Detection & EDR Evasion Techniques
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.001674
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 3650
+    rank: 74
+  - playbook: chain-evasion-incident-responder-01
+    name: Incident Responder Evasion & Interference
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.001674
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 3650
+    rank: 75
+  - playbook: chain-evasion-forensic-antianalysis-01
+    name: Forensic Anti-Analysis & Evidence Tampering
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.001674
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 3650
+    rank: 76
+  - playbook: malware_delivery_v1
+    name: Advanced Malware Delivery & Evasion
+    source: registry
+    category: Malware
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.45
+    success_probability: 0.001638
+    expected_findings_per_100_exec: 0.16
+    expected_payout_per_finding_usd: 3650
+    rank: 77
+  - playbook: dga_botnet_sim_v1
+    name: DGA Botnet Simulation & Command-Control Channel
+    source: registry
+    category: Botnet
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.44
+    success_probability: 0.001602
+    expected_findings_per_100_exec: 0.16
+    expected_payout_per_finding_usd: 3650
+    rank: 78
+  - playbook: industrial_scada_v1
+    name: Industrial SCADA/ICS System Compromise
+    source: registry
+    category: Industrial Control Systems
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.42
+    success_probability: 0.001529
+    expected_findings_per_100_exec: 0.15
+    expected_payout_per_finding_usd: 3650
+    rank: 79
+  - playbook: 5g_network_attack_v1
+    name: 5G Network Vulnerability Exploitation
+    source: registry
+    category: Telecommunications
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.41
+    success_probability: 0.001492
+    expected_findings_per_100_exec: 0.15
+    expected_payout_per_finding_usd: 3650
+    rank: 80
+  - playbook: air_gapped_network_v1
+    name: Air-Gapped Network Penetration & Exfiltration
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.39
+    success_probability: 0.00142
+    expected_findings_per_100_exec: 0.14
+    expected_payout_per_finding_usd: 3650
+    rank: 81
+  - playbook: hypervisor_escape_v1
+    name: Hypervisor Escape & Host Takeover
+    source: registry
+    category: Virtualization
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.38
+    success_probability: 0.001383
+    expected_findings_per_100_exec: 0.14
+    expected_payout_per_finding_usd: 3650
+    rank: 82
+  - playbook: zero_trust_bypass_v1
+    name: Zero Trust Architecture Bypass & Microsegmentation Escape
+    source: registry
+    category: Zero Trust
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.36
+    success_probability: 0.00131
+    expected_findings_per_100_exec: 0.13
+    expected_payout_per_finding_usd: 3650
+    rank: 83
+  - playbook: apt_campaign_sim_v1
+    name: APT Campaign Simulation (Multi-Stage, Multi-Vector)
+    source: registry
+    category: APT
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.35
+    success_probability: 0.001274
+    expected_findings_per_100_exec: 0.13
+    expected_payout_per_finding_usd: 3650
+    rank: 84
+  - playbook: quantum_safe_bypass_v1
+    name: Quantum-Ready Cryptanalysis & Downgrade
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.02
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.32
+    success_probability: 0.001165
+    expected_findings_per_100_exec: 0.12
+    expected_payout_per_finding_usd: 3650
+    rank: 85
+  enterprise_multi_property:
+  - playbook: owasp_a01_access_control_v1
+    name: OWASP A01 Broken Access Control Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.17
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.8
+    success_probability: 0.077194
+    expected_findings_per_100_exec: 7.72
+    expected_payout_per_finding_usd: 6440
+    rank: 1
+  - playbook: chain-exploit-privilege-escalation-01
+    name: Privilege Escalation & Post-Exploitation Access
+    source: chain_integration
+    category: Chain
+    vulnerability_family: access_control
+    frequency_in_target: 0.17
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.72
+    success_probability: 0.069474
+    expected_findings_per_100_exec: 6.95
+    expected_payout_per_finding_usd: 6440
+    rank: 2
+  - playbook: auth_bypass_v1
+    name: Authentication and Authorization Bypass Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.17
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.06272
+    expected_findings_per_100_exec: 6.27
+    expected_payout_per_finding_usd: 6440
+    rank: 3
+  - playbook: iam_privilege_escalation_v1
+    name: Identity & Access Management Privilege Escalation
+    source: registry
+    category: IAM Security
+    vulnerability_family: access_control
+    frequency_in_target: 0.17
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.06272
+    expected_findings_per_100_exec: 6.27
+    expected_payout_per_finding_usd: 6440
+    rank: 4
+  - playbook: cloud_lateral_movement_v1
+    name: AWS/Azure/GCP Lateral Movement & Privilege Escalation
+    source: registry
+    category: Cloud Infrastructure
+    vulnerability_family: access_control
+    frequency_in_target: 0.17
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.62
+    success_probability: 0.059825
+    expected_findings_per_100_exec: 5.98
+    expected_payout_per_finding_usd: 6440
+    rank: 5
+  - playbook: owasp_a04_design_v1
+    name: OWASP A04 Insecure Design Vulnerability Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: business_logic
+    frequency_in_target: 0.15
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.65
+    success_probability: 0.050388
+    expected_findings_per_100_exec: 5.04
+    expected_payout_per_finding_usd: 6620
+    rank: 6
+  - playbook: zero_day_chain_v1
+    name: Zero-Day Exploitation & Privilege Escalation Chain
+    source: registry
+    category: Advanced Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.17
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.5
+    success_probability: 0.048246
+    expected_findings_per_100_exec: 4.82
+    expected_payout_per_finding_usd: 6440
+    rank: 7
+  - playbook: chain-exploit-auth-bypass-01
+    name: Authentication Bypass & Credential Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: auth
+    frequency_in_target: 0.12
+    scope_likelihood: 0.84
+    payout_value_norm: 0.62
+    playbook_quality: 0.72
+    success_probability: 0.044997
+    expected_findings_per_100_exec: 4.5
+    expected_payout_per_finding_usd: 6080
+    rank: 8
+  - playbook: graphql_attacks_v1
+    name: GraphQL API Security Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: api
+    frequency_in_target: 0.11
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.8
+    success_probability: 0.042363
+    expected_findings_per_100_exec: 4.24
+    expected_payout_per_finding_usd: 5720
+    rank: 9
+  - playbook: business_logic_bypass_v1
+    name: Complex Business Logic Exploitation
+    source: registry
+    category: Business Logic
+    vulnerability_family: business_logic
+    frequency_in_target: 0.15
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.54
+    success_probability: 0.041861
+    expected_findings_per_100_exec: 4.19
+    expected_payout_per_finding_usd: 6620
+    rank: 10
+  - playbook: chain-exploit-api-abuse-01
+    name: API Abuse & Endpoint Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: api
+    frequency_in_target: 0.11
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.72
+    success_probability: 0.038127
+    expected_findings_per_100_exec: 3.81
+    expected_payout_per_finding_usd: 5720
+    rank: 11
+  - playbook: owasp_a05_misconfig_v1
+    name: OWASP A05 Security Misconfiguration Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.1
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.85
+    success_probability: 0.032062
+    expected_findings_per_100_exec: 3.21
+    expected_payout_per_finding_usd: 4640
+    rank: 12
+  - playbook: chain-recon-darkweb-intelligence-01
+    name: Dark Web Leaks & Breach Intelligence Research
+    source: chain_integration
+    category: Chain
+    vulnerability_family: info_disclosure
+    frequency_in_target: 0.13
+    scope_likelihood: 0.9
+    payout_value_norm: 0.42
+    playbook_quality: 0.56
+    success_probability: 0.027518
+    expected_findings_per_100_exec: 2.75
+    expected_payout_per_finding_usd: 4280
+    rank: 13
+  - playbook: dns_cache_poisoning_v1
+    name: DNS Infrastructure Attack & Traffic Redirection
+    source: registry
+    category: Infrastructure
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.1
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.54
+    success_probability: 0.020369
+    expected_findings_per_100_exec: 2.04
+    expected_payout_per_finding_usd: 4640
+    rank: 14
+  - playbook: xss_discovery_v1
+    name: Cross-Site Scripting Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: xss
+    frequency_in_target: 0.08
+    scope_likelihood: 0.88
+    payout_value_norm: 0.3
+    playbook_quality: 0.85
+    success_probability: 0.017952
+    expected_findings_per_100_exec: 1.8
+    expected_payout_per_finding_usd: 3200
+    rank: 15
+  - playbook: web_app_recon_v1
+    name: Web Application Reconnaissance
+    source: registry
+    category: Reconnaissance
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.8
+    success_probability: 0.01456
+    expected_findings_per_100_exec: 1.46
+    expected_payout_per_finding_usd: 3650
+    rank: 16
+  - playbook: owasp_a02_crypto_v1
+    name: OWASP A02 Cryptographic Failures Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: crypto
+    frequency_in_target: 0.05
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.85
+    success_probability: 0.013175
+    expected_findings_per_100_exec: 1.32
+    expected_payout_per_finding_usd: 5000
+    rank: 17
+  - playbook: database_exfiltration_v1
+    name: Database Vulnerability Exploitation & Data Exfiltration
+    source: registry
+    category: Database Security
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.013104
+    expected_findings_per_100_exec: 1.31
+    expected_payout_per_finding_usd: 3650
+    rank: 18
+  - playbook: chain-exploit-credential-theft-01
+    name: Credential Theft & Password Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.013104
+    expected_findings_per_100_exec: 1.31
+    expected_payout_per_finding_usd: 3650
+    rank: 19
+  - playbook: chain-exploit-database-extraction-01
+    name: Database Exploitation & Data Extraction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.013104
+    expected_findings_per_100_exec: 1.31
+    expected_payout_per_finding_usd: 3650
+    rank: 20
+  - playbook: chain-exploit-container-escape-01
+    name: Container Escape & Kubernetes Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.013104
+    expected_findings_per_100_exec: 1.31
+    expected_payout_per_finding_usd: 3650
+    rank: 21
+  - playbook: chain-exploit-physical-access-01
+    name: Physical Access & Hardware Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.013104
+    expected_findings_per_100_exec: 1.31
+    expected_payout_per_finding_usd: 3650
+    rank: 22
+  - playbook: chain-exploit-zeroday-exploitation-01
+    name: Zero-Day Exploitation & Advanced Payload Delivery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.013104
+    expected_findings_per_100_exec: 1.31
+    expected_payout_per_finding_usd: 3650
+    rank: 23
+  - playbook: sbom_vulnerability_chain_v1
+    name: Vulnerability Chaining via SBOM Analysis
+    source: registry
+    category: Supply Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.7
+    success_probability: 0.01274
+    expected_findings_per_100_exec: 1.27
+    expected_payout_per_finding_usd: 3650
+    rank: 24
+  - playbook: chain-persist-establish-access-01
+    name: Establish Persistence & Backdoor Installation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.011648
+    expected_findings_per_100_exec: 1.16
+    expected_payout_per_finding_usd: 3650
+    rank: 25
+  - playbook: chain-persist-lateral-movement-01
+    name: Lateral Movement & Network Pivoting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.011648
+    expected_findings_per_100_exec: 1.16
+    expected_payout_per_finding_usd: 3650
+    rank: 26
+  - playbook: chain-persist-data-exfiltration-01
+    name: Data Exfiltration & Sensitive Information Theft
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.011648
+    expected_findings_per_100_exec: 1.16
+    expected_payout_per_finding_usd: 3650
+    rank: 27
+  - playbook: chain-persist-domain-compromise-01
+    name: Domain Controller Compromise & Active Directory Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.011648
+    expected_findings_per_100_exec: 1.16
+    expected_payout_per_finding_usd: 3650
+    rank: 28
+  - playbook: chain-persist-long-game-01
+    name: Long Game Persistence & Multi-Year Dwell Time
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.011648
+    expected_findings_per_100_exec: 1.16
+    expected_payout_per_finding_usd: 3650
+    rank: 29
+  - playbook: chain-persist-iot-expansion-01
+    name: IoT Device Network Expansion & Bot Recruitment
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.011648
+    expected_findings_per_100_exec: 1.16
+    expected_payout_per_finding_usd: 3650
+    rank: 30
+  - playbook: log_deletion_forensic_v1
+    name: Log Deletion & Forensic Evidence Destruction
+    source: registry
+    category: Post-Exploitation
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.62
+    success_probability: 0.011284
+    expected_findings_per_100_exec: 1.13
+    expected_payout_per_finding_usd: 3650
+    rank: 31
+  - playbook: mobile_compromise_v1
+    name: Mobile Device Compromise & Data Exfiltration
+    source: registry
+    category: Mobile Security
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.6
+    success_probability: 0.01092
+    expected_findings_per_100_exec: 1.09
+    expected_payout_per_finding_usd: 3650
+    rank: 32
+  - playbook: iot_botnet_v1
+    name: IoT Device Compromise & Botnet Formation
+    source: registry
+    category: IoT
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.010556
+    expected_findings_per_100_exec: 1.06
+    expected_payout_per_finding_usd: 3650
+    rank: 33
+  - playbook: chain-impact-ransomware-deployment-01
+    name: Ransomware Deployment & Impact Maximization
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.010556
+    expected_findings_per_100_exec: 1.06
+    expected_payout_per_finding_usd: 3650
+    rank: 34
+  - playbook: chain-impact-insider-threat-01
+    name: Insider Threat Activation & Fraud Execution
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.010556
+    expected_findings_per_100_exec: 1.06
+    expected_payout_per_finding_usd: 3650
+    rank: 35
+  - playbook: vpn_ipsec_weakness_v1
+    name: VPN & IPSec Protocol Weakness Exploitation
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.57
+    success_probability: 0.010374
+    expected_findings_per_100_exec: 1.04
+    expected_payout_per_finding_usd: 3650
+    rank: 36
+  - playbook: network_lateral_movement_v1
+    name: Network-based Lateral Movement & Persistence
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.010192
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 3650
+    rank: 37
+  - playbook: persistent_backdoor_v1
+    name: Multi-Layer Persistent Backdoor Installation
+    source: registry
+    category: Persistence
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.010192
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 3650
+    rank: 38
+  - playbook: chain-recon-master-orchestration-01
+    name: Master Orchestrator & Mission Planning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.010192
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 3650
+    rank: 39
+  - playbook: chain-recon-passive-discovery-01
+    name: Passive Reconnaissance & Asset Discovery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.010192
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 3650
+    rank: 40
+  - playbook: chain-recon-active-fingerprinting-01
+    name: Active Fingerprinting & Service Detection
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.010192
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 3650
+    rank: 41
+  - playbook: chain-recon-vulnerability-discovery-01
+    name: Vulnerability Discovery & CVE Matching
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.010192
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 3650
+    rank: 42
+  - playbook: chain-recon-physical-access-01
+    name: Physical Access & Facility Reconnaissance
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.010192
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 3650
+    rank: 43
+  - playbook: chain-recon-social-engineering-01
+    name: Social Engineering & Credential Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.010192
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 3650
+    rank: 44
+  - playbook: sql_injection_v1
+    name: SQL Injection Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.03
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.01019
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 5360
+    rank: 45
+  - playbook: owasp_a03_injection_v1
+    name: OWASP A03 Injection Vulnerability Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.03
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.01019
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 5360
+    rank: 46
+  - playbook: supply_chain_model_v1
+    name: AI Model Supply Chain Attack
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.54
+    success_probability: 0.009828
+    expected_findings_per_100_exec: 0.98
+    expected_payout_per_finding_usd: 3650
+    rank: 47
+  - playbook: cryptographic_downgrade_v1
+    name: Cryptographic Protocol Downgrade & Key Recovery
+    source: registry
+    category: Cryptography
+    vulnerability_family: crypto
+    frequency_in_target: 0.05
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.62
+    success_probability: 0.00961
+    expected_findings_per_100_exec: 0.96
+    expected_payout_per_finding_usd: 5000
+    rank: 48
+  - playbook: insider_threat_simulation_v1
+    name: Insider Threat Attack Path Simulation
+    source: registry
+    category: Insider Threat
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.52
+    success_probability: 0.009464
+    expected_findings_per_100_exec: 0.95
+    expected_payout_per_finding_usd: 3650
+    rank: 49
+  - playbook: runtime_detection_evasion_v1
+    name: Runtime Detection & EDR Evasion Techniques
+    source: registry
+    category: Detection Evasion
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.5
+    success_probability: 0.0091
+    expected_findings_per_100_exec: 0.91
+    expected_payout_per_finding_usd: 3650
+    rank: 50
+  - playbook: chain-exploit-supply-chain-attack-01
+    name: Supply Chain Attack & Dependency Poisoning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.04
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.72
+    success_probability: 0.009029
+    expected_findings_per_100_exec: 0.9
+    expected_payout_per_finding_usd: 5630
+    rank: 51
+  - playbook: pixel_based_inference_v1
+    name: AI Model Inference via Pixel & Timing Attacks
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.48
+    success_probability: 0.008736
+    expected_findings_per_100_exec: 0.87
+    expected_payout_per_finding_usd: 3650
+    rank: 52
+  - playbook: ransomware_simulation_v1
+    name: Ransomware Attack Simulation & Impact Assessment
+    source: registry
+    category: Ransomware
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.008372
+    expected_findings_per_100_exec: 0.84
+    expected_payout_per_finding_usd: 3650
+    rank: 53
+  - playbook: chain-evasion-log-removal-01
+    name: Log Removal & Event Trail Destruction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.008372
+    expected_findings_per_100_exec: 0.84
+    expected_payout_per_finding_usd: 3650
+    rank: 54
+  - playbook: chain-evasion-artifact-cleanup-01
+    name: Artifact Cleanup & Residual Evidence Removal
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.008372
+    expected_findings_per_100_exec: 0.84
+    expected_payout_per_finding_usd: 3650
+    rank: 55
+  - playbook: chain-evasion-detection-evasion-01
+    name: Detection & EDR Evasion Techniques
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.008372
+    expected_findings_per_100_exec: 0.84
+    expected_payout_per_finding_usd: 3650
+    rank: 56
+  - playbook: chain-evasion-incident-responder-01
+    name: Incident Responder Evasion & Interference
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.008372
+    expected_findings_per_100_exec: 0.84
+    expected_payout_per_finding_usd: 3650
+    rank: 57
+  - playbook: chain-evasion-forensic-antianalysis-01
+    name: Forensic Anti-Analysis & Evidence Tampering
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.008372
+    expected_findings_per_100_exec: 0.84
+    expected_payout_per_finding_usd: 3650
+    rank: 58
+  - playbook: malware_delivery_v1
+    name: Advanced Malware Delivery & Evasion
+    source: registry
+    category: Malware
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.45
+    success_probability: 0.00819
+    expected_findings_per_100_exec: 0.82
+    expected_payout_per_finding_usd: 3650
+    rank: 59
+  - playbook: chain-persist-supply-chain-backdoor-01
+    name: Supply Chain Persistence & Dependency Backdoors
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.04
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.64
+    success_probability: 0.008026
+    expected_findings_per_100_exec: 0.8
+    expected_payout_per_finding_usd: 5630
+    rank: 60
+  - playbook: dga_botnet_sim_v1
+    name: DGA Botnet Simulation & Command-Control Channel
+    source: registry
+    category: Botnet
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.44
+    success_probability: 0.008008
+    expected_findings_per_100_exec: 0.8
+    expected_payout_per_finding_usd: 3650
+    rank: 61
+  - playbook: industrial_scada_v1
+    name: Industrial SCADA/ICS System Compromise
+    source: registry
+    category: Industrial Control Systems
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.42
+    success_probability: 0.007644
+    expected_findings_per_100_exec: 0.76
+    expected_payout_per_finding_usd: 3650
+    rank: 62
+  - playbook: 5g_network_attack_v1
+    name: 5G Network Vulnerability Exploitation
+    source: registry
+    category: Telecommunications
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.41
+    success_probability: 0.007462
+    expected_findings_per_100_exec: 0.75
+    expected_payout_per_finding_usd: 3650
+    rank: 63
+  - playbook: supply_chain_attack_v1
+    name: Supply Chain Attack via Dependency Poisoning
+    source: registry
+    category: Supply Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.04
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.58
+    success_probability: 0.007273
+    expected_findings_per_100_exec: 0.73
+    expected_payout_per_finding_usd: 5630
+    rank: 64
+  - playbook: air_gapped_network_v1
+    name: Air-Gapped Network Penetration & Exfiltration
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.39
+    success_probability: 0.007098
+    expected_findings_per_100_exec: 0.71
+    expected_payout_per_finding_usd: 3650
+    rank: 65
+  - playbook: chain-recon-supply-chain-research-01
+    name: Supply Chain Research & Dependency Analysis
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.04
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.56
+    success_probability: 0.007022
+    expected_findings_per_100_exec: 0.7
+    expected_payout_per_finding_usd: 5630
+    rank: 66
+  - playbook: hypervisor_escape_v1
+    name: Hypervisor Escape & Host Takeover
+    source: registry
+    category: Virtualization
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.38
+    success_probability: 0.006916
+    expected_findings_per_100_exec: 0.69
+    expected_payout_per_finding_usd: 3650
+    rank: 67
+  - playbook: chain-exploit-rce-escalation-01
+    name: Remote Code Execution & Initial Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.72
+    success_probability: 0.006566
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 9050
+    rank: 68
+  - playbook: zero_trust_bypass_v1
+    name: Zero Trust Architecture Bypass & Microsegmentation Escape
+    source: registry
+    category: Zero Trust
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.36
+    success_probability: 0.006552
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 3650
+    rank: 69
+  - playbook: apt_campaign_sim_v1
+    name: APT Campaign Simulation (Multi-Stage, Multi-Vector)
+    source: registry
+    category: APT
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.35
+    success_probability: 0.00637
+    expected_findings_per_100_exec: 0.64
+    expected_payout_per_finding_usd: 3650
+    rank: 70
+  - playbook: api_rce_chain_v1
+    name: Chained API Vulnerabilities Leading to RCE
+    source: registry
+    category: API Security
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.68
+    success_probability: 0.006202
+    expected_findings_per_100_exec: 0.62
+    expected_payout_per_finding_usd: 9050
+    rank: 71
+  - playbook: quantum_safe_bypass_v1
+    name: Quantum-Ready Cryptanalysis & Downgrade
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.1
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.32
+    success_probability: 0.005824
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 3650
+    rank: 72
+  - playbook: container_escape_rce_v1
+    name: Kubernetes Container Escape & Cluster Takeover
+    source: registry
+    category: Container Security
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.52
+    success_probability: 0.004742
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 9050
+    rank: 73
+  - playbook: social_engineering_rce_v1
+    name: Multi-Stage Social Engineering to RCE
+    source: registry
+    category: Social Engineering
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.48
+    success_probability: 0.004378
+    expected_findings_per_100_exec: 0.44
+    expected_payout_per_finding_usd: 9050
+    rank: 74
+  - playbook: firmware_rce_v1
+    name: Firmware Exploitation & Hardware-Level Code Execution
+    source: registry
+    category: Firmware
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.4
+    success_probability: 0.003648
+    expected_findings_per_100_exec: 0.36
+    expected_payout_per_finding_usd: 9050
+    rank: 75
+  - playbook: chain-exploit-llm-poisoning-01
+    name: LLM Model Poisoning & AI System Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.72
+    success_probability: 0.003514
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 5990
+    rank: 76
+  - playbook: ai_llm_supply_chain_v1
+    name: AI/LLM Supply Chain and Dependency Security Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.7
+    success_probability: 0.003416
+    expected_findings_per_100_exec: 0.34
+    expected_payout_per_finding_usd: 5990
+    rank: 77
+  - playbook: ai_llm_prompt_injection_v1
+    name: AI/LLM Prompt Injection and Jailbreak Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.65
+    success_probability: 0.003172
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 5990
+    rank: 78
+  - playbook: chain-persist-credential-storage-01
+    name: Credential Storage & Password Manager Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.64
+    success_probability: 0.003123
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 5990
+    rank: 79
+  - playbook: ai_llm_model_extraction_v1
+    name: AI/LLM Model Extraction and IP Theft Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.6
+    success_probability: 0.002928
+    expected_findings_per_100_exec: 0.29
+    expected_payout_per_finding_usd: 5990
+    rank: 80
+  - playbook: ai_llm_vector_db_v1
+    name: AI/LLM Vector Database and RAG System Attacks
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.00283
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 5990
+    rank: 81
+  - playbook: llm_model_extraction_v1
+    name: LLM Model Extraction & Fine-Tuning Data Theft
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.00283
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 5990
+    rank: 82
+  - playbook: ai_llm_container_escape_v1
+    name: AI/LLM Container Escape and Host Compromise
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.55
+    success_probability: 0.002684
+    expected_findings_per_100_exec: 0.27
+    expected_payout_per_finding_usd: 5990
+    rank: 83
+  - playbook: llm_poisoning_v1
+    name: LLM Training Data Poisoning & Prompt Injection Chains
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.52
+    success_probability: 0.002538
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 5990
+    rank: 84
+  - playbook: chain-evasion-timeline-spoofing-01
+    name: Timeline Spoofing & Timestamp Manipulation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: open_redirect
+    frequency_in_target: 0.03
+    scope_likelihood: 0.91
+    payout_value_norm: 0.18
+    playbook_quality: 0.46
+    success_probability: 0.00226
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 2120
+    rank: 85
+  fintech_regulated:
+  - playbook: owasp_a01_access_control_v1
+    name: OWASP A01 Broken Access Control Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.18
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.8
+    success_probability: 0.081734
+    expected_findings_per_100_exec: 8.17
+    expected_payout_per_finding_usd: 6440
+    rank: 1
+  - playbook: chain-exploit-auth-bypass-01
+    name: Authentication Bypass & Credential Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: auth
+    frequency_in_target: 0.2
+    scope_likelihood: 0.84
+    payout_value_norm: 0.62
+    playbook_quality: 0.72
+    success_probability: 0.074995
+    expected_findings_per_100_exec: 7.5
+    expected_payout_per_finding_usd: 6080
+    rank: 2
+  - playbook: chain-exploit-privilege-escalation-01
+    name: Privilege Escalation & Post-Exploitation Access
+    source: chain_integration
+    category: Chain
+    vulnerability_family: access_control
+    frequency_in_target: 0.18
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.72
+    success_probability: 0.073561
+    expected_findings_per_100_exec: 7.36
+    expected_payout_per_finding_usd: 6440
+    rank: 3
+  - playbook: auth_bypass_v1
+    name: Authentication and Authorization Bypass Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.18
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.066409
+    expected_findings_per_100_exec: 6.64
+    expected_payout_per_finding_usd: 6440
+    rank: 4
+  - playbook: iam_privilege_escalation_v1
+    name: Identity & Access Management Privilege Escalation
+    source: registry
+    category: IAM Security
+    vulnerability_family: access_control
+    frequency_in_target: 0.18
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.066409
+    expected_findings_per_100_exec: 6.64
+    expected_payout_per_finding_usd: 6440
+    rank: 5
+  - playbook: cloud_lateral_movement_v1
+    name: AWS/Azure/GCP Lateral Movement & Privilege Escalation
+    source: registry
+    category: Cloud Infrastructure
+    vulnerability_family: access_control
+    frequency_in_target: 0.18
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.62
+    success_probability: 0.063344
+    expected_findings_per_100_exec: 6.33
+    expected_payout_per_finding_usd: 6440
+    rank: 6
+  - playbook: zero_day_chain_v1
+    name: Zero-Day Exploitation & Privilege Escalation Chain
+    source: registry
+    category: Advanced Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.18
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.5
+    success_probability: 0.051084
+    expected_findings_per_100_exec: 5.11
+    expected_payout_per_finding_usd: 6440
+    rank: 7
+  - playbook: owasp_a04_design_v1
+    name: OWASP A04 Insecure Design Vulnerability Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: business_logic
+    frequency_in_target: 0.14
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.65
+    success_probability: 0.047029
+    expected_findings_per_100_exec: 4.7
+    expected_payout_per_finding_usd: 6620
+    rank: 8
+  - playbook: business_logic_bypass_v1
+    name: Complex Business Logic Exploitation
+    source: registry
+    category: Business Logic
+    vulnerability_family: business_logic
+    frequency_in_target: 0.14
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.54
+    success_probability: 0.03907
+    expected_findings_per_100_exec: 3.91
+    expected_payout_per_finding_usd: 6620
+    rank: 9
+  - playbook: graphql_attacks_v1
+    name: GraphQL API Security Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: api
+    frequency_in_target: 0.1
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.8
+    success_probability: 0.038512
+    expected_findings_per_100_exec: 3.85
+    expected_payout_per_finding_usd: 5720
+    rank: 10
+  - playbook: chain-exploit-api-abuse-01
+    name: API Abuse & Endpoint Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: api
+    frequency_in_target: 0.1
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.72
+    success_probability: 0.034661
+    expected_findings_per_100_exec: 3.47
+    expected_payout_per_finding_usd: 5720
+    rank: 11
+  - playbook: owasp_a02_crypto_v1
+    name: OWASP A02 Cryptographic Failures Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: crypto
+    frequency_in_target: 0.1
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.85
+    success_probability: 0.02635
+    expected_findings_per_100_exec: 2.63
+    expected_payout_per_finding_usd: 5000
+    rank: 12
+  - playbook: chain-recon-darkweb-intelligence-01
+    name: Dark Web Leaks & Breach Intelligence Research
+    source: chain_integration
+    category: Chain
+    vulnerability_family: info_disclosure
+    frequency_in_target: 0.12
+    scope_likelihood: 0.9
+    payout_value_norm: 0.42
+    playbook_quality: 0.56
+    success_probability: 0.025402
+    expected_findings_per_100_exec: 2.54
+    expected_payout_per_finding_usd: 4280
+    rank: 13
+  - playbook: owasp_a05_misconfig_v1
+    name: OWASP A05 Security Misconfiguration Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.07
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.85
+    success_probability: 0.022443
+    expected_findings_per_100_exec: 2.24
+    expected_payout_per_finding_usd: 4640
+    rank: 14
+  - playbook: cryptographic_downgrade_v1
+    name: Cryptographic Protocol Downgrade & Key Recovery
+    source: registry
+    category: Cryptography
+    vulnerability_family: crypto
+    frequency_in_target: 0.1
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.62
+    success_probability: 0.01922
+    expected_findings_per_100_exec: 1.92
+    expected_payout_per_finding_usd: 5000
+    rank: 15
+  - playbook: xss_discovery_v1
+    name: Cross-Site Scripting Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: xss
+    frequency_in_target: 0.07
+    scope_likelihood: 0.88
+    payout_value_norm: 0.3
+    playbook_quality: 0.85
+    success_probability: 0.015708
+    expected_findings_per_100_exec: 1.57
+    expected_payout_per_finding_usd: 3200
+    rank: 16
+  - playbook: dns_cache_poisoning_v1
+    name: DNS Infrastructure Attack & Traffic Redirection
+    source: registry
+    category: Infrastructure
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.07
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.54
+    success_probability: 0.014258
+    expected_findings_per_100_exec: 1.43
+    expected_payout_per_finding_usd: 4640
+    rank: 17
+  - playbook: sql_injection_v1
+    name: SQL Injection Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.03
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.01019
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 5360
+    rank: 18
+  - playbook: owasp_a03_injection_v1
+    name: OWASP A03 Injection Vulnerability Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.03
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.01019
+    expected_findings_per_100_exec: 1.02
+    expected_payout_per_finding_usd: 5360
+    rank: 19
+  - playbook: web_app_recon_v1
+    name: Web Application Reconnaissance
+    source: registry
+    category: Reconnaissance
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.8
+    success_probability: 0.00728
+    expected_findings_per_100_exec: 0.73
+    expected_payout_per_finding_usd: 3650
+    rank: 20
+  - playbook: chain-exploit-supply-chain-attack-01
+    name: Supply Chain Attack & Dependency Poisoning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.03
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.72
+    success_probability: 0.006772
+    expected_findings_per_100_exec: 0.68
+    expected_payout_per_finding_usd: 5630
+    rank: 21
+  - playbook: database_exfiltration_v1
+    name: Database Vulnerability Exploitation & Data Exfiltration
+    source: registry
+    category: Database Security
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.006552
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 3650
+    rank: 22
+  - playbook: chain-exploit-credential-theft-01
+    name: Credential Theft & Password Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.006552
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 3650
+    rank: 23
+  - playbook: chain-exploit-database-extraction-01
+    name: Database Exploitation & Data Extraction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.006552
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 3650
+    rank: 24
+  - playbook: chain-exploit-container-escape-01
+    name: Container Escape & Kubernetes Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.006552
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 3650
+    rank: 25
+  - playbook: chain-exploit-physical-access-01
+    name: Physical Access & Hardware Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.006552
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 3650
+    rank: 26
+  - playbook: chain-exploit-zeroday-exploitation-01
+    name: Zero-Day Exploitation & Advanced Payload Delivery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.006552
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 3650
+    rank: 27
+  - playbook: sbom_vulnerability_chain_v1
+    name: Vulnerability Chaining via SBOM Analysis
+    source: registry
+    category: Supply Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.7
+    success_probability: 0.00637
+    expected_findings_per_100_exec: 0.64
+    expected_payout_per_finding_usd: 3650
+    rank: 28
+  - playbook: chain-persist-supply-chain-backdoor-01
+    name: Supply Chain Persistence & Dependency Backdoors
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.03
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.64
+    success_probability: 0.006019
+    expected_findings_per_100_exec: 0.6
+    expected_payout_per_finding_usd: 5630
+    rank: 29
+  - playbook: chain-persist-establish-access-01
+    name: Establish Persistence & Backdoor Installation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.005824
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 3650
+    rank: 30
+  - playbook: chain-persist-lateral-movement-01
+    name: Lateral Movement & Network Pivoting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.005824
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 3650
+    rank: 31
+  - playbook: chain-persist-data-exfiltration-01
+    name: Data Exfiltration & Sensitive Information Theft
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.005824
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 3650
+    rank: 32
+  - playbook: chain-persist-domain-compromise-01
+    name: Domain Controller Compromise & Active Directory Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.005824
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 3650
+    rank: 33
+  - playbook: chain-persist-long-game-01
+    name: Long Game Persistence & Multi-Year Dwell Time
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.005824
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 3650
+    rank: 34
+  - playbook: chain-persist-iot-expansion-01
+    name: IoT Device Network Expansion & Bot Recruitment
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.005824
+    expected_findings_per_100_exec: 0.58
+    expected_payout_per_finding_usd: 3650
+    rank: 35
+  - playbook: log_deletion_forensic_v1
+    name: Log Deletion & Forensic Evidence Destruction
+    source: registry
+    category: Post-Exploitation
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.62
+    success_probability: 0.005642
+    expected_findings_per_100_exec: 0.56
+    expected_payout_per_finding_usd: 3650
+    rank: 36
+  - playbook: mobile_compromise_v1
+    name: Mobile Device Compromise & Data Exfiltration
+    source: registry
+    category: Mobile Security
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.6
+    success_probability: 0.00546
+    expected_findings_per_100_exec: 0.55
+    expected_payout_per_finding_usd: 3650
+    rank: 37
+  - playbook: supply_chain_attack_v1
+    name: Supply Chain Attack via Dependency Poisoning
+    source: registry
+    category: Supply Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.03
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.58
+    success_probability: 0.005455
+    expected_findings_per_100_exec: 0.55
+    expected_payout_per_finding_usd: 5630
+    rank: 38
+  - playbook: iot_botnet_v1
+    name: IoT Device Compromise & Botnet Formation
+    source: registry
+    category: IoT
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.005278
+    expected_findings_per_100_exec: 0.53
+    expected_payout_per_finding_usd: 3650
+    rank: 39
+  - playbook: chain-impact-ransomware-deployment-01
+    name: Ransomware Deployment & Impact Maximization
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.005278
+    expected_findings_per_100_exec: 0.53
+    expected_payout_per_finding_usd: 3650
+    rank: 40
+  - playbook: chain-impact-insider-threat-01
+    name: Insider Threat Activation & Fraud Execution
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.005278
+    expected_findings_per_100_exec: 0.53
+    expected_payout_per_finding_usd: 3650
+    rank: 41
+  - playbook: chain-recon-supply-chain-research-01
+    name: Supply Chain Research & Dependency Analysis
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.03
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.56
+    success_probability: 0.005267
+    expected_findings_per_100_exec: 0.53
+    expected_payout_per_finding_usd: 5630
+    rank: 42
+  - playbook: vpn_ipsec_weakness_v1
+    name: VPN & IPSec Protocol Weakness Exploitation
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.57
+    success_probability: 0.005187
+    expected_findings_per_100_exec: 0.52
+    expected_payout_per_finding_usd: 3650
+    rank: 43
+  - playbook: network_lateral_movement_v1
+    name: Network-based Lateral Movement & Persistence
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 44
+  - playbook: persistent_backdoor_v1
+    name: Multi-Layer Persistent Backdoor Installation
+    source: registry
+    category: Persistence
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 45
+  - playbook: chain-recon-master-orchestration-01
+    name: Master Orchestrator & Mission Planning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 46
+  - playbook: chain-recon-passive-discovery-01
+    name: Passive Reconnaissance & Asset Discovery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 47
+  - playbook: chain-recon-active-fingerprinting-01
+    name: Active Fingerprinting & Service Detection
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 48
+  - playbook: chain-recon-vulnerability-discovery-01
+    name: Vulnerability Discovery & CVE Matching
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 49
+  - playbook: chain-recon-physical-access-01
+    name: Physical Access & Facility Reconnaissance
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 50
+  - playbook: chain-recon-social-engineering-01
+    name: Social Engineering & Credential Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.005096
+    expected_findings_per_100_exec: 0.51
+    expected_payout_per_finding_usd: 3650
+    rank: 51
+  - playbook: supply_chain_model_v1
+    name: AI Model Supply Chain Attack
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.54
+    success_probability: 0.004914
+    expected_findings_per_100_exec: 0.49
+    expected_payout_per_finding_usd: 3650
+    rank: 52
+  - playbook: insider_threat_simulation_v1
+    name: Insider Threat Attack Path Simulation
+    source: registry
+    category: Insider Threat
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.52
+    success_probability: 0.004732
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 3650
+    rank: 53
+  - playbook: runtime_detection_evasion_v1
+    name: Runtime Detection & EDR Evasion Techniques
+    source: registry
+    category: Detection Evasion
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.5
+    success_probability: 0.00455
+    expected_findings_per_100_exec: 0.46
+    expected_payout_per_finding_usd: 3650
+    rank: 54
+  - playbook: pixel_based_inference_v1
+    name: AI Model Inference via Pixel & Timing Attacks
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.48
+    success_probability: 0.004368
+    expected_findings_per_100_exec: 0.44
+    expected_payout_per_finding_usd: 3650
+    rank: 55
+  - playbook: ransomware_simulation_v1
+    name: Ransomware Attack Simulation & Impact Assessment
+    source: registry
+    category: Ransomware
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.004186
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 56
+  - playbook: chain-evasion-log-removal-01
+    name: Log Removal & Event Trail Destruction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.004186
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 57
+  - playbook: chain-evasion-artifact-cleanup-01
+    name: Artifact Cleanup & Residual Evidence Removal
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.004186
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 58
+  - playbook: chain-evasion-detection-evasion-01
+    name: Detection & EDR Evasion Techniques
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.004186
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 59
+  - playbook: chain-evasion-incident-responder-01
+    name: Incident Responder Evasion & Interference
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.004186
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 60
+  - playbook: chain-evasion-forensic-antianalysis-01
+    name: Forensic Anti-Analysis & Evidence Tampering
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.004186
+    expected_findings_per_100_exec: 0.42
+    expected_payout_per_finding_usd: 3650
+    rank: 61
+  - playbook: malware_delivery_v1
+    name: Advanced Malware Delivery & Evasion
+    source: registry
+    category: Malware
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.45
+    success_probability: 0.004095
+    expected_findings_per_100_exec: 0.41
+    expected_payout_per_finding_usd: 3650
+    rank: 62
+  - playbook: dga_botnet_sim_v1
+    name: DGA Botnet Simulation & Command-Control Channel
+    source: registry
+    category: Botnet
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.44
+    success_probability: 0.004004
+    expected_findings_per_100_exec: 0.4
+    expected_payout_per_finding_usd: 3650
+    rank: 63
+  - playbook: industrial_scada_v1
+    name: Industrial SCADA/ICS System Compromise
+    source: registry
+    category: Industrial Control Systems
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.42
+    success_probability: 0.003822
+    expected_findings_per_100_exec: 0.38
+    expected_payout_per_finding_usd: 3650
+    rank: 64
+  - playbook: 5g_network_attack_v1
+    name: 5G Network Vulnerability Exploitation
+    source: registry
+    category: Telecommunications
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.41
+    success_probability: 0.003731
+    expected_findings_per_100_exec: 0.37
+    expected_payout_per_finding_usd: 3650
+    rank: 65
+  - playbook: air_gapped_network_v1
+    name: Air-Gapped Network Penetration & Exfiltration
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.39
+    success_probability: 0.003549
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 66
+  - playbook: chain-exploit-llm-poisoning-01
+    name: LLM Model Poisoning & AI System Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.72
+    success_probability: 0.003514
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 5990
+    rank: 67
+  - playbook: hypervisor_escape_v1
+    name: Hypervisor Escape & Host Takeover
+    source: registry
+    category: Virtualization
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.38
+    success_probability: 0.003458
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 68
+  - playbook: ai_llm_supply_chain_v1
+    name: AI/LLM Supply Chain and Dependency Security Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.7
+    success_probability: 0.003416
+    expected_findings_per_100_exec: 0.34
+    expected_payout_per_finding_usd: 5990
+    rank: 69
+  - playbook: chain-exploit-rce-escalation-01
+    name: Remote Code Execution & Initial Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: rce
+    frequency_in_target: 0.01
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.72
+    success_probability: 0.003283
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 9050
+    rank: 70
+  - playbook: zero_trust_bypass_v1
+    name: Zero Trust Architecture Bypass & Microsegmentation Escape
+    source: registry
+    category: Zero Trust
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.36
+    success_probability: 0.003276
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 71
+  - playbook: apt_campaign_sim_v1
+    name: APT Campaign Simulation (Multi-Stage, Multi-Vector)
+    source: registry
+    category: APT
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.35
+    success_probability: 0.003185
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 3650
+    rank: 72
+  - playbook: ai_llm_prompt_injection_v1
+    name: AI/LLM Prompt Injection and Jailbreak Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.65
+    success_probability: 0.003172
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 5990
+    rank: 73
+  - playbook: chain-persist-credential-storage-01
+    name: Credential Storage & Password Manager Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.64
+    success_probability: 0.003123
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 5990
+    rank: 74
+  - playbook: api_rce_chain_v1
+    name: Chained API Vulnerabilities Leading to RCE
+    source: registry
+    category: API Security
+    vulnerability_family: rce
+    frequency_in_target: 0.01
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.68
+    success_probability: 0.003101
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 9050
+    rank: 75
+  - playbook: ai_llm_model_extraction_v1
+    name: AI/LLM Model Extraction and IP Theft Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.6
+    success_probability: 0.002928
+    expected_findings_per_100_exec: 0.29
+    expected_payout_per_finding_usd: 5990
+    rank: 76
+  - playbook: quantum_safe_bypass_v1
+    name: Quantum-Ready Cryptanalysis & Downgrade
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.05
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.32
+    success_probability: 0.002912
+    expected_findings_per_100_exec: 0.29
+    expected_payout_per_finding_usd: 3650
+    rank: 77
+  - playbook: ai_llm_vector_db_v1
+    name: AI/LLM Vector Database and RAG System Attacks
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.00283
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 5990
+    rank: 78
+  - playbook: llm_model_extraction_v1
+    name: LLM Model Extraction & Fine-Tuning Data Theft
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.00283
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 5990
+    rank: 79
+  - playbook: ai_llm_container_escape_v1
+    name: AI/LLM Container Escape and Host Compromise
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.55
+    success_probability: 0.002684
+    expected_findings_per_100_exec: 0.27
+    expected_payout_per_finding_usd: 5990
+    rank: 80
+  - playbook: llm_poisoning_v1
+    name: LLM Training Data Poisoning & Prompt Injection Chains
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.02
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.52
+    success_probability: 0.002538
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 5990
+    rank: 81
+  - playbook: container_escape_rce_v1
+    name: Kubernetes Container Escape & Cluster Takeover
+    source: registry
+    category: Container Security
+    vulnerability_family: rce
+    frequency_in_target: 0.01
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.52
+    success_probability: 0.002371
+    expected_findings_per_100_exec: 0.24
+    expected_payout_per_finding_usd: 9050
+    rank: 82
+  - playbook: social_engineering_rce_v1
+    name: Multi-Stage Social Engineering to RCE
+    source: registry
+    category: Social Engineering
+    vulnerability_family: rce
+    frequency_in_target: 0.01
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.48
+    success_probability: 0.002189
+    expected_findings_per_100_exec: 0.22
+    expected_payout_per_finding_usd: 9050
+    rank: 83
+  - playbook: firmware_rce_v1
+    name: Firmware Exploitation & Hardware-Level Code Execution
+    source: registry
+    category: Firmware
+    vulnerability_family: rce
+    frequency_in_target: 0.01
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.4
+    success_probability: 0.001824
+    expected_findings_per_100_exec: 0.18
+    expected_payout_per_finding_usd: 9050
+    rank: 84
+  - playbook: chain-evasion-timeline-spoofing-01
+    name: Timeline Spoofing & Timestamp Manipulation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: open_redirect
+    frequency_in_target: 0.02
+    scope_likelihood: 0.91
+    payout_value_norm: 0.18
+    playbook_quality: 0.46
+    success_probability: 0.001507
+    expected_findings_per_100_exec: 0.15
+    expected_payout_per_finding_usd: 2120
+    rank: 85
+  consumer_ecommerce_retail:
+  - playbook: owasp_a01_access_control_v1
+    name: OWASP A01 Broken Access Control Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.14
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.8
+    success_probability: 0.063571
+    expected_findings_per_100_exec: 6.36
+    expected_payout_per_finding_usd: 6440
+    rank: 1
+  - playbook: chain-exploit-privilege-escalation-01
+    name: Privilege Escalation & Post-Exploitation Access
+    source: chain_integration
+    category: Chain
+    vulnerability_family: access_control
+    frequency_in_target: 0.14
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.72
+    success_probability: 0.057214
+    expected_findings_per_100_exec: 5.72
+    expected_payout_per_finding_usd: 6440
+    rank: 2
+  - playbook: auth_bypass_v1
+    name: Authentication and Authorization Bypass Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.14
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.051652
+    expected_findings_per_100_exec: 5.17
+    expected_payout_per_finding_usd: 6440
+    rank: 3
+  - playbook: iam_privilege_escalation_v1
+    name: Identity & Access Management Privilege Escalation
+    source: registry
+    category: IAM Security
+    vulnerability_family: access_control
+    frequency_in_target: 0.14
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.65
+    success_probability: 0.051652
+    expected_findings_per_100_exec: 5.17
+    expected_payout_per_finding_usd: 6440
+    rank: 4
+  - playbook: cloud_lateral_movement_v1
+    name: AWS/Azure/GCP Lateral Movement & Privilege Escalation
+    source: registry
+    category: Cloud Infrastructure
+    vulnerability_family: access_control
+    frequency_in_target: 0.14
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.62
+    success_probability: 0.049268
+    expected_findings_per_100_exec: 4.93
+    expected_payout_per_finding_usd: 6440
+    rank: 5
+  - playbook: owasp_a04_design_v1
+    name: OWASP A04 Insecure Design Vulnerability Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: business_logic
+    frequency_in_target: 0.13
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.65
+    success_probability: 0.04367
+    expected_findings_per_100_exec: 4.37
+    expected_payout_per_finding_usd: 6620
+    rank: 6
+  - playbook: xss_discovery_v1
+    name: Cross-Site Scripting Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: xss
+    frequency_in_target: 0.19
+    scope_likelihood: 0.88
+    payout_value_norm: 0.3
+    playbook_quality: 0.85
+    success_probability: 0.042636
+    expected_findings_per_100_exec: 4.26
+    expected_payout_per_finding_usd: 3200
+    rank: 7
+  - playbook: zero_day_chain_v1
+    name: Zero-Day Exploitation & Privilege Escalation Chain
+    source: registry
+    category: Advanced Exploitation
+    vulnerability_family: access_control
+    frequency_in_target: 0.14
+    scope_likelihood: 0.86
+    payout_value_norm: 0.66
+    playbook_quality: 0.5
+    success_probability: 0.039732
+    expected_findings_per_100_exec: 3.97
+    expected_payout_per_finding_usd: 6440
+    rank: 8
+  - playbook: graphql_attacks_v1
+    name: GraphQL API Security Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: api
+    frequency_in_target: 0.1
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.8
+    success_probability: 0.038512
+    expected_findings_per_100_exec: 3.85
+    expected_payout_per_finding_usd: 5720
+    rank: 9
+  - playbook: business_logic_bypass_v1
+    name: Complex Business Logic Exploitation
+    source: registry
+    category: Business Logic
+    vulnerability_family: business_logic
+    frequency_in_target: 0.13
+    scope_likelihood: 0.76
+    payout_value_norm: 0.68
+    playbook_quality: 0.54
+    success_probability: 0.036279
+    expected_findings_per_100_exec: 3.63
+    expected_payout_per_finding_usd: 6620
+    rank: 10
+  - playbook: chain-exploit-api-abuse-01
+    name: API Abuse & Endpoint Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: api
+    frequency_in_target: 0.1
+    scope_likelihood: 0.83
+    payout_value_norm: 0.58
+    playbook_quality: 0.72
+    success_probability: 0.034661
+    expected_findings_per_100_exec: 3.47
+    expected_payout_per_finding_usd: 5720
+    rank: 11
+  - playbook: chain-recon-darkweb-intelligence-01
+    name: Dark Web Leaks & Breach Intelligence Research
+    source: chain_integration
+    category: Chain
+    vulnerability_family: info_disclosure
+    frequency_in_target: 0.16
+    scope_likelihood: 0.9
+    payout_value_norm: 0.42
+    playbook_quality: 0.56
+    success_probability: 0.033869
+    expected_findings_per_100_exec: 3.39
+    expected_payout_per_finding_usd: 4280
+    rank: 12
+  - playbook: owasp_a05_misconfig_v1
+    name: OWASP A05 Security Misconfiguration Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.1
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.85
+    success_probability: 0.032062
+    expected_findings_per_100_exec: 3.21
+    expected_payout_per_finding_usd: 4640
+    rank: 13
+  - playbook: chain-exploit-auth-bypass-01
+    name: Authentication Bypass & Credential Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: auth
+    frequency_in_target: 0.08
+    scope_likelihood: 0.84
+    payout_value_norm: 0.62
+    playbook_quality: 0.72
+    success_probability: 0.029998
+    expected_findings_per_100_exec: 3.0
+    expected_payout_per_finding_usd: 6080
+    rank: 14
+  - playbook: dns_cache_poisoning_v1
+    name: DNS Infrastructure Attack & Traffic Redirection
+    source: registry
+    category: Infrastructure
+    vulnerability_family: misconfiguration
+    frequency_in_target: 0.1
+    scope_likelihood: 0.82
+    payout_value_norm: 0.46
+    playbook_quality: 0.54
+    success_probability: 0.020369
+    expected_findings_per_100_exec: 2.04
+    expected_payout_per_finding_usd: 4640
+    rank: 15
+  - playbook: sql_injection_v1
+    name: SQL Injection Discovery and Validation
+    source: registry
+    category: Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.05
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.016983
+    expected_findings_per_100_exec: 1.7
+    expected_payout_per_finding_usd: 5360
+    rank: 16
+  - playbook: owasp_a03_injection_v1
+    name: OWASP A03 Injection Vulnerability Detection and Exploitation
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: sqli
+    frequency_in_target: 0.05
+    scope_likelihood: 0.74
+    payout_value_norm: 0.54
+    playbook_quality: 0.85
+    success_probability: 0.016983
+    expected_findings_per_100_exec: 1.7
+    expected_payout_per_finding_usd: 5360
+    rank: 17
+  - playbook: chain-evasion-timeline-spoofing-01
+    name: Timeline Spoofing & Timestamp Manipulation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: open_redirect
+    frequency_in_target: 0.1
+    scope_likelihood: 0.91
+    payout_value_norm: 0.18
+    playbook_quality: 0.46
+    success_probability: 0.007535
+    expected_findings_per_100_exec: 0.75
+    expected_payout_per_finding_usd: 2120
+    rank: 18
+  - playbook: chain-exploit-rce-escalation-01
+    name: Remote Code Execution & Initial Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.72
+    success_probability: 0.006566
+    expected_findings_per_100_exec: 0.66
+    expected_payout_per_finding_usd: 9050
+    rank: 19
+  - playbook: api_rce_chain_v1
+    name: Chained API Vulnerabilities Leading to RCE
+    source: registry
+    category: API Security
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.68
+    success_probability: 0.006202
+    expected_findings_per_100_exec: 0.62
+    expected_payout_per_finding_usd: 9050
+    rank: 20
+  - playbook: owasp_a02_crypto_v1
+    name: OWASP A02 Cryptographic Failures Assessment
+    source: registry
+    category: OWASP Exploitation
+    vulnerability_family: crypto
+    frequency_in_target: 0.02
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.85
+    success_probability: 0.00527
+    expected_findings_per_100_exec: 0.53
+    expected_payout_per_finding_usd: 5000
+    rank: 21
+  - playbook: container_escape_rce_v1
+    name: Kubernetes Container Escape & Cluster Takeover
+    source: registry
+    category: Container Security
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.52
+    success_probability: 0.004742
+    expected_findings_per_100_exec: 0.47
+    expected_payout_per_finding_usd: 9050
+    rank: 22
+  - playbook: chain-exploit-supply-chain-attack-01
+    name: Supply Chain Attack & Dependency Poisoning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.02
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.72
+    success_probability: 0.004514
+    expected_findings_per_100_exec: 0.45
+    expected_payout_per_finding_usd: 5630
+    rank: 23
+  - playbook: social_engineering_rce_v1
+    name: Multi-Stage Social Engineering to RCE
+    source: registry
+    category: Social Engineering
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.48
+    success_probability: 0.004378
+    expected_findings_per_100_exec: 0.44
+    expected_payout_per_finding_usd: 9050
+    rank: 24
+  - playbook: web_app_recon_v1
+    name: Web Application Reconnaissance
+    source: registry
+    category: Reconnaissance
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.8
+    success_probability: 0.004368
+    expected_findings_per_100_exec: 0.44
+    expected_payout_per_finding_usd: 3650
+    rank: 25
+  - playbook: chain-persist-supply-chain-backdoor-01
+    name: Supply Chain Persistence & Dependency Backdoors
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.02
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.64
+    success_probability: 0.004013
+    expected_findings_per_100_exec: 0.4
+    expected_payout_per_finding_usd: 5630
+    rank: 26
+  - playbook: database_exfiltration_v1
+    name: Database Vulnerability Exploitation & Data Exfiltration
+    source: registry
+    category: Database Security
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.003931
+    expected_findings_per_100_exec: 0.39
+    expected_payout_per_finding_usd: 3650
+    rank: 27
+  - playbook: chain-exploit-credential-theft-01
+    name: Credential Theft & Password Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.003931
+    expected_findings_per_100_exec: 0.39
+    expected_payout_per_finding_usd: 3650
+    rank: 28
+  - playbook: chain-exploit-database-extraction-01
+    name: Database Exploitation & Data Extraction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.003931
+    expected_findings_per_100_exec: 0.39
+    expected_payout_per_finding_usd: 3650
+    rank: 29
+  - playbook: chain-exploit-container-escape-01
+    name: Container Escape & Kubernetes Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.003931
+    expected_findings_per_100_exec: 0.39
+    expected_payout_per_finding_usd: 3650
+    rank: 30
+  - playbook: chain-exploit-physical-access-01
+    name: Physical Access & Hardware Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.003931
+    expected_findings_per_100_exec: 0.39
+    expected_payout_per_finding_usd: 3650
+    rank: 31
+  - playbook: chain-exploit-zeroday-exploitation-01
+    name: Zero-Day Exploitation & Advanced Payload Delivery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.72
+    success_probability: 0.003931
+    expected_findings_per_100_exec: 0.39
+    expected_payout_per_finding_usd: 3650
+    rank: 32
+  - playbook: cryptographic_downgrade_v1
+    name: Cryptographic Protocol Downgrade & Key Recovery
+    source: registry
+    category: Cryptography
+    vulnerability_family: crypto
+    frequency_in_target: 0.02
+    scope_likelihood: 0.62
+    payout_value_norm: 0.5
+    playbook_quality: 0.62
+    success_probability: 0.003844
+    expected_findings_per_100_exec: 0.38
+    expected_payout_per_finding_usd: 5000
+    rank: 33
+  - playbook: sbom_vulnerability_chain_v1
+    name: Vulnerability Chaining via SBOM Analysis
+    source: registry
+    category: Supply Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.7
+    success_probability: 0.003822
+    expected_findings_per_100_exec: 0.38
+    expected_payout_per_finding_usd: 3650
+    rank: 34
+  - playbook: firmware_rce_v1
+    name: Firmware Exploitation & Hardware-Level Code Execution
+    source: registry
+    category: Firmware
+    vulnerability_family: rce
+    frequency_in_target: 0.02
+    scope_likelihood: 0.48
+    payout_value_norm: 0.95
+    playbook_quality: 0.4
+    success_probability: 0.003648
+    expected_findings_per_100_exec: 0.36
+    expected_payout_per_finding_usd: 9050
+    rank: 35
+  - playbook: supply_chain_attack_v1
+    name: Supply Chain Attack via Dependency Poisoning
+    source: registry
+    category: Supply Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.02
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.58
+    success_probability: 0.003637
+    expected_findings_per_100_exec: 0.36
+    expected_payout_per_finding_usd: 5630
+    rank: 36
+  - playbook: chain-recon-supply-chain-research-01
+    name: Supply Chain Research & Dependency Analysis
+    source: chain_integration
+    category: Chain
+    vulnerability_family: supply_chain
+    frequency_in_target: 0.02
+    scope_likelihood: 0.55
+    payout_value_norm: 0.57
+    playbook_quality: 0.56
+    success_probability: 0.003511
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 5630
+    rank: 37
+  - playbook: chain-persist-establish-access-01
+    name: Establish Persistence & Backdoor Installation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.003494
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 38
+  - playbook: chain-persist-lateral-movement-01
+    name: Lateral Movement & Network Pivoting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.003494
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 39
+  - playbook: chain-persist-data-exfiltration-01
+    name: Data Exfiltration & Sensitive Information Theft
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.003494
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 40
+  - playbook: chain-persist-domain-compromise-01
+    name: Domain Controller Compromise & Active Directory Takeover
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.003494
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 41
+  - playbook: chain-persist-long-game-01
+    name: Long Game Persistence & Multi-Year Dwell Time
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.003494
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 42
+  - playbook: chain-persist-iot-expansion-01
+    name: IoT Device Network Expansion & Bot Recruitment
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.64
+    success_probability: 0.003494
+    expected_findings_per_100_exec: 0.35
+    expected_payout_per_finding_usd: 3650
+    rank: 43
+  - playbook: log_deletion_forensic_v1
+    name: Log Deletion & Forensic Evidence Destruction
+    source: registry
+    category: Post-Exploitation
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.62
+    success_probability: 0.003385
+    expected_findings_per_100_exec: 0.34
+    expected_payout_per_finding_usd: 3650
+    rank: 44
+  - playbook: mobile_compromise_v1
+    name: Mobile Device Compromise & Data Exfiltration
+    source: registry
+    category: Mobile Security
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.6
+    success_probability: 0.003276
+    expected_findings_per_100_exec: 0.33
+    expected_payout_per_finding_usd: 3650
+    rank: 45
+  - playbook: iot_botnet_v1
+    name: IoT Device Compromise & Botnet Formation
+    source: registry
+    category: IoT
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.003167
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 3650
+    rank: 46
+  - playbook: chain-impact-ransomware-deployment-01
+    name: Ransomware Deployment & Impact Maximization
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.003167
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 3650
+    rank: 47
+  - playbook: chain-impact-insider-threat-01
+    name: Insider Threat Activation & Fraud Execution
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.58
+    success_probability: 0.003167
+    expected_findings_per_100_exec: 0.32
+    expected_payout_per_finding_usd: 3650
+    rank: 48
+  - playbook: vpn_ipsec_weakness_v1
+    name: VPN & IPSec Protocol Weakness Exploitation
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.57
+    success_probability: 0.003112
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 49
+  - playbook: network_lateral_movement_v1
+    name: Network-based Lateral Movement & Persistence
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 50
+  - playbook: persistent_backdoor_v1
+    name: Multi-Layer Persistent Backdoor Installation
+    source: registry
+    category: Persistence
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 51
+  - playbook: chain-recon-master-orchestration-01
+    name: Master Orchestrator & Mission Planning
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 52
+  - playbook: chain-recon-passive-discovery-01
+    name: Passive Reconnaissance & Asset Discovery
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 53
+  - playbook: chain-recon-active-fingerprinting-01
+    name: Active Fingerprinting & Service Detection
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 54
+  - playbook: chain-recon-vulnerability-discovery-01
+    name: Vulnerability Discovery & CVE Matching
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 55
+  - playbook: chain-recon-physical-access-01
+    name: Physical Access & Facility Reconnaissance
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 56
+  - playbook: chain-recon-social-engineering-01
+    name: Social Engineering & Credential Harvesting
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.56
+    success_probability: 0.003058
+    expected_findings_per_100_exec: 0.31
+    expected_payout_per_finding_usd: 3650
+    rank: 57
+  - playbook: supply_chain_model_v1
+    name: AI Model Supply Chain Attack
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.54
+    success_probability: 0.002948
+    expected_findings_per_100_exec: 0.29
+    expected_payout_per_finding_usd: 3650
+    rank: 58
+  - playbook: insider_threat_simulation_v1
+    name: Insider Threat Attack Path Simulation
+    source: registry
+    category: Insider Threat
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.52
+    success_probability: 0.002839
+    expected_findings_per_100_exec: 0.28
+    expected_payout_per_finding_usd: 3650
+    rank: 59
+  - playbook: runtime_detection_evasion_v1
+    name: Runtime Detection & EDR Evasion Techniques
+    source: registry
+    category: Detection Evasion
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.5
+    success_probability: 0.00273
+    expected_findings_per_100_exec: 0.27
+    expected_payout_per_finding_usd: 3650
+    rank: 60
+  - playbook: pixel_based_inference_v1
+    name: AI Model Inference via Pixel & Timing Attacks
+    source: registry
+    category: AI/LLM
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.48
+    success_probability: 0.002621
+    expected_findings_per_100_exec: 0.26
+    expected_payout_per_finding_usd: 3650
+    rank: 61
+  - playbook: ransomware_simulation_v1
+    name: Ransomware Attack Simulation & Impact Assessment
+    source: registry
+    category: Ransomware
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.002512
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 62
+  - playbook: chain-evasion-log-removal-01
+    name: Log Removal & Event Trail Destruction
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.002512
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 63
+  - playbook: chain-evasion-artifact-cleanup-01
+    name: Artifact Cleanup & Residual Evidence Removal
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.002512
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 64
+  - playbook: chain-evasion-detection-evasion-01
+    name: Detection & EDR Evasion Techniques
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.002512
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 65
+  - playbook: chain-evasion-incident-responder-01
+    name: Incident Responder Evasion & Interference
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.002512
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 66
+  - playbook: chain-evasion-forensic-antianalysis-01
+    name: Forensic Anti-Analysis & Evidence Tampering
+    source: chain_integration
+    category: Chain
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.46
+    success_probability: 0.002512
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 67
+  - playbook: malware_delivery_v1
+    name: Advanced Malware Delivery & Evasion
+    source: registry
+    category: Malware
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.45
+    success_probability: 0.002457
+    expected_findings_per_100_exec: 0.25
+    expected_payout_per_finding_usd: 3650
+    rank: 68
+  - playbook: dga_botnet_sim_v1
+    name: DGA Botnet Simulation & Command-Control Channel
+    source: registry
+    category: Botnet
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.44
+    success_probability: 0.002402
+    expected_findings_per_100_exec: 0.24
+    expected_payout_per_finding_usd: 3650
+    rank: 69
+  - playbook: industrial_scada_v1
+    name: Industrial SCADA/ICS System Compromise
+    source: registry
+    category: Industrial Control Systems
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.42
+    success_probability: 0.002293
+    expected_findings_per_100_exec: 0.23
+    expected_payout_per_finding_usd: 3650
+    rank: 70
+  - playbook: 5g_network_attack_v1
+    name: 5G Network Vulnerability Exploitation
+    source: registry
+    category: Telecommunications
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.41
+    success_probability: 0.002239
+    expected_findings_per_100_exec: 0.22
+    expected_payout_per_finding_usd: 3650
+    rank: 71
+  - playbook: air_gapped_network_v1
+    name: Air-Gapped Network Penetration & Exfiltration
+    source: registry
+    category: Network Security
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.39
+    success_probability: 0.002129
+    expected_findings_per_100_exec: 0.21
+    expected_payout_per_finding_usd: 3650
+    rank: 72
+  - playbook: hypervisor_escape_v1
+    name: Hypervisor Escape & Host Takeover
+    source: registry
+    category: Virtualization
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.38
+    success_probability: 0.002075
+    expected_findings_per_100_exec: 0.21
+    expected_payout_per_finding_usd: 3650
+    rank: 73
+  - playbook: zero_trust_bypass_v1
+    name: Zero Trust Architecture Bypass & Microsegmentation Escape
+    source: registry
+    category: Zero Trust
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.36
+    success_probability: 0.001966
+    expected_findings_per_100_exec: 0.2
+    expected_payout_per_finding_usd: 3650
+    rank: 74
+  - playbook: apt_campaign_sim_v1
+    name: APT Campaign Simulation (Multi-Stage, Multi-Vector)
+    source: registry
+    category: APT
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.35
+    success_probability: 0.001911
+    expected_findings_per_100_exec: 0.19
+    expected_payout_per_finding_usd: 3650
+    rank: 75
+  - playbook: chain-exploit-llm-poisoning-01
+    name: LLM Model Poisoning & AI System Compromise
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.72
+    success_probability: 0.001757
+    expected_findings_per_100_exec: 0.18
+    expected_payout_per_finding_usd: 5990
+    rank: 76
+  - playbook: quantum_safe_bypass_v1
+    name: Quantum-Ready Cryptanalysis & Downgrade
+    source: registry
+    category: Cryptography
+    vulnerability_family: other
+    frequency_in_target: 0.03
+    scope_likelihood: 0.52
+    payout_value_norm: 0.35
+    playbook_quality: 0.32
+    success_probability: 0.001747
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 3650
+    rank: 77
+  - playbook: ai_llm_supply_chain_v1
+    name: AI/LLM Supply Chain and Dependency Security Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.7
+    success_probability: 0.001708
+    expected_findings_per_100_exec: 0.17
+    expected_payout_per_finding_usd: 5990
+    rank: 78
+  - playbook: ai_llm_prompt_injection_v1
+    name: AI/LLM Prompt Injection and Jailbreak Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.65
+    success_probability: 0.001586
+    expected_findings_per_100_exec: 0.16
+    expected_payout_per_finding_usd: 5990
+    rank: 79
+  - playbook: chain-persist-credential-storage-01
+    name: Credential Storage & Password Manager Exploitation
+    source: chain_integration
+    category: Chain
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.64
+    success_probability: 0.001562
+    expected_findings_per_100_exec: 0.16
+    expected_payout_per_finding_usd: 5990
+    rank: 80
+  - playbook: ai_llm_model_extraction_v1
+    name: AI/LLM Model Extraction and IP Theft Assessment
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.6
+    success_probability: 0.001464
+    expected_findings_per_100_exec: 0.15
+    expected_payout_per_finding_usd: 5990
+    rank: 81
+  - playbook: ai_llm_vector_db_v1
+    name: AI/LLM Vector Database and RAG System Attacks
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.001415
+    expected_findings_per_100_exec: 0.14
+    expected_payout_per_finding_usd: 5990
+    rank: 82
+  - playbook: llm_model_extraction_v1
+    name: LLM Model Extraction & Fine-Tuning Data Theft
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.58
+    success_probability: 0.001415
+    expected_findings_per_100_exec: 0.14
+    expected_payout_per_finding_usd: 5990
+    rank: 83
+  - playbook: ai_llm_container_escape_v1
+    name: AI/LLM Container Escape and Host Compromise
+    source: registry
+    category: AI/LLM Exploitation
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.55
+    success_probability: 0.001342
+    expected_findings_per_100_exec: 0.13
+    expected_payout_per_finding_usd: 5990
+    rank: 84
+  - playbook: llm_poisoning_v1
+    name: LLM Training Data Poisoning & Prompt Injection Chains
+    source: registry
+    category: AI/LLM
+    vulnerability_family: ai_llm
+    frequency_in_target: 0.01
+    scope_likelihood: 0.4
+    payout_value_norm: 0.61
+    playbook_quality: 0.52
+    success_probability: 0.001269
+    expected_findings_per_100_exec: 0.13
+    expected_payout_per_finding_usd: 5990
+    rank: 85

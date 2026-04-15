@@ -205,3 +205,54 @@ def test_osint_stub_policy_gate_blocks_unapproved_scope(
                 "research_scope": "Unapproved Scope",
             },
         )
+
+
+@pytest.mark.parametrize(
+    ("tool", "class_name", "fixture_payload"),
+    [
+        ("chaos", "ChaosAgent", [{"domain": "api.example.com"}]),
+        ("github-subdomains", "GithubSubdomainsAgent", [{"subdomain": "dev.example.com"}]),
+        (
+            "sherlock",
+            "SherlockAgent",
+            {"profiles": [{"platform": "github", "url": "https://github.com/exampleuser"}]},
+        ),
+        (
+            "social-analyzer",
+            "SocialAnalyzerAgent",
+            {
+                "profiles": [
+                    {
+                        "username": "exampleuser",
+                        "platform": "github",
+                        "url": "https://github.com/exampleuser",
+                        "followers": 3,
+                    }
+                ]
+            },
+        ),
+    ],
+)
+def test_osint_stub_execute_fixture_mode(
+    tool: str,
+    class_name: str,
+    fixture_payload: str | dict[str, Any] | list[Any],
+    tmp_path: Path,
+) -> None:
+    cls = _load_agent_class(tool, class_name)
+    agent = cls(memory_root=tmp_path / tool / "memory")
+    scope_policy_path = _make_scope_policy(tmp_path)
+
+    result = agent.execute(
+        "example.com",
+        {
+            "fixture_data": fixture_payload,
+            "scope_policy_path": str(scope_policy_path),
+            "snl_interface": "tun0",
+        },
+    )
+
+    assert result.status == "success"
+    assert result.target_context.get("mode") == "stub_fixture"
+    assert result.target_context.get("snl_interface") == "tun0"
+    assert isinstance(result.target_context.get("telemetry"), list)

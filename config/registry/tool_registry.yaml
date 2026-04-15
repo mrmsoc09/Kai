@@ -51,6 +51,14 @@ tools:
     adapter: social_analyzer_adapter
     capabilities: [osint, identity_enrichment]
     opsec: low
+  - id: reconftw
+    adapter: reconftw_adapter
+    capabilities: [recon, macro_orchestration, selective_scan]
+    opsec: medium
+  - id: spiderfoot
+    adapter: spiderfoot_adapter
+    capabilities: [osint, recursive_intelligence, darknet_correlation]
+    opsec: low
   - id: nmap
     adapter: nmap_adapter
     capabilities: [network_enumeration, service_fingerprinting]
@@ -83,6 +91,26 @@ tools:
     adapter: ffuf_adapter
     capabilities: [content_discovery, recursive_busting]
     opsec: medium
+  - id: arjun
+    adapter: arjun_adapter
+    capabilities: [parameter_discovery, dalfox_ssrfmap_handoff]
+    opsec: low
+  - id: hakrawler
+    adapter: hakrawler_adapter
+    capabilities: [content_discovery, url_crawling]
+    opsec: low
+  - id: gau
+    adapter: gau_adapter
+    capabilities: [archive_url_mining, historical_discovery]
+    opsec: low
+  - id: dalfox
+    adapter: dalfox_adapter
+    capabilities: [xss_validation, parameter_testing]
+    opsec: medium
+  - id: smuggler
+    adapter: smuggler_adapter
+    capabilities: [request_smuggling_detection, protocol_anomaly_testing]
+    opsec: high
   - id: torbot
     adapter: torbot_adapter
     capabilities: [darknet_intelligence, tor_discovery]
@@ -102,4 +130,16 @@ tools:
   - id: gitleaks
     adapter: gitleaks_adapter
     capabilities: [secret_detection, source_scan]
+    opsec: medium
+  - id: metasploit-framework
+    adapter: metasploit_framework_adapter
+    capabilities: [vulnerability_assessment, check_only_validation]
+    opsec: high
+  - id: nikto
+    adapter: nikto_adapter
+    capabilities: [web_server_audit, service_validation]
+    opsec: medium
+  - id: searchsploit
+    adapter: searchsploit_adapter
+    capabilities: [exploit_intelligence, cve_to_poc_lookup]
     opsec: medium

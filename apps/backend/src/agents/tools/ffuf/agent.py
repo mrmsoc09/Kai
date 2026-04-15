@@ -5,6 +5,7 @@ from datetime import UTC, datetime
 import json
 from pathlib import Path
 from typing import Any, Callable
+from urllib.parse import urlparse
 
 from apps.backend.src.core.protocol import KaisonResult, KaisonResultMetadata
 from apps.backend.src.core.scope_guardrails import (
@@ -14,16 +15,18 @@ from apps.backend.src.core.scope_guardrails import (
 )
 
 from ..base_tool_agent import BaseToolAgent
-from ..content_discovery_schemas import CrawlRegistry
+from ..content_discovery_schemas import CrawlRegistry, WebDiscoveryRegistry
 
 
 _APPROVED_SCOPE_LABEL = "Approved Research Scope"
 _ALLOWED_SNL_INTERFACES = {"tun0", "wg0", "vpn0", "snl0"}
+_MAX_RPS_CAP = 50
 _DEFAULT_WORDLISTS = {
+    "top1k": "wordlists/content/top-1k-discovery.txt",
     "php": "wordlists/content/php-files.txt",
     "js": "wordlists/content/js-files.txt",
     "api": "wordlists/content/api-routes.txt",
-    "default": "wordlists/content/common-directories.txt",
+    "default": "wordlists/content/top-1k-discovery.txt",
 }
 
 
@@ -58,6 +61,15 @@ class FfufAgent(BaseToolAgent):
             except Exception:
                 return
 
+    @staticmethod
+    def _normalize_rps(options: dict[str, Any]) -> int:
+        raw = options.get("max_requests_per_second", options.get("rate_limit", 5))
+        try:
+            rps = int(raw)
+        except (TypeError, ValueError):
+            rps = 5
+        return max(1, min(_MAX_RPS_CAP, rps))
+
     def check_policy(self, target: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
         opts = options or {}
         scope_label = str(opts.get("research_scope", _APPROVED_SCOPE_LABEL)).strip()
@@ -80,6 +92,7 @@ class FfufAgent(BaseToolAgent):
             "target": decision.normalized_host,
             "matched_rule": decision.matched_rule,
             "snl_interface": snl_interface,
+            "max_requests_per_second": self._normalize_rps(opts),
         }
 
     @staticmethod
@@ -99,6 +112,7 @@ class FfufAgent(BaseToolAgent):
         output_path = f"{artifact_dir}/ffuf.json"
         waf_detected = bool(opts.get("waf_detected", False))
         threads = 5 if waf_detected else int(opts.get("threads", 20))
+        rps = self._normalize_rps(opts)
 
         if bool(opts.get("vhost", False)):
             domain = str(opts.get("domain", target))
@@ -118,6 +132,8 @@ class FfufAgent(BaseToolAgent):
                 "json",
                 "-t",
                 str(threads),
+                "-rate",
+                str(min(rps, 10)),
             ]
 
         recursive = bool(opts.get("recursive", True))
@@ -135,6 +151,8 @@ class FfufAgent(BaseToolAgent):
             "json",
             "-t",
             str(threads),
+            "-rate",
+            str(min(rps, 20)),
             "-timeout",
             str(opts.get("timeout", 10)),
         ]
@@ -169,7 +187,7 @@ class FfufAgent(BaseToolAgent):
             length = int(entry.get("length", 0) or 0)
             words = int(entry.get("words", 0) or 0)
             lines = int(entry.get("lines", 0) or 0)
-            mode = "vhost" if "Host:" in str(entry.get("input", {})) else "url"
+            mode = "vhost" if "Host:" in str(entry.get("input", {})) else "endpoint"
             depth = int(entry.get("depth", 0) or 0)
             is_js = url.lower().endswith(".js")
 
@@ -182,6 +200,20 @@ class FfufAgent(BaseToolAgent):
                         "asset_type": "js_asset" if is_js else mode,
                         "is_javascript": is_js,
                         "timestamp": datetime.now(UTC),
+                    }
+                )
+            except Exception:
+                continue
+            try:
+                parsed = urlparse(url)
+                web_registry = WebDiscoveryRegistry.model_validate(
+                    {
+                        "endpoint_url": url,
+                        "endpoint_path": parsed.path or "/",
+                        "source_tool": self.TOOL_NAME,
+                        "http_status": status if 100 <= status <= 599 else None,
+                        "content_length": length if length >= 0 else None,
+                        "discovered_at": datetime.now(UTC),
                     }
                 )
             except Exception:
@@ -203,6 +235,7 @@ class FfufAgent(BaseToolAgent):
                         "lines": lines,
                         "depth": depth,
                         "crawl_registry": crawl_record.model_dump(mode="json"),
+                        "web_discovery_registry": web_registry.model_dump(mode="json"),
                         "snl_mode": "fixture_only",
                     },
                     "recommended_next_tools": ["paramspider", "dalfox", "sqlmap"],
@@ -359,6 +392,7 @@ class FfufAgent(BaseToolAgent):
             max_depth = max(max_depth, depth)
 
         self._emit_telemetry("AGENT_STATUS", "ENUMERATING_CONTENT")
+        self._emit_telemetry("FUZZ_STREAM", len(result.findings))
         self._emit_telemetry("CRAWL_DEPTH", max_depth)
         if result.findings:
             self._emit_telemetry("EventLog", "SPIDER_WEB_EXPANSION")
@@ -368,6 +402,7 @@ class FfufAgent(BaseToolAgent):
             {
                 "mode": "stub_fixture",
                 "snl_interface": policy["snl_interface"],
+                "max_requests_per_second": policy["max_requests_per_second"],
                 "telemetry": self.get_telemetry_events(),
             }
         )

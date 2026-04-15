@@ -69,17 +69,120 @@ compose_up_with_retry() {
         return 0
     fi
 
-    echo "${output}" >&2
     if [[ "${output}" == *"ContainerConfig"* ]]; then
         warn "Detected docker-compose recreate bug (ContainerConfig). Cleaning stale containers and retrying once."
         for service in "${services[@]}"; do
+            ${compose_bin} -f docker-compose.yml rm -sf "${service}" >/dev/null 2>&1 || true
+            while IFS= read -r cid; do
+                [[ -z "${cid}" ]] && continue
+                docker rm -f "${cid}" >/dev/null 2>&1 || true
+            done < <(${compose_bin} -f docker-compose.yml ps -aq "${service}" 2>/dev/null || true)
             cleanup_compose_stale_containers "${service}"
         done
-        ${compose_bin} -f docker-compose.yml up -d "${services[@]}"
-        return $?
+        local retry_output=""
+        if retry_output="$(${compose_bin} -f docker-compose.yml up -d "${services[@]}" 2>&1)"; then
+            [[ -n "${retry_output}" ]] && echo "${retry_output}"
+            return 0
+        fi
+
+        if [[ "${retry_output}" == *"ContainerConfig"* ]]; then
+            warn "docker-compose retry still failed with ContainerConfig; falling back to direct Docker startup for core services."
+            if fallback_start_core_services "${services[@]}"; then
+                return 0
+            fi
+        else
+            echo "${retry_output}" >&2
+        fi
+        return 1
     fi
 
+    echo "${output}" >&2
     return 1
+}
+
+fallback_start_core_services() {
+    local services=("$@")
+    local service=""
+    for service in "${services[@]}"; do
+        case "${service}" in
+            postgres)
+                if ! ensure_postgres_running_cli; then
+                    return 1
+                fi
+                ;;
+            redis)
+                if ! ensure_redis_running_cli; then
+                    return 1
+                fi
+                ;;
+            *)
+                warn "No direct Docker fallback implemented for service '${service}'."
+                return 1
+                ;;
+        esac
+    done
+    return 0
+}
+
+ensure_postgres_running_cli() {
+    local name="k1-db"
+    local host_bind host_port postgres_image
+    host_bind="$(read_env_value K1_POSTGRES_HOST_BIND 127.0.0.1)"
+    host_port="$(read_env_value K1_POSTGRES_HOST_PORT 5432)"
+    postgres_image="$(read_env_value K1_POSTGRES_IMAGE postgres:16-alpine)"
+
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        return 0
+    fi
+
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        docker start "${name}" >/dev/null 2>&1 || true
+    fi
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        return 0
+    fi
+
+    docker rm -f "${name}" >/dev/null 2>&1 || true
+    docker run -d \
+        --name "${name}" \
+        --restart unless-stopped \
+        -e POSTGRES_USER=k1 \
+        -e POSTGRES_PASSWORD=k1_pass_secure \
+        -e POSTGRES_DB=k1 \
+        -p "${host_bind}:${host_port}:5432" \
+        -v postgres_data:/var/lib/postgresql/data \
+        "${postgres_image}" >/dev/null
+}
+
+ensure_redis_running_cli() {
+    local name="k1-cache"
+    local host_bind host_port
+    host_bind="$(read_env_value K1_REDIS_HOST_BIND 127.0.0.1)"
+    host_port="$(read_env_value K1_REDIS_HOST_PORT 6379)"
+
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        return 0
+    fi
+
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        docker start "${name}" >/dev/null 2>&1 || true
+    fi
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        return 0
+    fi
+
+    docker rm -f "${name}" >/dev/null 2>&1 || true
+    docker run -d \
+        --name "${name}" \
+        --restart unless-stopped \
+        -p "${host_bind}:${host_port}:6379" \
+        redis:7-alpine >/dev/null
+}
+
+compose_service_defined() {
+    local compose_bin="$1"
+    local service="$2"
+    ${compose_bin} -f docker-compose.yml config --services 2>/dev/null | grep -qx "${service}"
 }
 
 read_env_value() {
@@ -213,6 +316,21 @@ csv_contains() {
     return 1
 }
 
+csv_pattern_contains() {
+    local needle="$1"
+    local csv="$2"
+    local item=""
+    IFS=',' read -r -a items <<< "${csv}"
+    for item in "${items[@]}"; do
+        item="$(echo "${item}" | xargs)"
+        [[ -z "${item}" ]] && continue
+        if [[ "${needle}" == ${item} ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
 detect_active_interface() {
     local check_ip
     check_ip="$(read_env_value K1_VPN_CHECK_IP 1.1.1.1)"
@@ -235,14 +353,15 @@ verify_vpn_interface() {
     fi
 
     local allowed_ifaces vpn_bridge_iface
-    allowed_ifaces="$(read_env_value K1_VPN_ALLOWED_INTERFACES "tun0,wg0")"
+    allowed_ifaces="$(read_env_value K1_VPN_ALLOWED_INTERFACES "tun*,wg*,vpn*,snl*")"
     vpn_bridge_iface="$(read_env_value K1_VPN_BRIDGE_INTERFACE "")"
     if [[ -n "${vpn_bridge_iface}" ]]; then
         allowed_ifaces="${allowed_ifaces},${vpn_bridge_iface}"
     fi
 
-    if ! csv_contains "${active_iface}" "${allowed_ifaces}"; then
+    if ! csv_pattern_contains "${active_iface}" "${allowed_ifaces}"; then
         error "Active interface '${active_iface}' is not an allowed sovereign tunnel interface (${allowed_ifaces})."
+        error "Hint: set K1_ACTIVE_VPN_INTERFACE explicitly or update K1_VPN_ALLOWED_INTERFACES."
         return 1
     fi
 
@@ -252,6 +371,84 @@ verify_vpn_interface() {
     fi
 
     info "Sovereign VPN interface verified: ${active_iface}"
+    return 0
+}
+
+verify_whonix_proxy_tunnel() {
+    local enforce_whonix
+    enforce_whonix="$(read_env_value K1_ENFORCE_WHONIX_KVM false)"
+    if ! env_truthy "${enforce_whonix}"; then
+        return 1
+    fi
+
+    local proxy_host proxy_port proxy_url timeout_s ip_api proxied_ip local_isp_cidrs
+    proxy_host="$(read_env_value K1_WHONIX_PROXY_HOST 127.0.0.1)"
+    proxy_port="$(read_env_value K1_WHONIX_PROXY_PORT 9050)"
+    timeout_s="$(read_env_value K1_WHONIX_PROXY_WAIT_SECONDS 20)"
+    ip_api="$(read_env_value K1_EGRESS_IP_API "https://ipinfo.io/ip")"
+    proxy_url="socks5h://${proxy_host}:${proxy_port}"
+
+    info "Whonix enforcement enabled. Validating Whonix SOCKS tunnel (${proxy_url})..."
+
+    if ! wait_for_port "${proxy_host}" "${proxy_port}" "${timeout_s}"; then
+        error "Whonix SOCKS proxy not reachable at ${proxy_host}:${proxy_port}."
+        error "Run ./scripts/setup_whonix_kvm.sh and ensure Whonix Gateway is running."
+        return 1
+    fi
+
+    if ! has_cmd curl; then
+        error "curl is required for Whonix tunnel validation."
+        return 1
+    fi
+
+    proxied_ip="$(curl -fsS --max-time 12 --proxy "${proxy_url}" "${ip_api}" | tr -d '[:space:]' || true)"
+    if [[ -z "${proxied_ip}" ]]; then
+        error "Unable to resolve egress IP through Whonix proxy (${proxy_url})."
+        return 1
+    fi
+
+    local_isp_cidrs="$(read_env_value K1_LOCAL_ISP_CIDRS "")"
+    if [[ -n "${local_isp_cidrs}" ]]; then
+        local check_rc=0
+        python3 - "${proxied_ip}" "${local_isp_cidrs}" <<'PY'
+import ipaddress
+import sys
+
+ip_text = sys.argv[1]
+cidrs = [c.strip() for c in sys.argv[2].split(",") if c.strip()]
+try:
+    ip_obj = ipaddress.ip_address(ip_text)
+except ValueError:
+    raise SystemExit(2)
+
+for cidr in cidrs:
+    try:
+        network = ipaddress.ip_network(cidr, strict=False)
+    except ValueError:
+        continue
+    if ip_obj in network:
+        raise SystemExit(1)
+raise SystemExit(0)
+PY
+        check_rc=$?
+        if [[ "${check_rc}" -eq 1 ]]; then
+            error "Whonix proxied egress IP ${proxied_ip} matches local ISP CIDRs (${local_isp_cidrs})."
+            return 1
+        fi
+        if [[ "${check_rc}" -eq 2 ]]; then
+            error "Whonix proxied egress IP '${proxied_ip}' is not valid."
+            return 1
+        fi
+    else
+        warn "K1_LOCAL_ISP_CIDRS not set; skipping local-ISP leak comparison for Whonix mode."
+    fi
+
+    export K1_USE_PROXIES=true
+    if [[ -z "$(read_env_value K1_RESIDENTIAL_PROXY_URL "")" ]]; then
+        export K1_RESIDENTIAL_PROXY_URL="${proxy_url}"
+    fi
+
+    info "Whonix tunnel verified via proxy egress IP: ${proxied_ip}"
     return 0
 }
 
@@ -348,27 +545,71 @@ verify_proxy_tunnel() {
     return 0
 }
 
+can_bypass_sovereign_network() {
+    local env_name allow_insecure test_mode
+    env_name="$(read_env_value ENVIRONMENT development | tr '[:upper:]' '[:lower:]')"
+    allow_insecure="$(read_env_value K1_ALLOW_INSECURE_LOCAL_START false)"
+    test_mode="$(read_env_value K1_TEST_MODE false)"
+
+    if env_truthy "${test_mode}" && [[ "${env_name}" != "production" ]]; then
+        return 0
+    fi
+    if env_truthy "${allow_insecure}" && [[ "${env_name}" != "production" ]]; then
+        return 0
+    fi
+    return 1
+}
+
+sovereign_fail_or_bypass() {
+    local reason="$1"
+    if can_bypass_sovereign_network; then
+        warn "Sovereign checks failed: ${reason}"
+        warn "K1_ALLOW_INSECURE_LOCAL_START/K1_TEST_MODE enabled in non-production; bypassing sovereign guardrails."
+        warn "DO NOT run real-world scanning in this mode."
+        return 0
+    fi
+    error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
+    return 1
+}
+
 verify_sovereign_network() {
     local enforce
     enforce="$(read_env_value K1_ENFORCE_SOVEREIGN_NETWORK true)"
     if ! env_truthy "${enforce}"; then
+        if can_bypass_sovereign_network; then
+            warn "K1_ENFORCE_SOVEREIGN_NETWORK=false in non-production bypass mode."
+            warn "DO NOT run real-world scanning without sovereign networking."
+            return 0
+        fi
         error "K1_ENFORCE_SOVEREIGN_NETWORK=false is not allowed in tunnel-first mode."
+        error "Set K1_ALLOW_INSECURE_LOCAL_START=true only for local, non-production development."
         error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
         return 1
     fi
 
     info "Validating Sovereign Network Layer..."
+
+    # Whonix-first sovereign mode: if enabled and validated, skip direct VPN iface check.
+    if verify_whonix_proxy_tunnel; then
+        verify_proxy_tunnel || {
+            sovereign_fail_or_bypass "Whonix proxy tunnel health check failed" || return 1
+            return 0
+        }
+        info "Sovereign Network Layer: UP (Whonix mode)"
+        return 0
+    fi
+
     verify_vpn_interface || {
-        error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
-        return 1
+        sovereign_fail_or_bypass "VPN interface validation failed" || return 1
+        return 0
     }
     verify_ip_leak_protection || {
-        error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
-        return 1
+        sovereign_fail_or_bypass "Egress IP leak protection failed" || return 1
+        return 0
     }
     verify_proxy_tunnel || {
-        error "CRITICAL: Sovereign Network Layer not detected. Aborting to prevent IP leak."
-        return 1
+        sovereign_fail_or_bypass "Proxy tunnel validation failed" || return 1
+        return 0
     }
     info "Sovereign Network Layer: UP"
     return 0
@@ -403,6 +644,14 @@ set -a
 source .env
 set +a
 
+VAULT_SYNC_ENV_FILE="${REPO_ROOT}/runtime/.env.vault.synced"
+if [[ -f "${VAULT_SYNC_ENV_FILE}" ]]; then
+    set -a
+    # shellcheck disable=SC1090
+    source "${VAULT_SYNC_ENV_FILE}"
+    set +a
+fi
+
 NETWORK_ENV_SH="${REPO_ROOT}/apps/backend/src/config/network_env.sh"
 if [[ -f "${NETWORK_ENV_SH}" ]]; then
     set -a
@@ -426,43 +675,71 @@ else
     VAULT_WAIT_HOST="${VAULT_HOST_BIND}"
 fi
 VAULT_HOST_PORT="$(read_env_value K1_VAULT_HOST_PORT 8200)"
+SECRET_BACKEND_EFFECTIVE="$(read_env_value K1_SECRET_BACKEND env | tr '[:upper:]' '[:lower:]')"
+if [[ "${SECRET_BACKEND_EFFECTIVE}" == "vault" ]]; then
+    DESIRED_VAULT_ADDR="http://${VAULT_WAIT_HOST}:${VAULT_HOST_PORT}"
+    if [[ -z "${VAULT_ADDR:-}" || "${VAULT_ADDR}" != "${DESIRED_VAULT_ADDR}" ]]; then
+        warn "Normalizing VAULT_ADDR to ${DESIRED_VAULT_ADDR} for startup consistency."
+        export VAULT_ADDR="${DESIRED_VAULT_ADDR}"
+    fi
+fi
 
 COMPOSE_BIN="$(compose_cmd || true)"
 START_VAULT=false
 START_OLLAMA=false
 OLLAMA_REQUIRED=false
 if [[ -n "${COMPOSE_BIN}" ]]; then
-    SECRET_BACKEND="$(read_env_value K1_SECRET_BACKEND env | tr '[:upper:]' '[:lower:]')"
+    SECRET_BACKEND="${SECRET_BACKEND_EFFECTIVE}"
     PROVIDER_CHAIN="$(printf "%s,%s" "$(read_env_value K1_PRIMARY_LLM_PROVIDER anthropic)" "$(read_env_value K1_FALLBACK_LLM_PROVIDERS openai,gemini,ollama)" | tr '[:upper:]' '[:lower:]')"
     INFRA_SERVICES=(postgres redis)
     if [[ "${SECRET_BACKEND}" == "vault" ]]; then
-        INFRA_SERVICES+=(vault)
-        START_VAULT=true
+        if compose_service_defined "${COMPOSE_BIN}" "vault"; then
+            INFRA_SERVICES+=(vault)
+            START_VAULT=true
+        else
+            warn "K1_SECRET_BACKEND=vault but compose service 'vault' is not defined; expecting external Vault/fallback."
+        fi
     fi
     if [[ "${PROVIDER_CHAIN}" == *"ollama"* ]]; then
         OLLAMA_REQUIRED=true
         if should_manage_ollama_container; then
-            INFRA_SERVICES+=(ollama)
-            START_OLLAMA=true
+            if compose_service_defined "${COMPOSE_BIN}" "ollama"; then
+                INFRA_SERVICES+=(ollama)
+                START_OLLAMA=true
+            else
+                warn "Ollama is required but compose service 'ollama' is not defined; expecting external Ollama."
+            fi
         fi
     fi
 
     info "Checking Docker authentication..."
     if ! bash "${REPO_ROOT}/scripts/docker_auth_check.sh"; then
-        error "Docker authentication check failed."
-        exit 1
+        strict_docker_auth="$(read_env_value K1_STRICT_DOCKER_AUTH false)"
+        environment_name="$(read_env_value ENVIRONMENT development | tr '[:upper:]' '[:lower:]')"
+        if env_truthy "${strict_docker_auth}" || [[ "${environment_name}" == "production" ]]; then
+            error "Docker authentication check failed."
+            exit 1
+        fi
+        warn "Docker authentication check failed; continuing in non-production mode."
+        warn "If compose pull fails, authenticate with Docker and re-run ./k1-start."
     fi
 
     info "Ensuring infrastructure services are running: ${INFRA_SERVICES[*]}"
     compose_up_with_retry "${COMPOSE_BIN}" "${INFRA_SERVICES[@]}"
-    wait_for_port 127.0.0.1 5432 60 || {
-        error "PostgreSQL did not become reachable."
-        exit 1
-    }
-    wait_for_port 127.0.0.1 6379 45 || {
-        error "Redis did not become reachable."
-        exit 1
-    }
+    if ! wait_for_port 127.0.0.1 5432 60; then
+        warn "PostgreSQL was not reachable after compose startup; attempting direct Docker recovery."
+        if ! ensure_postgres_running_cli || ! wait_for_port 127.0.0.1 5432 45; then
+            error "PostgreSQL did not become reachable."
+            exit 1
+        fi
+    fi
+    if ! wait_for_port 127.0.0.1 6379 45; then
+        warn "Redis was not reachable after compose startup; attempting direct Docker recovery."
+        if ! ensure_redis_running_cli || ! wait_for_port 127.0.0.1 6379 30; then
+            error "Redis did not become reachable."
+            exit 1
+        fi
+    fi
     if [[ "${START_VAULT}" == "true" ]]; then
         wait_for_port "${VAULT_WAIT_HOST}" "${VAULT_HOST_PORT}" 45 || {
             error "Vault did not become reachable."

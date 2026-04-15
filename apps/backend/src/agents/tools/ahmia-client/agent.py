@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import json
 import re
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from apps.backend.src.core.protocol import KaisonResult, KaisonResultMetadata
+from apps.backend.src.core.protocol import (
+    FindingType,
+    KaisonFinding,
+    KaisonResult,
+    KaisonResultMetadata,
+    Severity,
+)
 from apps.backend.src.core.scope_guardrails import (
     audit_scope_decision,
     evaluate_target_scope,
@@ -19,11 +25,16 @@ from ..darknet_leak_schemas import DiscoveryRegistry
 
 _APPROVED_SCOPE_LABEL = "Approved Research Scope"
 _ALLOWED_SNL_INTERFACES = {"tun0", "wg0", "vpn0", "snl0"}
-_DEFAULT_TOR_PROXY = "127.0.0.1:9050"
+_REQUIRED_TOR_PROXY = "127.0.0.1:9050"
 _ONION_URL_RE = re.compile(r"https?://[a-z2-7]{16,56}\.onion[^\s<\"]*", re.IGNORECASE)
 
 
 class AhmiaClientAgent(BaseToolAgent):
+    """
+    Ahmia specialist agent for searching indexed darknet content.
+    Enforces traffic via K1 Sovereign Network Layer Tor proxy.
+    """
+
     TOOL_NAME = "ahmia-client"
 
     def __init__(self, memory_root: str | Path | None = None) -> None:
@@ -40,13 +51,15 @@ class AhmiaClientAgent(BaseToolAgent):
     def get_telemetry_events(self) -> list[dict[str, Any]]:
         return list(self._telemetry_events)
 
-    def _emit_telemetry(self, metric: str, value: Any) -> None:
+    def _emit_telemetry(self, metric: str, value: Any, payload: dict[str, Any] | None = None) -> None:
         event = {
             "tool": self.TOOL_NAME,
             "metric": metric,
             "value": value,
             "timestamp": datetime.now(UTC).isoformat(),
         }
+        if payload:
+            event["payload"] = payload
         self._telemetry_events.append(event)
         if self._telemetry_hook:
             try:
@@ -63,14 +76,19 @@ class AhmiaClientAgent(BaseToolAgent):
 
         snl_interface = str(opts.get("snl_interface", "tun0")).strip()
         snl_ok = snl_interface in _ALLOWED_SNL_INTERFACES
-        tor_proxy = str(opts.get("tor_proxy", _DEFAULT_TOR_PROXY)).strip()
+        
+        # Strict enforcement of K1 proxy
+        tor_proxy = str(opts.get("tor_proxy", _REQUIRED_TOR_PROXY)).strip()
+        tor_ok = tor_proxy == _REQUIRED_TOR_PROXY
 
-        allowed = decision.allowed and scope_label == _APPROVED_SCOPE_LABEL and snl_ok
+        allowed = decision.allowed and scope_label == _APPROVED_SCOPE_LABEL and snl_ok and tor_ok
         reason = decision.reason
         if scope_label != _APPROVED_SCOPE_LABEL:
             reason = "missing_approved_research_scope"
         elif not snl_ok:
             reason = f"snl_interface_not_allowed:{snl_interface}"
+        elif not tor_ok:
+            reason = f"tor_proxy_required:{_REQUIRED_TOR_PROXY}"
 
         return {
             "allowed": allowed,
@@ -84,14 +102,19 @@ class AhmiaClientAgent(BaseToolAgent):
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
         opts = options or {}
         artifact_dir = str(opts.get("artifact_dir", "/tmp"))
+        
+        # Mandatory K1 proxy
+        tor_proxy = str(opts.get("tor_proxy", _REQUIRED_TOR_PROXY))
+        
+        # ahmia search <target> --proxy <proxy> --output <dir>
         return [
             "ahmia",
             "search",
             target,
             "--proxy",
-            str(opts.get("tor_proxy", _DEFAULT_TOR_PROXY)),
+            tor_proxy,
             "--output",
-            f"{artifact_dir}/ahmia.json",
+            f"{artifact_dir}/ahmia_{int(datetime.now(UTC).timestamp())}.json",
         ]
 
     @staticmethod
@@ -99,10 +122,41 @@ class AhmiaClientAgent(BaseToolAgent):
         token = url.split("//", 1)[1] if "//" in url else url
         return token.split("/", 1)[0].strip().lower().rstrip(".")
 
-    def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:
-        findings: list[dict[str, Any]] = []
-        if not raw_output.strip():
-            return findings
+    def map_output(
+        self,
+        *,
+        target: str,
+        command: list[str],
+        stdout: str,
+        stderr: str,
+        exit_code: int,
+        started_at: datetime,
+        ended_at: datetime,
+        runtime_ms: int,
+        mission_id: str,
+        status: str,
+        options: dict[str, Any] | None = None,
+    ) -> KaisonResult:
+        findings: list[KaisonFinding] = []
+        raw_output = stdout.strip()
+        if not raw_output:
+            return KaisonResult(
+                mission_id=mission_id,
+                source_agent=self.TOOL_NAME,
+                status=status,
+                target_context={
+                    "target": target,
+                    "command": command,
+                    "exit_code": exit_code,
+                    "stderr": stderr[:2000],
+                },
+                metadata=KaisonResultMetadata(
+                    started_at=started_at,
+                    ended_at=ended_at,
+                    runtime_ms=runtime_ms,
+                ),
+                findings=[],
+            )
 
         urls = set(_ONION_URL_RE.findall(raw_output))
         for url in urls:
@@ -122,60 +176,49 @@ class AhmiaClientAgent(BaseToolAgent):
                 continue
 
             findings.append(
-                {
-                    "type": "indexed_dark_web_result",
-                    "value": record.onion_url or f"http://{record.discovered_domain}",
-                    "target": target,
-                    "severity": "medium",
-                    "confidence": 0.75,
-                    "source_tool": self.TOOL_NAME,
-                    "raw_evidence": json.dumps(
-                        {
-                            "onion_domain": record.discovered_domain,
-                            "source_engine": record.source_engine,
-                        },
-                        ensure_ascii=True,
-                    ),
-                    "context": {
+                KaisonFinding(
+                    finding_type=FindingType.CONFIG,
+                    value=record.onion_url or f"http://{record.discovered_domain}",
+                    source_agent=self.TOOL_NAME,
+                    confidence=0.75,
+                    severity=Severity.MEDIUM,
+                    raw_evidence={
+                        "onion_domain": record.discovered_domain,
+                        "source_engine": record.source_engine,
                         "discovery_registry": record.model_dump(mode="json"),
-                        "intel_source": "TOR",
-                        "snl_mode": "fixture_only",
                     },
-                    "recommended_next_tools": ["torbot", "onionsearch", "EvidenceAnalystAgent"],
-                    "recommended_next_actions": ["verify_onion_content"],
+                )
+            )
+
+        # Trigger V-RAD Telemetry for Dark Web Site Discovery
+        if findings:
+            self._emit_telemetry(
+                "V-RAD_EVENT",
+                "Deep Web Pulse",
+                payload={
+                    "v-rad_color": "DARK_PURPLE_BLACK",
+                    "discovery_count": len(findings),
+                    "summary": f"Ahmia indexed {len(findings)} darknet results for {target}"
                 }
             )
 
-        return findings
-
-    def filter_noise(
-        self, findings: list[dict[str, Any]]
-    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        signal: list[dict[str, Any]] = []
-        noise: list[dict[str, Any]] = []
-        known = self.load_memory()
-
-        for finding in findings:
-            value = str(finding.get("value", "")).lower()
-            if f"{str(finding.get('target', '')).lower()}|indexed_dark_web_result|{value}" in known:
-                noise.append(finding)
-                continue
-            signal.append(finding)
-
-        return signal, noise
-
-    def _generate_next_agent_instructions(
-        self,
-        signal: list[dict[str, Any]],
-        target: str,
-    ) -> dict[str, Any]:
-        return {
-            "next_agents": ["torbot", "onionsearch", "EvidenceAnalystAgent"],
-            "indexed_onion_urls": len(signal),
-            "operator_summary": (
-                f"Ahmia indexed search returned {len(signal)} .onion URLs for {target}."
+        return KaisonResult(
+            mission_id=mission_id,
+            source_agent=self.TOOL_NAME,
+            status=status,
+            target_context={
+                "target": target,
+                "command": command,
+                "exit_code": exit_code,
+                "options": options,
+            },
+            metadata=KaisonResultMetadata(
+                started_at=started_at,
+                ended_at=ended_at,
+                runtime_ms=runtime_ms,
             ),
-        }
+            findings=findings,
+        )
 
     def execute(
         self,
@@ -184,82 +227,44 @@ class AhmiaClientAgent(BaseToolAgent):
         *,
         mission_id: str = "mission-001",
     ) -> KaisonResult:
+        """
+        Executes Ahmia search with K1 proxy routing.
+        """
         opts = dict(options or {})
         policy = self.check_policy(target, opts)
-        started_at = datetime.now(UTC)
-
+        
         if not policy["allowed"]:
-            ended_at = datetime.now(UTC)
-            return KaisonResult(
-                mission_id=mission_id,
-                source_agent=self.TOOL_NAME,
-                status="failure",
-                target_context={"target": target, "mode": "stub_only", "error": f"policy_blocked:{policy['reason']}"},
-                metadata=KaisonResultMetadata(
-                    started_at=started_at,
-                    ended_at=ended_at,
-                    runtime_ms=max(0, int((ended_at - started_at).total_seconds() * 1000)),
-                ),
-                findings=[],
-            )
-
-        fixture = opts.get("fixture_data")
-        if fixture is None and isinstance(opts.get("fixture_path"), str):
-            fixture = Path(opts["fixture_path"]).read_text(encoding="utf-8")
-
-        if fixture is None:
-            ended_at = datetime.now(UTC)
+            now = datetime.now(UTC)
             return KaisonResult(
                 mission_id=mission_id,
                 source_agent=self.TOOL_NAME,
                 status="failure",
                 target_context={
-                    "target": target,
-                    "mode": "stub_only",
-                    "error": "fixture_data is required; live execution disabled",
+                    "target": target, 
+                    "error": f"policy_blocked:{policy['reason']}"
                 },
                 metadata=KaisonResultMetadata(
-                    started_at=started_at,
-                    ended_at=ended_at,
-                    runtime_ms=max(0, int((ended_at - started_at).total_seconds() * 1000)),
+                    started_at=now,
+                    ended_at=now,
+                    runtime_ms=0,
                 ),
                 findings=[],
             )
 
-        fixture_text = fixture if isinstance(fixture, str) else json.dumps(fixture)
-        ended_at = datetime.now(UTC)
-        runtime_ms = max(0, int((ended_at - started_at).total_seconds() * 1000))
-        result = self.map_output(
-            target=target,
-            command=["fixture://ahmia-client"],
-            stdout=fixture_text,
-            stderr="",
-            exit_code=0,
-            started_at=started_at,
-            ended_at=ended_at,
-            runtime_ms=runtime_ms,
-            mission_id=mission_id,
-            status="success",
-            options=opts,
-        )
-
-        self._emit_telemetry("AGENT_STATUS", "AHMIA_INDEX_LOOKUP")
-        self._emit_telemetry("TOR_ONION_DISCOVERIES", len(result.findings))
-        if result.findings:
-            self._emit_telemetry("EventLog", "DEEP_WEB_PULSE_DARK_PURPLE_BLACK")
-
-        context = dict(result.target_context)
-        context.update(
-            {
-                "mode": "stub_fixture",
-                "snl_interface": policy["snl_interface"],
-                "tor_proxy": policy["tor_proxy"],
-                "telemetry": self.get_telemetry_events(),
-            }
-        )
-        return result.model_copy(update={"target_context": context})
+        # Force K1 Tor proxy
+        opts["tor_proxy"] = policy["tor_proxy"]
+        
+        # Live execution
+        result = super().execute(target, opts, mission_id=mission_id)
+        
+        # Enrich context
+        enriched_context = dict(result.target_context)
+        enriched_context["snl_interface"] = policy.get("snl_interface")
+        enriched_context["tor_proxy"] = policy.get("tor_proxy")
+        enriched_context["telemetry"] = self.get_telemetry_events()
+        
+        return result.model_copy(update={"target_context": enriched_context})
 
 
 class AhmiaAgent(AhmiaClientAgent):
     """Alias class for architecture briefs."""
-

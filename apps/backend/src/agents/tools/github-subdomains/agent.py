@@ -263,11 +263,31 @@ class GithubSubdomainsAgent(BaseToolAgent):
         mission_id: str = "mission-001",
     ) -> KaisonResult:
         opts = dict(options or {})
+        policy = self.check_policy(target, opts)
         fixture = opts.get("fixture_data")
         if fixture is None and isinstance(opts.get("fixture_path"), str):
             fixture = Path(opts["fixture_path"]).read_text(encoding="utf-8")
 
         started_at = datetime.now(UTC)
+        if not policy["allowed"]:
+            ended_at = datetime.now(UTC)
+            return KaisonResult(
+                mission_id=mission_id,
+                source_agent=self.TOOL_NAME,
+                status="failure",
+                target_context={
+                    "target": target,
+                    "mode": "stub_only",
+                    "error": f"policy_blocked:{policy['reason']}",
+                },
+                metadata=KaisonResultMetadata(
+                    started_at=started_at,
+                    ended_at=ended_at,
+                    runtime_ms=max(0, int((ended_at - started_at).total_seconds() * 1000)),
+                ),
+                findings=[],
+            )
+
         if fixture is None:
             ended_at = datetime.now(UTC)
             return KaisonResult(

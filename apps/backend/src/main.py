@@ -35,6 +35,7 @@ from apps.backend.src.routers import (
     campaigns,
     chains,
     comms,
+    credentials,
     docs,
     dorks,
     embeddings,
@@ -43,6 +44,7 @@ from apps.backend.src.routers import (
     export,
     finding_validation,
     findings,
+    validation,
     graph,
     governance,
     hil_approval,
@@ -73,6 +75,7 @@ from apps.backend.src.routers import (
     reports,
     runs,
     runs_api,
+    safety,
     scope,
     simulation,
     state,
@@ -385,6 +388,9 @@ app.include_router(auth_routes.router) # New authentication router
 app.include_router(auth.router)  # Legacy auth compatibility endpoints (/auth/login, /auth/me)
 app.include_router(scope.router)
 
+# Safety systems (scope validation, kill switch, violations)
+app.include_router(safety.router)
+
 # Key Management (Cryptographic keys and PGP signatures)
 app.include_router(key_management.router)
 app.include_router(keys.router)
@@ -427,6 +433,7 @@ app.include_router(events.router)
 app.include_router(simulation.router)
 app.include_router(system.router)
 app.include_router(vault.router)
+app.include_router(credentials.router)
 
 # Model Bidding and Orchestration (v7.4)
 app.include_router(model_bidding.router)
@@ -441,6 +448,7 @@ app.include_router(agent_training.router)
 
 # Finding Validation Workflow (NEW)
 app.include_router(finding_validation.router)
+app.include_router(validation.router)
 
 # Opportunity Hub + Hunt Workflows (Phase 6)
 app.include_router(opportunities.router)

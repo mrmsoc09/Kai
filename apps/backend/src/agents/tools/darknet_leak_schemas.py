@@ -59,7 +59,7 @@ class DiscoveryRegistry(BaseModel):
         return value.astimezone(UTC)
 
 
-class VulnerabilityRegistry(BaseModel):
+class SecretLeakRegistry(BaseModel):
     """Normalized secret-leak record with mandatory masking semantics."""
 
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
@@ -107,3 +107,7 @@ class VulnerabilityRegistry(BaseModel):
         if value.tzinfo is None:
             return value.replace(tzinfo=UTC)
         return value.astimezone(UTC)
+
+
+class VulnerabilityRegistry(SecretLeakRegistry):
+    """Backward-compatible alias used by existing scanners/tests."""

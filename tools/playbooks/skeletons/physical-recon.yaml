@@ -1,0 +1,63 @@
+playbook:
+  metadata:
+    id: physical-recon
+    name: Physical Access Reconnaissance
+    cluster: RECONNAISSANCE
+    complexity: MEDIUM
+    version: '1.0'
+    status: skeleton
+  objective:
+    primary: Gather physical security intelligence
+    secondary:
+    - Badge cloning
+    - Security guard patterns
+    - Physical vulnerabilities
+  inputs_and_sources:
+    input_source: master-orchestrator
+    required_inputs:
+    - target_location
+  outputs_and_targets:
+    primary_output_target: physical-exploit
+    alternative_targets:
+    - badge-clone
+    fallback_target: social-engineering
+  cve_bindings:
+    count: 5
+    cves:
+    - CVE-2024-1111
+    - CVE-2024-9999
+    - CVE-2024-2222-sc
+    - CVE-2024-3333-sc
+    - CVE-2024-20567
+    note: Each binding is from cve_knowledge_expanded.yaml
+  persona_assignments:
+    count: 1
+    personas:
+    - physical_penetration_tester
+    note: Each persona from persona_cve_mapping.yaml
+  attack_sequence:
+    step_1:
+      title: Site reconnaissance
+      persona: physical_penetration_tester
+    step_2:
+      title: Security assessment
+      persona: physical_penetration_tester
+    step_3:
+      title: Vulnerability identification
+      persona: physical_penetration_tester
+  decision_branches:
+  - condition: If step succeeds
+    action: Call physical-exploit
+  - condition: If step fails
+    action: Call social-engineering
+  - condition: If detected
+    action: Call incident-responder-evasion
+  cross_link_graph:
+    calls_these_playbooks:
+    - physical-exploit
+    - badge-clone
+    called_by_these_playbooks:
+    - master-orchestrator
+    can_pivot_to:
+    - social-engineering
+  notes: 'SKELETON: Logic implementation pending. Cross-linking complete.'

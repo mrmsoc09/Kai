@@ -1,0 +1,60 @@
+playbook:
+  metadata:
+    name: Supply Chain Attack via Dependency Poisoning (High-Frequency Optimized v2)
+    id: supply_chain_attack_v1_optimized_v2
+    version: '2.0'
+    base_playbook_id: supply_chain_attack_v1
+    category: Supply Chain
+    optimization_focus: High-frequency vulnerability patterns by target archetype
+    scope_lock_required: true
+  optimization_baseline:
+    baseline_execution_minutes: 30
+    optimized_execution_minutes: 10
+    baseline_success_rate: 0.58
+    optimized_success_rate: 0.75
+    expected_time_reduction_percent: 66.7
+    expected_success_uplift_percent: 29.3
+  pre_execution_target_classification:
+    required_playbooks:
+    - target_fingerprinter_v1
+    - archetype_classifier_v1
+    - vulnerability_predictor_v1
+    required_outputs:
+    - target_archetype
+    - confidence_score
+    - recommended_top_playbooks
+    scope_validation_first: true
+  target_aware_routing:
+    startup:
+      exploitation_patterns:
+      - dependency_confusion_probe
+      - ci_token_reuse_exposure
+      - unsafe_package_source_check
+      timeout_seconds: 180
+      expected_success_rate: 0.86
+      execution_mode: high_frequency_only
+    enterprise:
+      exploitation_patterns:
+      - artifact_integrity_drift
+      - build_pipeline_trust_boundary_check
+      - transitive_dependency_risk_focus
+      timeout_seconds: 300
+      expected_success_rate: 0.79
+      execution_mode: high_frequency_only
+    government:
+      exploitation_patterns:
+      - signed_artifact_policy_validation
+      - supply_source_trust_enforcement_gap
+      timeout_seconds: 480
+      expected_success_rate: 0.64
+      execution_mode: high_frequency_only
+  execution_logic:
+    selection_rule: Use target archetype route; execute only listed high-frequency
+      patterns.
+    early_exit: Stop on first validated critical/high finding or after pattern list
+      exhausted.
+    fallback: If archetype unknown, run startup route with enterprise timeout.
+  optimization_rationale: Original playbook 'supply_chain_attack_v1' executed broad
+    pattern sets. v2 reduces low-probability pattern execution and targets high-frequency
+    supply_chain paths for startup/enterprise/government archetypes using Prompt 5
+    frequency intelligence.

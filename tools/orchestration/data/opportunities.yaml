@@ -1,0 +1,96 @@
+opportunities:
+- id: opp-h1-saas-001
+  name: Alpha SaaS
+  platform: hackerone
+  target_archetype: early_stage_saas
+  active: true
+  authorization_verified: true
+  targets:
+  - app.alpha.example
+  exclusions: []
+  rules:
+  - detection_only
+  - no_dos
+  detected_tech_stack:
+  - Node.js
+  - React
+  - PostgreSQL
+  historical_findings_count: 3
+  last_scanned_date: '2026-04-01T09:04:27.826091+00:00'
+  downloaded_at: '2026-04-13T09:04:27.826091+00:00'
+- id: opp-h1-saas-002
+  name: Delta SaaS
+  platform: hackerone
+  target_archetype: established_saas
+  active: true
+  authorization_verified: true
+  targets:
+  - api.delta.example
+  exclusions: []
+  rules:
+  - detection_only
+  - no_dos
+  detected_tech_stack:
+  - Kubernetes
+  - API Gateway
+  - OAuth
+  historical_findings_count: 4
+  last_scanned_date: '2026-03-23T09:04:27.826091+00:00'
+  downloaded_at: '2026-04-13T09:04:27.826091+00:00'
+- id: opp-inti-ent-001
+  name: Enterprise One
+  platform: intigriti
+  target_archetype: enterprise_multi_property
+  active: true
+  authorization_verified: true
+  targets:
+  - portal.enterprise.example
+  exclusions: []
+  rules:
+  - detection_only
+  - no_dos
+  detected_tech_stack:
+  - ASP.NET
+  - Oracle
+  - WAF
+  historical_findings_count: 5
+  last_scanned_date: '2026-03-09T09:04:27.826091+00:00'
+  downloaded_at: '2026-04-13T09:04:27.826091+00:00'
+- id: opp-dir-fin-001
+  name: Fintech Direct
+  platform: direct
+  target_archetype: fintech_regulated
+  active: true
+  authorization_verified: true
+  targets:
+  - secure.fin.example
+  exclusions: []
+  rules:
+  - detection_only
+  - no_dos
+  detected_tech_stack:
+  - Java
+  - SSO
+  - TLS
+  historical_findings_count: 6
+  last_scanned_date: '2026-03-26T09:04:27.826091+00:00'
+  downloaded_at: '2026-04-13T09:04:27.826091+00:00'
+- id: opp-h1-ecom-001
+  name: Ecom Public
+  platform: hackerone
+  target_archetype: consumer_ecommerce
+  active: true
+  authorization_verified: true
+  targets:
+  - shop.ecom.example
+  exclusions: []
+  rules:
+  - detection_only
+  - no_dos
+  detected_tech_stack:
+  - Node.js
+  - GraphQL
+  - Redis
+  historical_findings_count: 7
+  last_scanned_date: '2026-04-04T09:04:27.826091+00:00'
+  downloaded_at: '2026-04-13T09:04:27.826091+00:00'

@@ -51,8 +51,13 @@ class VaultSecretProvider(BaseSecretProvider):
         if self.namespace:
             kwargs["namespace"] = self.namespace
         self.client = hvac.Client(**kwargs)
-        if not self.client.is_authenticated():
-            raise SecretManagerError("Vault authentication failed")
+        try:
+            if not self.client.is_authenticated():
+                raise SecretManagerError("Vault authentication failed")
+        except SecretManagerError:
+            raise
+        except Exception as exc:
+            raise SecretManagerError("Vault authentication check failed") from exc
 
     def get_secret(self, name: str) -> Optional[str]:
         path = f"{self.prefix}/{name}" if self.prefix else name
@@ -113,11 +118,13 @@ class SecretManager:
         if self.backend == "vault":
             try:
                 self._vault_provider = VaultSecretProvider()
-            except SecretManagerError:
+            except Exception as exc:
                 if self._allow_env_fallback():
                     self._vault_provider = None
                 else:
-                    raise
+                    raise SecretManagerError(
+                        f"vault backend initialization failed: {exc}"
+                    ) from exc
         elif self.backend != "env":
             raise SecretManagerError(f"unsupported secret backend: {self.backend}")
 

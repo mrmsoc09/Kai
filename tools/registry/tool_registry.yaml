@@ -45,13 +45,15 @@ tools:
   - name: gau
     agent_class: GauAgent
     category: recon_asset_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: gau
     install_verification_cmd: ["gau", "--version"]
     input_schema: {"target": "domain"}
-    output_schema: {"urls": "list[str]"}
+    output_schema: {"web_discovery_registry": "list[WebDiscoveryRegistry]"}
     timeout_seconds: 900
     safety_classification: passive
+    tags: ["ARCHIVE_URL_MINING", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: waybackurls
     agent_class: WaybackurlsAgent
@@ -111,13 +113,15 @@ tools:
   - name: dalfox
     agent_class: DalfoxAgent
     category: vulnerability_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: dalfox
     install_verification_cmd: ["dalfox", "version"]
     input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
+    output_schema: {"xss_registry": "list[XssRegistry]"}
     timeout_seconds: 600
     safety_classification: intrusive
+    tags: ["XSS_VALIDATION", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer", "arjun_parameter_context"]
 
   - name: sqlmap
     agent_class: SqlmapAgent
@@ -280,13 +284,15 @@ tools:
   - name: metasploit-framework
     agent_class: MetasploitFrameworkAgent
     category: vulnerability_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: msfconsole
     install_verification_cmd: ["msfconsole", "-v"]
     input_schema: {"target": "host_or_url"}
     output_schema: {"findings": "list[json]"}
     timeout_seconds: 900
     safety_classification: intrusive
+    tags: ["CHECK_ONLY", "LISTENER_MODE", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer", "msfrpcd"]
 
   - name: wafw00f
     agent_class: Wafw00fAgent
@@ -379,24 +385,28 @@ tools:
   - name: arjun
     agent_class: ArjunAgent
     category: crawling_url_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: arjun
     install_verification_cmd: ["arjun", "--version"]
     input_schema: {"target": "url"}
-    output_schema: {"parameters": "list[str]"}
+    output_schema: {"parameter_registry": "list[ParameterRegistry]"}
     timeout_seconds: 300
     safety_classification: active
+    tags: ["PARAM_DISCOVERY", "dalfox_ssrfmap_context", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: hakrawler
     agent_class: HakrawlerAgent
     category: crawling_url_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: hakrawler
     install_verification_cmd: ["hakrawler", "--help"]
     input_schema: {"target": "url"}
-    output_schema: {"findings": "list[str]"}
+    output_schema: {"web_discovery_registry": "list[WebDiscoveryRegistry]"}
     timeout_seconds: 300
     safety_classification: active
+    tags: ["LIVE_CRAWL_DISCOVERY", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: ffuf
     agent_class: FfufAgent
@@ -405,11 +415,11 @@ tools:
     binary_path: ffuf
     install_verification_cmd: ["ffuf", "-V"]
     input_schema: {"target": "url"}
-    output_schema: {"crawl_registry": "list[CrawlRegistry]"}
+    output_schema: {"web_discovery_registry": "list[WebDiscoveryRegistry]"}
     timeout_seconds: 600
     safety_classification: intrusive
     tags: ["CONTENT_DISCOVERY", "recursive_busting", "async_stub"]
-    dependencies: ["scope_guardrails", "wordlist_manager"]
+    dependencies: ["scope_guardrails", "wordlist_manager", "sovereign_network_layer"]
 
   - name: gf
     agent_class: GfAgent
@@ -425,13 +435,15 @@ tools:
   - name: spiderfoot
     agent_class: SpiderfootAgent
     category: intelligence_osint
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: spiderfoot
     install_verification_cmd: ["spiderfoot", "--help"]
-    input_schema: {"target": "domain"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 900
+    input_schema: {"target": "domain_or_handle"}
+    output_schema: {"identity_registry": "list[IdentityRegistry]", "discovery_registry": "list[DiscoveryRegistry]"}
+    timeout_seconds: 600
     safety_classification: passive
+    tags: ["INTEL_ORCHESTRATION", "recursive_osint", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer", "fixture_data"]
 
   - name: sherlock
     agent_class: SherlockAgent
@@ -471,15 +483,18 @@ tools:
     dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: reconftw
-    agent_class: ReconftfwAgent
+    agent_class: ReconftwAgent
     category: recon_asset_discovery
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: reconftw.sh
     install_verification_cmd: ["reconftw.sh", "-h"]
-    input_schema: {"target": "domain"}
-    output_schema: {"findings": "list[str]"}
+    input_schema: {"target": "domain", "mode": "subdomains|web|deep|all"}
+    output_schema: {"discovery_registry": "list[DiscoveryRegistry]", "asset_inventory_registry": "list[AssetInventoryRegistry]"}
     timeout_seconds: 1800
     safety_classification: intrusive
+    service_category: RECON_ORCHESTRATION
+    tags: ["MACRO_SCOUT", "SELECTIVE_MODE", "PLAYBOOK_HANDSHAKE", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer", "reconftw_config", "playbook_library"]
 
   # Wave 3 (14 tools)
   - name: torbot
@@ -518,7 +533,7 @@ tools:
     output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
     timeout_seconds: 60
     safety_classification: passive
-    tags: ["DARKNET_INTEL", "index_lookup", "snl_guarded", "stub_only"]
+    tags: ["DARKNET_INTEL", "index_lookup", "tor_proxy_required", "snl_guarded", "stub_only"]
     dependencies: ["scope_guardrails", "sovereign_network_layer", "tor_proxy"]
 
   - name: trufflehog
@@ -528,7 +543,7 @@ tools:
     binary_path: trufflehog
     install_verification_cmd: ["trufflehog", "version"]
     input_schema: {"target": "git_repo_url_or_local_path"}
-    output_schema: {"vulnerability_registry": "list[VulnerabilityRegistry]"}
+    output_schema: {"secret_leak_registry": "list[SecretLeakRegistry]"}
     timeout_seconds: 600
     safety_classification: passive
     tags: ["SECRET_DETECTION", "masked_output", "v2_v3_compatible", "stub_only"]
@@ -541,7 +556,7 @@ tools:
     binary_path: gitleaks
     install_verification_cmd: ["gitleaks", "version"]
     input_schema: {"target": "git_repo_url_or_path"}
-    output_schema: {"vulnerability_registry": "list[VulnerabilityRegistry]"}
+    output_schema: {"secret_leak_registry": "list[SecretLeakRegistry]"}
     timeout_seconds: 300
     safety_classification: passive
     tags: ["SECRET_DETECTION", "masked_output", "stub_only"]
@@ -550,13 +565,15 @@ tools:
   - name: nikto
     agent_class: NiktoAgent
     category: vulnerability_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: nikto
     install_verification_cmd: ["nikto", "-h"]
     input_schema: {"target": "url_or_host"}
-    output_schema: {"vulnerabilities": "list[dict]"}
+    output_schema: {"service_registry": "list[ServiceRegistry]"}
     timeout_seconds: 300
     safety_classification: active
+    tags: ["WEB_SERVER_AUDIT", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer", "httpx_probe.schemas.ServiceRegistry"]
 
   - name: testssl
     agent_class: TestsslAgent
@@ -572,24 +589,28 @@ tools:
   - name: smuggler
     agent_class: SmugglerAgent
     category: vulnerability_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: smuggler
     install_verification_cmd: ["smuggler", "--help"]
     input_schema: {"target": "url"}
-    output_schema: {"smuggling_variants": "list[dict]"}
+    output_schema: {"smuggling_variants": "list[json]"}
     timeout_seconds: 300
     safety_classification: active
+    tags: ["REQUEST_SMUGGLING_TEST", "snl_guarded", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: searchsploit
     agent_class: SearchsploitAgent
     category: vulnerability_scanning
-    execution_mode: native
+    execution_mode: fixture_stub
     binary_path: searchsploit
     install_verification_cmd: ["searchsploit", "--help"]
     input_schema: {"target": "software_version"}
     output_schema: {"cve_matches": "list[dict]"}
     timeout_seconds: 30
     safety_classification: passive
+    tags: ["POST_EXPLOIT_INTEL", "poc_lookup", "stub_only"]
+    dependencies: ["scope_guardrails", "sovereign_network_layer"]
 
   - name: graphql-cop
     agent_class: GraphqlCopAgent

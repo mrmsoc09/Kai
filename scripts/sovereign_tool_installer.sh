@@ -91,6 +91,26 @@ verify_tool_installed() {
     return 1
 }
 
+verify_owasp_zap_installed() {
+    if command -v zaproxy >/dev/null 2>&1; then
+        return 0
+    fi
+    if [[ -x "/usr/share/zaproxy/zap.sh" ]]; then
+        return 0
+    fi
+    if command -v zap-cli >/dev/null 2>&1; then
+        local output=""
+        output="$(zap-cli --version 2>&1 || true)"
+        if [[ "${output}" == *"not automatically installed"* || "${output}" == *"docker not available"* ]]; then
+            return 1
+        fi
+        if zap-cli --version >/dev/null 2>&1; then
+            return 0
+        fi
+    fi
+    return 1
+}
+
 # Masscan: Clone, build with libpcap, and symlink
 install_masscan() {
     local src_dir="${LOCAL_TOOLS_SRC_DIR}/masscan"
@@ -609,7 +629,7 @@ EOF
 
 # OWASP ZAP: Install via apt and ensure zap-cli is available
 install_owasp_zap() {
-    if verify_tool_installed "zap-cli" "zap-cli"; then
+    if verify_owasp_zap_installed; then
         info "OWASP ZAP already installed and verified"
         return 0
     fi
@@ -617,30 +637,44 @@ install_owasp_zap() {
     info "Installing OWASP ZAP..."
     ensure_local_bin
 
-    # Try apt-get first
-    if apt_install_packages zaproxy 2>/dev/null; then
-        # zaproxy installs zap.sh, create zap-cli wrapper if not found
-        local zap_path="/usr/share/zaproxy/zap.sh"
-        if [[ -f "${zap_path}" ]]; then
-            cat > "${LOCAL_BIN_DIR}/zap-cli" <<'EOF'
+    # Repair wrapper when ZAP is already present at the common apt path.
+    local zap_path="/usr/share/zaproxy/zap.sh"
+    if [[ -f "${zap_path}" ]]; then
+        cat > "${LOCAL_BIN_DIR}/zap-cli" <<'EOF'
 #!/usr/bin/env bash
-# ZAP CLI wrapper
+if [[ "${1:-}" == "--version" ]]; then
+  exec bash /usr/share/zaproxy/zap.sh -version
+fi
 exec bash /usr/share/zaproxy/zap.sh "$@"
 EOF
-            chmod +x "${LOCAL_BIN_DIR}/zap-cli"
-
-            if verify_tool_installed "zap-cli" "zap-cli"; then
-                info "OWASP ZAP: Installation verified"
-                return 0
-            fi
+        chmod +x "${LOCAL_BIN_DIR}/zap-cli"
+        ln -sf "${LOCAL_BIN_DIR}/zap-cli" "${LOCAL_BIN_DIR}/owasp-zap"
+        if verify_owasp_zap_installed; then
+            info "OWASP ZAP: Existing installation wrapper repaired"
+            return 0
         fi
     fi
 
-    # Fallback: pip install zap-cli if available
-    if python3 -m pip install --quiet zap-cli 2>&1 | grep -v "Requirement already satisfied" || true; then
-        if verify_tool_installed "zap-cli" "zap-cli"; then
-            info "OWASP ZAP (zap-cli): Installation verified"
-            return 0
+    # Try apt-get first
+    if apt_install_packages zaproxy 2>/dev/null; then
+        # zaproxy installs zap.sh; create wrappers expected by K1 registry.
+        zap_path="/usr/share/zaproxy/zap.sh"
+        if [[ -f "${zap_path}" ]]; then
+            cat > "${LOCAL_BIN_DIR}/zap-cli" <<'EOF'
+#!/usr/bin/env bash
+# ZAP CLI wrapper for K1 bootstrap/runtime.
+if [[ "${1:-}" == "--version" ]]; then
+  exec bash /usr/share/zaproxy/zap.sh -version
+fi
+exec bash /usr/share/zaproxy/zap.sh "$@"
+EOF
+            chmod +x "${LOCAL_BIN_DIR}/zap-cli"
+            ln -sf "${LOCAL_BIN_DIR}/zap-cli" "${LOCAL_BIN_DIR}/owasp-zap"
+
+            if verify_owasp_zap_installed; then
+                info "OWASP ZAP: Installation verified"
+                return 0
+            fi
         fi
     fi
 
@@ -670,12 +704,38 @@ EOF
         fi
     fi
 
-    if verify_tool_installed "zap-cli" "zap-cli"; then
+    if verify_owasp_zap_installed; then
         info "OWASP ZAP: Installation verified"
         return 0
     fi
 
-    # Final fallback: Create a stub with instructions
+    # Docker fallback for environments where apt/package installation is unavailable.
+    if command -v docker >/dev/null 2>&1; then
+        local zap_image="${K1_ZAP_DOCKER_IMAGE:-ghcr.io/zaproxy/zaproxy:stable}"
+        warn "OWASP ZAP: Installing Docker-backed wrapper (${zap_image})..."
+        cat > "${LOCAL_BIN_DIR}/zap-cli" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+IMAGE="${zap_image}"
+if ! command -v docker >/dev/null 2>&1; then
+  echo "docker not available for ZAP wrapper" >&2
+  exit 1
+fi
+if [[ "\${1:-}" == "--version" ]]; then
+  exec docker run --rm "\${IMAGE}" zap.sh -version
+fi
+exec docker run --rm --network host -v "\$(pwd):/zap/wrk" "\${IMAGE}" zap.sh "\$@"
+EOF
+        chmod +x "${LOCAL_BIN_DIR}/zap-cli"
+        ln -sf "${LOCAL_BIN_DIR}/zap-cli" "${LOCAL_BIN_DIR}/owasp-zap"
+
+        if verify_owasp_zap_installed; then
+            info "OWASP ZAP: Docker wrapper verified"
+            return 0
+        fi
+    fi
+
+    # Final fallback: Create a stub with instructions.
     warn "OWASP ZAP: Creating installation stub..."
     cat > "${LOCAL_BIN_DIR}/zap-cli" <<'EOF'
 #!/usr/bin/env bash
@@ -690,8 +750,8 @@ To install OWASP ZAP:
    https://github.com/zaproxy/zaproxy/releases
 
 3. Option C: Use Docker:
-   docker pull zaproxy/zaproxy:latest
-   docker run -p 8080:8080 zaproxy/zaproxy:latest
+   docker pull ghcr.io/zaproxy/zaproxy:stable
+   docker run -p 8080:8080 ghcr.io/zaproxy/zaproxy:stable
 
 For more information, visit: https://www.zaproxy.org/
 
@@ -699,6 +759,7 @@ HELP
 exit 1
 EOF
     chmod +x "${LOCAL_BIN_DIR}/zap-cli"
+    ln -sf "${LOCAL_BIN_DIR}/zap-cli" "${LOCAL_BIN_DIR}/owasp-zap"
 
     # Even though we created a stub, return 0 so bootstrap doesn't fail
     if command -v zap-cli >/dev/null 2>&1; then
@@ -722,10 +783,42 @@ install_faraday() {
     }
 
     if [[ -f "${src_dir}/requirements.txt" ]]; then
-        if ! python3 -m pip install --quiet -r "${src_dir}/requirements.txt" 2>&1 | grep -v "Requirement already satisfied" || true; then
+        if ! python3 -m pip install --quiet -r "${src_dir}/requirements.txt" >/dev/null 2>&1; then
             warn "Faraday: Some Python dependencies failed (non-critical)"
         fi
     fi
+
+    ensure_local_bin
+    cat > "${LOCAL_BIN_DIR}/faraday-community" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+FARADAY_DIR="${src_dir}"
+if [[ ! -d "\${FARADAY_DIR}" ]]; then
+  echo "Faraday source not found at \${FARADAY_DIR}" >&2
+  exit 1
+fi
+if [[ "\${1:-}" == "--version" || "\${1:-}" == "-v" ]]; then
+  if [[ -f "\${FARADAY_DIR}/VERSION" ]]; then
+    cat "\${FARADAY_DIR}/VERSION"
+    exit 0
+  fi
+  echo "faraday-community source ready"
+  exit 0
+fi
+if [[ "\${1:-}" == "--help" || "\${1:-}" == "-h" || "\${#}" -eq 0 ]]; then
+  cat <<'HELP'
+Faraday Community source is installed.
+Source path: ${src_dir}
+Run service manually (example):
+  docker compose -f docker-compose.dev.yml up -d faraday
+or follow repo docs:
+  https://github.com/infobyte/faraday
+HELP
+  exit 0
+fi
+exec python3 "\${FARADAY_DIR}/faraday.py" "\$@"
+EOF
+    chmod +x "${LOCAL_BIN_DIR}/faraday-community"
 
     info "Faraday: Source prepared at ${src_dir}"
     return 0

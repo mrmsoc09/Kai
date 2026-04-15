@@ -1,0 +1,14 @@
+update_timestamp: null
+sources:
+  nvd:
+    source_mode: uninitialized
+    days: 7
+    records: []
+    record_count: 0
+  exploitdb:
+    source_mode: uninitialized
+    days: 7
+    records: []
+    record_count: 0
+opportunities_with_market_intelligence: []
+intelligent_scan_candidates: []

@@ -1,0 +1,3054 @@
+metadata:
+  analysis_date: '2026-04-13'
+  operation_mode: detection_only
+  detection_playbooks_ranked_total: 46
+  formula: detection_probability = frequency * scope_likelihood * playbook_reliability
+    * payout_value
+  efficiency_formula: efficiency_score = expected_payout_if_found_usd / execution_time_minutes
+  forbidden_operations:
+  - exploitation
+  - persistence
+  - destruction
+  - evasion
+  - lateral_movement
+playbook_detection_rankings_by_target:
+  early_stage_saas:
+  - detection_playbook_id: det_archetype_classifier_v1
+    playbook_name: 'Detection Profile: Archetype Classifier v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.171083
+    efficiency_score: 4280.0
+    rank: 1
+  - detection_playbook_id: det_vulnerability_predictor_v1
+    playbook_name: 'Detection Profile: Vulnerability Predictor v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.171083
+    efficiency_score: 4280.0
+    rank: 2
+  - detection_playbook_id: det_target_fingerprinter_v1
+    playbook_name: 'Detection Profile: Target Fingerprinter v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 2
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.171083
+    efficiency_score: 2140.0
+    rank: 3
+  - detection_playbook_id: det_business_logic_bypass_v1
+    playbook_name: 'Detection Profile: Complex Business Logic Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: business_logic
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6980
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.176717
+    efficiency_score: 498.57
+    rank: 4
+  - detection_playbook_id: det_iam_privilege_escalation_v1
+    playbook_name: 'Detection Profile: Identity & Access Management Privilege Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.252314
+    efficiency_score: 447.14
+    rank: 5
+  - detection_playbook_id: det_api_rce_chain_v1
+    playbook_name: 'Detection Profile: Chained API Vulnerabilities Leading to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: api_authz
+    playbook_reliability: 0.73
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5900
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.19053
+    efficiency_score: 421.43
+    rank: 6
+  - detection_playbook_id: det_database_exfiltration_v1
+    playbook_name: 'Detection Profile: Database Vulnerability Detection & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.77
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.147817
+    efficiency_score: 382.86
+    rank: 7
+  - detection_playbook_id: det_cryptographic_downgrade_v1
+    playbook_name: 'Detection Profile: Cryptographic Protocol Downgrade & Key Recovery'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.073164
+    efficiency_score: 370.0
+    rank: 8
+  - detection_playbook_id: det_vpn_ipsec_weakness_v1
+    playbook_name: 'Detection Profile: VPN & IPSec Protocol Weakness Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.62
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.067704
+    efficiency_score: 370.0
+    rank: 9
+  - detection_playbook_id: det_quantum_safe_bypass_v1
+    playbook_name: 'Detection Profile: Quantum-Ready Cryptanalysis & Downgrade'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.04914
+    efficiency_score: 370.0
+    rank: 10
+  - detection_playbook_id: det_graphql_attacks_v1
+    playbook_name: 'Detection Profile: GraphQL API Security Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 18
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.306381
+    efficiency_score: 347.78
+    rank: 11
+  - detection_playbook_id: det_sql_injection_v1
+    playbook_name: 'Detection Profile: SQL Injection Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 16
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.172773
+    efficiency_score: 335.0
+    rank: 12
+  - detection_playbook_id: det_sbom_vulnerability_chain_v1
+    playbook_name: 'Detection Profile: Vulnerability Chaining via SBOM Analysis'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.75
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.213213
+    efficiency_score: 318.57
+    rank: 13
+  - detection_playbook_id: det_supply_chain_attack_v1
+    playbook_name: 'Detection Profile: Supply Chain Assessment via Dependency Poisoning'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.179099
+    efficiency_score: 318.57
+    rank: 14
+  - detection_playbook_id: det_supply_chain_model_v1
+    playbook_name: 'Detection Profile: AI Model Supply Chain Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.167728
+    efficiency_score: 318.57
+    rank: 15
+  - detection_playbook_id: det_dns_cache_poisoning_v1
+    playbook_name: 'Detection Profile: DNS Infrastructure Assessment & Traffic Redirection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.167728
+    efficiency_score: 318.57
+    rank: 16
+  - detection_playbook_id: det_web_app_recon_v1
+    playbook_name: 'Detection Profile: Web Application Reconnaissance'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.306381
+    efficiency_score: 313.0
+    rank: 17
+  - detection_playbook_id: det_cloud_lateral_movement_v1
+    playbook_name: 'Detection Profile: AWS/Azure/GCP Lateral Movement & Privilege
+      Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.157021
+    efficiency_score: 305.71
+    rank: 18
+  - detection_playbook_id: det_mobile_compromise_v1
+    playbook_name: 'Detection Profile: Mobile Device Exposure Check & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.65
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.152334
+    efficiency_score: 305.71
+    rank: 19
+  - detection_playbook_id: det_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: LLM Model Extraction & Fine-Tuning Data Theft'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.147647
+    efficiency_score: 305.71
+    rank: 20
+  - detection_playbook_id: det_iot_botnet_v1
+    playbook_name: 'Detection Profile: IoT Device Exposure Check & Botnet Formation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.147647
+    efficiency_score: 305.71
+    rank: 21
+  - detection_playbook_id: det_container_escape_rce_v1
+    playbook_name: 'Detection Profile: Kubernetes Container Escape & Cluster Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.133585
+    efficiency_score: 305.71
+    rank: 22
+  - detection_playbook_id: det_llm_poisoning_v1
+    playbook_name: 'Detection Profile: LLM Training Data Poisoning & Prompt Injection
+      Chains'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.133585
+    efficiency_score: 305.71
+    rank: 23
+  - detection_playbook_id: det_zero_day_chain_v1
+    playbook_name: 'Detection Profile: Zero-Day Detection & Privilege Escalation Chain'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.55
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.128898
+    efficiency_score: 305.71
+    rank: 24
+  - detection_playbook_id: det_social_engineering_rce_v1
+    playbook_name: 'Detection Profile: Multi-Stage Social Engineering to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.124211
+    efficiency_score: 305.71
+    rank: 25
+  - detection_playbook_id: det_pixel_based_inference_v1
+    playbook_name: 'Detection Profile: AI Model Inference via Pixel & Timing Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.124211
+    efficiency_score: 305.71
+    rank: 26
+  - detection_playbook_id: det_dga_botnet_sim_v1
+    playbook_name: 'Detection Profile: DGA Botnet Simulation & Command-Control Channel'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.49
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.114836
+    efficiency_score: 305.71
+    rank: 27
+  - detection_playbook_id: det_industrial_scada_v1
+    playbook_name: 'Detection Profile: Industrial SCADA/ICS System Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.47
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.110149
+    efficiency_score: 305.71
+    rank: 28
+  - detection_playbook_id: det_5g_network_attack_v1
+    playbook_name: 'Detection Profile: 5G Network Vulnerability Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.46
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.107806
+    efficiency_score: 305.71
+    rank: 29
+  - detection_playbook_id: det_firmware_rce_v1
+    playbook_name: 'Detection Profile: Firmware Detection & Hardware-Level Code Execution'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.105462
+    efficiency_score: 305.71
+    rank: 30
+  - detection_playbook_id: det_hypervisor_escape_v1
+    playbook_name: 'Detection Profile: Hypervisor Escape & Host Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.105462
+    efficiency_score: 305.71
+    rank: 31
+  - detection_playbook_id: det_apt_campaign_sim_v1
+    playbook_name: 'Detection Profile: APT Campaign Simulation (Multi-Stage, Multi-Vector)'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.105462
+    efficiency_score: 305.71
+    rank: 32
+  - detection_playbook_id: det_zero_trust_bypass_v1
+    playbook_name: 'Detection Profile: Zero Trust Architecture Validation & Microsegmentation
+      Escape'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.105462
+    efficiency_score: 305.71
+    rank: 33
+  - detection_playbook_id: det_air_gapped_network_v1
+    playbook_name: 'Detection Profile: Air-Gapped Network Penetration & Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.105462
+    efficiency_score: 305.71
+    rank: 34
+  - detection_playbook_id: det_auth_bypass_v1
+    playbook_name: 'Detection Profile: Authentication and Authorization Validation
+      Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 22
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.252314
+    efficiency_score: 284.55
+    rank: 35
+  - detection_playbook_id: det_owasp_a02_crypto_v1
+    playbook_name: 'Detection Profile: OWASP A02 Cryptographic Failures Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.324403
+    efficiency_score: 231.85
+    rank: 36
+  - detection_playbook_id: det_owasp_a05_misconfig_v1
+    playbook_name: 'Detection Profile: OWASP A05 Security Misconfiguration Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.324403
+    efficiency_score: 231.85
+    rank: 37
+  - detection_playbook_id: det_owasp_a04_design_v1
+    playbook_name: 'Detection Profile: OWASP A04 Insecure Design Vulnerability Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.252314
+    efficiency_score: 231.85
+    rank: 38
+  - detection_playbook_id: det_ai_llm_vector_db_v1
+    playbook_name: 'Detection Profile: AI/LLM Vector Database and RAG System Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.63
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.120941
+    efficiency_score: 198.52
+    rank: 39
+  - detection_playbook_id: det_owasp_a01_access_control_v1
+    playbook_name: 'Detection Profile: OWASP A01 Broken Access Control Detection and
+      Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.306381
+    efficiency_score: 184.12
+    rank: 40
+  - detection_playbook_id: det_ai_llm_supply_chain_v1
+    playbook_name: 'Detection Profile: AI/LLM Supply Chain and Dependency Security
+      Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.75
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.270336
+    efficiency_score: 184.12
+    rank: 41
+  - detection_playbook_id: det_xss_discovery_v1
+    playbook_name: 'Detection Profile: Cross-Site Scripting Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: xss
+    playbook_reliability: 0.9
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 3200
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.20007
+    efficiency_score: 160.0
+    rank: 42
+  - detection_playbook_id: det_ai_llm_prompt_injection_v1
+    playbook_name: 'Detection Profile: AI/LLM Prompt Injection and Jailbreak Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.252314
+    efficiency_score: 156.5
+    rank: 43
+  - detection_playbook_id: det_ai_llm_container_escape_v1
+    playbook_name: 'Detection Profile: AI/LLM Container Escape and Host Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.6
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.216269
+    efficiency_score: 156.5
+    rank: 44
+  - detection_playbook_id: det_owasp_a03_injection_v1
+    playbook_name: 'Detection Profile: OWASP A03 Injection Vulnerability Detection
+      and Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.172773
+    efficiency_score: 134.0
+    rank: 45
+  - detection_playbook_id: det_ai_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: AI/LLM Model Extraction and IP Theft Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.65
+    execution_time_minutes: 54
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.234291
+    efficiency_score: 115.93
+    rank: 46
+  established_saas:
+  - detection_playbook_id: det_archetype_classifier_v1
+    playbook_name: 'Detection Profile: Archetype Classifier v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.139718
+    efficiency_score: 4280.0
+    rank: 1
+  - detection_playbook_id: det_vulnerability_predictor_v1
+    playbook_name: 'Detection Profile: Vulnerability Predictor v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.139718
+    efficiency_score: 4280.0
+    rank: 2
+  - detection_playbook_id: det_target_fingerprinter_v1
+    playbook_name: 'Detection Profile: Target Fingerprinter v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 2
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.139718
+    efficiency_score: 2140.0
+    rank: 3
+  - detection_playbook_id: det_business_logic_bypass_v1
+    playbook_name: 'Detection Profile: Complex Business Logic Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: business_logic
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6980
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.193709
+    efficiency_score: 498.57
+    rank: 4
+  - detection_playbook_id: det_iam_privilege_escalation_v1
+    playbook_name: 'Detection Profile: Identity & Access Management Privilege Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.228659
+    efficiency_score: 447.14
+    rank: 5
+  - detection_playbook_id: det_api_rce_chain_v1
+    playbook_name: 'Detection Profile: Chained API Vulnerabilities Leading to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: api_authz
+    playbook_reliability: 0.73
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5900
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.236257
+    efficiency_score: 421.43
+    rank: 6
+  - detection_playbook_id: det_database_exfiltration_v1
+    playbook_name: 'Detection Profile: Database Vulnerability Detection & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.77
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.118254
+    efficiency_score: 382.86
+    rank: 7
+  - detection_playbook_id: det_cryptographic_downgrade_v1
+    playbook_name: 'Detection Profile: Cryptographic Protocol Downgrade & Key Recovery'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.07839
+    efficiency_score: 370.0
+    rank: 8
+  - detection_playbook_id: det_vpn_ipsec_weakness_v1
+    playbook_name: 'Detection Profile: VPN & IPSec Protocol Weakness Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.62
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.07254
+    efficiency_score: 370.0
+    rank: 9
+  - detection_playbook_id: det_quantum_safe_bypass_v1
+    playbook_name: 'Detection Profile: Quantum-Ready Cryptanalysis & Downgrade'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.05265
+    efficiency_score: 370.0
+    rank: 10
+  - detection_playbook_id: det_graphql_attacks_v1
+    playbook_name: 'Detection Profile: GraphQL API Security Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 18
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.277658
+    efficiency_score: 347.78
+    rank: 11
+  - detection_playbook_id: det_sql_injection_v1
+    playbook_name: 'Detection Profile: SQL Injection Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 16
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.138218
+    efficiency_score: 335.0
+    rank: 12
+  - detection_playbook_id: det_sbom_vulnerability_chain_v1
+    playbook_name: 'Detection Profile: Vulnerability Chaining via SBOM Analysis'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.75
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.165165
+    efficiency_score: 318.57
+    rank: 13
+  - detection_playbook_id: det_supply_chain_attack_v1
+    playbook_name: 'Detection Profile: Supply Chain Assessment via Dependency Poisoning'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.138739
+    efficiency_score: 318.57
+    rank: 14
+  - detection_playbook_id: det_supply_chain_model_v1
+    playbook_name: 'Detection Profile: AI Model Supply Chain Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.12993
+    efficiency_score: 318.57
+    rank: 15
+  - detection_playbook_id: det_dns_cache_poisoning_v1
+    playbook_name: 'Detection Profile: DNS Infrastructure Assessment & Traffic Redirection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.12993
+    efficiency_score: 318.57
+    rank: 16
+  - detection_playbook_id: det_web_app_recon_v1
+    playbook_name: 'Detection Profile: Web Application Reconnaissance'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.277658
+    efficiency_score: 313.0
+    rank: 17
+  - detection_playbook_id: det_cloud_lateral_movement_v1
+    playbook_name: 'Detection Profile: AWS/Azure/GCP Lateral Movement & Privilege
+      Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.128234
+    efficiency_score: 305.71
+    rank: 18
+  - detection_playbook_id: det_mobile_compromise_v1
+    playbook_name: 'Detection Profile: Mobile Device Exposure Check & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.65
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.124406
+    efficiency_score: 305.71
+    rank: 19
+  - detection_playbook_id: det_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: LLM Model Extraction & Fine-Tuning Data Theft'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.120578
+    efficiency_score: 305.71
+    rank: 20
+  - detection_playbook_id: det_iot_botnet_v1
+    playbook_name: 'Detection Profile: IoT Device Exposure Check & Botnet Formation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.120578
+    efficiency_score: 305.71
+    rank: 21
+  - detection_playbook_id: det_container_escape_rce_v1
+    playbook_name: 'Detection Profile: Kubernetes Container Escape & Cluster Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.109095
+    efficiency_score: 305.71
+    rank: 22
+  - detection_playbook_id: det_llm_poisoning_v1
+    playbook_name: 'Detection Profile: LLM Training Data Poisoning & Prompt Injection
+      Chains'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.109095
+    efficiency_score: 305.71
+    rank: 23
+  - detection_playbook_id: det_zero_day_chain_v1
+    playbook_name: 'Detection Profile: Zero-Day Detection & Privilege Escalation Chain'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.55
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.105267
+    efficiency_score: 305.71
+    rank: 24
+  - detection_playbook_id: det_social_engineering_rce_v1
+    playbook_name: 'Detection Profile: Multi-Stage Social Engineering to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.101439
+    efficiency_score: 305.71
+    rank: 25
+  - detection_playbook_id: det_pixel_based_inference_v1
+    playbook_name: 'Detection Profile: AI Model Inference via Pixel & Timing Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.101439
+    efficiency_score: 305.71
+    rank: 26
+  - detection_playbook_id: det_dga_botnet_sim_v1
+    playbook_name: 'Detection Profile: DGA Botnet Simulation & Command-Control Channel'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.49
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.093783
+    efficiency_score: 305.71
+    rank: 27
+  - detection_playbook_id: det_industrial_scada_v1
+    playbook_name: 'Detection Profile: Industrial SCADA/ICS System Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.47
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.089955
+    efficiency_score: 305.71
+    rank: 28
+  - detection_playbook_id: det_5g_network_attack_v1
+    playbook_name: 'Detection Profile: 5G Network Vulnerability Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.46
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.088041
+    efficiency_score: 305.71
+    rank: 29
+  - detection_playbook_id: det_firmware_rce_v1
+    playbook_name: 'Detection Profile: Firmware Detection & Hardware-Level Code Execution'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.086127
+    efficiency_score: 305.71
+    rank: 30
+  - detection_playbook_id: det_hypervisor_escape_v1
+    playbook_name: 'Detection Profile: Hypervisor Escape & Host Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.086127
+    efficiency_score: 305.71
+    rank: 31
+  - detection_playbook_id: det_apt_campaign_sim_v1
+    playbook_name: 'Detection Profile: APT Campaign Simulation (Multi-Stage, Multi-Vector)'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.086127
+    efficiency_score: 305.71
+    rank: 32
+  - detection_playbook_id: det_zero_trust_bypass_v1
+    playbook_name: 'Detection Profile: Zero Trust Architecture Validation & Microsegmentation
+      Escape'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.086127
+    efficiency_score: 305.71
+    rank: 33
+  - detection_playbook_id: det_air_gapped_network_v1
+    playbook_name: 'Detection Profile: Air-Gapped Network Penetration & Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.086127
+    efficiency_score: 305.71
+    rank: 34
+  - detection_playbook_id: det_auth_bypass_v1
+    playbook_name: 'Detection Profile: Authentication and Authorization Validation
+      Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 22
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.228659
+    efficiency_score: 284.55
+    rank: 35
+  - detection_playbook_id: det_owasp_a02_crypto_v1
+    playbook_name: 'Detection Profile: OWASP A02 Cryptographic Failures Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.29399
+    efficiency_score: 231.85
+    rank: 36
+  - detection_playbook_id: det_owasp_a05_misconfig_v1
+    playbook_name: 'Detection Profile: OWASP A05 Security Misconfiguration Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.29399
+    efficiency_score: 231.85
+    rank: 37
+  - detection_playbook_id: det_owasp_a04_design_v1
+    playbook_name: 'Detection Profile: OWASP A04 Insecure Design Vulnerability Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.228659
+    efficiency_score: 231.85
+    rank: 38
+  - detection_playbook_id: det_ai_llm_vector_db_v1
+    playbook_name: 'Detection Profile: AI/LLM Vector Database and RAG System Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.63
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.096753
+    efficiency_score: 198.52
+    rank: 39
+  - detection_playbook_id: det_owasp_a01_access_control_v1
+    playbook_name: 'Detection Profile: OWASP A01 Broken Access Control Detection and
+      Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.277658
+    efficiency_score: 184.12
+    rank: 40
+  - detection_playbook_id: det_ai_llm_supply_chain_v1
+    playbook_name: 'Detection Profile: AI/LLM Supply Chain and Dependency Security
+      Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.75
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.244992
+    efficiency_score: 184.12
+    rank: 41
+  - detection_playbook_id: det_xss_discovery_v1
+    playbook_name: 'Detection Profile: Cross-Site Scripting Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: xss
+    playbook_reliability: 0.9
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 3200
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.13338
+    efficiency_score: 160.0
+    rank: 42
+  - detection_playbook_id: det_ai_llm_prompt_injection_v1
+    playbook_name: 'Detection Profile: AI/LLM Prompt Injection and Jailbreak Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.228659
+    efficiency_score: 156.5
+    rank: 43
+  - detection_playbook_id: det_ai_llm_container_escape_v1
+    playbook_name: 'Detection Profile: AI/LLM Container Escape and Host Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.6
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.195994
+    efficiency_score: 156.5
+    rank: 44
+  - detection_playbook_id: det_owasp_a03_injection_v1
+    playbook_name: 'Detection Profile: OWASP A03 Injection Vulnerability Detection
+      and Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.138218
+    efficiency_score: 134.0
+    rank: 45
+  - detection_playbook_id: det_ai_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: AI/LLM Model Extraction and IP Theft Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.65
+    execution_time_minutes: 54
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.212326
+    efficiency_score: 115.93
+    rank: 46
+  enterprise_multi_property:
+  - detection_playbook_id: det_archetype_classifier_v1
+    playbook_name: 'Detection Profile: Archetype Classifier v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.131163
+    efficiency_score: 4280.0
+    rank: 1
+  - detection_playbook_id: det_vulnerability_predictor_v1
+    playbook_name: 'Detection Profile: Vulnerability Predictor v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.131163
+    efficiency_score: 4280.0
+    rank: 2
+  - detection_playbook_id: det_target_fingerprinter_v1
+    playbook_name: 'Detection Profile: Target Fingerprinter v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 2
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.131163
+    efficiency_score: 2140.0
+    rank: 3
+  - detection_playbook_id: det_business_logic_bypass_v1
+    playbook_name: 'Detection Profile: Complex Business Logic Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: business_logic
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6980
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.186912
+    efficiency_score: 498.57
+    rank: 4
+  - detection_playbook_id: det_iam_privilege_escalation_v1
+    playbook_name: 'Detection Profile: Identity & Access Management Privilege Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.185293
+    efficiency_score: 447.14
+    rank: 5
+  - detection_playbook_id: det_api_rce_chain_v1
+    playbook_name: 'Detection Profile: Chained API Vulnerabilities Leading to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: api_authz
+    playbook_reliability: 0.73
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5900
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.205772
+    efficiency_score: 421.43
+    rank: 6
+  - detection_playbook_id: det_database_exfiltration_v1
+    playbook_name: 'Detection Profile: Database Vulnerability Detection & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.77
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.091975
+    efficiency_score: 382.86
+    rank: 7
+  - detection_playbook_id: det_cryptographic_downgrade_v1
+    playbook_name: 'Detection Profile: Cryptographic Protocol Downgrade & Key Recovery'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.086229
+    efficiency_score: 370.0
+    rank: 8
+  - detection_playbook_id: det_vpn_ipsec_weakness_v1
+    playbook_name: 'Detection Profile: VPN & IPSec Protocol Weakness Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.62
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.079794
+    efficiency_score: 370.0
+    rank: 9
+  - detection_playbook_id: det_quantum_safe_bypass_v1
+    playbook_name: 'Detection Profile: Quantum-Ready Cryptanalysis & Downgrade'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.057915
+    efficiency_score: 370.0
+    rank: 10
+  - detection_playbook_id: det_graphql_attacks_v1
+    playbook_name: 'Detection Profile: GraphQL API Security Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 18
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.224998
+    efficiency_score: 347.78
+    rank: 11
+  - detection_playbook_id: det_sql_injection_v1
+    playbook_name: 'Detection Profile: SQL Injection Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 16
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.107503
+    efficiency_score: 335.0
+    rank: 12
+  - detection_playbook_id: det_sbom_vulnerability_chain_v1
+    playbook_name: 'Detection Profile: Vulnerability Chaining via SBOM Analysis'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.75
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.15015
+    efficiency_score: 318.57
+    rank: 13
+  - detection_playbook_id: det_supply_chain_attack_v1
+    playbook_name: 'Detection Profile: Supply Chain Assessment via Dependency Poisoning'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.126126
+    efficiency_score: 318.57
+    rank: 14
+  - detection_playbook_id: det_supply_chain_model_v1
+    playbook_name: 'Detection Profile: AI Model Supply Chain Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.118118
+    efficiency_score: 318.57
+    rank: 15
+  - detection_playbook_id: det_dns_cache_poisoning_v1
+    playbook_name: 'Detection Profile: DNS Infrastructure Assessment & Traffic Redirection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.118118
+    efficiency_score: 318.57
+    rank: 16
+  - detection_playbook_id: det_web_app_recon_v1
+    playbook_name: 'Detection Profile: Web Application Reconnaissance'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.224998
+    efficiency_score: 313.0
+    rank: 17
+  - detection_playbook_id: det_cloud_lateral_movement_v1
+    playbook_name: 'Detection Profile: AWS/Azure/GCP Lateral Movement & Privilege
+      Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.120383
+    efficiency_score: 305.71
+    rank: 18
+  - detection_playbook_id: det_mobile_compromise_v1
+    playbook_name: 'Detection Profile: Mobile Device Exposure Check & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.65
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.116789
+    efficiency_score: 305.71
+    rank: 19
+  - detection_playbook_id: det_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: LLM Model Extraction & Fine-Tuning Data Theft'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.113196
+    efficiency_score: 305.71
+    rank: 20
+  - detection_playbook_id: det_iot_botnet_v1
+    playbook_name: 'Detection Profile: IoT Device Exposure Check & Botnet Formation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.113196
+    efficiency_score: 305.71
+    rank: 21
+  - detection_playbook_id: det_container_escape_rce_v1
+    playbook_name: 'Detection Profile: Kubernetes Container Escape & Cluster Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.102415
+    efficiency_score: 305.71
+    rank: 22
+  - detection_playbook_id: det_llm_poisoning_v1
+    playbook_name: 'Detection Profile: LLM Training Data Poisoning & Prompt Injection
+      Chains'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.102415
+    efficiency_score: 305.71
+    rank: 23
+  - detection_playbook_id: det_zero_day_chain_v1
+    playbook_name: 'Detection Profile: Zero-Day Detection & Privilege Escalation Chain'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.55
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.098822
+    efficiency_score: 305.71
+    rank: 24
+  - detection_playbook_id: det_social_engineering_rce_v1
+    playbook_name: 'Detection Profile: Multi-Stage Social Engineering to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.095228
+    efficiency_score: 305.71
+    rank: 25
+  - detection_playbook_id: det_pixel_based_inference_v1
+    playbook_name: 'Detection Profile: AI Model Inference via Pixel & Timing Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.095228
+    efficiency_score: 305.71
+    rank: 26
+  - detection_playbook_id: det_dga_botnet_sim_v1
+    playbook_name: 'Detection Profile: DGA Botnet Simulation & Command-Control Channel'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.49
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.088041
+    efficiency_score: 305.71
+    rank: 27
+  - detection_playbook_id: det_industrial_scada_v1
+    playbook_name: 'Detection Profile: Industrial SCADA/ICS System Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.47
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.084448
+    efficiency_score: 305.71
+    rank: 28
+  - detection_playbook_id: det_5g_network_attack_v1
+    playbook_name: 'Detection Profile: 5G Network Vulnerability Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.46
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.082651
+    efficiency_score: 305.71
+    rank: 29
+  - detection_playbook_id: det_firmware_rce_v1
+    playbook_name: 'Detection Profile: Firmware Detection & Hardware-Level Code Execution'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.080854
+    efficiency_score: 305.71
+    rank: 30
+  - detection_playbook_id: det_hypervisor_escape_v1
+    playbook_name: 'Detection Profile: Hypervisor Escape & Host Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.080854
+    efficiency_score: 305.71
+    rank: 31
+  - detection_playbook_id: det_apt_campaign_sim_v1
+    playbook_name: 'Detection Profile: APT Campaign Simulation (Multi-Stage, Multi-Vector)'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.080854
+    efficiency_score: 305.71
+    rank: 32
+  - detection_playbook_id: det_zero_trust_bypass_v1
+    playbook_name: 'Detection Profile: Zero Trust Architecture Validation & Microsegmentation
+      Escape'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.080854
+    efficiency_score: 305.71
+    rank: 33
+  - detection_playbook_id: det_air_gapped_network_v1
+    playbook_name: 'Detection Profile: Air-Gapped Network Penetration & Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.080854
+    efficiency_score: 305.71
+    rank: 34
+  - detection_playbook_id: det_auth_bypass_v1
+    playbook_name: 'Detection Profile: Authentication and Authorization Validation
+      Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 22
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.185293
+    efficiency_score: 284.55
+    rank: 35
+  - detection_playbook_id: det_owasp_a02_crypto_v1
+    playbook_name: 'Detection Profile: OWASP A02 Cryptographic Failures Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.238234
+    efficiency_score: 231.85
+    rank: 36
+  - detection_playbook_id: det_owasp_a05_misconfig_v1
+    playbook_name: 'Detection Profile: OWASP A05 Security Misconfiguration Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.238234
+    efficiency_score: 231.85
+    rank: 37
+  - detection_playbook_id: det_owasp_a04_design_v1
+    playbook_name: 'Detection Profile: OWASP A04 Insecure Design Vulnerability Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.185293
+    efficiency_score: 231.85
+    rank: 38
+  - detection_playbook_id: det_ai_llm_vector_db_v1
+    playbook_name: 'Detection Profile: AI/LLM Vector Database and RAG System Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.63
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.075252
+    efficiency_score: 198.52
+    rank: 39
+  - detection_playbook_id: det_owasp_a01_access_control_v1
+    playbook_name: 'Detection Profile: OWASP A01 Broken Access Control Detection and
+      Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.224998
+    efficiency_score: 184.12
+    rank: 40
+  - detection_playbook_id: det_ai_llm_supply_chain_v1
+    playbook_name: 'Detection Profile: AI/LLM Supply Chain and Dependency Security
+      Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.75
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.198528
+    efficiency_score: 184.12
+    rank: 41
+  - detection_playbook_id: det_xss_discovery_v1
+    playbook_name: 'Detection Profile: Cross-Site Scripting Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: xss
+    playbook_reliability: 0.9
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 3200
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.1026
+    efficiency_score: 160.0
+    rank: 42
+  - detection_playbook_id: det_ai_llm_prompt_injection_v1
+    playbook_name: 'Detection Profile: AI/LLM Prompt Injection and Jailbreak Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.185293
+    efficiency_score: 156.5
+    rank: 43
+  - detection_playbook_id: det_ai_llm_container_escape_v1
+    playbook_name: 'Detection Profile: AI/LLM Container Escape and Host Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.6
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.158822
+    efficiency_score: 156.5
+    rank: 44
+  - detection_playbook_id: det_owasp_a03_injection_v1
+    playbook_name: 'Detection Profile: OWASP A03 Injection Vulnerability Detection
+      and Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.107503
+    efficiency_score: 134.0
+    rank: 45
+  - detection_playbook_id: det_ai_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: AI/LLM Model Extraction and IP Theft Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.65
+    execution_time_minutes: 54
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.172058
+    efficiency_score: 115.93
+    rank: 46
+  fintech_regulated:
+  - detection_playbook_id: det_archetype_classifier_v1
+    playbook_name: 'Detection Profile: Archetype Classifier v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.116907
+    efficiency_score: 4280.0
+    rank: 1
+  - detection_playbook_id: det_vulnerability_predictor_v1
+    playbook_name: 'Detection Profile: Vulnerability Predictor v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.116907
+    efficiency_score: 4280.0
+    rank: 2
+  - detection_playbook_id: det_target_fingerprinter_v1
+    playbook_name: 'Detection Profile: Target Fingerprinter v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 2
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.116907
+    efficiency_score: 2140.0
+    rank: 3
+  - detection_playbook_id: det_business_logic_bypass_v1
+    playbook_name: 'Detection Profile: Complex Business Logic Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: business_logic
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6980
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.214099
+    efficiency_score: 498.57
+    rank: 4
+  - detection_playbook_id: det_iam_privilege_escalation_v1
+    playbook_name: 'Detection Profile: Identity & Access Management Privilege Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.240486
+    efficiency_score: 447.14
+    rank: 5
+  - detection_playbook_id: det_api_rce_chain_v1
+    playbook_name: 'Detection Profile: Chained API Vulnerabilities Leading to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: api_authz
+    playbook_reliability: 0.73
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5900
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.2515
+    efficiency_score: 421.43
+    rank: 6
+  - detection_playbook_id: det_database_exfiltration_v1
+    playbook_name: 'Detection Profile: Database Vulnerability Detection & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.77
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.078836
+    efficiency_score: 382.86
+    rank: 7
+  - detection_playbook_id: det_cryptographic_downgrade_v1
+    playbook_name: 'Detection Profile: Cryptographic Protocol Downgrade & Key Recovery'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.120198
+    efficiency_score: 370.0
+    rank: 8
+  - detection_playbook_id: det_vpn_ipsec_weakness_v1
+    playbook_name: 'Detection Profile: VPN & IPSec Protocol Weakness Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.62
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.111228
+    efficiency_score: 370.0
+    rank: 9
+  - detection_playbook_id: det_quantum_safe_bypass_v1
+    playbook_name: 'Detection Profile: Quantum-Ready Cryptanalysis & Downgrade'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.08073
+    efficiency_score: 370.0
+    rank: 10
+  - detection_playbook_id: det_graphql_attacks_v1
+    playbook_name: 'Detection Profile: GraphQL API Security Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 18
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.292019
+    efficiency_score: 347.78
+    rank: 11
+  - detection_playbook_id: det_sql_injection_v1
+    playbook_name: 'Detection Profile: SQL Injection Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 16
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.092146
+    efficiency_score: 335.0
+    rank: 12
+  - detection_playbook_id: det_sbom_vulnerability_chain_v1
+    playbook_name: 'Detection Profile: Vulnerability Chaining via SBOM Analysis'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.75
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.132132
+    efficiency_score: 318.57
+    rank: 13
+  - detection_playbook_id: det_supply_chain_attack_v1
+    playbook_name: 'Detection Profile: Supply Chain Assessment via Dependency Poisoning'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.110991
+    efficiency_score: 318.57
+    rank: 14
+  - detection_playbook_id: det_supply_chain_model_v1
+    playbook_name: 'Detection Profile: AI Model Supply Chain Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.103944
+    efficiency_score: 318.57
+    rank: 15
+  - detection_playbook_id: det_dns_cache_poisoning_v1
+    playbook_name: 'Detection Profile: DNS Infrastructure Assessment & Traffic Redirection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.103944
+    efficiency_score: 318.57
+    rank: 16
+  - detection_playbook_id: det_web_app_recon_v1
+    playbook_name: 'Detection Profile: Web Application Reconnaissance'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.292019
+    efficiency_score: 313.0
+    rank: 17
+  - detection_playbook_id: det_cloud_lateral_movement_v1
+    playbook_name: 'Detection Profile: AWS/Azure/GCP Lateral Movement & Privilege
+      Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.107298
+    efficiency_score: 305.71
+    rank: 18
+  - detection_playbook_id: det_mobile_compromise_v1
+    playbook_name: 'Detection Profile: Mobile Device Exposure Check & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.65
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.104095
+    efficiency_score: 305.71
+    rank: 19
+  - detection_playbook_id: det_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: LLM Model Extraction & Fine-Tuning Data Theft'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.100892
+    efficiency_score: 305.71
+    rank: 20
+  - detection_playbook_id: det_iot_botnet_v1
+    playbook_name: 'Detection Profile: IoT Device Exposure Check & Botnet Formation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.100892
+    efficiency_score: 305.71
+    rank: 21
+  - detection_playbook_id: det_container_escape_rce_v1
+    playbook_name: 'Detection Profile: Kubernetes Container Escape & Cluster Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.091283
+    efficiency_score: 305.71
+    rank: 22
+  - detection_playbook_id: det_llm_poisoning_v1
+    playbook_name: 'Detection Profile: LLM Training Data Poisoning & Prompt Injection
+      Chains'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.091283
+    efficiency_score: 305.71
+    rank: 23
+  - detection_playbook_id: det_zero_day_chain_v1
+    playbook_name: 'Detection Profile: Zero-Day Detection & Privilege Escalation Chain'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.55
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.08808
+    efficiency_score: 305.71
+    rank: 24
+  - detection_playbook_id: det_social_engineering_rce_v1
+    playbook_name: 'Detection Profile: Multi-Stage Social Engineering to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.084877
+    efficiency_score: 305.71
+    rank: 25
+  - detection_playbook_id: det_pixel_based_inference_v1
+    playbook_name: 'Detection Profile: AI Model Inference via Pixel & Timing Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.084877
+    efficiency_score: 305.71
+    rank: 26
+  - detection_playbook_id: det_dga_botnet_sim_v1
+    playbook_name: 'Detection Profile: DGA Botnet Simulation & Command-Control Channel'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.49
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.078472
+    efficiency_score: 305.71
+    rank: 27
+  - detection_playbook_id: det_industrial_scada_v1
+    playbook_name: 'Detection Profile: Industrial SCADA/ICS System Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.47
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.075269
+    efficiency_score: 305.71
+    rank: 28
+  - detection_playbook_id: det_5g_network_attack_v1
+    playbook_name: 'Detection Profile: 5G Network Vulnerability Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.46
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.073667
+    efficiency_score: 305.71
+    rank: 29
+  - detection_playbook_id: det_firmware_rce_v1
+    playbook_name: 'Detection Profile: Firmware Detection & Hardware-Level Code Execution'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.072066
+    efficiency_score: 305.71
+    rank: 30
+  - detection_playbook_id: det_hypervisor_escape_v1
+    playbook_name: 'Detection Profile: Hypervisor Escape & Host Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.072066
+    efficiency_score: 305.71
+    rank: 31
+  - detection_playbook_id: det_apt_campaign_sim_v1
+    playbook_name: 'Detection Profile: APT Campaign Simulation (Multi-Stage, Multi-Vector)'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.072066
+    efficiency_score: 305.71
+    rank: 32
+  - detection_playbook_id: det_zero_trust_bypass_v1
+    playbook_name: 'Detection Profile: Zero Trust Architecture Validation & Microsegmentation
+      Escape'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.072066
+    efficiency_score: 305.71
+    rank: 33
+  - detection_playbook_id: det_air_gapped_network_v1
+    playbook_name: 'Detection Profile: Air-Gapped Network Penetration & Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.072066
+    efficiency_score: 305.71
+    rank: 34
+  - detection_playbook_id: det_auth_bypass_v1
+    playbook_name: 'Detection Profile: Authentication and Authorization Validation
+      Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 22
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.240486
+    efficiency_score: 284.55
+    rank: 35
+  - detection_playbook_id: det_owasp_a02_crypto_v1
+    playbook_name: 'Detection Profile: OWASP A02 Cryptographic Failures Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.309197
+    efficiency_score: 231.85
+    rank: 36
+  - detection_playbook_id: det_owasp_a05_misconfig_v1
+    playbook_name: 'Detection Profile: OWASP A05 Security Misconfiguration Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.309197
+    efficiency_score: 231.85
+    rank: 37
+  - detection_playbook_id: det_owasp_a04_design_v1
+    playbook_name: 'Detection Profile: OWASP A04 Insecure Design Vulnerability Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.240486
+    efficiency_score: 231.85
+    rank: 38
+  - detection_playbook_id: det_ai_llm_vector_db_v1
+    playbook_name: 'Detection Profile: AI/LLM Vector Database and RAG System Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.63
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.064502
+    efficiency_score: 198.52
+    rank: 39
+  - detection_playbook_id: det_owasp_a01_access_control_v1
+    playbook_name: 'Detection Profile: OWASP A01 Broken Access Control Detection and
+      Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.292019
+    efficiency_score: 184.12
+    rank: 40
+  - detection_playbook_id: det_ai_llm_supply_chain_v1
+    playbook_name: 'Detection Profile: AI/LLM Supply Chain and Dependency Security
+      Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.75
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.257664
+    efficiency_score: 184.12
+    rank: 41
+  - detection_playbook_id: det_xss_discovery_v1
+    playbook_name: 'Detection Profile: Cross-Site Scripting Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: xss
+    playbook_reliability: 0.9
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 3200
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.089775
+    efficiency_score: 160.0
+    rank: 42
+  - detection_playbook_id: det_ai_llm_prompt_injection_v1
+    playbook_name: 'Detection Profile: AI/LLM Prompt Injection and Jailbreak Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.240486
+    efficiency_score: 156.5
+    rank: 43
+  - detection_playbook_id: det_ai_llm_container_escape_v1
+    playbook_name: 'Detection Profile: AI/LLM Container Escape and Host Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.6
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.206131
+    efficiency_score: 156.5
+    rank: 44
+  - detection_playbook_id: det_owasp_a03_injection_v1
+    playbook_name: 'Detection Profile: OWASP A03 Injection Vulnerability Detection
+      and Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.092146
+    efficiency_score: 134.0
+    rank: 45
+  - detection_playbook_id: det_ai_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: AI/LLM Model Extraction and IP Theft Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.65
+    execution_time_minutes: 54
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.223309
+    efficiency_score: 115.93
+    rank: 46
+  consumer_ecommerce:
+  - detection_playbook_id: det_archetype_classifier_v1
+    playbook_name: 'Detection Profile: Archetype Classifier v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.16538
+    efficiency_score: 4280.0
+    rank: 1
+  - detection_playbook_id: det_vulnerability_predictor_v1
+    playbook_name: 'Detection Profile: Vulnerability Predictor v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 1
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.16538
+    efficiency_score: 4280.0
+    rank: 2
+  - detection_playbook_id: det_target_fingerprinter_v1
+    playbook_name: 'Detection Profile: Target Fingerprinter v1'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.73
+    execution_time_minutes: 2
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.16538
+    efficiency_score: 2140.0
+    rank: 3
+  - detection_playbook_id: det_business_logic_bypass_v1
+    playbook_name: 'Detection Profile: Complex Business Logic Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: business_logic
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6980
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.200506
+    efficiency_score: 498.57
+    rank: 4
+  - detection_playbook_id: det_iam_privilege_escalation_v1
+    playbook_name: 'Detection Profile: Identity & Access Management Privilege Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.173466
+    efficiency_score: 447.14
+    rank: 5
+  - detection_playbook_id: det_api_rce_chain_v1
+    playbook_name: 'Detection Profile: Chained API Vulnerabilities Leading to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: api_authz
+    playbook_reliability: 0.73
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5900
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.209583
+    efficiency_score: 421.43
+    rank: 6
+  - detection_playbook_id: det_database_exfiltration_v1
+    playbook_name: 'Detection Profile: Database Vulnerability Detection & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.77
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.128108
+    efficiency_score: 382.86
+    rank: 7
+  - detection_playbook_id: det_cryptographic_downgrade_v1
+    playbook_name: 'Detection Profile: Cryptographic Protocol Downgrade & Key Recovery'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.067938
+    efficiency_score: 370.0
+    rank: 8
+  - detection_playbook_id: det_vpn_ipsec_weakness_v1
+    playbook_name: 'Detection Profile: VPN & IPSec Protocol Weakness Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.62
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.062868
+    efficiency_score: 370.0
+    rank: 9
+  - detection_playbook_id: det_quantum_safe_bypass_v1
+    playbook_name: 'Detection Profile: Quantum-Ready Cryptanalysis & Downgrade'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: crypto
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 5180
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.04563
+    efficiency_score: 370.0
+    rank: 10
+  - detection_playbook_id: det_graphql_attacks_v1
+    playbook_name: 'Detection Profile: GraphQL API Security Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 18
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.210637
+    efficiency_score: 347.78
+    rank: 11
+  - detection_playbook_id: det_sql_injection_v1
+    playbook_name: 'Detection Profile: SQL Injection Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 16
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.149737
+    efficiency_score: 335.0
+    rank: 12
+  - detection_playbook_id: det_sbom_vulnerability_chain_v1
+    playbook_name: 'Detection Profile: Vulnerability Chaining via SBOM Analysis'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.75
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.186186
+    efficiency_score: 318.57
+    rank: 13
+  - detection_playbook_id: det_supply_chain_attack_v1
+    playbook_name: 'Detection Profile: Supply Chain Assessment via Dependency Poisoning'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.156396
+    efficiency_score: 318.57
+    rank: 14
+  - detection_playbook_id: det_supply_chain_model_v1
+    playbook_name: 'Detection Profile: AI Model Supply Chain Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.146466
+    efficiency_score: 318.57
+    rank: 15
+  - detection_playbook_id: det_dns_cache_poisoning_v1
+    playbook_name: 'Detection Profile: DNS Infrastructure Assessment & Traffic Redirection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: misconfiguration
+    playbook_reliability: 0.59
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4460
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.146466
+    efficiency_score: 318.57
+    rank: 16
+  - detection_playbook_id: det_web_app_recon_v1
+    playbook_name: 'Detection Profile: Web Application Reconnaissance'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.210637
+    efficiency_score: 313.0
+    rank: 17
+  - detection_playbook_id: det_cloud_lateral_movement_v1
+    playbook_name: 'Detection Profile: AWS/Azure/GCP Lateral Movement & Privilege
+      Escalation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.67
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.151787
+    efficiency_score: 305.71
+    rank: 18
+  - detection_playbook_id: det_mobile_compromise_v1
+    playbook_name: 'Detection Profile: Mobile Device Exposure Check & Data Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.65
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.147256
+    efficiency_score: 305.71
+    rank: 19
+  - detection_playbook_id: det_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: LLM Model Extraction & Fine-Tuning Data Theft'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.142725
+    efficiency_score: 305.71
+    rank: 20
+  - detection_playbook_id: det_iot_botnet_v1
+    playbook_name: 'Detection Profile: IoT Device Exposure Check & Botnet Formation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.63
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.142725
+    efficiency_score: 305.71
+    rank: 21
+  - detection_playbook_id: det_container_escape_rce_v1
+    playbook_name: 'Detection Profile: Kubernetes Container Escape & Cluster Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.129132
+    efficiency_score: 305.71
+    rank: 22
+  - detection_playbook_id: det_llm_poisoning_v1
+    playbook_name: 'Detection Profile: LLM Training Data Poisoning & Prompt Injection
+      Chains'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.57
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.129132
+    efficiency_score: 305.71
+    rank: 23
+  - detection_playbook_id: det_zero_day_chain_v1
+    playbook_name: 'Detection Profile: Zero-Day Detection & Privilege Escalation Chain'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.55
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.124601
+    efficiency_score: 305.71
+    rank: 24
+  - detection_playbook_id: det_social_engineering_rce_v1
+    playbook_name: 'Detection Profile: Multi-Stage Social Engineering to Execution
+      Exposure'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.12007
+    efficiency_score: 305.71
+    rank: 25
+  - detection_playbook_id: det_pixel_based_inference_v1
+    playbook_name: 'Detection Profile: AI Model Inference via Pixel & Timing Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.53
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.12007
+    efficiency_score: 305.71
+    rank: 26
+  - detection_playbook_id: det_dga_botnet_sim_v1
+    playbook_name: 'Detection Profile: DGA Botnet Simulation & Command-Control Channel'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.49
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.111009
+    efficiency_score: 305.71
+    rank: 27
+  - detection_playbook_id: det_industrial_scada_v1
+    playbook_name: 'Detection Profile: Industrial SCADA/ICS System Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.47
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.106478
+    efficiency_score: 305.71
+    rank: 28
+  - detection_playbook_id: det_5g_network_attack_v1
+    playbook_name: 'Detection Profile: 5G Network Vulnerability Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.46
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.104212
+    efficiency_score: 305.71
+    rank: 29
+  - detection_playbook_id: det_firmware_rce_v1
+    playbook_name: 'Detection Profile: Firmware Detection & Hardware-Level Code Execution'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.101947
+    efficiency_score: 305.71
+    rank: 30
+  - detection_playbook_id: det_hypervisor_escape_v1
+    playbook_name: 'Detection Profile: Hypervisor Escape & Host Takeover'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.101947
+    efficiency_score: 305.71
+    rank: 31
+  - detection_playbook_id: det_apt_campaign_sim_v1
+    playbook_name: 'Detection Profile: APT Campaign Simulation (Multi-Stage, Multi-Vector)'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.101947
+    efficiency_score: 305.71
+    rank: 32
+  - detection_playbook_id: det_zero_trust_bypass_v1
+    playbook_name: 'Detection Profile: Zero Trust Architecture Validation & Microsegmentation
+      Escape'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.101947
+    efficiency_score: 305.71
+    rank: 33
+  - detection_playbook_id: det_air_gapped_network_v1
+    playbook_name: 'Detection Profile: Air-Gapped Network Penetration & Exfiltration'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: information_disclosure
+    playbook_reliability: 0.45
+    execution_time_minutes: 14
+    expected_payout_if_found_usd: 4280
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.101947
+    efficiency_score: 305.71
+    rank: 34
+  - detection_playbook_id: det_auth_bypass_v1
+    playbook_name: 'Detection Profile: Authentication and Authorization Validation
+      Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 22
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.173466
+    efficiency_score: 284.55
+    rank: 35
+  - detection_playbook_id: det_owasp_a02_crypto_v1
+    playbook_name: 'Detection Profile: OWASP A02 Cryptographic Failures Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.223027
+    efficiency_score: 231.85
+    rank: 36
+  - detection_playbook_id: det_owasp_a05_misconfig_v1
+    playbook_name: 'Detection Profile: OWASP A05 Security Misconfiguration Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.9
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.223027
+    efficiency_score: 231.85
+    rank: 37
+  - detection_playbook_id: det_owasp_a04_design_v1
+    playbook_name: 'Detection Profile: OWASP A04 Insecure Design Vulnerability Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.173466
+    efficiency_score: 231.85
+    rank: 38
+  - detection_playbook_id: det_ai_llm_vector_db_v1
+    playbook_name: 'Detection Profile: AI/LLM Vector Database and RAG System Assessments'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.63
+    execution_time_minutes: 27
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.104816
+    efficiency_score: 198.52
+    rank: 39
+  - detection_playbook_id: det_owasp_a01_access_control_v1
+    playbook_name: 'Detection Profile: OWASP A01 Broken Access Control Detection and
+      Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.85
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.210637
+    efficiency_score: 184.12
+    rank: 40
+  - detection_playbook_id: det_ai_llm_supply_chain_v1
+    playbook_name: 'Detection Profile: AI/LLM Supply Chain and Dependency Security
+      Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.75
+    execution_time_minutes: 34
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.185856
+    efficiency_score: 184.12
+    rank: 41
+  - detection_playbook_id: det_xss_discovery_v1
+    playbook_name: 'Detection Profile: Cross-Site Scripting Discovery and Validation'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: xss
+    playbook_reliability: 0.9
+    execution_time_minutes: 20
+    expected_payout_if_found_usd: 3200
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.176985
+    efficiency_score: 160.0
+    rank: 42
+  - detection_playbook_id: det_ai_llm_prompt_injection_v1
+    playbook_name: 'Detection Profile: AI/LLM Prompt Injection and Jailbreak Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.7
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.173466
+    efficiency_score: 156.5
+    rank: 43
+  - detection_playbook_id: det_ai_llm_container_escape_v1
+    playbook_name: 'Detection Profile: AI/LLM Container Escape and Host Exposure Check'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.6
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.148685
+    efficiency_score: 156.5
+    rank: 44
+  - detection_playbook_id: det_owasp_a03_injection_v1
+    playbook_name: 'Detection Profile: OWASP A03 Injection Vulnerability Detection
+      and Detection'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: sql_injection
+    playbook_reliability: 0.9
+    execution_time_minutes: 40
+    expected_payout_if_found_usd: 5360
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.149737
+    efficiency_score: 134.0
+    rank: 45
+  - detection_playbook_id: det_ai_llm_model_extraction_v1
+    playbook_name: 'Detection Profile: AI/LLM Model Extraction and IP Theft Assessment'
+    playbook_type: detection_only
+    forbidden_operations_present: false
+    vulnerability_type: weak_auth
+    playbook_reliability: 0.65
+    execution_time_minutes: 54
+    expected_payout_if_found_usd: 6260
+    operational_notes: Detection and evidence collection only. Non-destructive and
+      within authorized scope.
+    detection_probability: 0.161075
+    efficiency_score: 115.93
+    rank: 46

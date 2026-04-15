@@ -29,6 +29,7 @@ class WorkflowStep:
     tool: str
     approval_required: bool = False
     params: dict[str, Any] = field(default_factory=dict)
+    requires_mode: str | None = None  # None = public, "user_account", "api_key", "hunter_account"
 
 
 @dataclass(frozen=True)
@@ -43,71 +44,71 @@ WORKFLOW_TEMPLATES: dict[str, WorkflowTemplate] = {
         name="workflow_recon_surface_map",
         description="Map domain attack surface through passive and low-noise active recon.",
         steps=(
-            WorkflowStep("passive_recon", "subfinder"),
-            WorkflowStep("passive_recon", "assetfinder"),
-            WorkflowStep("passive_recon", "amass"),
-            WorkflowStep("passive_recon", "gau"),
-            WorkflowStep("passive_recon", "waybackurls"),
-            WorkflowStep("active_recon", "dnsx"),
-            WorkflowStep("live_host_validation", "httpx"),
-            WorkflowStep("live_host_validation", "naabu"),
-            WorkflowStep("tech_fingerprint", "tlsx"),
-            WorkflowStep("prioritization_and_correlation", "k1_correlation"),
-            WorkflowStep("report_prep", "k1_priority_ranking"),
+            WorkflowStep("passive_recon", "subfinder", requires_mode=None),
+            WorkflowStep("passive_recon", "assetfinder", requires_mode=None),
+            WorkflowStep("passive_recon", "amass", requires_mode=None),
+            WorkflowStep("passive_recon", "gau", requires_mode=None),
+            WorkflowStep("passive_recon", "waybackurls", requires_mode=None),
+            WorkflowStep("active_recon", "dnsx", requires_mode=None),
+            WorkflowStep("live_host_validation", "httpx", requires_mode=None),
+            WorkflowStep("live_host_validation", "naabu", requires_mode=None),
+            WorkflowStep("tech_fingerprint", "tlsx", requires_mode=None),
+            WorkflowStep("prioritization_and_correlation", "k1_correlation", requires_mode=None),
+            WorkflowStep("report_prep", "k1_priority_ranking", requires_mode=None),
         ),
     ),
     "workflow_web_attack_surface": WorkflowTemplate(
         name="workflow_web_attack_surface",
         description="Discover crawlable endpoints and content-discovery surface for web targets.",
         steps=(
-            WorkflowStep("passive_recon", "subfinder"),
-            WorkflowStep("live_host_validation", "httpx"),
-            WorkflowStep("web_crawling", "katana"),
-            WorkflowStep("web_crawling", "hakrawler"),
-            WorkflowStep("web_crawling", "gospider"),
-            WorkflowStep("endpoint_discovery", "waymore"),
-            WorkflowStep("parameter_discovery", "ffuf", approval_required=True),
-            WorkflowStep("tech_fingerprint", "httpx"),
-            WorkflowStep("prioritization_and_correlation", "k1_correlation"),
-            WorkflowStep("report_prep", "k1_priority_ranking"),
+            WorkflowStep("passive_recon", "subfinder", requires_mode=None),
+            WorkflowStep("live_host_validation", "httpx", requires_mode=None),
+            WorkflowStep("web_crawling", "katana", requires_mode=None),
+            WorkflowStep("web_crawling", "hakrawler", requires_mode=None),
+            WorkflowStep("web_crawling", "gospider", requires_mode=None),
+            WorkflowStep("endpoint_discovery", "waymore", requires_mode="api_key"),
+            WorkflowStep("parameter_discovery", "ffuf", approval_required=True, requires_mode=None),
+            WorkflowStep("tech_fingerprint", "httpx", requires_mode=None),
+            WorkflowStep("prioritization_and_correlation", "k1_correlation", requires_mode=None),
+            WorkflowStep("report_prep", "k1_priority_ranking", requires_mode=None),
         ),
     ),
     "workflow_quick_vuln_sweep": WorkflowTemplate(
         name="workflow_quick_vuln_sweep",
         description="Fast vulnerability signal sweep over discovered web services.",
         steps=(
-            WorkflowStep("passive_recon", "subfinder"),
-            WorkflowStep("live_host_validation", "httpx"),
-            WorkflowStep("live_host_validation", "naabu"),
-            WorkflowStep("vuln_scan", "nuclei"),
-            WorkflowStep("vuln_scan", "nikto"),
-            WorkflowStep("vuln_scan", "dalfox", approval_required=True),
-            WorkflowStep("prioritization_and_correlation", "k1_correlation"),
-            WorkflowStep("report_prep", "k1_sandbox_critic"),
-            WorkflowStep("report_prep", "k1_priority_ranking"),
+            WorkflowStep("passive_recon", "subfinder", requires_mode=None),
+            WorkflowStep("live_host_validation", "httpx", requires_mode=None),
+            WorkflowStep("live_host_validation", "naabu", requires_mode=None),
+            WorkflowStep("vuln_scan", "nuclei", requires_mode=None),
+            WorkflowStep("vuln_scan", "nikto", requires_mode=None),
+            WorkflowStep("vuln_scan", "dalfox", approval_required=True, requires_mode=None),
+            WorkflowStep("prioritization_and_correlation", "k1_correlation", requires_mode=None),
+            WorkflowStep("report_prep", "k1_sandbox_critic", requires_mode=None),
+            WorkflowStep("report_prep", "k1_priority_ranking", requires_mode=None),
         ),
     ),
     "workflow_secret_exposure_scan": WorkflowTemplate(
         name="workflow_secret_exposure_scan",
         description="Scan repository/path targets for accidental secret exposure.",
         steps=(
-            WorkflowStep("secret_scan", "trufflehog"),
-            WorkflowStep("secret_scan", "gitleaks"),
-            WorkflowStep("secret_scan", "git-secrets"),
-            WorkflowStep("secret_scan", "gitrob_alt"),
-            WorkflowStep("prioritization_and_correlation", "k1_correlation"),
-            WorkflowStep("report_prep", "k1_priority_ranking"),
+            WorkflowStep("secret_scan", "trufflehog", requires_mode=None),
+            WorkflowStep("secret_scan", "gitleaks", requires_mode=None),
+            WorkflowStep("secret_scan", "git-secrets", requires_mode=None),
+            WorkflowStep("secret_scan", "gitrob_alt", requires_mode=None),
+            WorkflowStep("prioritization_and_correlation", "k1_correlation", requires_mode=None),
+            WorkflowStep("report_prep", "k1_priority_ranking", requires_mode=None),
         ),
     ),
     "workflow_priority_target_ranking": WorkflowTemplate(
         name="workflow_priority_target_ranking",
         description="Produce a conservative target-priority output from recon signals.",
         steps=(
-            WorkflowStep("passive_recon", "subfinder"),
-            WorkflowStep("passive_recon", "assetfinder"),
-            WorkflowStep("live_host_validation", "httpx"),
-            WorkflowStep("prioritization_and_correlation", "k1_correlation"),
-            WorkflowStep("report_prep", "k1_priority_ranking"),
+            WorkflowStep("passive_recon", "subfinder", requires_mode=None),
+            WorkflowStep("passive_recon", "assetfinder", requires_mode=None),
+            WorkflowStep("live_host_validation", "httpx", requires_mode=None),
+            WorkflowStep("prioritization_and_correlation", "k1_correlation", requires_mode=None),
+            WorkflowStep("report_prep", "k1_priority_ranking", requires_mode=None),
         ),
     ),
 }
@@ -142,6 +143,7 @@ def build_phase_specs_for_template(
     enable_steps: list[str] | None = None,
     disable_steps: list[str] | None = None,
     dry_run: bool = False,
+    available_modes: list[str] | None = None,
 ) -> tuple[list[PhaseSeedSpec], dict[str, Any]]:
     template = WORKFLOW_TEMPLATES.get(template_name)
     if template is None:
@@ -150,17 +152,24 @@ def build_phase_specs_for_template(
     enforce_target_in_scope(target, scope_policy)
     enabled_set = {step.strip().lower() for step in (enable_steps or []) if step.strip()}
     disabled_set = {step.strip().lower() for step in (disable_steps or []) if step.strip()}
+    available_modes_set = set(available_modes or ["unauthenticated"])
 
     phase_specs: list[PhaseSeedSpec] = []
     current_stage: str | None = None
     stage_dependency_anchor: str | None = None
     last_stage_anchor: str | None = None
+    skipped_steps: list[str] = []
 
     for idx, step in enumerate(template.steps, start=1):
         step_name = f"{step.stage}:{step.tool}".lower()
         if enabled_set and step_name not in enabled_set and step.tool not in enabled_set:
             continue
         if step_name in disabled_set or step.tool in disabled_set:
+            continue
+
+        # Check if step's credential requirement is available
+        if step.requires_mode and step.requires_mode not in available_modes_set:
+            skipped_steps.append(f"{step.tool} (requires {step.requires_mode})")
             continue
 
         catalog_entry = tool_entry_or_none(step.tool)
@@ -206,6 +215,8 @@ def build_phase_specs_for_template(
         "dry_run": dry_run,
         "steps_total": len(template.steps),
         "steps_enabled": len(phase_specs),
+        "steps_skipped_due_to_credentials": skipped_steps,
+        "available_scanning_modes": list(available_modes_set),
         "stage_order": STAGES,
     }
     return phase_specs, metadata

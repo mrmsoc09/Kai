@@ -497,42 +497,88 @@ class VaultClient:
         except Exception as e:
             return (False, f"Validation error: {str(e)}")
 
-    def sync_secrets_to_env(self, secret_prefix: str = "secret/data/kaison") -> int:
+    def sync_secrets_to_env(self, secret_prefix: str = "k1") -> int:
         """
-        Load all secrets from Vault and set as environment variables.
+        Load K1 Vault secrets and expose them as process env vars.
 
         Args:
-            secret_prefix: Prefix to scan (default: secret/data/kaison)
+            secret_prefix: Root prefix in KV v2 mount (default: "k1")
 
         Returns:
-            Number of secrets synced
+            Number of env vars populated from Vault.
         """
-        try:
-            secrets = self.list_secrets(secret_prefix)
-            synced = 0
+        if not self.client:
+            self._connect()
+        if not self.client:
+            return 0
 
-            for secret_name in secrets:
-                full_path = f"{secret_prefix}/{secret_name}".replace("//", "/")
+        service_to_env = {
+            "openai": "OPENAI_API_KEY",
+            "anthropicai": "ANTHROPIC_API_KEY",
+            "geminiai": "GOOGLE_API_KEY",
+            "google_developer": "GOOGLE_API_KEY",
+            "github_developer": "GITHUB_TOKEN",
+            "otx_alienvault": "OTX_API_KEY",
+            "nvd_nist": "NVD_API_KEY",
+            "projectdiscovery": "PROJECTDISCOVERY_API_KEY",
+        }
+
+        categories = ("ai", "osint", "security", "bugbounty", "search", "communication", "developer", "other")
+        preferred_fields = ("key", "value", "api_key", "token", "secret")
+
+        def _env_name_for_service(service: str) -> str:
+            if service in service_to_env:
+                return service_to_env[service]
+            normalized = "".join(ch if ch.isalnum() else "_" for ch in service).strip("_").upper()
+            if not normalized:
+                return ""
+            if normalized.endswith(("_KEY", "_TOKEN", "_SECRET", "_PASSWORD")):
+                return normalized
+            return f"{normalized}_API_KEY"
+
+        def _pick_value(secret_data: Dict[str, Any]) -> Optional[str]:
+            for field in preferred_fields:
+                value = secret_data.get(field)
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+            for value in secret_data.values():
+                if isinstance(value, str) and value.strip():
+                    return value.strip()
+            return None
+
+        synced = 0
+        for category in categories:
+            category_path = f"{secret_prefix}/{category}".strip("/")
+            try:
+                response = self.client.secrets.kv.v2.list_secrets(path=category_path)
+                services = response.get("data", {}).get("keys", []) or []
+            except Exception:
+                continue
+
+            for service_raw in services:
+                service = str(service_raw).rstrip("/")
+                if not service:
+                    continue
+                full_path = f"{category_path}/{service}".strip("/")
                 try:
                     secret_data = self.read_secret(full_path)
+                except Exception as exc:
+                    logger.warning(f"Failed to read Vault secret {full_path}: {exc}")
+                    continue
 
-                    # Set each field as env var
-                    for key, value in secret_data.items():
-                        # Convert secret name to env var format
-                        env_key = f"{secret_name}_{key}".upper()
-                        # Don't override existing env vars
-                        if env_key not in os.environ:
-                            os.environ[env_key] = value
-                            synced += 1
-                except Exception as e:
-                    logger.warning(f"Failed to sync {full_path}: {str(e)}")
+                value = _pick_value(secret_data or {})
+                if not value:
+                    continue
 
-            logger.info(f"Synced {synced} secrets to environment")
-            return synced
+                env_key = _env_name_for_service(service)
+                if not env_key or env_key in os.environ:
+                    continue
 
-        except Exception as e:
-            logger.error(f"Failed to sync secrets: {str(e)}")
-            return 0
+                os.environ[env_key] = value
+                synced += 1
+
+        logger.info(f"Synced {synced} secrets to environment")
+        return synced
 
     def get_secret_audit_log(
         self,

@@ -1,0 +1,66 @@
+playbook:
+  metadata:
+    name: 'Detection Profile: Cross-Site Scripting Discovery and Validation (Optimized
+      Detection v2)'
+    id: det_xss_discovery_v1_optimized_v2
+    version: '2.0'
+    base_detection_playbook_id: det_xss_discovery_v1
+    operation_type: detection_only
+    scope_lock_required: true
+    non_destructive_only: true
+  guardrails:
+    forbidden_operations:
+    - exploitation
+    - persistence
+    - destruction
+    - evasion
+    - lateral_movement
+    required_preconditions:
+    - authorized_scope_verified
+    - opportunity_active
+    - safe_mode_enabled
+    reporting_mode: proof_of_concept_evidence_only
+  optimization_baseline:
+    baseline_execution_minutes: 20
+    optimized_execution_minutes: 7
+    baseline_network_requests: 440
+    optimized_network_requests: 211
+    time_reduction_percent: 65.0
+    noise_reduction_percent: 52.05
+  target_aware_scanning_strategy:
+    early_stage_saas:
+      detection_patterns:
+      - dom_xss_sink_walk
+      - stored_xss_user_content_scan
+      - reflected_xss_parameter_sweep
+      scan_depth: thorough
+      timeout_seconds: 17
+      max_requests: 128
+      expected_detection_probability: 0.2101
+    enterprise_multi_property:
+      detection_patterns:
+      - api_rendered_xss_check
+      - csp_gap_validation
+      - waf_safe_xss_probe
+      scan_depth: moderate
+      timeout_seconds: 26
+      max_requests: 112
+      expected_detection_probability: 0.1901
+    fintech_regulated:
+      detection_patterns:
+      - high-assurance_dom_xss_check
+      - trusted-template_reflection_check
+      scan_depth: deep
+      timeout_seconds: 38
+      max_requests: 96
+      expected_detection_probability: 0.1801
+  execution_logic:
+    selection_rule: Classify target archetype, then execute only listed high-frequency
+      detection patterns.
+    batching: Group compatible endpoint checks by route to reduce duplicate requests.
+    early_stop: Stop when confidence threshold reached for vulnerability reportability.
+    fallback: If archetype unknown, use early_stage_saas patterns with enterprise
+      timeout.
+  optimization_rationale: Focuses scanning effort on high-frequency-detection vectors
+    and removes low-probability pattern sweeps to reduce time and network noise while
+    preserving finding quality.

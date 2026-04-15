@@ -1,0 +1,63 @@
+playbook:
+  metadata:
+    id: active-fingerprinting
+    name: Active Fingerprinting
+    cluster: RECONNAISSANCE
+    complexity: MEDIUM
+    version: '1.0'
+    status: skeleton
+  objective:
+    primary: Enumerate services and versions on target
+    secondary:
+    - Port scanning
+    - Service identification
+    - Version detection
+  inputs_and_sources:
+    input_source: passive-recon
+    required_inputs:
+    - target_domain
+    - public_intelligence
+  outputs_and_targets:
+    primary_output_target: vuln-discovery
+    alternative_targets: []
+    fallback_target: passive-recon
+  cve_bindings:
+    count: 5
+    cves:
+    - CVE-2024-8765
+    - CVE-2024-5432
+    - CVE-2023-49070
+    - CVE-2023-50299
+    - CVE-2024-20942
+    note: Each binding is from cve_knowledge_expanded.yaml
+  persona_assignments:
+    count: 2
+    personas:
+    - rce_hunter
+    - threat_intelligence_integrator
+    note: Each persona from persona_cve_mapping.yaml
+  attack_sequence:
+    step_1:
+      title: Execute port scan
+      persona: rce_hunter
+    step_2:
+      title: Identify services
+      persona: threat_intelligence_integrator
+    step_3:
+      title: Determine versions
+      persona: rce_hunter
+  decision_branches:
+  - condition: If step succeeds
+    action: Call vuln-discovery
+  - condition: If step fails
+    action: Call passive-recon
+  - condition: If detected
+    action: Call incident-responder-evasion
+  cross_link_graph:
+    calls_these_playbooks:
+    - vuln-discovery
+    called_by_these_playbooks:
+    - passive-recon
+    can_pivot_to:
+    - passive-recon
+  notes: 'SKELETON: Logic implementation pending. Cross-linking complete.'

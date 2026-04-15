@@ -59,6 +59,151 @@ compose_cmd() {
     return 1
 }
 
+cleanup_compose_stale_containers() {
+    local service="$1"
+    local canonical="k1_${service}"
+    docker rm -f "${canonical}" >/dev/null 2>&1 || true
+    while IFS= read -r container_name; do
+        [[ -z "${container_name}" ]] && continue
+        if [[ "${container_name}" == *_k1_"${service}" ]]; then
+            docker rm -f "${container_name}" >/dev/null 2>&1 || true
+        fi
+    done < <(docker ps -a --format '{{.Names}}' 2>/dev/null || true)
+}
+
+ensure_postgres_running_cli() {
+    local env_file="$1"
+    local name="k1-db"
+    local host_bind host_port postgres_image
+    host_bind="$(read_env_value K1_POSTGRES_HOST_BIND 127.0.0.1 "${env_file}")"
+    host_port="$(read_env_value K1_POSTGRES_HOST_PORT 5432 "${env_file}")"
+    postgres_image="$(read_env_value K1_POSTGRES_IMAGE postgres:16-alpine "${env_file}")"
+
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        return 0
+    fi
+
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        docker start "${name}" >/dev/null 2>&1 || true
+    fi
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        return 0
+    fi
+
+    docker rm -f "${name}" >/dev/null 2>&1 || true
+    docker run -d \
+        --name "${name}" \
+        --restart unless-stopped \
+        -e POSTGRES_USER=k1 \
+        -e POSTGRES_PASSWORD=k1_pass_secure \
+        -e POSTGRES_DB=k1 \
+        -p "${host_bind}:${host_port}:5432" \
+        -v postgres_data:/var/lib/postgresql/data \
+        "${postgres_image}" >/dev/null
+}
+
+ensure_redis_running_cli() {
+    local env_file="$1"
+    local name="k1-cache"
+    local host_bind host_port
+    host_bind="$(read_env_value K1_REDIS_HOST_BIND 127.0.0.1 "${env_file}")"
+    host_port="$(read_env_value K1_REDIS_HOST_PORT 6379 "${env_file}")"
+
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        return 0
+    fi
+
+    if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        docker start "${name}" >/dev/null 2>&1 || true
+    fi
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "${name}"; then
+        return 0
+    fi
+
+    docker rm -f "${name}" >/dev/null 2>&1 || true
+    docker run -d \
+        --name "${name}" \
+        --restart unless-stopped \
+        -p "${host_bind}:${host_port}:6379" \
+        redis:7-alpine >/dev/null
+}
+
+fallback_start_core_services() {
+    local env_file="$1"
+    shift
+    local services=("$@")
+    local service=""
+    for service in "${services[@]}"; do
+        case "${service}" in
+            postgres)
+                ensure_postgres_running_cli "${env_file}" || return 1
+                ;;
+            redis)
+                ensure_redis_running_cli "${env_file}" || return 1
+                ;;
+            vault)
+                if is_container_running "k1-vault"; then
+                    continue
+                fi
+                docker start k1-vault >/dev/null 2>&1 || return 1
+                ;;
+            ollama)
+                if is_container_running "k1_ollama"; then
+                    continue
+                fi
+                docker start k1_ollama >/dev/null 2>&1 || return 1
+                ;;
+            *)
+                warn "No direct Docker fallback implemented for service '${service}'."
+                return 1
+                ;;
+        esac
+    done
+    return 0
+}
+
+compose_up_with_retry() {
+    local compose_bin="$1"
+    local env_file="$2"
+    shift 2
+    local services=("$@")
+    local output=""
+    if output="$(${compose_bin} -f docker-compose.yml -f docker-compose.dev.yml up -d --remove-orphans "${services[@]}" 2>&1)"; then
+        [[ -n "${output}" ]] && echo "${output}"
+        return 0
+    fi
+
+    if [[ "${output}" == *"ContainerConfig"* ]]; then
+        warn "Detected docker-compose recreate bug (ContainerConfig). Cleaning stale containers and retrying once."
+        for service in "${services[@]}"; do
+            ${compose_bin} -f docker-compose.yml -f docker-compose.dev.yml rm -sf "${service}" >/dev/null 2>&1 || true
+            while IFS= read -r cid; do
+                [[ -z "${cid}" ]] && continue
+                docker rm -f "${cid}" >/dev/null 2>&1 || true
+            done < <(${compose_bin} -f docker-compose.yml -f docker-compose.dev.yml ps -aq "${service}" 2>/dev/null || true)
+            cleanup_compose_stale_containers "${service}"
+        done
+        local retry_output=""
+        if retry_output="$(${compose_bin} -f docker-compose.yml -f docker-compose.dev.yml up -d --remove-orphans "${services[@]}" 2>&1)"; then
+            [[ -n "${retry_output}" ]] && echo "${retry_output}"
+            return 0
+        fi
+
+        if [[ "${retry_output}" == *"ContainerConfig"* ]]; then
+            warn "docker-compose retry still failed with ContainerConfig; falling back to direct Docker startup for core services."
+            if fallback_start_core_services "${env_file}" "${services[@]}"; then
+                return 0
+            fi
+        else
+            echo "${retry_output}" >&2
+        fi
+        return 1
+    fi
+
+    echo "${output}" >&2
+    return 1
+}
+
 can_use_apt() {
     has_cmd apt-get
 }
@@ -145,6 +290,159 @@ read_env_bool() {
     else
         echo "false"
     fi
+}
+
+sync_vault_api_keys_runtime() {
+    local env_file="$1"
+    local secret_backend vault_host_bind vault_host_port vault_addr vault_token runtime_env_file explicit_vault_addr
+    secret_backend="$(read_env_value K1_SECRET_BACKEND env "${env_file}" | tr '[:upper:]' '[:lower:]')"
+    if [[ "${secret_backend}" != "vault" ]]; then
+        return 0
+    fi
+
+    explicit_vault_addr="$(read_env_value VAULT_ADDR "" "${env_file}")"
+    vault_host_bind="$(read_env_value K1_VAULT_HOST_BIND 127.0.0.1 "${env_file}")"
+    vault_host_port="$(read_env_value K1_VAULT_HOST_PORT 8200 "${env_file}")"
+    if [[ "${vault_host_bind}" == "0.0.0.0" || "${vault_host_bind}" == "::" ]]; then
+        vault_host_bind="127.0.0.1"
+    fi
+    if [[ -n "${explicit_vault_addr}" ]]; then
+        vault_addr="${explicit_vault_addr}"
+    elif [[ -n "${VAULT_ADDR:-}" ]]; then
+        vault_addr="${VAULT_ADDR}"
+    else
+        vault_addr="http://${vault_host_bind}:${vault_host_port}"
+    fi
+    vault_token="$(read_env_value VAULT_TOKEN "" "${env_file}")"
+    if [[ -z "${vault_token}" && -n "${VAULT_TOKEN:-}" ]]; then
+        vault_token="${VAULT_TOKEN}"
+    fi
+    runtime_env_file="runtime/.env.vault.synced"
+
+    if [[ -z "${vault_token}" ]]; then
+        warn "K1_SECRET_BACKEND=vault but VAULT_TOKEN is missing; skipping Vault API key sync."
+        return 0
+    fi
+
+    mkdir -p runtime
+    if [[ -f "${runtime_env_file}" ]]; then
+        while IFS='=' read -r existing_key _; do
+            [[ -z "${existing_key}" ]] && continue
+            [[ "${existing_key}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
+            unset "${existing_key}" || true
+        done < "${runtime_env_file}"
+    fi
+    : > "${runtime_env_file}"
+    chmod 600 "${runtime_env_file}"
+
+    local synced_count=0
+    if ! synced_count="$(python3 - "${vault_addr}" "${vault_token}" "${runtime_env_file}" <<'PY'
+import os
+import re
+import shlex
+import sys
+
+try:
+    import hvac
+    from hvac.exceptions import InvalidPath
+except Exception:
+    print("0")
+    raise SystemExit(0)
+
+vault_addr = sys.argv[1]
+vault_token = sys.argv[2]
+output_path = sys.argv[3]
+
+service_to_env = {
+    "openai": "OPENAI_API_KEY",
+    "anthropicai": "ANTHROPIC_API_KEY",
+    "geminiai": "GOOGLE_API_KEY",
+    "google_developer": "GOOGLE_API_KEY",
+    "github_developer": "GITHUB_TOKEN",
+    "otx_alienvault": "OTX_API_KEY",
+    "nvd_nist": "NVD_API_KEY",
+    "projectdiscovery": "PROJECTDISCOVERY_API_KEY",
+}
+
+preferred_fields = ("key", "value", "api_key", "token", "secret")
+
+def env_name_for_service(service: str) -> str:
+    if service in service_to_env:
+        return service_to_env[service]
+    normalized = re.sub(r"[^A-Za-z0-9]+", "_", service).strip("_").upper()
+    if not normalized:
+        return ""
+    if normalized.endswith(("_KEY", "_TOKEN", "_SECRET", "_PASSWORD")):
+        return normalized
+    return f"{normalized}_API_KEY"
+
+def pick_secret_value(payload: dict) -> str:
+    for field in preferred_fields:
+        value = payload.get(field)
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    for value in payload.values():
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return ""
+
+client = hvac.Client(url=vault_addr, token=vault_token)
+if not client.is_authenticated():
+    print("0")
+    raise SystemExit(0)
+
+mount_point = "secret"
+categories = ["ai", "osint", "security", "bugbounty", "search", "communication", "developer", "other"]
+exported: dict[str, str] = {}
+
+for category in categories:
+    prefix = f"k1/{category}"
+    try:
+        listing = client.secrets.kv.v2.list_secrets(path=prefix, mount_point=mount_point)
+        services = listing.get("data", {}).get("keys", []) or []
+    except Exception:
+        continue
+    for service in services:
+        service = service.rstrip("/")
+        if not service:
+            continue
+        path = f"{prefix}/{service}"
+        try:
+            response = client.secrets.kv.v2.read_secret_version(path=path, mount_point=mount_point)
+            payload = response.get("data", {}).get("data", {}) or {}
+        except InvalidPath:
+            continue
+        except Exception:
+            continue
+        value = pick_secret_value(payload)
+        if not value:
+            continue
+        env_name = env_name_for_service(service)
+        if not env_name:
+            continue
+        exported.setdefault(env_name, value)
+
+with open(output_path, "w", encoding="utf-8") as fh:
+    for key in sorted(exported):
+        fh.write(f"{key}={shlex.quote(exported[key])}\n")
+
+print(str(len(exported)))
+PY
+)"; then
+        warn "Vault API key sync failed; continuing without synced runtime key file."
+        return 0
+    fi
+
+    if [[ -s "${runtime_env_file}" ]]; then
+        set -a
+        # shellcheck disable=SC1090
+        source "${runtime_env_file}"
+        set +a
+    fi
+
+    export VAULT_ADDR="${vault_addr}"
+    export VAULT_TOKEN="${vault_token}"
+    info "Vault API keys synced for bootstrap runtime (${synced_count} keys)."
 }
 
 readiness_line() {
@@ -557,12 +855,54 @@ for tool in payload.get("tools", []):
     record = {
         "name": str(tool.get("name") or "").strip(),
         "mode": str(tool.get("execution_mode") or "native").strip().lower(),
+        "binary": str(tool.get("binary_path") or "").strip(),
         "verify": tool.get("install_verification_cmd") or [],
         "image": str(tool.get("container_image") or "").strip(),
     }
     if record["name"]:
         print(json.dumps(record))
 PY
+}
+
+tool_is_available() {
+    local verify_json="$1"
+    local binary_path="$2"
+    local tool_name="$3"
+
+    if [[ "${tool_name}" == "owasp-zap" ]]; then
+        if has_cmd "zaproxy" || [[ -x "/usr/share/zaproxy/zap.sh" ]]; then
+            return 0
+        fi
+        if has_cmd "zap-cli"; then
+            local zap_output=""
+            zap_output="$(zap-cli --version 2>&1 || true)"
+            if [[ "${zap_output}" == *"not automatically installed"* || "${zap_output}" == *"docker not available"* ]]; then
+                return 1
+            fi
+            if zap-cli --version >/dev/null 2>&1; then
+                return 0
+            fi
+        fi
+        return 1
+    fi
+
+    if run_verify_cmd "${verify_json}" >/dev/null 2>&1; then
+        return 0
+    fi
+    if [[ -n "${binary_path}" ]] && has_cmd "${binary_path}"; then
+        return 0
+    fi
+    if has_cmd "${tool_name}"; then
+        return 0
+    fi
+    case "${tool_name}" in
+        faraday-community)
+            if [[ -d "${LOCAL_TOOLS_SRC_DIR}/faraday/.git" ]]; then
+                return 0
+            fi
+            ;;
+    esac
+    return 1
 }
 
 # Source Wave 7 tool bootstrap functions
@@ -760,8 +1100,14 @@ if [[ -n "${COMPOSE_BIN}" ]]; then
 
     info "Checking Docker authentication..."
     if ! bash "${REPO_ROOT}/scripts/docker_auth_check.sh"; then
-        error "Docker authentication check failed."
-        exit 1
+        STRICT_DOCKER_AUTH="$(read_env_bool K1_STRICT_DOCKER_AUTH false .env)"
+        ENVIRONMENT_NAME="$(read_env_value ENVIRONMENT development .env | tr '[:upper:]' '[:lower:]')"
+        if [[ "${STRICT_DOCKER_AUTH}" == "true" || "${ENVIRONMENT_NAME}" == "production" ]]; then
+            error "Docker authentication check failed."
+            exit 1
+        fi
+        warn "Docker authentication check failed; continuing in non-production mode."
+        warn "If image pulls fail, authenticate with Docker and rerun ./bootstrap.sh."
     fi
 
     echo "[k1] Building sandbox image..."
@@ -772,7 +1118,9 @@ if [[ -n "${COMPOSE_BIN}" ]]; then
         warn "Payload execution isolation disabled."
     fi
 
-    ${COMPOSE_BIN} -f docker-compose.yml -f docker-compose.dev.yml up -d --remove-orphans "${INFRA_SERVICES[@]}"
+    if ! compose_up_with_retry "${COMPOSE_BIN}" .env "${INFRA_SERVICES[@]}"; then
+        warn "Docker compose service startup failed. Continuing readiness checks against currently running services."
+    fi
     if wait_for_port 127.0.0.1 5432 60 && wait_for_port 127.0.0.1 6379 45; then
         if [[ " ${INFRA_SERVICES[*]} " == *" vault "* ]]; then
             VAULT_HOST_BIND="$(read_env_value K1_VAULT_HOST_BIND 127.0.0.1 .env)"
@@ -823,6 +1171,9 @@ else
     exit 1
 fi
 
+section "Vault API key synchronization"
+sync_vault_api_keys_runtime .env
+
 section "External tool verification + installation"
 REQUIRE_EXTERNAL_TOOLS="$(read_env_bool K1_BOOTSTRAP_REQUIRE_EXTERNAL_TOOLS true .env)"
 mapfile -t TOOL_RECORDS < <(load_enabled_tools)
@@ -836,6 +1187,7 @@ mkdir -p "${LOCAL_BIN_DIR}"
 for record in "${TOOL_RECORDS[@]}"; do
     name="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["name"])' "${record}")"
     mode="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["mode"])' "${record}")"
+    binary_path="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1]).get("binary",""))' "${record}")"
     verify_json="$(python3 -c 'import json,sys; print(json.dumps(json.loads(sys.argv[1])["verify"]))' "${record}")"
     image="$(python3 -c 'import json,sys; print(json.loads(sys.argv[1])["image"])' "${record}")"
 
@@ -848,8 +1200,7 @@ for record in "${TOOL_RECORDS[@]}"; do
         continue
     fi
 
-    # Try both JSON-based verification and simple command check
-    if run_verify_cmd "${verify_json}" >/dev/null 2>&1 || has_cmd "${name}"; then
+    if tool_is_available "${verify_json}" "${binary_path}" "${name}"; then
         info "Tool ${name}: already available"
         continue
     fi
@@ -860,28 +1211,31 @@ for record in "${TOOL_RECORDS[@]}"; do
         # Try sovereign installer first
         if install_native_tool "${name}" >/dev/null 2>&1; then
             # Re-verify after install (PATH may have updated)
-            if run_verify_cmd "${verify_json}" >/dev/null 2>&1; then
+            if tool_is_available "${verify_json}" "${binary_path}" "${name}"; then
                 info "Tool ${name}: installed successfully"
                 continue
-            else
-                # Installation succeeded but verification failed - might be PATH issue
-                # Give it another chance with explicit PATH
-                if command -v "${name}" >/dev/null 2>&1 || has_cmd "${name}"; then
-                    info "Tool ${name}: installed successfully (post-install verification passed)"
-                    continue
-                fi
             fi
         fi
 
         # Try local download method
         if install_local_download_tool "${name}" >/dev/null 2>&1; then
-            if run_verify_cmd "${verify_json}" >/dev/null 2>&1; then
+            if tool_is_available "${verify_json}" "${binary_path}" "${name}"; then
                 info "Tool ${name}: installed successfully (local download source)"
                 continue
             fi
         fi
 
         TOOL_ERRORS+=("${name}: auto-install failed; install manually and re-run bootstrap.")
+        continue
+    fi
+
+    if [[ "${mode}" == "integration_hook" && "${name}" == "faraday-community" ]]; then
+        warn "Tool ${name}: integration hook missing local source; attempting install"
+        if install_native_tool "${name}" >/dev/null 2>&1 && [[ -d "${LOCAL_TOOLS_SRC_DIR}/faraday/.git" ]]; then
+            info "Tool ${name}: source prepared at ${LOCAL_TOOLS_SRC_DIR}/faraday"
+            continue
+        fi
+        warn "Tool ${name}: optional mode not installed"
         continue
     fi
 

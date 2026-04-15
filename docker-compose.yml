@@ -26,12 +26,14 @@ services:
 
   # --- Data Layer ---
   postgres:
-    image: postgres:15-alpine
+    image: ${K1_POSTGRES_IMAGE:-postgres:16-alpine}
     container_name: k1-db
     environment:
       - POSTGRES_USER=k1
       - POSTGRES_PASSWORD=k1_pass_secure
       - POSTGRES_DB=k1
+    ports:
+      - "${K1_POSTGRES_HOST_BIND:-127.0.0.1}:${K1_POSTGRES_HOST_PORT:-5432}:5432"
     networks:
       - k1-net
     volumes:
@@ -40,6 +42,8 @@ services:
   redis:
     image: redis:7-alpine
     container_name: k1-cache
+    ports:
+      - "${K1_REDIS_HOST_BIND:-127.0.0.1}:${K1_REDIS_HOST_PORT:-6379}:6379"
     networks:
       - k1-net
 

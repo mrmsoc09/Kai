@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import hashlib
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from apps.backend.src.core.protocol import KaisonResult, KaisonResultMetadata
+from apps.backend.src.core.protocol import (
+    FindingType,
+    KaisonFinding,
+    KaisonResult,
+    KaisonResultMetadata,
+    Severity,
+)
 from apps.backend.src.core.scope_guardrails import (
     audit_scope_decision,
     evaluate_target_scope,
@@ -22,6 +28,11 @@ _ALLOWED_SNL_INTERFACES = {"tun0", "wg0", "vpn0", "snl0"}
 
 
 class TrufflehogAgent(BaseToolAgent):
+    """
+    TruffleHog specialist agent for secret-leak detection.
+    Supports v3 Go-based syntax with automatic masking and V-RAD telemetry.
+    """
+
     TOOL_NAME = "trufflehog"
 
     def __init__(self, memory_root: str | Path | None = None) -> None:
@@ -29,22 +40,21 @@ class TrufflehogAgent(BaseToolAgent):
         self._telemetry_events: list[dict[str, Any]] = []
         self._telemetry_hook: Callable[[dict[str, Any]], None] | None = None
 
-    def _get_tool_name(self) -> str:
-        return self.TOOL_NAME
-
     def register_telemetry_hook(self, hook: Callable[[dict[str, Any]], None]) -> None:
         self._telemetry_hook = hook
 
     def get_telemetry_events(self) -> list[dict[str, Any]]:
         return list(self._telemetry_events)
 
-    def _emit_telemetry(self, metric: str, value: Any) -> None:
+    def _emit_telemetry(self, metric: str, value: Any, payload: dict[str, Any] | None = None) -> None:
         event = {
             "tool": self.TOOL_NAME,
             "metric": metric,
             "value": value,
             "timestamp": datetime.now(UTC).isoformat(),
         }
+        if payload:
+            event["payload"] = payload
         self._telemetry_events.append(event)
         if self._telemetry_hook:
             try:
@@ -57,16 +67,12 @@ class TrufflehogAgent(BaseToolAgent):
         token = target.strip().lower()
         return token.startswith("http://") or token.startswith("https://") or token.startswith("git@")
 
-    @staticmethod
-    def _is_local_path(target: str) -> bool:
-        return Path(target).exists() and Path(target).is_dir()
-
     def check_policy(self, target: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
         opts = options or {}
         allow_local_path = bool(opts.get("allow_local_path", True))
         scope_label = str(opts.get("research_scope", _APPROVED_SCOPE_LABEL)).strip()
 
-        if allow_local_path and self._is_local_path(target):
+        if allow_local_path and not self._is_repo_url(target):
             snl_interface = str(opts.get("snl_interface", "tun0")).strip()
             snl_ok = snl_interface in _ALLOWED_SNL_INTERFACES
             return {
@@ -99,22 +105,31 @@ class TrufflehogAgent(BaseToolAgent):
         }
 
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
+        """
+        Builds TruffleHog command, handling v2/v3 syntax transition.
+        Default is v3 subcommand-based architecture.
+        """
         opts = options or {}
         cli_variant = str(opts.get("cli_variant", "v3")).strip().lower()
 
         if cli_variant == "v2":
+            # v2: trufflehog [options] <url>
             cmd = ["trufflehog", "--json"]
             if self._is_repo_url(target):
-                cmd.extend(["--repo", target])
+                cmd.extend(["--regex", "--entropy", target])
             else:
-                cmd.append(target)
+                cmd.extend(["--find-paths", target])
             return cmd
 
+        # v3 default: trufflehog <source> <target> [options]
         mode = "git" if self._is_repo_url(target) else "filesystem"
         cmd = ["trufflehog", mode, target, "--json", "--no-verification"]
 
         if bool(opts.get("only_verified", False)):
+            # v3 verification filter
             cmd.append("--only-verified")
+        
+        # Add common v3 filters
         if opts.get("since_commit"):
             cmd.extend(["--since-commit", str(opts["since_commit"])])
         if opts.get("branch"):
@@ -154,10 +169,25 @@ class TrufflehogAgent(BaseToolAgent):
                 return value.strip().lower().replace(" ", "_")
         return "secret_exposure"
 
-    @staticmethod
-    def _iter_records(raw_output: str) -> list[dict[str, Any]]:
-        records: list[dict[str, Any]] = []
-        for line in raw_output.strip().splitlines():
+    def map_output(
+        self,
+        *,
+        target: str,
+        command: list[str],
+        stdout: str,
+        stderr: str,
+        exit_code: int,
+        started_at: datetime,
+        ended_at: datetime,
+        runtime_ms: int,
+        mission_id: str,
+        status: str,
+        options: dict[str, Any] | None = None,
+    ) -> KaisonResult:
+        findings: list[KaisonFinding] = []
+        raw_lines = stdout.strip().splitlines()
+        
+        for line in raw_lines:
             token = line.strip()
             if not token:
                 continue
@@ -167,21 +197,15 @@ class TrufflehogAgent(BaseToolAgent):
                 continue
             if not isinstance(data, dict):
                 continue
-            if isinstance(data.get("Result"), dict):
-                records.append(data["Result"])
-            else:
-                records.append(data)
-        return records
 
-    def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:
-        findings: list[dict[str, Any]] = []
-        if not raw_output.strip():
-            return findings
-
-        for record in self._iter_records(raw_output):
+            # Handle v3 'Result' wrapper
+            record = data.get("Result", data)
+            
             vuln_type = self._derive_vuln_type(record)
             location = self._derive_location(record)
-            if "test" in location.lower() or "fixture" in location.lower():
+            
+            # Skip noise/test files
+            if any(m in location.lower() for m in ["test", "fixture", "mock", "example"]):
                 continue
 
             try:
@@ -198,69 +222,56 @@ class TrufflehogAgent(BaseToolAgent):
             except Exception:
                 continue
 
-            masked_id = hashlib.sha256(
+            mask_id = hashlib.sha256(
                 f"{registry.vuln_type}|{registry.location}".encode("utf-8")
             ).hexdigest()[:12]
 
             findings.append(
-                {
-                    "type": "exposed_secret",
-                    "value": f"{registry.vuln_type} in {registry.location}",
-                    "target": target,
-                    "severity": "critical",
-                    "confidence": 0.95,
-                    "source_tool": self.TOOL_NAME,
-                    "raw_evidence": json.dumps(
-                        {
-                            "vuln_type": registry.vuln_type,
-                            "location": registry.location,
-                            "masked": True,
-                            "mask_id": masked_id,
-                        },
-                        ensure_ascii=True,
-                    ),
-                    "context": {
-                        "vulnerability_registry": registry.model_dump(mode="json"),
+                KaisonFinding(
+                    finding_type=FindingType.SECRET,
+                    value=f"{registry.vuln_type} masked_at {registry.location} [ID:{mask_id}]",
+                    source_agent=self.TOOL_NAME,
+                    confidence=0.95,
+                    severity=Severity.CRITICAL,
+                    raw_evidence={
                         "vuln_type": registry.vuln_type,
                         "location": registry.location,
-                        "masked": True,
-                        "snl_mode": "fixture_only",
+                        "mask_id": mask_id,
+                        "vulnerability_registry": registry.model_dump(mode="json"),
                     },
-                    "recommended_next_tools": ["EvidenceAnalystAgent"],
-                    "recommended_next_actions": ["credential_rotation", "incident_response"],
+                )
+            )
+
+        # Trigger V-RAD Telemetry for identified secrets
+        if findings:
+            self._emit_telemetry(
+                "V-RAD_EVENT",
+                "Secret Exposed",
+                payload={
+                    "v-rad_color": "NEON_RED",
+                    "secret_count": len(findings),
+                    "summary": f"Detected {len(findings)} leaked credentials in {target}"
                 }
             )
 
-        return findings
-
-    def filter_noise(
-        self, findings: list[dict[str, Any]]
-    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        signal: list[dict[str, Any]] = []
-        noise: list[dict[str, Any]] = []
-        known = self.load_memory()
-
-        for finding in findings:
-            key = f"{str(finding.get('target', '')).lower()}|exposed_secret|{str(finding.get('value', '')).lower()}"
-            if key in known:
-                noise.append(finding)
-                continue
-            signal.append(finding)
-
-        return signal, noise
-
-    def _generate_next_agent_instructions(
-        self,
-        signal: list[dict[str, Any]],
-        target: str,
-    ) -> dict[str, Any]:
-        return {
-            "next_agents": ["EvidenceAnalystAgent"],
-            "detected_secrets": len(signal),
-            "operator_summary": (
-                f"TruffleHog normalized {len(signal)} secret findings in {target}; values masked for safety."
+        return KaisonResult(
+            mission_id=mission_id,
+            source_agent=self.TOOL_NAME,
+            status=status,
+            target_context={
+                "target": target,
+                "command": command,
+                "exit_code": exit_code,
+                "stderr": stderr[:2000],
+                "options": options,
+            },
+            metadata=KaisonResultMetadata(
+                started_at=started_at,
+                ended_at=ended_at,
+                runtime_ms=runtime_ms,
             ),
-        }
+            findings=findings,
+        )
 
     def execute(
         self,
@@ -269,76 +280,36 @@ class TrufflehogAgent(BaseToolAgent):
         *,
         mission_id: str = "mission-001",
     ) -> KaisonResult:
+        """
+        Executes TruffleHog with policy checks and live scanning.
+        """
         opts = dict(options or {})
         policy = self.check_policy(target, opts)
-        started_at = datetime.now(UTC)
-
+        
         if not policy["allowed"]:
-            ended_at = datetime.now(UTC)
-            return KaisonResult(
-                mission_id=mission_id,
-                source_agent=self.TOOL_NAME,
-                status="failure",
-                target_context={"target": target, "mode": "stub_only", "error": f"policy_blocked:{policy['reason']}"},
-                metadata=KaisonResultMetadata(
-                    started_at=started_at,
-                    ended_at=ended_at,
-                    runtime_ms=max(0, int((ended_at - started_at).total_seconds() * 1000)),
-                ),
-                findings=[],
-            )
-
-        fixture = opts.get("fixture_data")
-        if fixture is None and isinstance(opts.get("fixture_path"), str):
-            fixture = Path(opts["fixture_path"]).read_text(encoding="utf-8")
-
-        if fixture is None:
-            ended_at = datetime.now(UTC)
+            now = datetime.now(UTC)
             return KaisonResult(
                 mission_id=mission_id,
                 source_agent=self.TOOL_NAME,
                 status="failure",
                 target_context={
-                    "target": target,
-                    "mode": "stub_only",
-                    "error": "fixture_data is required; live execution disabled",
+                    "target": target, 
+                    "error": f"policy_blocked:{policy['reason']}"
                 },
                 metadata=KaisonResultMetadata(
-                    started_at=started_at,
-                    ended_at=ended_at,
-                    runtime_ms=max(0, int((ended_at - started_at).total_seconds() * 1000)),
+                    started_at=now,
+                    ended_at=now,
+                    runtime_ms=0,
                 ),
                 findings=[],
             )
 
-        fixture_text = fixture if isinstance(fixture, str) else json.dumps(fixture)
-        ended_at = datetime.now(UTC)
-        runtime_ms = max(0, int((ended_at - started_at).total_seconds() * 1000))
-        result = self.map_output(
-            target=target,
-            command=["fixture://trufflehog"],
-            stdout=fixture_text,
-            stderr="",
-            exit_code=0,
-            started_at=started_at,
-            ended_at=ended_at,
-            runtime_ms=runtime_ms,
-            mission_id=mission_id,
-            status="success",
-            options=opts,
-        )
-
-        self._emit_telemetry("AGENT_STATUS", "SECRET_DETECTION")
-        self._emit_telemetry("SECRETS_IDENTIFIED", len(result.findings))
-        if result.findings:
-            self._emit_telemetry("EventLog", "SECRET_EXPOSED_NEON_RED")
-
-        context = dict(result.target_context)
-        context.update(
-            {
-                "mode": "stub_fixture",
-                "snl_interface": policy.get("snl_interface"),
-                "telemetry": self.get_telemetry_events(),
-            }
-        )
-        return result.model_copy(update={"target_context": context})
+        # Use BaseToolAgent.execute for live subprocess execution
+        result = super().execute(target, opts, mission_id=mission_id)
+        
+        # Enrich context with SNL info
+        enriched_context = dict(result.target_context)
+        enriched_context["snl_interface"] = policy.get("snl_interface")
+        enriched_context["telemetry"] = self.get_telemetry_events()
+        
+        return result.model_copy(update={"target_context": enriched_context})

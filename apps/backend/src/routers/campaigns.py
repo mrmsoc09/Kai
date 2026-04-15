@@ -20,6 +20,8 @@ from ..core.auth import (
 from ..core.branch_scheduler import BranchScheduler
 from ..core.bugbounty_workflow_engine import build_phase_specs_for_template, list_workflow_templates
 from ..core.campaign_service import CampaignStartService
+from ..core.credentials_manager import CredentialsManager
+from ..core.opportunity_credentials_vault import OpportunityCredentialsVault
 from ..core.execution_result_service import ExecutionResultIngestionService
 from ..core.finding_correlation_service import FindingCorrelationService
 from ..core.finding_review_service import FindingReviewService
@@ -224,6 +226,22 @@ async def start_workflow_campaign(
 ):
     try:
         policy = load_scope_policy(body.scope_policy_path)
+
+        # Get available scanning modes from credentials
+        available_modes = ["unauthenticated"]
+        if body.program_id:
+            try:
+                creds_mgr = CredentialsManager(db, OpportunityCredentialsVault())
+                modes_info = await creds_mgr.get_scanning_modes(body.program_id)
+                available_modes = modes_info.get("available_modes", ["unauthenticated"])
+            except Exception as exc:
+                # Log but don't fail - use default unauthenticated mode
+                import logging
+                logging.getLogger(__name__).warning(
+                    f"Failed to get scanning modes for program {body.program_id}: {exc}"
+                )
+                available_modes = ["unauthenticated"]
+
         phase_specs, workflow_metadata = build_phase_specs_for_template(
             template_name=body.workflow_template,
             target=body.target,
@@ -232,6 +250,7 @@ async def start_workflow_campaign(
             enable_steps=body.enable_steps,
             disable_steps=body.disable_steps,
             dry_run=body.dry_run,
+            available_modes=available_modes,
         )
     except ValueError as exc:
         raise _value_error_to_http(exc) from exc

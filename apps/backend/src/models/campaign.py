@@ -57,6 +57,8 @@ class Program(Base, TimestampMixin):
 
     scope_targets = relationship("ScopeTarget", back_populates="program")
     campaign_runs = relationship("CampaignRun", back_populates="program")
+    findings = relationship("ScanFinding", back_populates="program", foreign_keys="ScanFinding.program_id")
+    scans = relationship("ScanExecution", back_populates="program", foreign_keys="ScanExecution.program_id")
 
 
 class ScopeTarget(Base, TimestampMixin):

@@ -1,0 +1,64 @@
+playbook:
+  metadata:
+    id: darkweb-leaks
+    name: Dark Web Leaks Research
+    cluster: RECONNAISSANCE
+    complexity: MEDIUM
+    version: '1.0'
+    status: skeleton
+  objective:
+    primary: Search for leaked credentials and data
+    secondary:
+    - Find leaked passwords
+    - Discover compromised accounts
+    - Identify data breaches
+  inputs_and_sources:
+    input_source: master-orchestrator
+    required_inputs:
+    - target_organization
+  outputs_and_targets:
+    primary_output_target: auth-bypass
+    alternative_targets:
+    - lateral-movement
+    fallback_target: physical-recon
+  cve_bindings:
+    count: 5
+    cves:
+    - CVE-2024-6666
+    - CVE-2024-7777
+    - CVE-2024-8888
+    - CVE-2023-46805
+    - CVE-2023-49069
+    note: Each binding is from cve_knowledge_expanded.yaml
+  persona_assignments:
+    count: 2
+    personas:
+    - credential_extractor
+    - threat_intelligence_integrator
+    note: Each persona from persona_cve_mapping.yaml
+  attack_sequence:
+    step_1:
+      title: Search leak databases
+      persona: credential_extractor
+    step_2:
+      title: Validate credentials
+      persona: threat_intelligence_integrator
+    step_3:
+      title: Correlate with target
+      persona: credential_extractor
+  decision_branches:
+  - condition: If step succeeds
+    action: Call auth-bypass
+  - condition: If step fails
+    action: Call physical-recon
+  - condition: If detected
+    action: Call incident-responder-evasion
+  cross_link_graph:
+    calls_these_playbooks:
+    - auth-bypass
+    - lateral-movement
+    called_by_these_playbooks:
+    - master-orchestrator
+    can_pivot_to:
+    - physical-recon
+  notes: 'SKELETON: Logic implementation pending. Cross-linking complete.'

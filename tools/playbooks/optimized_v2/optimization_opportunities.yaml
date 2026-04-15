@@ -1,0 +1,192 @@
+optimization_analysis:
+  analysis_date: '2026-04-13'
+  selection_criteria:
+  - execution_time > 20 minutes
+  - baseline success <= 0.75 preferred
+  - high-frequency vulnerability overlap from Prompt 5
+  - scope-safe archetype routing possible
+  selected_playbooks_count: 20
+  average_baseline_duration_minutes: 49.0
+  average_optimized_duration_minutes: 16.3
+  average_time_reduction_percent: 66.73
+  playbooks:
+  - playbook_id: ai_llm_model_extraction_v1
+    baseline_duration_minutes: 120
+    optimized_duration_minutes: 40
+    baseline_success_rate: 0.6
+    optimized_success_rate: 0.77
+    time_saved_minutes: 80
+    optimization_score: 48.0
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: ai_llm_prompt_injection_v1
+    baseline_duration_minutes: 90
+    optimized_duration_minutes: 30
+    baseline_success_rate: 0.65
+    optimized_success_rate: 0.82
+    time_saved_minutes: 60
+    optimization_score: 31.5
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: owasp_a04_design_v1
+    baseline_duration_minutes: 60
+    optimized_duration_minutes: 20
+    baseline_success_rate: 0.65
+    optimized_success_rate: 0.82
+    time_saved_minutes: 40
+    optimization_score: 21.0
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: zero_trust_bypass_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.36
+    optimized_success_rate: 0.53
+    time_saved_minutes: 20
+    optimization_score: 19.2
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: auth_bypass_v1
+    baseline_duration_minutes: 50
+    optimized_duration_minutes: 16
+    baseline_success_rate: 0.65
+    optimized_success_rate: 0.82
+    time_saved_minutes: 34
+    optimization_score: 17.5
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: owasp_a01_access_control_v1
+    baseline_duration_minutes: 75
+    optimized_duration_minutes: 25
+    baseline_success_rate: 0.8
+    optimized_success_rate: 0.92
+    time_saved_minutes: 50
+    optimization_score: 15.0
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: llm_poisoning_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.52
+    optimized_success_rate: 0.69
+    time_saved_minutes: 20
+    optimization_score: 14.4
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: container_escape_rce_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.52
+    optimized_success_rate: 0.69
+    time_saved_minutes: 20
+    optimization_score: 14.4
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: business_logic_bypass_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.54
+    optimized_success_rate: 0.71
+    time_saved_minutes: 20
+    optimization_score: 13.8
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: owasp_a03_injection_v1
+    baseline_duration_minutes: 90
+    optimized_duration_minutes: 30
+    baseline_success_rate: 0.85
+    optimized_success_rate: 0.92
+    time_saved_minutes: 60
+    optimization_score: 13.5
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: supply_chain_attack_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.58
+    optimized_success_rate: 0.75
+    time_saved_minutes: 20
+    optimization_score: 12.6
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: cryptographic_downgrade_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.62
+    optimized_success_rate: 0.79
+    time_saved_minutes: 20
+    optimization_score: 11.4
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: iam_privilege_escalation_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.65
+    optimized_success_rate: 0.82
+    time_saved_minutes: 20
+    optimization_score: 10.5
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: api_rce_chain_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.68
+    optimized_success_rate: 0.85
+    time_saved_minutes: 20
+    optimization_score: 9.6
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: owasp_a05_misconfig_v1
+    baseline_duration_minutes: 60
+    optimized_duration_minutes: 20
+    baseline_success_rate: 0.85
+    optimized_success_rate: 0.92
+    time_saved_minutes: 40
+    optimization_score: 9.0
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: web_app_recon_v1
+    baseline_duration_minutes: 45
+    optimized_duration_minutes: 15
+    baseline_success_rate: 0.8
+    optimized_success_rate: 0.92
+    time_saved_minutes: 30
+    optimization_score: 9.0
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: database_exfiltration_v1
+    baseline_duration_minutes: 30
+    optimized_duration_minutes: 10
+    baseline_success_rate: 0.72
+    optimized_success_rate: 0.89
+    time_saved_minutes: 20
+    optimization_score: 8.4
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: graphql_attacks_v1
+    baseline_duration_minutes: 40
+    optimized_duration_minutes: 13
+    baseline_success_rate: 0.8
+    optimized_success_rate: 0.92
+    time_saved_minutes: 27
+    optimization_score: 8.0
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: xss_discovery_v1
+    baseline_duration_minutes: 45
+    optimized_duration_minutes: 15
+    baseline_success_rate: 0.85
+    optimized_success_rate: 0.92
+    time_saved_minutes: 30
+    optimization_score: 6.75
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.
+  - playbook_id: sql_injection_v1
+    baseline_duration_minutes: 35
+    optimized_duration_minutes: 12
+    baseline_success_rate: 0.85
+    optimized_success_rate: 0.92
+    time_saved_minutes: 23
+    optimization_score: 5.25
+    rationale: Long runtime and/or moderate baseline success with strong high-frequency
+      vulnerability overlap.

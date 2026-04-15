@@ -1,0 +1,56 @@
+{
+  "contracts": [
+    {
+      "output_schema": "DiscoveryRegistry",
+      "input_schema": "DiscoveryRegistry"
+    },
+    {
+      "output_schema": "DiscoveryRegistry",
+      "input_schema": "ServiceRegistry"
+    },
+    {
+      "output_schema": "PortRegistry",
+      "input_schema": "ServiceRegistry"
+    },
+    {
+      "output_schema": "ServiceRegistry",
+      "input_schema": "VulnerabilityRegistry"
+    },
+    {
+      "output_schema": "WebDiscoveryRegistry",
+      "input_schema": "XssRegistry"
+    },
+    {
+      "output_schema": "ParameterRegistry",
+      "input_schema": "DatabaseSecurityRegistry"
+    },
+    {
+      "output_schema": "SecretLeakRegistry",
+      "input_schema": "VulnerabilityRegistry"
+    }
+  ],
+  "compatibility_matrix": {
+    "DiscoveryRegistry": [
+      "DiscoveryRegistry",
+      "ServiceRegistry"
+    ],
+    "PortRegistry": [
+      "ServiceRegistry"
+    ],
+    "ServiceRegistry": [
+      "VulnerabilityRegistry",
+      "WebPolicyRegistry"
+    ],
+    "WebDiscoveryRegistry": [
+      "XssRegistry",
+      "EndpointRegistry"
+    ],
+    "ParameterRegistry": [
+      "DatabaseSecurityRegistry",
+      "XssRegistry"
+    ],
+    "SecretLeakRegistry": [
+      "VulnerabilityRegistry"
+    ]
+  }
+}

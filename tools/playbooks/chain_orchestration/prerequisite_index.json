@@ -1,0 +1,2675 @@
+{
+  "caido": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    }
+  ],
+  "sqlmap": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "database_exfiltration_v1",
+      "success_weight": 0.72,
+      "category": "Database Security"
+    }
+  ],
+  "authorized-validation": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    },
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a04_design_v1",
+      "success_weight": 0.65,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "sbom_vulnerability_chain_v1",
+      "success_weight": 0.7,
+      "category": "Supply Chain"
+    }
+  ],
+  "nvd-nist": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    }
+  ],
+  "input-validation": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    }
+  ],
+  "input_parameter_found": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    }
+  ],
+  "target_has_database_backend": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    }
+  ],
+  "database": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "database_exfiltration_v1",
+      "success_weight": 0.72,
+      "category": "Database Security"
+    }
+  ],
+  "sql-injection": [
+    {
+      "playbook_id": "sql_injection_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "database_exfiltration_v1",
+      "success_weight": 0.72,
+      "category": "Database Security"
+    }
+  ],
+  "safe-payload": [
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    }
+  ],
+  "target_is_web_application": [
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    }
+  ],
+  "xss": [
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    }
+  ],
+  "web": [
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    }
+  ],
+  "owasp-zap": [
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    }
+  ],
+  "javascript": [
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    }
+  ],
+  "user_input_reflected_in_output": [
+    {
+      "playbook_id": "xss_discovery_v1",
+      "success_weight": 0.85,
+      "category": "Exploitation"
+    }
+  ],
+  "default_credentials_likely": [
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "owasp": [
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a04_design_v1",
+      "success_weight": 0.65,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "spiderfoot": [
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    }
+  ],
+  "burp_suite": [
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "owasp_a04_design_v1",
+      "success_weight": 0.65,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    },
+    {
+      "playbook_id": "database_exfiltration_v1",
+      "success_weight": 0.72,
+      "category": "Database Security"
+    },
+    {
+      "playbook_id": "zero_day_chain_v1",
+      "success_weight": 0.5,
+      "category": "Advanced Exploitation"
+    },
+    {
+      "playbook_id": "business_logic_bypass_v1",
+      "success_weight": 0.54,
+      "category": "Business Logic"
+    }
+  ],
+  "exposed-endpoints": [
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "default-credentials": [
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "misconfiguration": [
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "target_has_exposed_endpoints": [
+    {
+      "playbook_id": "owasp_a05_misconfig_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "tls": [
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    }
+  ],
+  "ssl": [
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "cryptography": [
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    },
+    {
+      "playbook_id": "vpn_ipsec_weakness_v1",
+      "success_weight": 0.57,
+      "category": "Cryptography"
+    },
+    {
+      "playbook_id": "quantum_safe_bypass_v1",
+      "success_weight": 0.32,
+      "category": "Cryptography"
+    }
+  ],
+  "testssl": [
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    },
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    }
+  ],
+  "openssl": [
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "weak_cipher_suite_likely": [
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "target_uses_tls": [
+    {
+      "playbook_id": "owasp_a02_crypto_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "sql": [
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "user_input_processed_by_interpreter": [
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "input_validation_weak": [
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "injection": [
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "command-injection": [
+    {
+      "playbook_id": "owasp_a03_injection_v1",
+      "success_weight": 0.85,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "custom_authz_tester": [
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "target_has_user_roles": [
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "resource_isolation_weak": [
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "idor": [
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "access-control": [
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "privilege-escalation": [
+    {
+      "playbook_id": "owasp_a01_access_control_v1",
+      "success_weight": 0.8,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    },
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    },
+    {
+      "playbook_id": "zero_day_chain_v1",
+      "success_weight": 0.5,
+      "category": "Advanced Exploitation"
+    }
+  ],
+  "osint": [
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    }
+  ],
+  "httpx": [
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    }
+  ],
+  "cve-assessment": [
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    }
+  ],
+  "fingerprinting": [
+    {
+      "playbook_id": "web_app_recon_v1",
+      "success_weight": 0.8,
+      "category": "Reconnaissance"
+    }
+  ],
+  "jwt_tool": [
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    }
+  ],
+  "graphql": [
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    }
+  ],
+  "api": [
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    }
+  ],
+  "introspection": [
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    }
+  ],
+  "clairvoyance": [
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    }
+  ],
+  "graphql-cop": [
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    }
+  ],
+  "target_has_graphql_endpoint": [
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    }
+  ],
+  "authz": [
+    {
+      "playbook_id": "graphql_attacks_v1",
+      "success_weight": 0.8,
+      "category": "Exploitation"
+    }
+  ],
+  "dependencies": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "ai-security": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "target_uses_ml_models": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "dependency_checker": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "supply_chain_attack_v1",
+      "success_weight": 0.58,
+      "category": "Supply Chain"
+    }
+  ],
+  "checkpoint_analyzer": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "ci-cd": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "model-checkpoint": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "supply-chain": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "sbom_vulnerability_chain_v1",
+      "success_weight": 0.7,
+      "category": "Supply Chain"
+    },
+    {
+      "playbook_id": "supply_chain_attack_v1",
+      "success_weight": 0.58,
+      "category": "Supply Chain"
+    },
+    {
+      "playbook_id": "supply_chain_model_v1",
+      "success_weight": 0.54,
+      "category": "AI/LLM"
+    }
+  ],
+  "dependency_chain_accessible": [
+    {
+      "playbook_id": "ai_llm_supply_chain_v1",
+      "success_weight": 0.7,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "target_has_authentication": [
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    }
+  ],
+  "jwt": [
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    }
+  ],
+  "oauth": [
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    },
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    }
+  ],
+  "authorization": [
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    }
+  ],
+  "api-security": [
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    }
+  ],
+  "oauth_jwt_or_saml_used": [
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    }
+  ],
+  "authentication": [
+    {
+      "playbook_id": "auth_bypass_v1",
+      "success_weight": 0.65,
+      "category": "Exploitation"
+    }
+  ],
+  "custom_llm_tester": [
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "token_analyzer": [
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "jailbreak": [
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "llm": [
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "llm_model_extraction_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM"
+    },
+    {
+      "playbook_id": "llm_poisoning_v1",
+      "success_weight": 0.52,
+      "category": "AI/LLM"
+    }
+  ],
+  "api_client": [
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "target_has_llm_application": [
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "user_input_processed_by_llm": [
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "prompt-injection": [
+    {
+      "playbook_id": "ai_llm_prompt_injection_v1",
+      "success_weight": 0.65,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "api_rate_limits_weak": [
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "statistical_analyzer": [
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "ip-theft": [
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "llm_model_extraction_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM"
+    }
+  ],
+  "target_has_llm_api": [
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "model-extraction": [
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "llm_model_extraction_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM"
+    }
+  ],
+  "api_fuzzer": [
+    {
+      "playbook_id": "ai_llm_model_extraction_v1",
+      "success_weight": 0.6,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "race-condition": [
+    {
+      "playbook_id": "owasp_a04_design_v1",
+      "success_weight": 0.65,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "target_has_complex_workflows": [
+    {
+      "playbook_id": "owasp_a04_design_v1",
+      "success_weight": 0.65,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "workflow": [
+    {
+      "playbook_id": "owasp_a04_design_v1",
+      "success_weight": 0.65,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "business_logic_bypass_v1",
+      "success_weight": 0.54,
+      "category": "Business Logic"
+    }
+  ],
+  "business-logic": [
+    {
+      "playbook_id": "owasp_a04_design_v1",
+      "success_weight": 0.65,
+      "category": "OWASP Exploitation"
+    },
+    {
+      "playbook_id": "business_logic_bypass_v1",
+      "success_weight": 0.54,
+      "category": "Business Logic"
+    }
+  ],
+  "business_logic_weak": [
+    {
+      "playbook_id": "owasp_a04_design_v1",
+      "success_weight": 0.65,
+      "category": "OWASP Exploitation"
+    }
+  ],
+  "semantic-search": [
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "vector-database": [
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "custom_vector_tools": [
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "target_uses_rag_system": [
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "rag": [
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "vector_db_accessible": [
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "semantic_analyzer": [
+    {
+      "playbook_id": "ai_llm_vector_db_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "kubernetes": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    }
+  ],
+  "gpu": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "kernel-exploit": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "exploit_tools": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "container_runtime_vulnerable": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "container": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    }
+  ],
+  "target_runs_llm_in_container": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "ai-infrastructure": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    }
+  ],
+  "docker": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    }
+  ],
+  "custom_container_tools": [
+    {
+      "playbook_id": "ai_llm_container_escape_v1",
+      "success_weight": 0.55,
+      "category": "AI/LLM Exploitation"
+    },
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    }
+  ],
+  "vulnerability_db": [
+    {
+      "playbook_id": "sbom_vulnerability_chain_v1",
+      "success_weight": 0.7,
+      "category": "Supply Chain"
+    }
+  ],
+  "sbom_parser": [
+    {
+      "playbook_id": "sbom_vulnerability_chain_v1",
+      "success_weight": 0.7,
+      "category": "Supply Chain"
+    }
+  ],
+  "sbom": [
+    {
+      "playbook_id": "sbom_vulnerability_chain_v1",
+      "success_weight": 0.7,
+      "category": "Supply Chain"
+    }
+  ],
+  "vulnerable_dependencies_exist": [
+    {
+      "playbook_id": "sbom_vulnerability_chain_v1",
+      "success_weight": 0.7,
+      "category": "Supply Chain"
+    }
+  ],
+  "dependency-chain": [
+    {
+      "playbook_id": "sbom_vulnerability_chain_v1",
+      "success_weight": 0.7,
+      "category": "Supply Chain"
+    }
+  ],
+  "sbom_accessible": [
+    {
+      "playbook_id": "sbom_vulnerability_chain_v1",
+      "success_weight": 0.7,
+      "category": "Supply Chain"
+    }
+  ],
+  "cloud_mapper": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "lateral-movement": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    },
+    {
+      "playbook_id": "network_lateral_movement_v1",
+      "success_weight": 0.56,
+      "category": "Network Security"
+    }
+  ],
+  "cloud": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "iam_misconfiguration_exists": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "azcli": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "gcp": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "azure": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "awscli": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "aws": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "target_uses_cloud_platform": [
+    {
+      "playbook_id": "cloud_lateral_movement_v1",
+      "success_weight": 0.62,
+      "category": "Cloud Infrastructure"
+    }
+  ],
+  "vulnerability-chain": [
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    }
+  ],
+  "chaining": [
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    }
+  ],
+  "multiple_api_endpoints_exist": [
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    }
+  ],
+  "rce": [
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    },
+    {
+      "playbook_id": "social_engineering_rce_v1",
+      "success_weight": 0.48,
+      "category": "Social Engineering"
+    },
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "custom_api_fuzzer": [
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    }
+  ],
+  "postman": [
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    }
+  ],
+  "target_has_api": [
+    {
+      "playbook_id": "api_rce_chain_v1",
+      "success_weight": 0.68,
+      "category": "API Security"
+    }
+  ],
+  "data-exfiltration": [
+    {
+      "playbook_id": "database_exfiltration_v1",
+      "success_weight": 0.72,
+      "category": "Database Security"
+    },
+    {
+      "playbook_id": "mobile_compromise_v1",
+      "success_weight": 0.6,
+      "category": "Mobile Security"
+    }
+  ],
+  "database_accessible": [
+    {
+      "playbook_id": "database_exfiltration_v1",
+      "success_weight": 0.72,
+      "category": "Database Security"
+    }
+  ],
+  "sql_injection_likely": [
+    {
+      "playbook_id": "database_exfiltration_v1",
+      "success_weight": 0.72,
+      "category": "Database Security"
+    }
+  ],
+  "custom_db_exploit": [
+    {
+      "playbook_id": "database_exfiltration_v1",
+      "success_weight": 0.72,
+      "category": "Database Security"
+    }
+  ],
+  "iam_system_configured": [
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    }
+  ],
+  "iam": [
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    }
+  ],
+  "custom_iam_tools": [
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    }
+  ],
+  "role_hierarchy_weak": [
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    }
+  ],
+  "oauth_analyzer": [
+    {
+      "playbook_id": "iam_privilege_escalation_v1",
+      "success_weight": 0.65,
+      "category": "IAM Security"
+    }
+  ],
+  "custom_exploit": [
+    {
+      "playbook_id": "zero_day_chain_v1",
+      "success_weight": 0.5,
+      "category": "Advanced Exploitation"
+    }
+  ],
+  "target_unpatched": [
+    {
+      "playbook_id": "zero_day_chain_v1",
+      "success_weight": 0.5,
+      "category": "Advanced Exploitation"
+    }
+  ],
+  "metasploit": [
+    {
+      "playbook_id": "zero_day_chain_v1",
+      "success_weight": 0.5,
+      "category": "Advanced Exploitation"
+    },
+    {
+      "playbook_id": "network_lateral_movement_v1",
+      "success_weight": 0.56,
+      "category": "Network Security"
+    },
+    {
+      "playbook_id": "malware_delivery_v1",
+      "success_weight": 0.45,
+      "category": "Malware"
+    },
+    {
+      "playbook_id": "apt_campaign_sim_v1",
+      "success_weight": 0.35,
+      "category": "APT"
+    },
+    {
+      "playbook_id": "persistent_backdoor_v1",
+      "success_weight": 0.56,
+      "category": "Persistence"
+    }
+  ],
+  "exploit-chain": [
+    {
+      "playbook_id": "zero_day_chain_v1",
+      "success_weight": 0.5,
+      "category": "Advanced Exploitation"
+    }
+  ],
+  "zero_day_exploit_available": [
+    {
+      "playbook_id": "zero_day_chain_v1",
+      "success_weight": 0.5,
+      "category": "Advanced Exploitation"
+    }
+  ],
+  "zero-day": [
+    {
+      "playbook_id": "zero_day_chain_v1",
+      "success_weight": 0.5,
+      "category": "Advanced Exploitation"
+    }
+  ],
+  "weak_cipher_supported": [
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    }
+  ],
+  "downgrade": [
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    }
+  ],
+  "custom_crypto_tools": [
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    }
+  ],
+  "hashcat": [
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    }
+  ],
+  "tls_downgrade_possible": [
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    }
+  ],
+  "key-recovery": [
+    {
+      "playbook_id": "cryptographic_downgrade_v1",
+      "success_weight": 0.62,
+      "category": "Cryptography"
+    }
+  ],
+  "target_uses_kubernetes": [
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    }
+  ],
+  "container_escaped_from": [
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    }
+  ],
+  "escape": [
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    },
+    {
+      "playbook_id": "hypervisor_escape_v1",
+      "success_weight": 0.38,
+      "category": "Virtualization"
+    }
+  ],
+  "kubectl": [
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    }
+  ],
+  "cluster-takeover": [
+    {
+      "playbook_id": "container_escape_rce_v1",
+      "success_weight": 0.52,
+      "category": "Container Security"
+    }
+  ],
+  "package_publish_rights": [
+    {
+      "playbook_id": "supply_chain_attack_v1",
+      "success_weight": 0.58,
+      "category": "Supply Chain"
+    }
+  ],
+  "custom_dropper": [
+    {
+      "playbook_id": "supply_chain_attack_v1",
+      "success_weight": 0.58,
+      "category": "Supply Chain"
+    }
+  ],
+  "dependency_management_accessible": [
+    {
+      "playbook_id": "supply_chain_attack_v1",
+      "success_weight": 0.58,
+      "category": "Supply Chain"
+    }
+  ],
+  "dependency": [
+    {
+      "playbook_id": "supply_chain_attack_v1",
+      "success_weight": 0.58,
+      "category": "Supply Chain"
+    }
+  ],
+  "poisoning": [
+    {
+      "playbook_id": "supply_chain_attack_v1",
+      "success_weight": 0.58,
+      "category": "Supply Chain"
+    },
+    {
+      "playbook_id": "llm_poisoning_v1",
+      "success_weight": 0.52,
+      "category": "AI/LLM"
+    },
+    {
+      "playbook_id": "supply_chain_model_v1",
+      "success_weight": 0.54,
+      "category": "AI/LLM"
+    }
+  ],
+  "custom_logic_tester": [
+    {
+      "playbook_id": "business_logic_bypass_v1",
+      "success_weight": 0.54,
+      "category": "Business Logic"
+    }
+  ],
+  "constraint-bypass": [
+    {
+      "playbook_id": "business_logic_bypass_v1",
+      "success_weight": 0.54,
+      "category": "Business Logic"
+    }
+  ],
+  "complex_workflow_exists": [
+    {
+      "playbook_id": "business_logic_bypass_v1",
+      "success_weight": 0.54,
+      "category": "Business Logic"
+    }
+  ],
+  "business_rules_weak": [
+    {
+      "playbook_id": "business_logic_bypass_v1",
+      "success_weight": 0.54,
+      "category": "Business Logic"
+    }
+  ],
+  "internal_network_access": [
+    {
+      "playbook_id": "network_lateral_movement_v1",
+      "success_weight": 0.56,
+      "category": "Network Security"
+    }
+  ],
+  "network": [
+    {
+      "playbook_id": "network_lateral_movement_v1",
+      "success_weight": 0.56,
+      "category": "Network Security"
+    },
+    {
+      "playbook_id": "5g_network_attack_v1",
+      "success_weight": 0.41,
+      "category": "Telecommunications"
+    },
+    {
+      "playbook_id": "air_gapped_network_v1",
+      "success_weight": 0.39,
+      "category": "Network Security"
+    }
+  ],
+  "network_segmentation_weak": [
+    {
+      "playbook_id": "network_lateral_movement_v1",
+      "success_weight": 0.56,
+      "category": "Network Security"
+    }
+  ],
+  "custom_c2": [
+    {
+      "playbook_id": "network_lateral_movement_v1",
+      "success_weight": 0.56,
+      "category": "Network Security"
+    },
+    {
+      "playbook_id": "dga_botnet_sim_v1",
+      "success_weight": 0.44,
+      "category": "Botnet"
+    }
+  ],
+  "nmap": [
+    {
+      "playbook_id": "network_lateral_movement_v1",
+      "success_weight": 0.56,
+      "category": "Network Security"
+    }
+  ],
+  "persistence": [
+    {
+      "playbook_id": "network_lateral_movement_v1",
+      "success_weight": 0.56,
+      "category": "Network Security"
+    },
+    {
+      "playbook_id": "dga_botnet_sim_v1",
+      "success_weight": 0.44,
+      "category": "Botnet"
+    },
+    {
+      "playbook_id": "runtime_detection_evasion_v1",
+      "success_weight": 0.5,
+      "category": "Detection Evasion"
+    },
+    {
+      "playbook_id": "persistent_backdoor_v1",
+      "success_weight": 0.56,
+      "category": "Persistence"
+    }
+  ],
+  "default_credentials_unchanged": [
+    {
+      "playbook_id": "iot_botnet_v1",
+      "success_weight": 0.58,
+      "category": "IoT"
+    }
+  ],
+  "iot": [
+    {
+      "playbook_id": "iot_botnet_v1",
+      "success_weight": 0.58,
+      "category": "IoT"
+    }
+  ],
+  "iot_devices_present": [
+    {
+      "playbook_id": "iot_botnet_v1",
+      "success_weight": 0.58,
+      "category": "IoT"
+    }
+  ],
+  "custom_iot_tools": [
+    {
+      "playbook_id": "iot_botnet_v1",
+      "success_weight": 0.58,
+      "category": "IoT"
+    }
+  ],
+  "device-compromise": [
+    {
+      "playbook_id": "iot_botnet_v1",
+      "success_weight": 0.58,
+      "category": "IoT"
+    }
+  ],
+  "botnet": [
+    {
+      "playbook_id": "iot_botnet_v1",
+      "success_weight": 0.58,
+      "category": "IoT"
+    },
+    {
+      "playbook_id": "dga_botnet_sim_v1",
+      "success_weight": 0.44,
+      "category": "Botnet"
+    }
+  ],
+  "app-security": [
+    {
+      "playbook_id": "mobile_compromise_v1",
+      "success_weight": 0.6,
+      "category": "Mobile Security"
+    }
+  ],
+  "app_vulnerable": [
+    {
+      "playbook_id": "mobile_compromise_v1",
+      "success_weight": 0.6,
+      "category": "Mobile Security"
+    }
+  ],
+  "frida": [
+    {
+      "playbook_id": "mobile_compromise_v1",
+      "success_weight": 0.6,
+      "category": "Mobile Security"
+    }
+  ],
+  "custom_mobile_tools": [
+    {
+      "playbook_id": "mobile_compromise_v1",
+      "success_weight": 0.6,
+      "category": "Mobile Security"
+    }
+  ],
+  "mobile": [
+    {
+      "playbook_id": "mobile_compromise_v1",
+      "success_weight": 0.6,
+      "category": "Mobile Security"
+    }
+  ],
+  "mobile_app_installed": [
+    {
+      "playbook_id": "mobile_compromise_v1",
+      "success_weight": 0.6,
+      "category": "Mobile Security"
+    }
+  ],
+  "objection": [
+    {
+      "playbook_id": "mobile_compromise_v1",
+      "success_weight": 0.6,
+      "category": "Mobile Security"
+    }
+  ],
+  "traffic-redirection": [
+    {
+      "playbook_id": "dns_cache_poisoning_v1",
+      "success_weight": 0.54,
+      "category": "Infrastructure"
+    }
+  ],
+  "dns": [
+    {
+      "playbook_id": "dns_cache_poisoning_v1",
+      "success_weight": 0.54,
+      "category": "Infrastructure"
+    }
+  ],
+  "dns_server_accessible": [
+    {
+      "playbook_id": "dns_cache_poisoning_v1",
+      "success_weight": 0.54,
+      "category": "Infrastructure"
+    }
+  ],
+  "custom_dns_tools": [
+    {
+      "playbook_id": "dns_cache_poisoning_v1",
+      "success_weight": 0.54,
+      "category": "Infrastructure"
+    }
+  ],
+  "dnssec_not_enforced": [
+    {
+      "playbook_id": "dns_cache_poisoning_v1",
+      "success_weight": 0.54,
+      "category": "Infrastructure"
+    }
+  ],
+  "cache-poisoning": [
+    {
+      "playbook_id": "dns_cache_poisoning_v1",
+      "success_weight": 0.54,
+      "category": "Infrastructure"
+    }
+  ],
+  "custom_vpn_tools": [
+    {
+      "playbook_id": "vpn_ipsec_weakness_v1",
+      "success_weight": 0.57,
+      "category": "Cryptography"
+    }
+  ],
+  "weak_cryptography_used": [
+    {
+      "playbook_id": "vpn_ipsec_weakness_v1",
+      "success_weight": 0.57,
+      "category": "Cryptography"
+    }
+  ],
+  "vpn": [
+    {
+      "playbook_id": "vpn_ipsec_weakness_v1",
+      "success_weight": 0.57,
+      "category": "Cryptography"
+    }
+  ],
+  "ipsec": [
+    {
+      "playbook_id": "vpn_ipsec_weakness_v1",
+      "success_weight": 0.57,
+      "category": "Cryptography"
+    }
+  ],
+  "vpn_service_exposed": [
+    {
+      "playbook_id": "vpn_ipsec_weakness_v1",
+      "success_weight": 0.57,
+      "category": "Cryptography"
+    }
+  ],
+  "tunnel-bypass": [
+    {
+      "playbook_id": "vpn_ipsec_weakness_v1",
+      "success_weight": 0.57,
+      "category": "Cryptography"
+    }
+  ],
+  "gophish": [
+    {
+      "playbook_id": "social_engineering_rce_v1",
+      "success_weight": 0.48,
+      "category": "Social Engineering"
+    }
+  ],
+  "email_system_configured": [
+    {
+      "playbook_id": "social_engineering_rce_v1",
+      "success_weight": 0.48,
+      "category": "Social Engineering"
+    }
+  ],
+  "custom_phishing": [
+    {
+      "playbook_id": "social_engineering_rce_v1",
+      "success_weight": 0.48,
+      "category": "Social Engineering"
+    }
+  ],
+  "evilginx": [
+    {
+      "playbook_id": "social_engineering_rce_v1",
+      "success_weight": 0.48,
+      "category": "Social Engineering"
+    }
+  ],
+  "phishing": [
+    {
+      "playbook_id": "social_engineering_rce_v1",
+      "success_weight": 0.48,
+      "category": "Social Engineering"
+    }
+  ],
+  "social-engineering": [
+    {
+      "playbook_id": "social_engineering_rce_v1",
+      "success_weight": 0.48,
+      "category": "Social Engineering"
+    }
+  ],
+  "target_users_identified": [
+    {
+      "playbook_id": "social_engineering_rce_v1",
+      "success_weight": 0.48,
+      "category": "Social Engineering"
+    }
+  ],
+  "evasion_tools": [
+    {
+      "playbook_id": "malware_delivery_v1",
+      "success_weight": 0.45,
+      "category": "Malware"
+    }
+  ],
+  "execution_method_available": [
+    {
+      "playbook_id": "malware_delivery_v1",
+      "success_weight": 0.45,
+      "category": "Malware"
+    }
+  ],
+  "malware": [
+    {
+      "playbook_id": "malware_delivery_v1",
+      "success_weight": 0.45,
+      "category": "Malware"
+    }
+  ],
+  "delivery": [
+    {
+      "playbook_id": "malware_delivery_v1",
+      "success_weight": 0.45,
+      "category": "Malware"
+    }
+  ],
+  "evasion": [
+    {
+      "playbook_id": "malware_delivery_v1",
+      "success_weight": 0.45,
+      "category": "Malware"
+    },
+    {
+      "playbook_id": "geolocation_bypass_v1",
+      "success_weight": 0.72,
+      "category": "Evasion"
+    }
+  ],
+  "custom_malware_gen": [
+    {
+      "playbook_id": "malware_delivery_v1",
+      "success_weight": 0.45,
+      "category": "Malware"
+    }
+  ],
+  "av_evasion_possible": [
+    {
+      "playbook_id": "malware_delivery_v1",
+      "success_weight": 0.45,
+      "category": "Malware"
+    }
+  ],
+  "network_access_present": [
+    {
+      "playbook_id": "ransomware_simulation_v1",
+      "success_weight": 0.46,
+      "category": "Ransomware"
+    }
+  ],
+  "ransomware": [
+    {
+      "playbook_id": "ransomware_simulation_v1",
+      "success_weight": 0.46,
+      "category": "Ransomware"
+    }
+  ],
+  "encryption": [
+    {
+      "playbook_id": "ransomware_simulation_v1",
+      "success_weight": 0.46,
+      "category": "Ransomware"
+    }
+  ],
+  "code_execution_gained": [
+    {
+      "playbook_id": "ransomware_simulation_v1",
+      "success_weight": 0.46,
+      "category": "Ransomware"
+    },
+    {
+      "playbook_id": "log_deletion_forensic_v1",
+      "success_weight": 0.62,
+      "category": "Post-Exploitation"
+    },
+    {
+      "playbook_id": "persistent_backdoor_v1",
+      "success_weight": 0.56,
+      "category": "Persistence"
+    }
+  ],
+  "impact-assessment": [
+    {
+      "playbook_id": "ransomware_simulation_v1",
+      "success_weight": 0.46,
+      "category": "Ransomware"
+    }
+  ],
+  "custom_ransomware_sim": [
+    {
+      "playbook_id": "ransomware_simulation_v1",
+      "success_weight": 0.46,
+      "category": "Ransomware"
+    }
+  ],
+  "encryption_tools": [
+    {
+      "playbook_id": "ransomware_simulation_v1",
+      "success_weight": 0.46,
+      "category": "Ransomware"
+    }
+  ],
+  "custom_insider_tools": [
+    {
+      "playbook_id": "insider_threat_simulation_v1",
+      "success_weight": 0.52,
+      "category": "Insider Threat"
+    }
+  ],
+  "legitimate_access_gained": [
+    {
+      "playbook_id": "insider_threat_simulation_v1",
+      "success_weight": 0.52,
+      "category": "Insider Threat"
+    }
+  ],
+  "detection-evasion": [
+    {
+      "playbook_id": "insider_threat_simulation_v1",
+      "success_weight": 0.52,
+      "category": "Insider Threat"
+    },
+    {
+      "playbook_id": "runtime_detection_evasion_v1",
+      "success_weight": 0.5,
+      "category": "Detection Evasion"
+    }
+  ],
+  "data_theft_opportunity": [
+    {
+      "playbook_id": "insider_threat_simulation_v1",
+      "success_weight": 0.52,
+      "category": "Insider Threat"
+    }
+  ],
+  "data-theft": [
+    {
+      "playbook_id": "insider_threat_simulation_v1",
+      "success_weight": 0.52,
+      "category": "Insider Threat"
+    }
+  ],
+  "insider-threat": [
+    {
+      "playbook_id": "insider_threat_simulation_v1",
+      "success_weight": 0.52,
+      "category": "Insider Threat"
+    }
+  ],
+  "binwalk": [
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "hardware": [
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "hardware_debugging_available": [
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "ghidra": [
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "firmware": [
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "firmware_accessible": [
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "custom_firmware_tools": [
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "bios": [
+    {
+      "playbook_id": "firmware_rce_v1",
+      "success_weight": 0.4,
+      "category": "Firmware"
+    }
+  ],
+  "vm-escape": [
+    {
+      "playbook_id": "hypervisor_escape_v1",
+      "success_weight": 0.38,
+      "category": "Virtualization"
+    }
+  ],
+  "host-takeover": [
+    {
+      "playbook_id": "hypervisor_escape_v1",
+      "success_weight": 0.38,
+      "category": "Virtualization"
+    }
+  ],
+  "custom_hypervisor_tools": [
+    {
+      "playbook_id": "hypervisor_escape_v1",
+      "success_weight": 0.38,
+      "category": "Virtualization"
+    }
+  ],
+  "hypervisor": [
+    {
+      "playbook_id": "hypervisor_escape_v1",
+      "success_weight": 0.38,
+      "category": "Virtualization"
+    }
+  ],
+  "vm_running_on_hypervisor": [
+    {
+      "playbook_id": "hypervisor_escape_v1",
+      "success_weight": 0.38,
+      "category": "Virtualization"
+    }
+  ],
+  "hypervisor_vulnerability_exists": [
+    {
+      "playbook_id": "hypervisor_escape_v1",
+      "success_weight": 0.38,
+      "category": "Virtualization"
+    }
+  ],
+  "multiple_infected_hosts": [
+    {
+      "playbook_id": "dga_botnet_sim_v1",
+      "success_weight": 0.44,
+      "category": "Botnet"
+    }
+  ],
+  "c2": [
+    {
+      "playbook_id": "dga_botnet_sim_v1",
+      "success_weight": 0.44,
+      "category": "Botnet"
+    }
+  ],
+  "c2_infrastructure_available": [
+    {
+      "playbook_id": "dga_botnet_sim_v1",
+      "success_weight": 0.44,
+      "category": "Botnet"
+    }
+  ],
+  "dga": [
+    {
+      "playbook_id": "dga_botnet_sim_v1",
+      "success_weight": 0.44,
+      "category": "Botnet"
+    }
+  ],
+  "custom_dga": [
+    {
+      "playbook_id": "dga_botnet_sim_v1",
+      "success_weight": 0.44,
+      "category": "Botnet"
+    }
+  ],
+  "ics_protocol_understood": [
+    {
+      "playbook_id": "industrial_scada_v1",
+      "success_weight": 0.42,
+      "category": "Industrial Control Systems"
+    }
+  ],
+  "critical-infrastructure": [
+    {
+      "playbook_id": "industrial_scada_v1",
+      "success_weight": 0.42,
+      "category": "Industrial Control Systems"
+    }
+  ],
+  "ics": [
+    {
+      "playbook_id": "industrial_scada_v1",
+      "success_weight": 0.42,
+      "category": "Industrial Control Systems"
+    }
+  ],
+  "custom_scada_tools": [
+    {
+      "playbook_id": "industrial_scada_v1",
+      "success_weight": 0.42,
+      "category": "Industrial Control Systems"
+    }
+  ],
+  "industrial": [
+    {
+      "playbook_id": "industrial_scada_v1",
+      "success_weight": 0.42,
+      "category": "Industrial Control Systems"
+    }
+  ],
+  "scada": [
+    {
+      "playbook_id": "industrial_scada_v1",
+      "success_weight": 0.42,
+      "category": "Industrial Control Systems"
+    }
+  ],
+  "scada_system_accessible": [
+    {
+      "playbook_id": "industrial_scada_v1",
+      "success_weight": 0.42,
+      "category": "Industrial Control Systems"
+    }
+  ],
+  "apt": [
+    {
+      "playbook_id": "apt_campaign_sim_v1",
+      "success_weight": 0.35,
+      "category": "APT"
+    }
+  ],
+  "custom_apt_tools": [
+    {
+      "playbook_id": "apt_campaign_sim_v1",
+      "success_weight": 0.35,
+      "category": "APT"
+    }
+  ],
+  "multi-stage": [
+    {
+      "playbook_id": "apt_campaign_sim_v1",
+      "success_weight": 0.35,
+      "category": "APT"
+    }
+  ],
+  "campaign": [
+    {
+      "playbook_id": "apt_campaign_sim_v1",
+      "success_weight": 0.35,
+      "category": "APT"
+    }
+  ],
+  "multi-vector": [
+    {
+      "playbook_id": "apt_campaign_sim_v1",
+      "success_weight": 0.35,
+      "category": "APT"
+    }
+  ],
+  "target_organization_large": [
+    {
+      "playbook_id": "apt_campaign_sim_v1",
+      "success_weight": 0.35,
+      "category": "APT"
+    }
+  ],
+  "multiple_vectors_available": [
+    {
+      "playbook_id": "apt_campaign_sim_v1",
+      "success_weight": 0.35,
+      "category": "APT"
+    }
+  ],
+  "microsegmentation": [
+    {
+      "playbook_id": "zero_trust_bypass_v1",
+      "success_weight": 0.36,
+      "category": "Zero Trust"
+    }
+  ],
+  "bypass": [
+    {
+      "playbook_id": "zero_trust_bypass_v1",
+      "success_weight": 0.36,
+      "category": "Zero Trust"
+    },
+    {
+      "playbook_id": "geolocation_bypass_v1",
+      "success_weight": 0.72,
+      "category": "Evasion"
+    }
+  ],
+  "zero-trust": [
+    {
+      "playbook_id": "zero_trust_bypass_v1",
+      "success_weight": 0.36,
+      "category": "Zero Trust"
+    }
+  ],
+  "microsegmentation_configured": [
+    {
+      "playbook_id": "zero_trust_bypass_v1",
+      "success_weight": 0.36,
+      "category": "Zero Trust"
+    }
+  ],
+  "zero_trust_deployed": [
+    {
+      "playbook_id": "zero_trust_bypass_v1",
+      "success_weight": 0.36,
+      "category": "Zero Trust"
+    }
+  ],
+  "custom_zero_trust_tools": [
+    {
+      "playbook_id": "zero_trust_bypass_v1",
+      "success_weight": 0.36,
+      "category": "Zero Trust"
+    }
+  ],
+  "evasion_technique_available": [
+    {
+      "playbook_id": "runtime_detection_evasion_v1",
+      "success_weight": 0.5,
+      "category": "Detection Evasion"
+    }
+  ],
+  "edr_solution_deployed": [
+    {
+      "playbook_id": "runtime_detection_evasion_v1",
+      "success_weight": 0.5,
+      "category": "Detection Evasion"
+    }
+  ],
+  "custom_evasion_tools": [
+    {
+      "playbook_id": "runtime_detection_evasion_v1",
+      "success_weight": 0.5,
+      "category": "Detection Evasion"
+    }
+  ],
+  "edr": [
+    {
+      "playbook_id": "runtime_detection_evasion_v1",
+      "success_weight": 0.5,
+      "category": "Detection Evasion"
+    }
+  ],
+  "log_access_available": [
+    {
+      "playbook_id": "log_deletion_forensic_v1",
+      "success_weight": 0.62,
+      "category": "Post-Exploitation"
+    }
+  ],
+  "forensics": [
+    {
+      "playbook_id": "log_deletion_forensic_v1",
+      "success_weight": 0.62,
+      "category": "Post-Exploitation"
+    }
+  ],
+  "log-deletion": [
+    {
+      "playbook_id": "log_deletion_forensic_v1",
+      "success_weight": 0.62,
+      "category": "Post-Exploitation"
+    }
+  ],
+  "custom_log_tools": [
+    {
+      "playbook_id": "log_deletion_forensic_v1",
+      "success_weight": 0.62,
+      "category": "Post-Exploitation"
+    }
+  ],
+  "post-exploitation": [
+    {
+      "playbook_id": "log_deletion_forensic_v1",
+      "success_weight": 0.62,
+      "category": "Post-Exploitation"
+    }
+  ],
+  "custom_backdoor": [
+    {
+      "playbook_id": "persistent_backdoor_v1",
+      "success_weight": 0.56,
+      "category": "Persistence"
+    }
+  ],
+  "multi-layer": [
+    {
+      "playbook_id": "persistent_backdoor_v1",
+      "success_weight": 0.56,
+      "category": "Persistence"
+    }
+  ],
+  "persistence_mechanism_available": [
+    {
+      "playbook_id": "persistent_backdoor_v1",
+      "success_weight": 0.56,
+      "category": "Persistence"
+    }
+  ],
+  "backdoor": [
+    {
+      "playbook_id": "persistent_backdoor_v1",
+      "success_weight": 0.56,
+      "category": "Persistence"
+    }
+  ],
+  "quantum": [
+    {
+      "playbook_id": "quantum_safe_bypass_v1",
+      "success_weight": 0.32,
+      "category": "Cryptography"
+    }
+  ],
+  "quantum_resistant_crypto_deployed": [
+    {
+      "playbook_id": "quantum_safe_bypass_v1",
+      "success_weight": 0.32,
+      "category": "Cryptography"
+    }
+  ],
+  "downgrade_possible": [
+    {
+      "playbook_id": "quantum_safe_bypass_v1",
+      "success_weight": 0.32,
+      "category": "Cryptography"
+    }
+  ],
+  "cryptanalysis": [
+    {
+      "playbook_id": "quantum_safe_bypass_v1",
+      "success_weight": 0.32,
+      "category": "Cryptography"
+    }
+  ],
+  "custom_crypto_analyzer": [
+    {
+      "playbook_id": "quantum_safe_bypass_v1",
+      "success_weight": 0.32,
+      "category": "Cryptography"
+    }
+  ],
+  "rate_limits_weak": [
+    {
+      "playbook_id": "llm_model_extraction_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM"
+    }
+  ],
+  "model_stealer": [
+    {
+      "playbook_id": "llm_model_extraction_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM"
+    }
+  ],
+  "custom_llm_tools": [
+    {
+      "playbook_id": "llm_model_extraction_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM"
+    },
+    {
+      "playbook_id": "llm_poisoning_v1",
+      "success_weight": 0.52,
+      "category": "AI/LLM"
+    }
+  ],
+  "llm_api_accessible": [
+    {
+      "playbook_id": "llm_model_extraction_v1",
+      "success_weight": 0.58,
+      "category": "AI/LLM"
+    }
+  ],
+  "training_data_accessible": [
+    {
+      "playbook_id": "llm_poisoning_v1",
+      "success_weight": 0.52,
+      "category": "AI/LLM"
+    }
+  ],
+  "poisoning_injection_point": [
+    {
+      "playbook_id": "llm_poisoning_v1",
+      "success_weight": 0.52,
+      "category": "AI/LLM"
+    }
+  ],
+  "training-data": [
+    {
+      "playbook_id": "llm_poisoning_v1",
+      "success_weight": 0.52,
+      "category": "AI/LLM"
+    }
+  ],
+  "side-channel": [
+    {
+      "playbook_id": "pixel_based_inference_v1",
+      "success_weight": 0.48,
+      "category": "AI/LLM"
+    }
+  ],
+  "ml": [
+    {
+      "playbook_id": "pixel_based_inference_v1",
+      "success_weight": 0.48,
+      "category": "AI/LLM"
+    }
+  ],
+  "timing-attack": [
+    {
+      "playbook_id": "pixel_based_inference_v1",
+      "success_weight": 0.48,
+      "category": "AI/LLM"
+    }
+  ],
+  "inference_api_accessible": [
+    {
+      "playbook_id": "pixel_based_inference_v1",
+      "success_weight": 0.48,
+      "category": "AI/LLM"
+    }
+  ],
+  "inference": [
+    {
+      "playbook_id": "pixel_based_inference_v1",
+      "success_weight": 0.48,
+      "category": "AI/LLM"
+    }
+  ],
+  "pixel_rendering_visible": [
+    {
+      "playbook_id": "pixel_based_inference_v1",
+      "success_weight": 0.48,
+      "category": "AI/LLM"
+    }
+  ],
+  "custom_inference_tools": [
+    {
+      "playbook_id": "pixel_based_inference_v1",
+      "success_weight": 0.48,
+      "category": "AI/LLM"
+    }
+  ],
+  "model_checkpoint_downloadable": [
+    {
+      "playbook_id": "supply_chain_model_v1",
+      "success_weight": 0.54,
+      "category": "AI/LLM"
+    }
+  ],
+  "ai-model": [
+    {
+      "playbook_id": "supply_chain_model_v1",
+      "success_weight": 0.54,
+      "category": "AI/LLM"
+    }
+  ],
+  "custom_model_tools": [
+    {
+      "playbook_id": "supply_chain_model_v1",
+      "success_weight": 0.54,
+      "category": "AI/LLM"
+    }
+  ],
+  "poisoning_injection_available": [
+    {
+      "playbook_id": "supply_chain_model_v1",
+      "success_weight": 0.54,
+      "category": "AI/LLM"
+    }
+  ],
+  "5g_vulnerability_exists": [
+    {
+      "playbook_id": "5g_network_attack_v1",
+      "success_weight": 0.41,
+      "category": "Telecommunications"
+    }
+  ],
+  "5g_network_deployed": [
+    {
+      "playbook_id": "5g_network_attack_v1",
+      "success_weight": 0.41,
+      "category": "Telecommunications"
+    }
+  ],
+  "5g": [
+    {
+      "playbook_id": "5g_network_attack_v1",
+      "success_weight": 0.41,
+      "category": "Telecommunications"
+    }
+  ],
+  "telecom": [
+    {
+      "playbook_id": "5g_network_attack_v1",
+      "success_weight": 0.41,
+      "category": "Telecommunications"
+    }
+  ],
+  "custom_5g_tools": [
+    {
+      "playbook_id": "5g_network_attack_v1",
+      "success_weight": 0.41,
+      "category": "Telecommunications"
+    }
+  ],
+  "rogue-base-station": [
+    {
+      "playbook_id": "5g_network_attack_v1",
+      "success_weight": 0.41,
+      "category": "Telecommunications"
+    }
+  ],
+  "exfiltration_channel_available": [
+    {
+      "playbook_id": "air_gapped_network_v1",
+      "success_weight": 0.39,
+      "category": "Network Security"
+    }
+  ],
+  "air-gap": [
+    {
+      "playbook_id": "air_gapped_network_v1",
+      "success_weight": 0.39,
+      "category": "Network Security"
+    }
+  ],
+  "covert-channel": [
+    {
+      "playbook_id": "air_gapped_network_v1",
+      "success_weight": 0.39,
+      "category": "Network Security"
+    }
+  ],
+  "air_gap_compromised": [
+    {
+      "playbook_id": "air_gapped_network_v1",
+      "success_weight": 0.39,
+      "category": "Network Security"
+    }
+  ],
+  "exfiltration": [
+    {
+      "playbook_id": "air_gapped_network_v1",
+      "success_weight": 0.39,
+      "category": "Network Security"
+    }
+  ],
+  "custom_airgap_tools": [
+    {
+      "playbook_id": "air_gapped_network_v1",
+      "success_weight": 0.39,
+      "category": "Network Security"
+    }
+  ],
+  "geolocation": [
+    {
+      "playbook_id": "geolocation_bypass_v1",
+      "success_weight": 0.72,
+      "category": "Evasion"
+    }
+  ],
+  "target_has_geo_restrictions": [
+    {
+      "playbook_id": "geolocation_bypass_v1",
+      "success_weight": 0.72,
+      "category": "Evasion"
+    }
+  ],
+  "vpn_tools": [
+    {
+      "playbook_id": "geolocation_bypass_v1",
+      "success_weight": 0.72,
+      "category": "Evasion"
+    }
+  ],
+  "proxy_access_available": [
+    {
+      "playbook_id": "geolocation_bypass_v1",
+      "success_weight": 0.72,
+      "category": "Evasion"
+    }
+  ],
+  "proxy_tools": [
+    {
+      "playbook_id": "geolocation_bypass_v1",
+      "success_weight": 0.72,
+      "category": "Evasion"
+    }
+  ]
+}

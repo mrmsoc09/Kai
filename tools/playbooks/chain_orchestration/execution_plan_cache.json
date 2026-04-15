@@ -1,0 +1,716 @@
+{
+  "sql_injection_v1": [
+    [
+      1,
+      "sql_injection_v1",
+      {
+        "tool_id": "caido"
+      },
+      {
+        "timeout_seconds": 2100,
+        "mode": "indexed_dispatch"
+      },
+      "sqlmap"
+    ]
+  ],
+  "xss_discovery_v1": [
+    [
+      1,
+      "xss_discovery_v1",
+      {
+        "tool_id": "caido"
+      },
+      {
+        "timeout_seconds": 2700,
+        "mode": "indexed_dispatch"
+      },
+      "owasp-zap"
+    ]
+  ],
+  "owasp_a05_misconfig_v1": [
+    [
+      1,
+      "owasp_a05_misconfig_v1",
+      {
+        "tool_id": "spiderfoot"
+      },
+      {
+        "timeout_seconds": 3600,
+        "mode": "indexed_dispatch"
+      },
+      "burp_suite"
+    ]
+  ],
+  "owasp_a02_crypto_v1": [
+    [
+      1,
+      "owasp_a02_crypto_v1",
+      {
+        "tool_id": "testssl"
+      },
+      {
+        "timeout_seconds": 3600,
+        "mode": "indexed_dispatch"
+      },
+      "openssl"
+    ]
+  ],
+  "owasp_a03_injection_v1": [
+    [
+      1,
+      "owasp_a03_injection_v1",
+      {
+        "tool_id": "sqlmap"
+      },
+      {
+        "timeout_seconds": 5400,
+        "mode": "indexed_dispatch"
+      },
+      "burp_suite"
+    ]
+  ],
+  "owasp_a01_access_control_v1": [
+    [
+      1,
+      "owasp_a01_access_control_v1",
+      {
+        "tool_id": "burp_suite"
+      },
+      {
+        "timeout_seconds": 4500,
+        "mode": "indexed_dispatch"
+      },
+      "custom_authz_tester"
+    ]
+  ],
+  "web_app_recon_v1": [
+    [
+      1,
+      "web_app_recon_v1",
+      {
+        "tool_id": "spiderfoot"
+      },
+      {
+        "timeout_seconds": 2700,
+        "mode": "indexed_dispatch"
+      },
+      "testssl"
+    ]
+  ],
+  "graphql_attacks_v1": [
+    [
+      1,
+      "graphql_attacks_v1",
+      {
+        "tool_id": "graphql-cop"
+      },
+      {
+        "timeout_seconds": 2400,
+        "mode": "indexed_dispatch"
+      },
+      "clairvoyance"
+    ]
+  ],
+  "ai_llm_supply_chain_v1": [
+    [
+      1,
+      "ai_llm_supply_chain_v1",
+      {
+        "tool_id": "dependency_checker"
+      },
+      {
+        "timeout_seconds": 4500,
+        "mode": "indexed_dispatch"
+      },
+      "checkpoint_analyzer"
+    ]
+  ],
+  "auth_bypass_v1": [
+    [
+      1,
+      "auth_bypass_v1",
+      {
+        "tool_id": "caido"
+      },
+      {
+        "timeout_seconds": 3000,
+        "mode": "indexed_dispatch"
+      },
+      "jwt_tool"
+    ]
+  ],
+  "ai_llm_prompt_injection_v1": [
+    [
+      1,
+      "ai_llm_prompt_injection_v1",
+      {
+        "tool_id": "custom_llm_tester"
+      },
+      {
+        "timeout_seconds": 5400,
+        "mode": "indexed_dispatch"
+      },
+      "token_analyzer"
+    ]
+  ],
+  "ai_llm_model_extraction_v1": [
+    [
+      1,
+      "ai_llm_model_extraction_v1",
+      {
+        "tool_id": "api_fuzzer"
+      },
+      {
+        "timeout_seconds": 7200,
+        "mode": "indexed_dispatch"
+      },
+      "statistical_analyzer"
+    ]
+  ],
+  "owasp_a04_design_v1": [
+    [
+      1,
+      "owasp_a04_design_v1",
+      {
+        "tool_id": "burp_suite"
+      },
+      {
+        "timeout_seconds": 3600,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "ai_llm_vector_db_v1": [
+    [
+      1,
+      "ai_llm_vector_db_v1",
+      {
+        "tool_id": "custom_vector_tools"
+      },
+      {
+        "timeout_seconds": 3600,
+        "mode": "indexed_dispatch"
+      },
+      "semantic_analyzer"
+    ]
+  ],
+  "ai_llm_container_escape_v1": [
+    [
+      1,
+      "ai_llm_container_escape_v1",
+      {
+        "tool_id": "custom_container_tools"
+      },
+      {
+        "timeout_seconds": 5400,
+        "mode": "indexed_dispatch"
+      },
+      "exploit_tools"
+    ]
+  ],
+  "sbom_vulnerability_chain_v1": [
+    [
+      1,
+      "sbom_vulnerability_chain_v1",
+      {
+        "tool_id": "sbom_parser"
+      },
+      {
+        "timeout_seconds": 10800,
+        "mode": "indexed_dispatch"
+      },
+      "vulnerability_db"
+    ]
+  ],
+  "cloud_lateral_movement_v1": [
+    [
+      1,
+      "cloud_lateral_movement_v1",
+      {
+        "tool_id": "awscli"
+      },
+      {
+        "timeout_seconds": 12600,
+        "mode": "indexed_dispatch"
+      },
+      "azcli"
+    ]
+  ],
+  "api_rce_chain_v1": [
+    [
+      1,
+      "api_rce_chain_v1",
+      {
+        "tool_id": "burp_suite"
+      },
+      {
+        "timeout_seconds": 9000,
+        "mode": "indexed_dispatch"
+      },
+      "postman"
+    ]
+  ],
+  "database_exfiltration_v1": [
+    [
+      1,
+      "database_exfiltration_v1",
+      {
+        "tool_id": "sqlmap"
+      },
+      {
+        "timeout_seconds": 10800,
+        "mode": "indexed_dispatch"
+      },
+      "burp_suite"
+    ]
+  ],
+  "iam_privilege_escalation_v1": [
+    [
+      1,
+      "iam_privilege_escalation_v1",
+      {
+        "tool_id": "custom_iam_tools"
+      },
+      {
+        "timeout_seconds": 12000,
+        "mode": "indexed_dispatch"
+      },
+      "jwt_tool"
+    ]
+  ],
+  "zero_day_chain_v1": [
+    [
+      1,
+      "zero_day_chain_v1",
+      {
+        "tool_id": "custom_exploit"
+      },
+      {
+        "timeout_seconds": 10800,
+        "mode": "indexed_dispatch"
+      },
+      "metasploit"
+    ]
+  ],
+  "cryptographic_downgrade_v1": [
+    [
+      1,
+      "cryptographic_downgrade_v1",
+      {
+        "tool_id": "testssl"
+      },
+      {
+        "timeout_seconds": 14400,
+        "mode": "indexed_dispatch"
+      },
+      "hashcat"
+    ]
+  ],
+  "container_escape_rce_v1": [
+    [
+      1,
+      "container_escape_rce_v1",
+      {
+        "tool_id": "custom_container_tools"
+      },
+      {
+        "timeout_seconds": 12000,
+        "mode": "indexed_dispatch"
+      },
+      "kubectl"
+    ]
+  ],
+  "supply_chain_attack_v1": [
+    [
+      1,
+      "supply_chain_attack_v1",
+      {
+        "tool_id": "dependency_checker"
+      },
+      {
+        "timeout_seconds": 14400,
+        "mode": "indexed_dispatch"
+      },
+      "custom_dropper"
+    ]
+  ],
+  "business_logic_bypass_v1": [
+    [
+      1,
+      "business_logic_bypass_v1",
+      {
+        "tool_id": "burp_suite"
+      },
+      {
+        "timeout_seconds": 12000,
+        "mode": "indexed_dispatch"
+      },
+      "custom_logic_tester"
+    ]
+  ],
+  "network_lateral_movement_v1": [
+    [
+      1,
+      "network_lateral_movement_v1",
+      {
+        "tool_id": "nmap"
+      },
+      {
+        "timeout_seconds": 14400,
+        "mode": "indexed_dispatch"
+      },
+      "metasploit"
+    ]
+  ],
+  "iot_botnet_v1": [
+    [
+      1,
+      "iot_botnet_v1",
+      {
+        "tool_id": "custom_iot_tools"
+      },
+      {
+        "timeout_seconds": 12000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "mobile_compromise_v1": [
+    [
+      1,
+      "mobile_compromise_v1",
+      {
+        "tool_id": "frida"
+      },
+      {
+        "timeout_seconds": 10800,
+        "mode": "indexed_dispatch"
+      },
+      "objection"
+    ]
+  ],
+  "dns_cache_poisoning_v1": [
+    [
+      1,
+      "dns_cache_poisoning_v1",
+      {
+        "tool_id": "custom_dns_tools"
+      },
+      {
+        "timeout_seconds": 9000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "vpn_ipsec_weakness_v1": [
+    [
+      1,
+      "vpn_ipsec_weakness_v1",
+      {
+        "tool_id": "custom_vpn_tools"
+      },
+      {
+        "timeout_seconds": 10800,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "social_engineering_rce_v1": [
+    [
+      1,
+      "social_engineering_rce_v1",
+      {
+        "tool_id": "gophish"
+      },
+      {
+        "timeout_seconds": 10800,
+        "mode": "indexed_dispatch"
+      },
+      "evilginx"
+    ]
+  ],
+  "malware_delivery_v1": [
+    [
+      1,
+      "malware_delivery_v1",
+      {
+        "tool_id": "custom_malware_gen"
+      },
+      {
+        "timeout_seconds": 18000,
+        "mode": "indexed_dispatch"
+      },
+      "metasploit"
+    ]
+  ],
+  "ransomware_simulation_v1": [
+    [
+      1,
+      "ransomware_simulation_v1",
+      {
+        "tool_id": "custom_ransomware_sim"
+      },
+      {
+        "timeout_seconds": 18000,
+        "mode": "indexed_dispatch"
+      },
+      "encryption_tools"
+    ]
+  ],
+  "insider_threat_simulation_v1": [
+    [
+      1,
+      "insider_threat_simulation_v1",
+      {
+        "tool_id": "custom_insider_tools"
+      },
+      {
+        "timeout_seconds": 12000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "firmware_rce_v1": [
+    [
+      1,
+      "firmware_rce_v1",
+      {
+        "tool_id": "custom_firmware_tools"
+      },
+      {
+        "timeout_seconds": 15000,
+        "mode": "indexed_dispatch"
+      },
+      "ghidra"
+    ]
+  ],
+  "hypervisor_escape_v1": [
+    [
+      1,
+      "hypervisor_escape_v1",
+      {
+        "tool_id": "custom_hypervisor_tools"
+      },
+      {
+        "timeout_seconds": 15000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "dga_botnet_sim_v1": [
+    [
+      1,
+      "dga_botnet_sim_v1",
+      {
+        "tool_id": "custom_dga"
+      },
+      {
+        "timeout_seconds": 18000,
+        "mode": "indexed_dispatch"
+      },
+      "custom_c2"
+    ]
+  ],
+  "industrial_scada_v1": [
+    [
+      1,
+      "industrial_scada_v1",
+      {
+        "tool_id": "custom_scada_tools"
+      },
+      {
+        "timeout_seconds": 18000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "apt_campaign_sim_v1": [
+    [
+      1,
+      "apt_campaign_sim_v1",
+      {
+        "tool_id": "metasploit"
+      },
+      {
+        "timeout_seconds": 24000,
+        "mode": "indexed_dispatch"
+      },
+      "custom_apt_tools"
+    ]
+  ],
+  "zero_trust_bypass_v1": [
+    [
+      1,
+      "zero_trust_bypass_v1",
+      {
+        "tool_id": "custom_zero_trust_tools"
+      },
+      {
+        "timeout_seconds": 15000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "runtime_detection_evasion_v1": [
+    [
+      1,
+      "runtime_detection_evasion_v1",
+      {
+        "tool_id": "custom_evasion_tools"
+      },
+      {
+        "timeout_seconds": 12000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "log_deletion_forensic_v1": [
+    [
+      1,
+      "log_deletion_forensic_v1",
+      {
+        "tool_id": "custom_log_tools"
+      },
+      {
+        "timeout_seconds": 9000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "persistent_backdoor_v1": [
+    [
+      1,
+      "persistent_backdoor_v1",
+      {
+        "tool_id": "metasploit"
+      },
+      {
+        "timeout_seconds": 15000,
+        "mode": "indexed_dispatch"
+      },
+      "custom_backdoor"
+    ]
+  ],
+  "quantum_safe_bypass_v1": [
+    [
+      1,
+      "quantum_safe_bypass_v1",
+      {
+        "tool_id": "custom_crypto_analyzer"
+      },
+      {
+        "timeout_seconds": 18000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "llm_model_extraction_v1": [
+    [
+      1,
+      "llm_model_extraction_v1",
+      {
+        "tool_id": "custom_llm_tools"
+      },
+      {
+        "timeout_seconds": 14400,
+        "mode": "indexed_dispatch"
+      },
+      "model_stealer"
+    ]
+  ],
+  "llm_poisoning_v1": [
+    [
+      1,
+      "llm_poisoning_v1",
+      {
+        "tool_id": "custom_llm_tools"
+      },
+      {
+        "timeout_seconds": 12000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "pixel_based_inference_v1": [
+    [
+      1,
+      "pixel_based_inference_v1",
+      {
+        "tool_id": "custom_inference_tools"
+      },
+      {
+        "timeout_seconds": 10800,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "supply_chain_model_v1": [
+    [
+      1,
+      "supply_chain_model_v1",
+      {
+        "tool_id": "custom_model_tools"
+      },
+      {
+        "timeout_seconds": 12000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "5g_network_attack_v1": [
+    [
+      1,
+      "5g_network_attack_v1",
+      {
+        "tool_id": "custom_5g_tools"
+      },
+      {
+        "timeout_seconds": 15000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "air_gapped_network_v1": [
+    [
+      1,
+      "air_gapped_network_v1",
+      {
+        "tool_id": "custom_airgap_tools"
+      },
+      {
+        "timeout_seconds": 18000,
+        "mode": "indexed_dispatch"
+      },
+      ""
+    ]
+  ],
+  "geolocation_bypass_v1": [
+    [
+      1,
+      "geolocation_bypass_v1",
+      {
+        "tool_id": "proxy_tools"
+      },
+      {
+        "timeout_seconds": 7200,
+        "mode": "indexed_dispatch"
+      },
+      "vpn_tools"
+    ]
+  ]
+}

@@ -1,0 +1,64 @@
+playbook:
+  metadata:
+    id: social-engineering
+    name: Social Engineering Chain
+    cluster: RECONNAISSANCE
+    complexity: HIGH
+    version: '1.0'
+    status: skeleton
+  objective:
+    primary: Compromise personnel to gain access
+    secondary:
+    - Phishing
+    - Pretexting
+    - Credential harvesting
+  inputs_and_sources:
+    input_source: master-orchestrator
+    required_inputs:
+    - personnel_intelligence
+  outputs_and_targets:
+    primary_output_target: cred-theft
+    alternative_targets:
+    - physical-exploit
+    fallback_target: zeroday-exploit
+  cve_bindings:
+    count: 5
+    cves:
+    - CVE-2024-20889
+    - CVE-2024-20678
+    - CVE-2024-21193
+    - CVE-2024-21234
+    - CVE-2024-21456
+    note: Each binding is from cve_knowledge_expanded.yaml
+  persona_assignments:
+    count: 2
+    personas:
+    - social_engineer
+    - phishing_specialist
+    note: Each persona from persona_cve_mapping.yaml
+  attack_sequence:
+    step_1:
+      title: Target identification
+      persona: social_engineer
+    step_2:
+      title: Pretext development
+      persona: phishing_specialist
+    step_3:
+      title: Campaign execution
+      persona: social_engineer
+  decision_branches:
+  - condition: If step succeeds
+    action: Call cred-theft
+  - condition: If step fails
+    action: Call zeroday-exploit
+  - condition: If detected
+    action: Call incident-responder-evasion
+  cross_link_graph:
+    calls_these_playbooks:
+    - cred-theft
+    - physical-exploit
+    called_by_these_playbooks:
+    - master-orchestrator
+    can_pivot_to:
+    - zeroday-exploit
+  notes: 'SKELETON: Logic implementation pending. Cross-linking complete.'

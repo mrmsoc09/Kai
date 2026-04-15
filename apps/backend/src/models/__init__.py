@@ -73,6 +73,7 @@ from .enums import (
     WorkflowRunStatusEnum,
 )
 from .execution import ExecutionContextRecord
+from .finding_overrides import FindingOverride
 from .hil import AuditMerkleRoot, Evidence, Finding, HILApproval, Report
 from .hil_extra import ProgramScope
 from .intention import IntentionRecord
@@ -129,6 +130,7 @@ __all__ = [
     "AuditMerkleRoot",
     "ProgramScope",
     "ExecutionContextRecord",
+    "FindingOverride",
     "Program",
     "ScopeTarget",
     "CampaignRun",

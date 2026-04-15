@@ -1,0 +1,61 @@
+playbook:
+  metadata:
+    name: Authentication and Authorization Bypass Validation (High-Frequency Optimized
+      v2)
+    id: auth_bypass_v1_optimized_v2
+    version: '2.0'
+    base_playbook_id: auth_bypass_v1
+    category: Exploitation
+    optimization_focus: High-frequency vulnerability patterns by target archetype
+    scope_lock_required: true
+  optimization_baseline:
+    baseline_execution_minutes: 50
+    optimized_execution_minutes: 16
+    baseline_success_rate: 0.65
+    optimized_success_rate: 0.82
+    expected_time_reduction_percent: 68.0
+    expected_success_uplift_percent: 26.2
+  pre_execution_target_classification:
+    required_playbooks:
+    - target_fingerprinter_v1
+    - archetype_classifier_v1
+    - vulnerability_predictor_v1
+    required_outputs:
+    - target_archetype
+    - confidence_score
+    - recommended_top_playbooks
+    scope_validation_first: true
+  target_aware_routing:
+    startup:
+      exploitation_patterns:
+      - idor_object_enumeration
+      - vertical_role_escalation
+      - session_rotation_bypass
+      timeout_seconds: 180
+      expected_success_rate: 0.94
+      execution_mode: high_frequency_only
+    enterprise:
+      exploitation_patterns:
+      - tenant_boundary_authz_bypass
+      - function_level_authz_bypass
+      - oauth_token_scope_mismatch
+      timeout_seconds: 300
+      expected_success_rate: 0.86
+      execution_mode: high_frequency_only
+    government:
+      exploitation_patterns:
+      - least_privilege_boundary_validation
+      - policy_enforcement_inconsistency_check
+      timeout_seconds: 480
+      expected_success_rate: 0.7
+      execution_mode: high_frequency_only
+  execution_logic:
+    selection_rule: Use target archetype route; execute only listed high-frequency
+      patterns.
+    early_exit: Stop on first validated critical/high finding or after pattern list
+      exhausted.
+    fallback: If archetype unknown, run startup route with enterprise timeout.
+  optimization_rationale: Original playbook 'auth_bypass_v1' executed broad pattern
+    sets. v2 reduces low-probability pattern execution and targets high-frequency
+    access_control paths for startup/enterprise/government archetypes using Prompt
+    5 frequency intelligence.

@@ -1,0 +1,13 @@
+{
+  "discovery_plan": [
+    {"tool": "subfinder", "args": ["-d", "{target}"]},
+    {"tool": "tlsx", "args": ["-u", "{subdomains}"]},
+    {"tool": "httpx", "args": ["-l", "{subdomains}"]},
+    {"tool": "gowitness", "args": ["-f", "{urls}"]}
+  ],
+  "fuzzing_plan": [
+    {"tool": "gf", "args": ["patterns"]},
+    {"tool": "nuclei", "args": ["-t", "cves", "-u", "{target}"]},
+    {"tool": "caido", "args": ["replay", "--auto"]}
+  ]
+}

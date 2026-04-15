@@ -1,0 +1,180 @@
+bug_bounty_target_profiles:
+  analysis_date: "2026-04-13"
+  scope_enforcement_principle: >
+    Each profile assumes strict per-opportunity scope validation (allowlist + exclusions +
+    rules-of-engagement) before any testing or prioritization.
+  archetypes:
+    - target_type: "early_stage_saas"
+      profile_summary:
+        organization_shape: "10-150 employees, rapid release cadence, cloud-native web/API stack"
+        typical_stack: ["React/Next.js SPA", "Node.js/Python API", "Managed cloud DB", "CI/CD automation"]
+        likely_assets_in_scope: ["app subdomain", "public API", "selected staging endpoints"]
+      scope_characteristics:
+        typical_in_scope:
+          - "Public web application and API hostnames"
+          - "Authentication flows and account workflows"
+          - "Core business feature endpoints"
+        common_exclusions:
+          - "Third-party providers"
+          - "Production admin panels"
+          - "DoS/stress testing"
+      security_controls_observed:
+        - "Basic WAF/CDN"
+        - "Limited rate limiting"
+        - "Partial centralized logging"
+      vulnerability_distribution:
+        xss: 0.22
+        weak_auth_session: 0.17
+        idor_access_control: 0.16
+        information_disclosure: 0.14
+        misconfiguration: 0.11
+        api_authz: 0.10
+        sql_injection: 0.06
+        other: 0.04
+      expected_findings_per_engagement: "6-14"
+      typical_payout_per_finding_usd: [400, 6000]
+      estimated_effort_hours: [6, 18]
+      confidence: "HIGH"
+
+    - target_type: "established_saas"
+      profile_summary:
+        organization_shape: "150-1000 employees, mature SDLC, dedicated AppSec team"
+        typical_stack: ["Microservices", "API gateways", "SSO/OAuth", "Cloud IAM + IaC"]
+        likely_assets_in_scope: ["specific subdomains", "customer-facing API clusters", "mobile backend endpoints"]
+      scope_characteristics:
+        typical_in_scope:
+          - "Specific domains and business-critical APIs"
+          - "Auth/authz logic and multi-tenant boundaries"
+        common_exclusions:
+          - "Internal-only infrastructure"
+          - "Social engineering"
+          - "Non-production partner environments"
+      security_controls_observed:
+        - "Stronger WAF and abuse controls"
+        - "MFA and SSO hardening"
+        - "Automated SAST/DAST pre-release"
+      vulnerability_distribution:
+        idor_access_control: 0.19
+        api_authz: 0.17
+        business_logic: 0.14
+        information_disclosure: 0.12
+        misconfiguration: 0.10
+        xss: 0.10
+        auth_session: 0.10
+        other: 0.08
+      expected_findings_per_engagement: "3-9"
+      typical_payout_per_finding_usd: [900, 18000]
+      estimated_effort_hours: [10, 28]
+      confidence: "HIGH"
+
+    - target_type: "enterprise_multi_property"
+      profile_summary:
+        organization_shape: "1000+ employees, heterogeneous legacy+modern estate"
+        typical_stack: ["Multiple identity systems", "Legacy web tiers", "Mixed cloud/on-prem", "Complex routing"]
+        likely_assets_in_scope: ["1-3 sanctioned properties", "strictly bounded functional areas"]
+      scope_characteristics:
+        typical_in_scope:
+          - "Narrow application slices with explicit testing windows"
+          - "Specific API and account flows"
+        common_exclusions:
+          - "Broad network scanning"
+          - "Employee-targeted social testing"
+          - "Payment flow destructive actions"
+      security_controls_observed:
+        - "Mature SOC monitoring and rapid triage"
+        - "Strong edge controls"
+        - "Heavy policy constraints"
+      vulnerability_distribution:
+        access_control_generic: 0.17
+        business_logic: 0.15
+        information_disclosure: 0.13
+        auth_session: 0.12
+        api_flaws: 0.11
+        misconfiguration: 0.10
+        xss: 0.08
+        other: 0.14
+      expected_findings_per_engagement: "1-5"
+      typical_payout_per_finding_usd: [1500, 30000]
+      estimated_effort_hours: [14, 36]
+      confidence: "MEDIUM-HIGH"
+
+    - target_type: "fintech_regulated"
+      profile_summary:
+        organization_shape: "Regulated financial services, strict compliance and segmented systems"
+        typical_stack: ["Strong IAM", "Fraud controls", "High-assurance APIs", "Audit-heavy workflows"]
+        likely_assets_in_scope: ["specific customer portals", "approved API endpoints", "limited mobile/web features"]
+      scope_characteristics:
+        typical_in_scope:
+          - "Authentication and authorization paths"
+          - "Transaction-related business logic"
+          - "Customer data segregation checks"
+        common_exclusions:
+          - "Real transaction disruption"
+          - "High-volume automation"
+          - "Core banking/payment rails"
+      security_controls_observed:
+        - "Aggressive anomaly detection"
+        - "Tighter session controls"
+        - "Strict legal and evidence requirements"
+      vulnerability_distribution:
+        auth_bypass_logic: 0.20
+        authorization_flaws: 0.18
+        business_logic_race_condition: 0.14
+        information_disclosure: 0.12
+        cryptographic_weakness: 0.10
+        api_security: 0.10
+        xss: 0.07
+        other: 0.09
+      expected_findings_per_engagement: "1-4"
+      typical_payout_per_finding_usd: [2500, 50000]
+      estimated_effort_hours: [16, 44]
+      confidence: "MEDIUM-HIGH"
+
+    - target_type: "consumer_ecommerce_retail"
+      profile_summary:
+        organization_shape: "Traffic-heavy retail/consumer platform with frequent marketing and release cycles"
+        typical_stack: ["Web storefront", "Mobile APIs", "Promo/business-rules engine", "Third-party integrations"]
+        likely_assets_in_scope: ["checkout-adjacent flows", "account area", "catalog/search surfaces", "public APIs"]
+      scope_characteristics:
+        typical_in_scope:
+          - "Account and profile features"
+          - "Coupon/promo logic"
+          - "Public web + API routes"
+        common_exclusions:
+          - "Cardholder data environment"
+          - "Denial-of-service scenarios"
+          - "Physical POS systems"
+      security_controls_observed:
+        - "CDN/WAF with bot filtering"
+        - "Fraud detection around checkout"
+        - "Moderate API governance"
+      vulnerability_distribution:
+        xss: 0.19
+        information_disclosure: 0.16
+        idor_access_control: 0.14
+        business_logic: 0.13
+        open_redirect_content_spoof: 0.10
+        api_security: 0.10
+        auth_session: 0.08
+        other: 0.10
+      expected_findings_per_engagement: "4-11"
+      typical_payout_per_finding_usd: [700, 15000]
+      estimated_effort_hours: [8, 24]
+      confidence: "MEDIUM-HIGH"
+
+  cross_profile_findings:
+    - "Access control, information disclosure, and misconfiguration remain universally high across archetypes."
+    - "XSS remains a high-frequency entry class, but relative dominance is lower in tightly controlled enterprise/fintech scopes."
+    - "Fintech and mature SaaS reward deeper authz/business-logic testing more than commodity payload checks."
+
+  source_trace:
+    - url: "https://www.hackerone.com/lp/top-ten-vulnerabilities"
+      use: "Bug bounty class ordering baseline and platform volume statement."
+    - url: "https://www.hackerone.com/blog/ai-security-trends-2025"
+      use: "Trend correction for IDOR/access control growth and XSS/SQLi decline."
+    - url: "https://www.bugcrowd.com/resource/top-10-vulnerabilities/"
+      use: "Critical and reward-weighted class prioritization."
+    - url: "https://www.bugcrowd.com/press-release/bugcrowd-reports-an-88-increase-in-hardware-vulnerabilities-and-a-2x-spike-in-network-vulnerabilities-2025-ciso-report-reveals/"
+      use: "Critical trend deltas for access control, data exposure, and API growth."
+    - url: "https://www.intigriti.com/blog/news/intigriti-2024-a-year-in-review"
+      use: "Direct percentage anchors and high-impact submission mix."

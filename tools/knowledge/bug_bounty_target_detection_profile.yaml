@@ -1,0 +1,160 @@
+bug_bounty_target_detection_profile:
+  analysis_date: '2026-04-13'
+  operation_mode: detection_only
+  target_profiles:
+  - target_type: early_stage_saas
+    scope_characteristics:
+      typical_scope_size: 3-10 domains/subdomains
+      total_endpoints_typical: 50-150
+      typical_technologies:
+      - Node.js
+      - Python
+      - React/Vue
+      typical_exclusions:
+      - Admin panels
+      - Internal APIs
+      - Staging environments
+    vulnerability_detection_frequencies:
+      xss: 0.78
+      weak_auth: 0.64
+      misconfiguration: 0.71
+      ssrf: 0.38
+      sql_injection: 0.45
+      business_logic: 0.52
+      information_disclosure: 0.6
+    high_frequency_discoveries:
+    - XSS (78%)
+    - Misconfiguration (71%)
+    - Information Disclosure (60%)
+    estimated_findings_per_scope: 5-8
+    estimated_scanning_time_minutes: 90-180
+    estimated_total_payout_usd: 8000-15000
+    scanning_efficiency: High
+    playbooks_most_effective:
+    - det_xss_discovery_v1
+    - det_owasp_a05_misconfig_v1
+    - det_web_app_recon_v1
+  - target_type: established_saas
+    scope_characteristics:
+      typical_scope_size: 8-25 domains/subdomains
+      total_endpoints_typical: 120-450
+      typical_technologies:
+      - Microservices
+      - API Gateway
+      - OAuth/SSO
+      typical_exclusions:
+      - Internal control plane
+      - Partner-only integrations
+    vulnerability_detection_frequencies:
+      xss: 0.52
+      weak_auth: 0.58
+      misconfiguration: 0.55
+      api_authz: 0.62
+      business_logic: 0.57
+      information_disclosure: 0.49
+      ssrf: 0.31
+    high_frequency_discoveries:
+    - API authorization flaws (62%)
+    - Weak auth/session (58%)
+    - Business logic (57%)
+    estimated_findings_per_scope: 3-6
+    estimated_scanning_time_minutes: 120-240
+    estimated_total_payout_usd: 10000-22000
+    scanning_efficiency: Medium-High
+    playbooks_most_effective:
+    - det_auth_bypass_v1
+    - det_graphql_attacks_v1
+    - det_business_logic_bypass_v1
+  - target_type: enterprise_multi_property
+    scope_characteristics:
+      typical_scope_size: 2-8 sanctioned properties
+      total_endpoints_typical: 80-300
+      typical_technologies:
+      - Legacy + modern hybrid
+      - SSO federation
+      - WAF/EDR
+      typical_exclusions:
+      - Employee portals
+      - High-risk operational systems
+    vulnerability_detection_frequencies:
+      xss: 0.4
+      weak_auth: 0.47
+      misconfiguration: 0.5
+      api_authz: 0.54
+      business_logic: 0.55
+      information_disclosure: 0.46
+      crypto: 0.33
+    high_frequency_discoveries:
+    - Business logic (55%)
+    - API authorization (54%)
+    - Misconfiguration (50%)
+    estimated_findings_per_scope: 2-5
+    estimated_scanning_time_minutes: 180-320
+    estimated_total_payout_usd: 12000-28000
+    scanning_efficiency: Medium
+    playbooks_most_effective:
+    - det_archetype_classifier_v1
+    - det_business_logic_bypass_v1
+    - det_owasp_a01_access_control_v1
+  - target_type: fintech_regulated
+    scope_characteristics:
+      typical_scope_size: 1-6 properties with strict API boundaries
+      total_endpoints_typical: 60-180
+      typical_technologies:
+      - Strong IAM
+      - Transaction workflows
+      - Fraud controls
+      typical_exclusions:
+      - Payment rails
+      - Destructive transaction paths
+    vulnerability_detection_frequencies:
+      xss: 0.35
+      weak_auth: 0.61
+      misconfiguration: 0.44
+      api_authz: 0.66
+      business_logic: 0.63
+      information_disclosure: 0.41
+      crypto: 0.46
+    high_frequency_discoveries:
+    - API authorization flaws (66%)
+    - Business logic flaws (63%)
+    - Weak auth/session (61%)
+    estimated_findings_per_scope: 1-4
+    estimated_scanning_time_minutes: 180-360
+    estimated_total_payout_usd: 15000-50000
+    scanning_efficiency: Medium
+    playbooks_most_effective:
+    - det_auth_bypass_v1
+    - det_cryptographic_downgrade_v1
+    - det_business_logic_bypass_v1
+  - target_type: consumer_ecommerce
+    scope_characteristics:
+      typical_scope_size: 5-20 web/API surfaces
+      total_endpoints_typical: 100-400
+      typical_technologies:
+      - Web storefront
+      - Mobile API
+      - Promo engine
+      typical_exclusions:
+      - Cardholder-data systems
+      - DoS stress tests
+    vulnerability_detection_frequencies:
+      xss: 0.69
+      weak_auth: 0.44
+      misconfiguration: 0.62
+      api_authz: 0.55
+      business_logic: 0.59
+      information_disclosure: 0.58
+      open_redirect: 0.51
+    high_frequency_discoveries:
+    - XSS (69%)
+    - Misconfiguration (62%)
+    - Business logic (59%)
+    estimated_findings_per_scope: 4-9
+    estimated_scanning_time_minutes: 120-260
+    estimated_total_payout_usd: 9000-20000
+    scanning_efficiency: High
+    playbooks_most_effective:
+    - det_xss_discovery_v1
+    - det_owasp_a05_misconfig_v1
+    - det_business_logic_bypass_v1

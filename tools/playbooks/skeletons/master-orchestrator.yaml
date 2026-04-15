@@ -1,0 +1,71 @@
+playbook:
+  metadata:
+    id: master-orchestrator
+    name: Master Orchestrator
+    cluster: RECONNAISSANCE
+    complexity: HIGH
+    version: '1.0'
+    status: skeleton
+  objective:
+    primary: Coordinate entire autonomous attack campaign
+    secondary:
+    - Decide reconnaissance path
+    - Route to appropriate exploitation
+  inputs_and_sources:
+    input_source: EXTERNAL
+    required_inputs:
+    - target_domain
+    - target_organization
+    - scope
+    - rules_of_engagement
+  outputs_and_targets:
+    primary_output_target: passive-recon
+    alternative_targets:
+    - darkweb-leaks
+    - physical-recon
+    - supply-chain-research
+    fallback_target: social-engineering
+  cve_bindings:
+    count: 5
+    cves:
+    - CVE-2024-3059
+    - CVE-2024-6789
+    - CVE-2024-21678
+    - CVE-2024-12149
+    - CVE-2024-9876
+    note: Each binding is from cve_knowledge_expanded.yaml
+  persona_assignments:
+    count: 1
+    personas:
+    - impact_demonstrator
+    note: Each persona from persona_cve_mapping.yaml
+  attack_sequence:
+    step_1:
+      title: Analyze target profile
+      persona: impact_demonstrator
+    step_2:
+      title: Select reconnaissance path
+      persona: impact_demonstrator
+    step_3:
+      title: Execute path
+      persona: impact_demonstrator
+    step_4:
+      title: Route to exploitation
+      persona: impact_demonstrator
+  decision_branches:
+  - condition: If step succeeds
+    action: Call passive-recon
+  - condition: If step fails
+    action: Call social-engineering
+  - condition: If detected
+    action: Call incident-responder-evasion
+  cross_link_graph:
+    calls_these_playbooks:
+    - passive-recon
+    - darkweb-leaks
+    - physical-recon
+    - supply-chain-research
+    called_by_these_playbooks: []
+    can_pivot_to:
+    - social-engineering
+  notes: 'SKELETON: Logic implementation pending. Cross-linking complete.'

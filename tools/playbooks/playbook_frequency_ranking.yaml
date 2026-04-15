@@ -1,0 +1,743 @@
+################################################################################
+# OPTION B PROMPT 1: Playbook Frequency Rankings
+# All 85 Playbooks Ranked by Success Probability per Target Archetype
+#
+# Formula: success_probability = frequency × exploitation_difficulty_factor × (1 - detection_risk)
+# exploitation_difficulty_factor: TRIVIAL=0.97, EASY=0.90, MODERATE=0.70, HARD=0.45, EXPERT=0.15
+# All 85 playbooks ranked — 50 ecosystem + 35 chain playbooks
+################################################################################
+
+playbook_frequency_ranking:
+  version: "1.0"
+  date: "2026-04-12"
+  analyst: "Attack Surface Analyst Epsilon"
+  total_playbooks: 85
+  formula: "success_probability = frequency(CVE, archetype) × exploitation_difficulty_factor × (1 - detection_risk)"
+  archetypes_ranked: ["startup", "mid_market", "enterprise", "mssp", "government"]
+
+  ################################################################################
+  # TIER A: TOP 15 UNIVERSALLY HIGH-PROBABILITY PLAYBOOKS
+  # These consistently rank in top 5 across all target archetypes
+  ################################################################################
+
+  universal_priority_list:
+    description: "Execute these first regardless of target archetype — highest cross-archetype success rates"
+    playbooks:
+      - id: sql_injection_v1
+        category: Exploitation
+        overall_rank: 1
+        reasoning: "SQL injection present in 75% of startups, 52% of mid-market; trivial exploitation"
+        success_probability:
+          startup: 0.604
+          mid_market: 0.411
+          enterprise: 0.168
+          mssp: 0.350
+          government: 0.082
+        notes: "Primary first-attempt on startup/mid-market; skip enterprise/government"
+
+      - id: owasp_a05_misconfig_v1
+        category: OWASP Exploitation
+        overall_rank: 2
+        reasoning: "82% of startups have critical misconfiguration; detection risk minimal"
+        success_probability:
+          startup: 0.680
+          mid_market: 0.445
+          enterprise: 0.298
+          mssp: 0.520
+          government: 0.090
+        notes: "Best second attempt — catches default credentials, exposed endpoints"
+
+      - id: web_app_recon_v1
+        category: Reconnaissance
+        overall_rank: 3
+        reasoning: "Foundation for all subsequent attacks; near-zero detection risk"
+        success_probability:
+          startup: 0.760
+          mid_market: 0.680
+          enterprise: 0.580
+          mssp: 0.700
+          government: 0.350
+        notes: "Always execute first — reconnaissance enables all subsequent targeting"
+
+      - id: auth_bypass_v1
+        category: Exploitation
+        overall_rank: 4
+        reasoning: "88% of startups have weak auth; high operational value when successful"
+        success_probability:
+          startup: 0.584
+          mid_market: 0.475
+          enterprise: 0.247
+          mssp: 0.380
+          government: 0.095
+        notes: "High-value — direct account access; skip for hardened government targets"
+
+      - id: owasp_a03_injection_v1
+        category: OWASP Exploitation
+        overall_rank: 5
+        reasoning: "Injection covers SQL + Command + XXE + SSTI; comprehensive high-probability"
+        success_probability:
+          startup: 0.614
+          mid_market: 0.398
+          enterprise: 0.158
+          mssp: 0.320
+          government: 0.075
+        notes: "High correlation with SQL injection success; run together"
+
+  ################################################################################
+  # RANKINGS BY TARGET ARCHETYPE — STARTUP
+  ################################################################################
+
+  startup_rankings:
+    description: "Optimized for cloud-native SaaS, minimal security, weak auth patterns"
+    expected_overall_success: 0.82
+    top_playbooks:
+
+      - rank: 1
+        playbook_id: owasp_a05_misconfig_v1
+        playbook_name: "OWASP A05 Security Misconfiguration Assessment"
+        cvss_frequency_on_startup: 0.82
+        exploitation_difficulty_factor: 0.90
+        detection_risk_factor: 0.25
+        success_probability: 0.554
+        execution_time_minutes: 60
+        reasoning: "82% of startups misconfigured; detection risk low; AWS S3, default creds, debug mode"
+
+      - rank: 2
+        playbook_id: web_app_recon_v1
+        playbook_name: "Web Application Reconnaissance"
+        cvss_frequency_on_startup: 0.98
+        exploitation_difficulty_factor: 0.95
+        detection_risk_factor: 0.22
+        success_probability: 0.726
+        execution_time_minutes: 45
+        reasoning: "Always succeeds at information gathering; foundation for all subsequent attacks"
+
+      - rank: 3
+        playbook_id: auth_bypass_v1
+        playbook_name: "Authentication Bypass Validation"
+        cvss_frequency_on_startup: 0.88
+        exploitation_difficulty_factor: 0.90
+        detection_risk_factor: 0.40
+        success_probability: 0.475
+        execution_time_minutes: 50
+        reasoning: "88% of startups have weak auth; JWT weakness, weak session management"
+
+      - rank: 4
+        playbook_id: sql_injection_v1
+        playbook_name: "SQL Injection Discovery"
+        cvss_frequency_on_startup: 0.75
+        exploitation_difficulty_factor: 0.97
+        detection_risk_factor: 0.32
+        success_probability: 0.494
+        execution_time_minutes: 35
+        reasoning: "75% of startups have SQL injection surfaces; trivial tooling (sqlmap)"
+
+      - rank: 5
+        playbook_id: owasp_a01_access_control_v1
+        playbook_name: "OWASP A01 Broken Access Control"
+        cvss_frequency_on_startup: 0.78
+        exploitation_difficulty_factor: 0.90
+        detection_risk_factor: 0.35
+        success_probability: 0.456
+        execution_time_minutes: 75
+        reasoning: "IDOR extremely common in startup APIs; direct object reference exploits"
+
+      - rank: 6
+        playbook_id: xss_discovery_v1
+        playbook_name: "XSS Discovery"
+        cvss_frequency_on_startup: 0.58
+        exploitation_difficulty_factor: 0.97
+        detection_risk_factor: 0.28
+        success_probability: 0.405
+        execution_time_minutes: 45
+        reasoning: "React/Vue SPAs often have DOM XSS; combined with stolen JWT = high impact"
+
+      - rank: 7
+        playbook_id: chain-recon-passive-discovery-01
+        playbook_name: "Passive Reconnaissance & Asset Discovery"
+        cvss_frequency_on_startup: 0.98
+        exploitation_difficulty_factor: 0.95
+        detection_risk_factor: 0.00
+        success_probability: 0.931
+        execution_time_minutes: 60
+        reasoning: "Zero detection risk; discovers all attack surface; essential foundation"
+
+      - rank: 8
+        playbook_id: chain-exploit-rce-escalation-01
+        playbook_name: "RCE & Initial Compromise Chain"
+        cvss_frequency_on_startup: 0.72
+        exploitation_difficulty_factor: 0.90
+        detection_risk_factor: 0.35
+        success_probability: 0.421
+        execution_time_minutes: 300
+        reasoning: "Log4Shell on Java microservices; Spring4Shell on Spring Boot; common in startups"
+
+      - rank: 9
+        playbook_id: graphql_attacks_v1
+        playbook_name: "GraphQL API Security"
+        cvss_frequency_on_startup: 0.45
+        exploitation_difficulty_factor: 0.90
+        detection_risk_factor: 0.30
+        success_probability: 0.284
+        execution_time_minutes: 40
+        reasoning: "Startups love GraphQL; introspection often exposed; auth bypass common"
+
+      - rank: 10
+        playbook_id: owasp_a02_crypto_v1
+        playbook_name: "Cryptographic Failures Assessment"
+        cvss_frequency_on_startup: 0.65
+        exploitation_difficulty_factor: 0.90
+        detection_risk_factor: 0.30
+        success_probability: 0.410
+        execution_time_minutes: 60
+        reasoning: "Startups often misconfigure TLS; weak cipher selection; Let's Encrypt expiry issues"
+
+      - rank: 11
+        playbook_id: ai_llm_prompt_injection_v1
+        playbook_name: "AI/LLM Prompt Injection Assessment"
+        cvss_frequency_on_startup: 0.62
+        exploitation_difficulty_factor: 0.70
+        detection_risk_factor: 0.35
+        success_probability: 0.282
+        execution_time_minutes: 90
+        reasoning: "Startups are AI-first; LLM integration in 62% of new SaaS; prompt injection common"
+
+      - rank: 12
+        playbook_id: chain-exploit-api-abuse-01
+        playbook_name: "API Abuse & Endpoint Exploitation Chain"
+        cvss_frequency_on_startup: 0.72
+        exploitation_difficulty_factor: 0.90
+        detection_risk_factor: 0.30
+        success_probability: 0.454
+        execution_time_minutes: 180
+        reasoning: "API-first architecture; IDOR + rate limit bypass + auth bypass common"
+
+      - rank: 13
+        playbook_id: ai_llm_supply_chain_v1
+        playbook_name: "AI/LLM Supply Chain Assessment"
+        cvss_frequency_on_startup: 0.72
+        exploitation_difficulty_factor: 0.90
+        detection_risk_factor: 0.28
+        success_probability: 0.467
+        execution_time_minutes: 75
+        reasoning: "NPM/PyPI dependency chains; GitHub Actions CI/CD poisoning risk"
+
+      - rank: 14
+        playbook_id: chain-recon-darkweb-intelligence-01
+        playbook_name: "Dark Web Leaks Research"
+        cvss_frequency_on_startup: 0.72
+        exploitation_difficulty_factor: 0.95
+        detection_risk_factor: 0.02
+        success_probability: 0.670
+        execution_time_minutes: 120
+        reasoning: "Startups frequently appear in breach data; credential reuse high"
+
+      - rank: 15
+        playbook_id: owasp_a04_design_v1
+        playbook_name: "Insecure Design Assessment"
+        cvss_frequency_on_startup: 0.55
+        exploitation_difficulty_factor: 0.70
+        detection_risk_factor: 0.33
+        success_probability: 0.258
+        execution_time_minutes: 60
+        reasoning: "Business logic flaws in subscription management, payment flows"
+
+      # Mid-priority playbooks for startup targets
+      mid_priority:
+        - id: ai_llm_model_extraction_v1
+          success_probability: 0.245
+          frequency: 0.48
+          notes: "AI startup focus only"
+        - id: ai_llm_vector_db_v1
+          success_probability: 0.225
+          frequency: 0.40
+        - id: chain-exploit-credential-theft-01
+          success_probability: 0.350
+          frequency: 0.52
+        - id: chain-exploit-database-extraction-01
+          success_probability: 0.405
+          frequency: 0.65
+        - id: database_exfiltration_v1
+          success_probability: 0.380
+          frequency: 0.55
+        - id: chain-persist-establish-access-01
+          success_probability: 0.280
+          frequency: 0.48
+
+      # Low-priority (skip for startup targets)
+      skip_for_startup:
+        - id: iam_privilege_escalation_v1
+          reason: "No enterprise IAM; startup uses Okta/Auth0 not AD"
+        - id: cryptographic_downgrade_v1
+          reason: "Modern cloud TLS; downgrade not applicable"
+        - id: zero_day_chain_v1
+          reason: "Overkill for unpatched startup; standard CVEs more effective"
+        - id: network_lateral_movement_v1
+          reason: "Cloud-native; no internal network to pivot"
+        - id: industrial_scada_v1
+          reason: "Not applicable to SaaS target"
+
+  ################################################################################
+  # RANKINGS BY TARGET ARCHETYPE — MID-MARKET
+  ################################################################################
+
+  mid_market_rankings:
+    description: "Optimized for hybrid on-prem/cloud, partial AD, some WAF protection"
+    expected_overall_success: 0.70
+    top_playbooks:
+
+      - rank: 1
+        playbook_id: web_app_recon_v1
+        success_probability: 0.650
+        execution_time_minutes: 45
+        frequency: 0.90
+        reasoning: "Always start with recon; mid-market web apps well-exposed"
+
+      - rank: 2
+        playbook_id: owasp_a05_misconfig_v1
+        success_probability: 0.510
+        execution_time_minutes: 60
+        frequency: 0.75
+        reasoning: "58% misconfiguration rate; default creds on network devices"
+
+      - rank: 3
+        playbook_id: chain-exploit-auth-bypass-01
+        success_probability: 0.480
+        execution_time_minutes: 250
+        frequency: 0.72
+        reasoning: "AD Kerberoasting + JWT exploitation + VPN credentials"
+
+      - rank: 4
+        playbook_id: owasp_a01_access_control_v1
+        success_probability: 0.450
+        execution_time_minutes: 75
+        frequency: 0.70
+        reasoning: "RBAC misconfigurations common in growing companies"
+
+      - rank: 5
+        playbook_id: chain-exploit-rce-escalation-01
+        success_probability: 0.440
+        execution_time_minutes: 300
+        frequency: 0.72
+        reasoning: "Log4j in Java apps; Spring4Shell; Apache 2.4.49 still present"
+
+      - rank: 6
+        playbook_id: owasp_a03_injection_v1
+        success_probability: 0.398
+        execution_time_minutes: 90
+        frequency: 0.62
+        reasoning: "Legacy PHP/MySQL stack common; injection more likely than startup"
+
+      - rank: 7
+        playbook_id: auth_bypass_v1
+        success_probability: 0.420
+        execution_time_minutes: 50
+        frequency: 0.68
+        reasoning: "Partial MFA deployment; OAuth misconfigurations; SSO bypass"
+
+      - rank: 8
+        playbook_id: chain-exploit-privilege-escalation-01
+        success_probability: 0.380
+        execution_time_minutes: 200
+        frequency: 0.68
+        reasoning: "PrintNightmare (72%), Zerologon (68%) — AD environments"
+
+      - rank: 9
+        playbook_id: chain-persist-lateral-movement-01
+        success_probability: 0.360
+        execution_time_minutes: 250
+        frequency: 0.58
+        reasoning: "Once foothold achieved; lateral movement through AD"
+
+      - rank: 10
+        playbook_id: iam_privilege_escalation_v1
+        success_probability: 0.340
+        execution_time_minutes: 200
+        frequency: 0.55
+        reasoning: "Azure AD privilege escalation via Conditional Access bypass"
+
+      additional_mid_market_playbooks:
+        - id: sql_injection_v1
+          success_probability: 0.380
+          frequency: 0.52
+        - id: chain-exploit-database-extraction-01
+          success_probability: 0.360
+          frequency: 0.55
+        - id: owasp_a02_crypto_v1
+          success_probability: 0.385
+          frequency: 0.60
+        - id: xss_discovery_v1
+          success_probability: 0.340
+          frequency: 0.52
+        - id: chain-recon-supply-chain-research-01
+          success_probability: 0.315
+          frequency: 0.48
+        - id: cloud_lateral_movement_v1
+          success_probability: 0.310
+          frequency: 0.45
+        - id: network_lateral_movement_v1
+          success_probability: 0.295
+          frequency: 0.48
+        - id: chain-exploit-credential-theft-01
+          success_probability: 0.360
+          frequency: 0.55
+        - id: persistent_backdoor_v1
+          success_probability: 0.290
+          frequency: 0.50
+        - id: chain-persist-establish-access-01
+          success_probability: 0.320
+          frequency: 0.52
+
+  ################################################################################
+  # RANKINGS BY TARGET ARCHETYPE — ENTERPRISE
+  ################################################################################
+
+  enterprise_rankings:
+    description: "Optimized for mature security, EDR, SIEM, PAM — requires chaining"
+    expected_overall_success: 0.58
+    notes: "Single-exploit rarely succeeds; chain multiple techniques required"
+    top_playbooks:
+
+      - rank: 1
+        playbook_id: chain-recon-passive-discovery-01
+        success_probability: 0.920
+        execution_time_minutes: 60
+        frequency: 0.99
+        reasoning: "Passive recon always safe; huge value — maps attack surface"
+
+      - rank: 2
+        playbook_id: chain-recon-darkweb-intelligence-01
+        success_probability: 0.820
+        execution_time_minutes: 120
+        frequency: 0.92
+        reasoning: "Enterprise always in breach data; credential reuse from past breaches"
+
+      - rank: 3
+        playbook_id: chain-exploit-auth-bypass-01
+        success_probability: 0.398
+        execution_time_minutes: 250
+        frequency: 0.75
+        reasoning: "Outlook NTLM hash (CVE-2023-23397) + Kerberoasting + AS-REP roasting"
+
+      - rank: 4
+        playbook_id: chain-exploit-privilege-escalation-01
+        success_probability: 0.385
+        execution_time_minutes: 200
+        frequency: 0.90
+        reasoning: "AD attack paths ubiquitous; Zerologon for DC; BloodHound paths"
+
+      - rank: 5
+        playbook_id: chain-exploit-rce-escalation-01
+        success_probability: 0.370
+        execution_time_minutes: 300
+        frequency: 0.88
+        reasoning: "Log4Shell still present in deep enterprise Java stacks"
+
+      - rank: 6
+        playbook_id: chain-persist-domain-compromise-01
+        success_probability: 0.355
+        execution_time_minutes: 350
+        frequency: 0.90
+        reasoning: "Domain compromise = total enterprise access; high value"
+
+      - rank: 7
+        playbook_id: chain-exploit-supply-chain-attack-01
+        success_probability: 0.285
+        execution_time_minutes: 400
+        frequency: 0.62
+        reasoning: "Enterprise vendor ecosystem; SolarWinds-style attack paths"
+
+      - rank: 8
+        playbook_id: owasp_a01_access_control_v1
+        success_probability: 0.295
+        execution_time_minutes: 75
+        frequency: 0.58
+        reasoning: "SharePoint IDOR, SAP access control flaws"
+
+      - rank: 9
+        playbook_id: cloud_lateral_movement_v1
+        success_probability: 0.310
+        execution_time_minutes: 210
+        frequency: 0.55
+        reasoning: "Hybrid cloud; Azure AD + AWS cross-account IAM misconfig"
+
+      - rank: 10
+        playbook_id: chain-persist-lateral-movement-01
+        success_probability: 0.340
+        execution_time_minutes: 250
+        frequency: 0.75
+        reasoning: "Post-foothold; lateral movement through AD to high-value systems"
+
+      additional_enterprise_playbooks:
+        - id: web_app_recon_v1
+          success_probability: 0.460
+          frequency: 0.92
+        - id: iam_privilege_escalation_v1
+          success_probability: 0.330
+          frequency: 0.68
+        - id: chain-exploit-credential-theft-01
+          success_probability: 0.355
+          frequency: 0.65
+        - id: database_exfiltration_v1
+          success_probability: 0.310
+          frequency: 0.55
+        - id: chain-exploit-container-escape-01
+          success_probability: 0.255
+          frequency: 0.52
+        - id: chain-evasion-detection-evasion-01
+          success_probability: 0.245
+          frequency: 0.72
+        - id: chain-persist-long-game-01
+          success_probability: 0.225
+          frequency: 0.45
+        - id: runtime_detection_evasion_v1
+          success_probability: 0.235
+          frequency: 0.62
+        - id: chain-persist-credential-storage-01
+          success_probability: 0.295
+          frequency: 0.58
+        - id: sbom_vulnerability_chain_v1
+          success_probability: 0.280
+          frequency: 0.55
+        - id: social_engineering_rce_v1
+          success_probability: 0.215
+          frequency: 0.45
+        - id: owasp_a02_crypto_v1
+          success_probability: 0.250
+          frequency: 0.45
+
+      skip_for_enterprise:
+        - id: ai_llm_vector_db_v1
+          reason: "Only if specific RAG/LLM system identified in recon"
+        - id: iot_botnet_v1
+          reason: "Not primary target; skip unless OT network present"
+
+  ################################################################################
+  # RANKINGS BY TARGET ARCHETYPE — MSSP/HOSTING PROVIDER
+  ################################################################################
+
+  mssp_rankings:
+    description: "High supply-chain multiplier; focus on managed infrastructure components"
+    expected_overall_success: 0.68
+    supply_chain_multiplier: "1 compromise → median 24 client environments"
+    top_playbooks:
+
+      - rank: 1
+        playbook_id: web_app_recon_v1
+        success_probability: 0.700
+        frequency: 0.94
+        reasoning: "MSSP web surfaces massive; recon essential for client enumeration"
+
+      - rank: 2
+        playbook_id: chain-exploit-supply-chain-attack-01
+        success_probability: 0.520
+        execution_time_minutes: 400
+        frequency: 0.80
+        reasoning: "MOVEit CVE-2023-34362; supply chain highest impact on MSSP"
+
+      - rank: 3
+        playbook_id: database_exfiltration_v1
+        success_probability: 0.504
+        frequency: 0.72
+        reasoning: "MSSP databases contain all client data; highest-value extraction"
+
+      - rank: 4
+        playbook_id: owasp_a05_misconfig_v1
+        success_probability: 0.488
+        frequency: 0.72
+        reasoning: "MSSP infrastructure often misconfigured from rapid provisioning"
+
+      - rank: 5
+        playbook_id: auth_bypass_v1
+        success_probability: 0.460
+        frequency: 0.70
+        reasoning: "MSSP admin portals often shared credentials; single bypass = all clients"
+
+      - rank: 6
+        playbook_id: chain-exploit-credential-theft-01
+        success_probability: 0.480
+        frequency: 0.72
+        reasoning: "MSSP credential stores contain all client logins; extreme value"
+
+      - rank: 7
+        playbook_id: container_escape_rce_v1
+        success_probability: 0.400
+        frequency: 0.65
+        reasoning: "MSSP containerized hosting; escape = access to other client containers"
+
+      - rank: 8
+        playbook_id: iam_privilege_escalation_v1
+        success_probability: 0.408
+        frequency: 0.62
+        reasoning: "MSSP IAM systems control all client access; privilege escalation = empire"
+
+      additional_mssp_playbooks:
+        - id: sql_injection_v1
+          success_probability: 0.400
+          frequency: 0.58
+        - id: owasp_a03_injection_v1
+          success_probability: 0.385
+          frequency: 0.58
+        - id: chain-persist-supply-chain-backdoor-01
+          success_probability: 0.350
+          frequency: 0.55
+        - id: network_lateral_movement_v1
+          success_probability: 0.340
+          frequency: 0.60
+
+  ################################################################################
+  # RANKINGS BY TARGET ARCHETYPE — GOVERNMENT
+  ################################################################################
+
+  government_rankings:
+    description: "Hardened target; perimeter device CVEs primary; chain + LOTL required"
+    expected_overall_success: 0.22
+    notes: "Standard web playbooks fail; focus on network/VPN device CVEs"
+    top_playbooks:
+
+      - rank: 1
+        playbook_id: chain-recon-passive-discovery-01
+        success_probability: 0.850
+        frequency: 0.99
+        reasoning: "Always safe; OSINT critical for government target mapping"
+
+      - rank: 2
+        playbook_id: chain-exploit-zeroday-exploitation-01
+        success_probability: 0.245
+        execution_time_minutes: 360
+        frequency: 0.25
+        reasoning: "Only reliable vector against hardened targets; CVE-2024-3400 (PAN-OS)"
+
+      - rank: 3
+        playbook_id: chain-exploit-privilege-escalation-01
+        success_probability: 0.198
+        execution_time_minutes: 200
+        frequency: 0.42
+        reasoning: "Post-initial-access; Living-Off-the-Land + AD attack paths"
+
+      - rank: 4
+        playbook_id: chain-persist-domain-compromise-01
+        success_probability: 0.185
+        execution_time_minutes: 350
+        frequency: 0.38
+        reasoning: "Domain compromise = access to classified systems; highest value"
+
+      - rank: 5
+        playbook_id: chain-persist-long-game-01
+        success_probability: 0.175
+        execution_time_minutes: 400
+        frequency: 0.35
+        reasoning: "APT-style long-dwell: average government dwell time 200+ days before detection"
+
+      - rank: 6
+        playbook_id: chain-evasion-detection-evasion-01
+        success_probability: 0.212
+        execution_time_minutes: 200
+        frequency: 0.72
+        reasoning: "EDR/SIEM present; evasion required to maintain access"
+
+      - rank: 7
+        playbook_id: chain-persist-lateral-movement-01
+        success_probability: 0.195
+        execution_time_minutes: 250
+        frequency: 0.42
+        reasoning: "Post-foothold; strict segmentation requires careful pivoting"
+
+      - rank: 8
+        playbook_id: social_engineering_rce_v1
+        success_probability: 0.188
+        execution_time_minutes: 180
+        frequency: 0.35
+        reasoning: "Spearphishing still works; MFA bypass via adversary-in-the-middle (AiTM)"
+
+      additional_government_playbooks:
+        - id: chain-recon-darkweb-intelligence-01
+          success_probability: 0.380
+          frequency: 0.65
+          notes: "Credential leaks from contractor breaches"
+        - id: chain-exploit-supply-chain-attack-01
+          success_probability: 0.195
+          frequency: 0.45
+          notes: "Contractor supply chain attack path"
+        - id: chain-evasion-log-removal-01
+          success_probability: 0.295
+          frequency: 0.62
+          notes: "Evidence destruction critical when detected"
+        - id: chain-evasion-forensic-antianalysis-01
+          success_probability: 0.245
+          frequency: 0.55
+
+      skip_for_government:
+        - id: sql_injection_v1
+          reason: "Applications well-patched; injection rare in hardened gov apps"
+        - id: xss_discovery_v1
+          reason: "Very low frequency in government web apps; not worth the time"
+        - id: owasp_a05_misconfig_v1
+          reason: "Configuration auditing rigorous; low return"
+        - id: iot_botnet_v1
+          reason: "Not applicable in classified environments"
+
+  ################################################################################
+  # GLOBAL ORCHESTRATION DECISION TABLE
+  ################################################################################
+
+  orchestrator_decision_table:
+    description: "Lookup table for orchestrator: given target fingerprint → archetype → prioritized playbook queue"
+
+    no_fingerprint_available:
+      strategy: "Default to startup profile; run passive recon + misconfig + auth bypass"
+      initial_queue:
+        - chain-recon-passive-discovery-01  # Always safe, always first
+        - web_app_recon_v1
+        - owasp_a05_misconfig_v1
+        - auth_bypass_v1
+        - sql_injection_v1
+
+    startup_identified:
+      strategy: "Hit highest-success auth/injection playbooks immediately; low detection risk"
+      priority_queue:
+        1: web_app_recon_v1
+        2: owasp_a05_misconfig_v1
+        3: auth_bypass_v1
+        4: sql_injection_v1
+        5: owasp_a01_access_control_v1
+        6: xss_discovery_v1
+        7: chain-exploit-api-abuse-01
+
+    mid_market_identified:
+      strategy: "Combine web exploitation with AD attack; check for Confluence/Log4j"
+      priority_queue:
+        1: web_app_recon_v1
+        2: chain-recon-passive-discovery-01
+        3: chain-exploit-auth-bypass-01
+        4: owasp_a05_misconfig_v1
+        5: chain-exploit-rce-escalation-01
+        6: chain-exploit-privilege-escalation-01
+
+    enterprise_identified:
+      strategy: "Passive recon, dark web intel, then chain to perimeter; avoid EDR triggers"
+      priority_queue:
+        1: chain-recon-passive-discovery-01
+        2: chain-recon-darkweb-intelligence-01
+        3: chain-exploit-auth-bypass-01
+        4: chain-exploit-privilege-escalation-01
+        5: chain-persist-domain-compromise-01
+        6: chain-evasion-detection-evasion-01
+
+    mssp_identified:
+      strategy: "Target file transfer and RMM tools first — supply chain multiplier"
+      priority_queue:
+        1: chain-recon-passive-discovery-01
+        2: chain-exploit-supply-chain-attack-01
+        3: database_exfiltration_v1
+        4: owasp_a05_misconfig_v1
+        5: chain-persist-supply-chain-backdoor-01
+
+    government_identified:
+      strategy: "OSINT only until perimeter device identified; then CVE-specific chain"
+      priority_queue:
+        1: chain-recon-passive-discovery-01
+        2: chain-recon-darkweb-intelligence-01
+        3: chain-exploit-zeroday-exploitation-01
+        4: chain-evasion-detection-evasion-01
+        5: chain-persist-long-game-01

@@ -218,7 +218,7 @@ graphql-cop:
     - "Rule 6: If batch_query_abuse is reported, disable batch queries if not essential to API contract. If batch queries are required, limit batch size (e.g., max 5 operations per request) and enforce strict rate limiting."
     - "Rule 7: If alias_attack_vulnerability is reported, this is a design flaw; aliases cannot be disabled without breaking GraphQL spec. Mitigation is strict rate limiting per-IP and per-user (e.g., 100 requests/minute)."
     - "Rule 8: If debug_mode_enabled is reported, disable immediately. Set debug=false in production GraphQL config. Stack traces leak implementation details and aid attackers."
-    - "Rule 9: If custom_directive_injection is reported, review custom directive implementations. Directives must validate input, enforce authorization, and avoid code injection. Consider removing custom directives if not essential."
+    - "Rule 9: If custom_directive_injection is reported, review custom directive implementations. Directives must validate input, enforce authorization, and avoid code injection. Consider removing custom directives if not empty."
     - "Rule 10: False positive indicator - if endpoint is development/staging, some findings (debug mode, introspection) are expected. Verify environment before escalating. Production endpoints have zero tolerance for missing controls."
 
   common_pitfalls:
@@ -229,3 +229,191 @@ graphql-cop:
     - "Pitfall: Assuming GraphQL rate limits are sufficient. GraphQL lacks built-in rate limiting; must be implemented at gateway/middleware level. Default behavior is unlimited requests. Always explicitly verify rate limiting implementation."
     - "Pitfall: Custom directive validation is inconsistent. Developers may validate input in one directive but not others. Audit ALL custom directives, not just high-risk ones. Test injection payloads in all directives."
     - "Pitfall: Overlooking mutations in security review. Mutations are often less tested than queries. Review all mutations for authorization, input validation, and impact. A trivial-seeming mutation may corrupt critical data."
+
+trufflehog:
+  metadata:
+    description: "High-fidelity secret scanning tool with active verification capabilities"
+    phase: 1
+    source_url: "https://github.com/trufflesecurity/trufflehog"
+    version: "3.x"
+    classification: "Secret-leak detection, credential hunting"
+
+  core_concepts:
+    - "Active verification: TruffleHog attempts to verify discovered secrets against the provider's API (e.g., AWS, GitHub, Slack) to confirm validity. Reduces false positives significantly."
+    - "Detector-based scanning: Uses 700+ specific detectors for various credential types rather than generic high-entropy regexes. Increases precision for known service keys."
+    - "Scanning modes: Supports scanning git repositories (history and current), filesystems, S3 buckets, and Docker images. Comprehensive coverage of development and deployment artifacts."
+
+  key_findings:
+    identified_secret: "A potential secret (API key, password, private key) was found. If verified, this represents a critical vulnerability allowing unauthorized access to the associated service."
+
+  execution_parameters:
+    critical_flags:
+      - flag: "git"
+        purpose: "Scan a git repository's history and current state. Essential for finding secrets committed in previous versions."
+      - flag: "filesystem"
+        purpose: "Scan local files and directories. Useful for CI/CD pipelines and local developer environment audits."
+      - flag: "--no-verification"
+        purpose: "Disable active verification of found secrets. Use in air-gapped environments or when provider APIs are unreachable."
+        default: "Verification enabled"
+    optional_flags:
+      - flag: "--json"
+        purpose: "Output findings in JSON format for machine readability and agent integration."
+      - flag: "--only-verified"
+        purpose: "Only report secrets that have been successfully verified against the provider API."
+
+  interpretation_rules:
+    - "Rule 1: If an 'identified_secret' is marked as 'Verified', escalate immediately to CRITICAL. The credential is confirmed active and exploitable."
+    - "Rule 2: Masking enforcement: Ensure all reported secrets in logs or reports are masked (e.g., 'AKIA...XXXX') to prevent further leakage during the reporting process."
+    - "Rule 3: V-RAD Neon Red: Findings triggered by TruffleHog in Phase 1 should trigger the Neon Red telemetry alert for immediate responder attention."
+
+  common_pitfalls:
+    - "Pitfall: Assuming unverified secrets are false positives. Unverified secrets may still be valid for internal services or providers that don't support automated verification."
+    - "Pitfall: Rate limiting during verification. Scanning large repositories with many potential secrets may trigger API rate limits on provider services (e.g., GitHub, AWS)."
+
+gitleaks:
+  metadata:
+    description: "Surgical secret scanner for git repositories and local directories"
+    phase: 1
+    source_url: "https://github.com/gitleaks/gitleaks"
+    version: "8.x"
+    classification: "Credential scanning, static analysis"
+
+  core_concepts:
+    - "Regex history analysis: Analyzes every commit in a git repository's history using a predefined set of regular expressions. Effective at finding secrets deleted in later commits."
+    - "Redact flag: Automatically masks discovered secrets in the output. Essential for maintaining security hygiene during the scanning process."
+
+  key_findings:
+    exposed_credential: "A sensitive credential (e.g., private key, API token) was detected in the source code or history. Represents a potential breach point."
+
+  execution_parameters:
+    critical_flags:
+      - flag: "detect"
+        purpose: "The primary command to scan for secrets in the current directory or a specified path."
+      - flag: "--redact"
+        purpose: "Redact secrets from the output. Recommended for all automated scans to prevent logs from containing plaintext credentials."
+        default: "Disabled"
+    optional_flags:
+      - flag: "--report-path"
+        purpose: "Specify the file path to write the scan results (JSON, CSV, or SARIF)."
+      - flag: "--log-level"
+        purpose: "Set the verbosity of the output (debug, info, warn, error, fatal)."
+
+  interpretation_rules:
+    - "Rule 1: Neon red telemetry: All 'exposed_credential' findings must be tagged with Neon Red telemetry priority for immediate triage."
+    - "Rule 2: Correlation: Cross-reference findings with trufflehog results to determine if the same secret is detected by both tools, increasing confidence."
+
+  common_pitfalls:
+    - "Pitfall: High false positive rate with generic rules. Gitleaks relies heavily on regexes; entropy-based rules may flag random strings as secrets. Validate findings manually."
+    - "Pitfall: Missing history. If gitleaks is run without full history access (e.g., shallow clone), it will miss secrets committed in earlier development phases."
+
+torbot:
+  metadata:
+    description: "Darknet intelligence gathering and onion site crawler"
+    phase: 1
+    source_url: "https://github.com/DedSecInside/TorBot"
+    version: "v1.x"
+    classification: "Darknet crawling, OSINT"
+
+  core_concepts:
+    - "Recursive .onion crawling: Automatically follows links within .onion sites to map out hidden services and extract data. Enables discovery of non-indexed darknet content."
+    - "Tor proxy routing: Routes all traffic through the Tor network (typically via SOCKS5 proxy) to maintain anonymity and access hidden services."
+
+  key_findings:
+    dark_web_discovery: "Identification of a previously unknown or significant .onion service, page, or piece of information (e.g., leaked data, forums, markets)."
+
+  execution_parameters:
+    critical_flags:
+      - flag: "--url <onion-url>"
+        purpose: "The starting .onion URL for the crawl. Required parameter."
+      - flag: "--depth <integer>"
+        purpose: "The maximum recursion depth for the crawler. Higher values increase discovery but significantly increase execution time."
+        default: "1"
+      - flag: "--proxy <address:port>"
+        purpose: "The SOCKS5 proxy address for Tor routing (usually localhost:9050). Required for darknet access."
+        default: "localhost:9050"
+    optional_flags:
+      - flag: "--collect-emails"
+        purpose: "Automatically extract email addresses from crawled pages."
+      - flag: "--collect-links"
+        purpose: "Save all discovered links to a file for further analysis."
+
+  interpretation_rules:
+    - "Rule 1: INTEL_SOURCE:TOR tagging: All findings from TorBot must be tagged with the INTEL_SOURCE:TOR metadata attribute."
+    - "Rule 2: Deep Web Pulse telemetry: Forward all 'dark_web_discovery' findings to the Deep Web Pulse telemetry stream for trend analysis."
+
+  common_pitfalls:
+    - "Pitfall: Slow crawl speeds. Tor network latency and high-latency hidden services make crawling significantly slower than the surface web. Adjust timeouts accordingly."
+    - "Pitfall: Proxy failure. If the Tor proxy is not running or misconfigured, TorBot will fail to reach any .onion targets. Always verify proxy connectivity first."
+
+onionsearch:
+  metadata:
+    description: "Multi-engine darknet search aggregator"
+    phase: 1
+    source_url: "https://github.com/megadose/onionsearch"
+    version: "v1.x"
+    classification: "Darknet search, OSINT"
+
+  core_concepts:
+    - "Multi-engine aggregation: Queries multiple darknet search engines (e.g., Ahmia, Haystack, Torch) simultaneously to provide comprehensive search results."
+    - "Snippet analysis: Extracts and summarizes content from search results to allow for rapid assessment of relevance without visiting every link."
+
+  key_findings:
+    onion_search_result: "A specific search result from one or more darknet engines matching the provided query. Indicates presence of the target keyword on the darknet."
+
+  execution_parameters:
+    critical_flags:
+      - flag: "--proxy <address:port>"
+        purpose: "The SOCKS proxy for Tor routing. Essential for communicating with darknet search engines."
+        default: "localhost:9050"
+      - flag: "--engines <list>"
+        purpose: "Comma-separated list of search engines to query. Allows for targeted searching across specific platforms."
+        default: "All engines"
+    optional_flags:
+      - flag: "--output <directory>"
+        purpose: "Directory to save search result reports."
+      - flag: "--limit <number>"
+        purpose: "Maximum number of results to retrieve per engine."
+
+  interpretation_rules:
+    - "Rule 1: Deep Web Pulse telemetry: All 'onion_search_result' findings should be integrated into the Deep Web Pulse dashboard."
+    - "Rule 2: Frequency analysis: Multiple results for the same keyword across different engines increase the priority of the finding."
+
+  common_pitfalls:
+    - "Pitfall: Engine downtime. Darknet search engines are frequently offline; inconsistent results may be due to engine availability rather than lack of data."
+    - "Pitfall: Captcha blocking. Some darknet engines use Captchas to block automated tools, which may cause onionsearch to return no results for those engines."
+
+ahmia-client:
+  metadata:
+    description: "Client for the Ahmia darknet search engine and indexer"
+    phase: 1
+    source_url: "https://github.com/ahmia/ahmia-site"
+    version: "v1.x"
+    classification: "Indexed darknet search, crawler"
+
+  core_concepts:
+    - "Ahmia indexing: Leverages the Ahmia.fi index, which is one of the most comprehensive and clean indexes of the darknet (actively filters illegal content)."
+    - "Public .onion crawler: Uses a distributed crawler to discover and index hidden services, providing a searchable interface for the darknet."
+
+  key_findings:
+    indexed_onion_url: "A URL discovered via the Ahmia index that matches the search criteria. Indicates a publicly indexed and reachable hidden service."
+
+  execution_parameters:
+    critical_flags:
+      - flag: "search"
+        purpose: "The primary command to perform a keyword search against the Ahmia index."
+      - flag: "--proxy <address:port>"
+        purpose: "Tor proxy for reaching Ahmia's hidden service or for anonymous searching. Recommended for all darknet operations."
+        default: "localhost:9050"
+    optional_flags:
+      - flag: "--format <json|txt>"
+        purpose: "Specify the output format for search results."
+      - flag: "--all"
+        purpose: "Retrieve all results, including those marked as potentially inactive."
+
+  interpretation_rules:
+    - "Rule 1: Deep Web Pulse telemetry: Forward all 'indexed_onion_url' findings to the Deep Web Pulse telemetry stream."
+    - "Rule 2: Verification: Findings should be verified by attempting to access the onion URL via a Tor-routed probe if active reconnaissance is authorized."
+
+  common_pitfalls:
+    - "Pitfall: Stale index data. Hidden services frequently go offline; indexed results may point to non-functional sites. Always check for 'last seen' timestamps if available."
+    - "Pitfall: Limited scope. Ahmia filters certain types of content; for a completely unfiltered view, use onionsearch or torbot for raw discovery."

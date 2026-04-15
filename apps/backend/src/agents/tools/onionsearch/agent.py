@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlparse
 
-from apps.backend.src.core.protocol import KaisonResult, KaisonResultMetadata
+from apps.backend.src.core.protocol import (
+    FindingType,
+    KaisonFinding,
+    KaisonResult,
+    KaisonResultMetadata,
+    Severity,
+)
 from apps.backend.src.core.scope_guardrails import (
     audit_scope_decision,
     evaluate_target_scope,
@@ -23,6 +29,11 @@ _REQUIRED_TOR_PROXY = "127.0.0.1:9050"
 
 
 class OnionsearchAgent(BaseToolAgent):
+    """
+    OnionSearch specialist agent for aggregating darknet search engine results.
+    Enforces routing via K1 Sovereign Network Layer Tor proxy.
+    """
+
     TOOL_NAME = "onionsearch"
 
     def __init__(self, memory_root: str | Path | None = None) -> None:
@@ -30,22 +41,21 @@ class OnionsearchAgent(BaseToolAgent):
         self._telemetry_events: list[dict[str, Any]] = []
         self._telemetry_hook: Callable[[dict[str, Any]], None] | None = None
 
-    def _get_tool_name(self) -> str:
-        return self.TOOL_NAME
-
     def register_telemetry_hook(self, hook: Callable[[dict[str, Any]], None]) -> None:
         self._telemetry_hook = hook
 
     def get_telemetry_events(self) -> list[dict[str, Any]]:
         return list(self._telemetry_events)
 
-    def _emit_telemetry(self, metric: str, value: Any) -> None:
+    def _emit_telemetry(self, metric: str, value: Any, payload: dict[str, Any] | None = None) -> None:
         event = {
             "tool": self.TOOL_NAME,
             "metric": metric,
             "value": value,
             "timestamp": datetime.now(UTC).isoformat(),
         }
+        if payload:
+            event["payload"] = payload
         self._telemetry_events.append(event)
         if self._telemetry_hook:
             try:
@@ -62,6 +72,8 @@ class OnionsearchAgent(BaseToolAgent):
 
         snl_interface = str(opts.get("snl_interface", "tun0")).strip()
         snl_ok = snl_interface in _ALLOWED_SNL_INTERFACES
+        
+        # Mandatory K1 proxy
         tor_proxy = str(opts.get("tor_proxy", _REQUIRED_TOR_PROXY)).strip()
         tor_ok = tor_proxy == _REQUIRED_TOR_PROXY
 
@@ -86,42 +98,100 @@ class OnionsearchAgent(BaseToolAgent):
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
         opts = options or {}
         artifact_dir = str(opts.get("artifact_dir", "/tmp"))
+        
+        # Use K1 mandatory proxy
+        tor_proxy = str(opts.get("tor_proxy", _REQUIRED_TOR_PROXY))
+        
+        # Engines selection (default to wide coverage)
         engines = opts.get("engines")
         if isinstance(engines, list) and engines:
             engine_arg = ",".join(str(e).strip() for e in engines if str(e).strip())
         else:
-            engine_arg = "ahmia,darksearch,phobos,haystak"
+            engine_arg = "ahmia,darksearch,phobos,haystak,torch,candle"
+            
+        # onionsearch <target> --proxy <proxy> --engines <engines> --output <dir>
         return [
             "onionsearch",
             target,
             "--proxy",
-            str(opts.get("tor_proxy", _REQUIRED_TOR_PROXY)),
+            tor_proxy,
             "--engines",
             engine_arg,
             "--output",
-            f"{artifact_dir}/onionsearch.json",
+            f"{artifact_dir}/onionsearch_{int(datetime.now(UTC).timestamp())}.json",
         ]
 
     @staticmethod
     def _extract_onion_domain(url: str) -> str:
-        parsed = urlparse(url.strip())
-        return (parsed.netloc or "").lower()
+        token = url.strip().lower()
+        if token.startswith("http://") or token.startswith("https://"):
+            try:
+                parsed = urlparse(token)
+                return (parsed.netloc or "").lower()
+            except Exception:
+                return token.split("//", 1)[-1].split("/", 1)[0]
+        return token.split("/", 1)[0]
 
-    def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:
-        findings: list[dict[str, Any]] = []
-        raw_output = raw_output.strip()
+    def map_output(
+        self,
+        *,
+        target: str,
+        command: list[str],
+        stdout: str,
+        stderr: str,
+        exit_code: int,
+        started_at: datetime,
+        ended_at: datetime,
+        runtime_ms: int,
+        mission_id: str,
+        status: str,
+        options: dict[str, Any] | None = None,
+    ) -> KaisonResult:
+        findings: list[KaisonFinding] = []
+        raw_output = stdout.strip()
         if not raw_output:
-            return findings
+            return KaisonResult(
+                mission_id=mission_id,
+                source_agent=self.TOOL_NAME,
+                status=status,
+                target_context={
+                    "target": target,
+                    "command": command,
+                    "exit_code": exit_code,
+                    "stderr": stderr[:2000],
+                },
+                metadata=KaisonResultMetadata(
+                    started_at=started_at,
+                    ended_at=ended_at,
+                    runtime_ms=runtime_ms,
+                ),
+                findings=[],
+            )
 
         try:
             data = json.loads(raw_output)
         except json.JSONDecodeError:
-            data = {}
+            return KaisonResult(
+                mission_id=mission_id,
+                source_agent=self.TOOL_NAME,
+                status="failure",
+                target_context={
+                    "target": target,
+                    "error": "json_parse_failed",
+                },
+                metadata=KaisonResultMetadata(
+                    started_at=started_at,
+                    ended_at=ended_at,
+                    runtime_ms=runtime_ms,
+                ),
+                findings=[],
+            )
 
         results = data.get("results", []) if isinstance(data, dict) else []
         if not isinstance(results, list):
-            return findings
+            results = []
 
+        # Aggregate by domain to reduce noise while preserving engine diversity
         aggregated: dict[str, dict[str, Any]] = {}
         for entry in results:
             if not isinstance(entry, dict):
@@ -129,9 +199,11 @@ class OnionsearchAgent(BaseToolAgent):
             url = str(entry.get("url", "")).strip()
             if not url or ".onion" not in url.lower():
                 continue
+            
             domain = self._extract_onion_domain(url)
             if not domain:
                 continue
+                
             source_engine = str(entry.get("engine") or entry.get("source") or "onionsearch").strip().lower()
             snippet = str(entry.get("snippet", "")).strip()
 
@@ -144,6 +216,7 @@ class OnionsearchAgent(BaseToolAgent):
                 }
             else:
                 aggregated[domain]["engines"].add(source_engine)
+                # Keep the longest snippet for better intelligence
                 if len(snippet) > len(str(aggregated[domain].get("snippet", ""))):
                     aggregated[domain]["snippet"] = snippet
 
@@ -162,78 +235,51 @@ class OnionsearchAgent(BaseToolAgent):
             except Exception:
                 continue
 
-            has_credential = any(
-                pattern in str(item.get("snippet", "")).lower()
-                for pattern in ["password", "leaked", "credentials", "breach", "dump"]
+            findings.append(
+                KaisonFinding(
+                    finding_type=FindingType.CONFIG,
+                    value=record.onion_url or f"http://{record.discovered_domain}",
+                    source_agent=self.TOOL_NAME,
+                    confidence=0.82,
+                    severity=Severity.MEDIUM,
+                    raw_evidence={
+                        "onion_domain": record.discovered_domain,
+                        "source_engines": sorted(item["engines"]),
+                        "snippet": item.get("snippet"),
+                        "discovery_registry": record.model_dump(mode="json"),
+                    },
+                )
             )
 
-            findings.append(
-                {
-                    "type": "dark_web_search_result",
-                    "value": record.onion_url or f"http://{record.discovered_domain}",
-                    "target": target,
-                    "severity": "high" if has_credential else "medium",
-                    "confidence": 0.82,
-                    "source_tool": self.TOOL_NAME,
-                    "raw_evidence": json.dumps(
-                        {
-                            "onion_domain": record.discovered_domain,
-                            "source_engines": sorted(item["engines"]),
-                            "credential_keywords": has_credential,
-                        },
-                        ensure_ascii=True,
-                    ),
-                    "context": {
-                        "has_credential_keywords": has_credential,
-                        "source_engines": sorted(item["engines"]),
-                        "discovery_registry": record.model_dump(mode="json"),
-                        "intel_source": "TOR",
-                        "snl_mode": "fixture_only",
-                    },
-                    "recommended_next_tools": ["torbot", "ahmia-client", "EvidenceAnalystAgent"],
-                    "recommended_next_actions": ["investigate_onion_source"],
+        # Trigger V-RAD Telemetry for deep web site identification
+        if findings:
+            self._emit_telemetry(
+                "V-RAD_EVENT",
+                "Deep Web Pulse",
+                payload={
+                    "v-rad_color": "DARK_PURPLE_BLACK",
+                    "site_count": len(findings),
+                    "summary": f"OnionSearch aggregated {len(findings)} darknet nodes for {target}"
                 }
             )
 
-        return findings
-
-    def filter_noise(
-        self, findings: list[dict[str, Any]]
-    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-        signal: list[dict[str, Any]] = []
-        noise: list[dict[str, Any]] = []
-        known = self.load_memory()
-
-        for finding in findings:
-            value = str(finding.get("value", "")).lower()
-            if f"{str(finding.get('target', '')).lower()}|dark_web_search_result|{value}" in known:
-                noise.append(finding)
-                continue
-            signal.append(finding)
-
-        return signal, noise
-
-    def _generate_next_agent_instructions(
-        self,
-        signal: list[dict[str, Any]],
-        target: str,
-    ) -> dict[str, Any]:
-        engines = sorted(
-            {
-                engine
-                for finding in signal
-                for engine in finding.get("context", {}).get("source_engines", [])
-            }
-        )
-        return {
-            "next_agents": ["torbot", "ahmia-client", "EvidenceAnalystAgent"],
-            "high_value_results": len([f for f in signal if f.get("severity") == "high"]),
-            "total_results": len(signal),
-            "engines_aggregated": engines,
-            "operator_summary": (
-                f"Onionsearch aggregated {len(signal)} .onion findings for {target} across {len(engines)} engines."
+        return KaisonResult(
+            mission_id=mission_id,
+            source_agent=self.TOOL_NAME,
+            status=status,
+            target_context={
+                "target": target,
+                "command": command,
+                "exit_code": exit_code,
+                "options": options,
+            },
+            metadata=KaisonResultMetadata(
+                started_at=started_at,
+                ended_at=ended_at,
+                runtime_ms=runtime_ms,
             ),
-        }
+            findings=findings,
+        )
 
     def execute(
         self,
@@ -242,77 +288,40 @@ class OnionsearchAgent(BaseToolAgent):
         *,
         mission_id: str = "mission-001",
     ) -> KaisonResult:
+        """
+        Executes OnionSearch with Sovereign Network Layer enforcement.
+        """
         opts = dict(options or {})
         policy = self.check_policy(target, opts)
-        started_at = datetime.now(UTC)
-
+        
         if not policy["allowed"]:
-            ended_at = datetime.now(UTC)
-            return KaisonResult(
-                mission_id=mission_id,
-                source_agent=self.TOOL_NAME,
-                status="failure",
-                target_context={"target": target, "mode": "stub_only", "error": f"policy_blocked:{policy['reason']}"},
-                metadata=KaisonResultMetadata(
-                    started_at=started_at,
-                    ended_at=ended_at,
-                    runtime_ms=max(0, int((ended_at - started_at).total_seconds() * 1000)),
-                ),
-                findings=[],
-            )
-
-        fixture = opts.get("fixture_data")
-        if fixture is None and isinstance(opts.get("fixture_path"), str):
-            fixture = Path(opts["fixture_path"]).read_text(encoding="utf-8")
-
-        if fixture is None:
-            ended_at = datetime.now(UTC)
+            now = datetime.now(UTC)
             return KaisonResult(
                 mission_id=mission_id,
                 source_agent=self.TOOL_NAME,
                 status="failure",
                 target_context={
-                    "target": target,
-                    "mode": "stub_only",
-                    "error": "fixture_data is required; live execution disabled",
+                    "target": target, 
+                    "error": f"policy_blocked:{policy['reason']}"
                 },
                 metadata=KaisonResultMetadata(
-                    started_at=started_at,
-                    ended_at=ended_at,
-                    runtime_ms=max(0, int((ended_at - started_at).total_seconds() * 1000)),
+                    started_at=now,
+                    ended_at=now,
+                    runtime_ms=0,
                 ),
                 findings=[],
             )
 
-        fixture_text = fixture if isinstance(fixture, str) else json.dumps(fixture)
-        ended_at = datetime.now(UTC)
-        runtime_ms = max(0, int((ended_at - started_at).total_seconds() * 1000))
-        result = self.map_output(
-            target=target,
-            command=["fixture://onionsearch"],
-            stdout=fixture_text,
-            stderr="",
-            exit_code=0,
-            started_at=started_at,
-            ended_at=ended_at,
-            runtime_ms=runtime_ms,
-            mission_id=mission_id,
-            status="success",
-            options=opts,
-        )
-
-        self._emit_telemetry("AGENT_STATUS", "ONIONSEARCH_AGGREGATION")
-        self._emit_telemetry("TOR_ONION_DISCOVERIES", len(result.findings))
-        if result.findings:
-            self._emit_telemetry("EventLog", "DEEP_WEB_PULSE_DARK_PURPLE_BLACK")
-
-        context = dict(result.target_context)
-        context.update(
-            {
-                "mode": "stub_fixture",
-                "snl_interface": policy["snl_interface"],
-                "tor_proxy": policy["tor_proxy"],
-                "telemetry": self.get_telemetry_events(),
-            }
-        )
-        return result.model_copy(update={"target_context": context})
+        # Ensure proxy is passed to build_command
+        opts["tor_proxy"] = policy["tor_proxy"]
+        
+        # Live execution
+        result = super().execute(target, opts, mission_id=mission_id)
+        
+        # Enrich context
+        enriched_context = dict(result.target_context)
+        enriched_context["snl_interface"] = policy.get("snl_interface")
+        enriched_context["tor_proxy"] = policy.get("tor_proxy")
+        enriched_context["telemetry"] = self.get_telemetry_events()
+        
+        return result.model_copy(update={"target_context": enriched_context})

@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import asyncio
 import json
+import logging
 import os
 from pathlib import Path
 from typing import Any
@@ -15,6 +16,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .bugbounty_workflow_engine import STAGES, build_phase_specs_for_template
 from .recon_correlation import correlate_observations
+from .cve_playbook_selector import CVEPlaybookSelector
+from .global_task_queue import GlobalTaskQueue
+from .praison_execution_events import MissionEvent, get_event_bus
 from .scope_guardrails import (
     ScopePolicy,
     audit_scope_decision,
@@ -43,6 +47,8 @@ from ..schemas.bugbounty import (
     ToolExecution,
     WorkflowRun,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -91,6 +97,14 @@ class WorkflowExecutor:
         self.db = db
         self.trigger_source = trigger_source
         self.actor = actor
+        self._task_queue = GlobalTaskQueue(
+            max_memory_gb=float(os.getenv("K1_GLOBAL_MEMORY_CAP_GB", "40"))
+        )
+        self._playbook_selector: CVEPlaybookSelector | None = None
+        try:
+            self._playbook_selector = CVEPlaybookSelector()
+        except Exception as exc:
+            logger.warning("CVE/playbook selector unavailable: %s", exc)
 
     def _store(self, run_id: str) -> WorkflowDataStore:
         root = self.output_root or Path(os.getenv("K1_WORKFLOW_OUTPUT_ROOT", "output")).resolve()
@@ -207,6 +221,56 @@ class WorkflowExecutor:
         else:
             text = json.dumps(value, default=str)
         return text[:max_len]
+
+    def _select_playbooks_from_signals(
+        self,
+        *,
+        aggregate_signal_records: list[dict[str, Any]],
+        prioritized_findings: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        if self._playbook_selector is None:
+            return {}
+        try:
+            return self._playbook_selector.select_for_signals(
+                signals=aggregate_signal_records,
+                prioritized_findings=prioritized_findings,
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Playbook selection failed: %s", exc)
+            return {}
+
+    @staticmethod
+    def _emit_active_playbook_events(
+        *,
+        run_id: str,
+        workflow_template: str,
+        program_id: UUID | None,
+        selection: dict[str, Any],
+    ) -> None:
+        recommendations = selection.get("playbook_recommendations")
+        if not isinstance(recommendations, list) or not recommendations:
+            return
+        bus = get_event_bus()
+        program_ref = str(program_id) if program_id is not None else ""
+        for rec in recommendations[:5]:
+            if not isinstance(rec, dict):
+                continue
+            bus.emit(
+                MissionEvent(
+                    event_type="active_playbook_logic",
+                    mission_id=run_id,
+                    workflow_id=workflow_template,
+                    program_id=program_ref,
+                    phase="playbook_selection",
+                    detail={
+                        "playbook_id": rec.get("playbook_id"),
+                        "playbook_name": rec.get("playbook_name"),
+                        "path": rec.get("path"),
+                        "score": rec.get("score"),
+                        "supporting_cves": rec.get("supporting_cves", []),
+                    },
+                )
+            )
 
     async def _ensure_local_campaign_context(
         self,
@@ -711,6 +775,23 @@ class WorkflowExecutor:
                 "normalized_counts": {key: len(value) for key, value in normalized.items()},
             }
             self._append_unique(store, "tool_executions", tool_execution_row.model_dump())
+            
+            # Visual Synthesis: Wire to V-RAD event bus
+            bus = get_event_bus()
+            bus.emit(
+                MissionEvent(
+                    event_type="tool_execution",
+                    mission_id=run_id,
+                    workflow_id=workflow_template,
+                    phase=stage_name,
+                    detail={
+                        "tool_id": tool_id,
+                        "status": tool_execution_row.status,
+                        "findings": tool_execution_row.metadata["normalized_counts"],
+                    },
+                )
+            )
+
             if db_tool_execution is not None and workflow_svc is not None:
                 terminal_status = (
                     ToolExecutionStatusEnum.COMPLETED
@@ -785,9 +866,26 @@ class WorkflowExecutor:
                     StageRunStatusEnum.RUNNING,
                 )
 
-            if effective_concurrency == 1:
+            ordered_phases = self._task_queue.order_stage_phases(
+                stage=stage,
+                phases=list(phases),
+            )
+            stage_tool_ids = []
+            for phase in ordered_phases:
+                dispatch = (
+                    phase.input_payload_json.get("dispatch")
+                    if isinstance(getattr(phase, "input_payload_json", None), dict)
+                    else {}
+                )
+                stage_tool_ids.append(str(dispatch.get("tool_id") or "").strip())
+            stage_concurrency = self._task_queue.suggested_concurrency(
+                tool_ids=stage_tool_ids,
+                requested=effective_concurrency,
+            )
+
+            if stage_concurrency == 1:
                 tool_results = []
-                for phase in phases:
+                for phase in ordered_phases:
                     tool_results.append(
                         await run_phase(
                             stage,
@@ -796,7 +894,7 @@ class WorkflowExecutor:
                         )
                     )
             else:
-                semaphore = asyncio.Semaphore(effective_concurrency)
+                semaphore = asyncio.Semaphore(stage_concurrency)
 
                 async def run_phase_limited(phase):
                     async with semaphore:
@@ -806,7 +904,7 @@ class WorkflowExecutor:
                             db_stage_run.id if db_stage_run is not None else None,
                         )
 
-                tool_results = list(await asyncio.gather(*(run_phase_limited(phase) for phase in phases)))
+                tool_results = list(await asyncio.gather(*(run_phase_limited(phase) for phase in ordered_phases)))
             failures = 0
             successes = 0
             stage_tool_rows: list[dict[str, Any]] = []
@@ -824,6 +922,8 @@ class WorkflowExecutor:
                 "tool_count": len(phases),
                 "success_count": successes,
                 "failed_count": failures,
+                "concurrency_used": stage_concurrency,
+                "execution_order": stage_tool_ids,
                 "executions": stage_tool_rows,
                 "completed_at": datetime.now(timezone.utc).isoformat(),
             }
@@ -858,6 +958,18 @@ class WorkflowExecutor:
             self._append_unique(store, "correlation_records", row)
 
         prioritized = correlation_output.priority_queue
+        playbook_selection = self._select_playbooks_from_signals(
+            aggregate_signal_records=aggregate_signal_records,
+            prioritized_findings=prioritized,
+        )
+        if playbook_selection:
+            self._emit_active_playbook_events(
+                run_id=run_id,
+                workflow_template=workflow_template,
+                program_id=program_id,
+                selection=playbook_selection,
+            )
+
         analyst_export = AnalystExport(
             run_id=run_id,
             summary={
@@ -865,6 +977,9 @@ class WorkflowExecutor:
                 "target": target,
                 "stages": len(stage_results),
                 "executions": execution_count,
+                "playbook_candidates": len(playbook_selection.get("playbook_recommendations", []))
+                if playbook_selection
+                else 0,
             },
             prioritized_findings=prioritized,
         )
@@ -890,8 +1005,17 @@ class WorkflowExecutor:
                 "stages_total": len(stage_results),
                 "tool_executions_total": execution_count,
                 "priority_items": len(prioritized),
+                "playbook_recommendations_total": len(playbook_selection.get("playbook_recommendations", []))
+                if playbook_selection
+                else 0,
+                "matched_cves_total": len(playbook_selection.get("cve_matches", []))
+                if playbook_selection
+                else 0,
             },
         }
+        if playbook_selection:
+            summary_payload["playbook_selection"] = playbook_selection
+            manifest["playbook_selection"] = playbook_selection
         summary_path = store.write_workflow_json("summary.json", summary_payload)
 
         manifest["status"] = summary_payload["status"]
