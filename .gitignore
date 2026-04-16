@@ -112,3 +112,4 @@ cache/
 *.swo
 *~
 .tmp/
+outputs/
