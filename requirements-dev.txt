@@ -1,7 +1,7 @@
 -r requirements.txt
 
 # Pinned developer tooling for reproducible local/CI behavior.
-pytest==8.4.2
+pytest==9.0.3
 pytest-cov==7.0.0
 ruff==0.15.5
 black==26.3.1

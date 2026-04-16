@@ -37,7 +37,7 @@ Jinja2==3.1.6
 weasyprint==68.0
 Markdown==3.8.1
 bleach==6.1.0
-Pillow==12.1.1
+Pillow==12.2.0
 
 # Vector DB & Search
 sentence-transformers==5.4.0
@@ -96,7 +96,7 @@ py3nvml==0.2.7
 neo4j==5.28.1
 
 # Development & Testing
-pytest==8.4.2
+pytest==9.0.3
 pytest-cov==7.0.0
 pytest-asyncio==0.25.3
 black==26.3.1
@@ -107,6 +107,6 @@ isort==5.13.2
 # Optional: For enhanced functionality
 plotly==6.0.0
 hvac==2.3.0
-pypdf==6.10.0
-python-multipart==0.0.22
+pypdf==6.10.1
+python-multipart==0.0.26
 transformers==5.0.0rc3
