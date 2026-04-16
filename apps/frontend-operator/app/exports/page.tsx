@@ -40,8 +40,8 @@ export default function ExportsPage() {
   return (
     <div className="operator-grid">
       <PageHeader
-        title="Exports"
-        description="Provider payload preview and staging for approved findings."
+        title="Reports"
+        description="Report payload preview and staging for approved findings."
       />
 
       <Card>

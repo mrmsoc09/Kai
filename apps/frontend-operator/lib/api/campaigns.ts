@@ -37,7 +37,14 @@ export function getCampaignDiagnostics(campaignId: string, signal?: AbortSignal)
 
 export function decideApprovalGate(
   gateId: string,
-  body: { status: string; decided_by: string; operator_notes?: string }
+  body: {
+    status: string;
+    decided_by: string;
+    operator_notes?: string;
+    decision_payload_json?: Record<string, unknown>;
+    intention_id?: string;
+    trigger_scheduler?: boolean;
+  }
 ) {
   return requestJson<CampaignApprovalDecisionResponse>(`/api/v1/campaigns/approvals/${gateId}/decision`, {
     method: "POST",

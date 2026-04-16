@@ -42,10 +42,10 @@ export function CampaignTable({
             <Td>
               <div className="flex gap-2">
                 <Link
-                  href={`/campaigns/${row.id}`}
+                  href={`/mission-control/${row.id}`}
                   className="inline-flex h-8 items-center justify-center rounded-md border border-border px-3 text-xs font-medium text-foreground hover:bg-elevated"
                 >
-                  Open
+                  Mission Control
                 </Link>
                 <Button size="sm" variant="secondary" onClick={() => onSchedule(row.id)}>
                   Re-schedule

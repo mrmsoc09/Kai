@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { FindingQueueItem } from "@/lib/types";
 
 import { DataTable } from "@/components/data-display/DataTable";
+import { EvidenceStateBadge } from "@/components/status/EvidenceStateBadge";
 import { StatusBadge } from "@/components/status/StatusBadge";
 import { Td, Th } from "@/components/ui/table";
 
@@ -32,7 +33,7 @@ export function FindingsQueueTable({ rows }: { rows: FindingQueueItem[] }) {
               <StatusBadge status={row.finding_status} />
             </Td>
             <Td>
-              <StatusBadge status={row.readiness_status} />
+              <EvidenceStateBadge state={row.readiness_status} />
             </Td>
             <Td>
               <p>{row.program}</p>

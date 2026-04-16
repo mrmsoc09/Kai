@@ -16,7 +16,7 @@ from .base_platform_client import (
 
 logger = logging.getLogger(__name__)
 
-H1_API_URL = "https://api.hackerone.com/graphql"
+H1_API_URL = "https://api.hackerone.com/v1/graphql"
 
 
 class HackerOneClient(BasePlatformClient):
@@ -211,7 +211,6 @@ class HackerOneClient(BasePlatformClient):
                     node {
                       name
                       handle
-                      scope
                     }
                   }
                 }
@@ -235,6 +234,39 @@ class HackerOneClient(BasePlatformClient):
         except Exception as e:
             logger.warning(f"Failed to list programs: {str(e)}")
             return []
+
+    async def get_program_details(self, handle: str) -> Optional[Dict[str, Any]]:
+        """Get full program details including scope and guidelines."""
+        if not self.authenticated:
+            return None
+
+        try:
+            query = f"""
+            query {{
+              program(handle: "{handle}") {{
+                name
+                handle
+                policy
+                structured_scopes(first: 100) {{
+                  edges {{
+                    node {{
+                      asset_identifier
+                      asset_type
+                      instruction
+                      availability_requirement
+                    }}
+                  }}
+                }}
+              }}
+            }}
+            """
+            response = await self.session.post(self.api_url, json={"query": query})
+            if response.status_code == 200:
+                return response.json().get("data", {}).get("program")
+            return None
+        except Exception as e:
+            logger.error(f"Failed to get program details for {handle}: {e}")
+            return None
 
     @staticmethod
     def _extract_h1_program(target_url: str) -> str:

@@ -1,7 +1,7 @@
 import type { CampaignStatusResponse } from "@/lib/types";
 
 import { DataTable } from "@/components/data-display/DataTable";
-import { StatusBadge } from "@/components/status/StatusBadge";
+import { PhaseStatusBadge } from "@/components/status/PhaseStatusBadge";
 import { Td, Th } from "@/components/ui/table";
 
 export function PhaseJobTable({ jobs }: { jobs: CampaignStatusResponse["phase_jobs"] }) {
@@ -23,7 +23,7 @@ export function PhaseJobTable({ jobs }: { jobs: CampaignStatusResponse["phase_jo
             <Td>{job.phase_name}</Td>
             <Td>{job.phase_order}</Td>
             <Td>
-              <StatusBadge status={job.status} />
+              <PhaseStatusBadge status={job.status} />
             </Td>
             <Td className="font-mono text-xs">{job.depends_on_job_id ?? "-"}</Td>
             <Td>{job.approval_required ? "yes" : "no"}</Td>

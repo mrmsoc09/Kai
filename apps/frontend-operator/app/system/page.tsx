@@ -3,7 +3,11 @@
 import { useState } from "react";
 
 import { useBountyOperations } from "@/hooks/useBountyOperations";
+import { useTrackedCampaignData } from "@/hooks/useTrackedCampaignData";
+import { useTrackedCampaignIds } from "@/hooks/useTrackedCampaignIds";
+import { flattenRecentAuditEvents } from "@/lib/utils/soc";
 
+import { AuditEventList } from "@/components/data-display/AuditEventList";
 import { OperationsHealthPanel } from "@/components/bugbounty/OperationsHealthPanel";
 import { ProgramFilterCard } from "@/components/bugbounty/ProgramFilterCard";
 import { EmptyState } from "@/components/data-display/EmptyState";
@@ -16,12 +20,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function SystemPage() {
   const [programId, setProgramId] = useState("");
   const data = useBountyOperations(programId.trim() || undefined);
+  const trackedMissions = useTrackedCampaignIds();
+  const trackedData = useTrackedCampaignData(trackedMissions.trackedCampaignIds);
+  const systemLogEvents = flattenRecentAuditEvents({ campaignDiagnostics: trackedData.diagnostics }).slice(0, 60);
 
   return (
     <div className="operator-grid">
       <PageHeader
-        title="System Diagnostics"
-        description="Scheduler, readiness, adaptive action, and tool-health operations view for bug bounty monitoring."
+        title="System / Logs"
+        description="Scheduler, readiness, adaptive actions, tool-health telemetry, and mission audit logs."
       />
 
       <ProgramFilterCard value={programId} onChange={setProgramId} />
@@ -89,6 +96,34 @@ export default function SystemPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Mission System Logs (Audit Feed)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {trackedData.isLoading ? <LoadingState label="Loading mission audit logs..." /> : null}
+          {trackedData.errors.length > 0 ? (
+            <div className="space-y-2">
+              {trackedData.errors.map((entry, index) => (
+                <ErrorState
+                  key={`${entry.scope}:${entry.campaignId}:${index}`}
+                  error={entry.error}
+                  title={`Mission log source failed (${entry.campaignId})`}
+                />
+              ))}
+            </div>
+          ) : null}
+          {systemLogEvents.length > 0 ? (
+            <AuditEventList events={systemLogEvents} />
+          ) : (
+            <EmptyState
+              title="No mission logs"
+              description="Track missions from the Missions page to populate system audit logs."
+            />
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

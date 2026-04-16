@@ -645,6 +645,13 @@ async def decide_campaign_approval_gate(
                 intention_id=body.intention_id,
             )
         else:
+            if body.status == ApprovalGateStatusEnum.APPROVED and not (
+                body.reviewer_intention and body.reviewer_intention.strip()
+            ):
+                raise HTTPException(
+                    status_code=422,
+                    detail="reviewer_intention is required when approving a gate",
+                )
             decided = await approvals.decide_gate(
                 gate,
                 ApprovalGateDecision(
@@ -652,6 +659,7 @@ async def decide_campaign_approval_gate(
                     decided_by=actor_id,
                     operator_notes=body.operator_notes,
                     decision_payload_json=body.decision_payload_json,
+                    reviewer_intention=body.reviewer_intention,
                 ),
                 actor=actor_id,
                 intention_id=body.intention_id,

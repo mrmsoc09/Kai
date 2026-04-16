@@ -108,9 +108,23 @@ describe("operator console pages", () => {
           gate_id: "33333333-3333-4333-8333-333333333333",
           campaign_id: "11111111-1111-4111-8111-111111111111",
           phase_job_id: "22222222-2222-4222-8222-222222222222",
+          phase_name: "workflow_recon",
           status: "PENDING",
           source_event_type: "approval_gate.created",
           happened_at: "2026-03-11T00:10:00Z",
+          requested_at: "2026-03-11T00:09:00Z",
+          decided_at: null,
+          request_title: "Recon escalation approval",
+          requested_action: "Run elevated recon step",
+          requesting_agent: "recon_agent",
+          scope_target: "api.example.com",
+          risk_band: "HIGH",
+          evidence_attached: "2 linked item(s)",
+          intention: "Verify exploitable recon path before progression.",
+          justification: "Policy requires operator review for elevated recon.",
+          expected_impact: "Improves mission confidence for next phase decisions.",
+          safety_constraints: "Scope-restricted and non-destructive only.",
+          reviewer_notes: "",
           message: "Approval required"
         }
       ]
@@ -185,7 +199,7 @@ describe("operator console pages", () => {
 
   it("renders campaign dashboard route", () => {
     renderWithQueryClient(<CampaignsPage />);
-    expect(screen.getByText("Campaign Dashboard")).toBeInTheDocument();
+    expect(screen.getByText("Missions")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Start Campaign" })).toBeInTheDocument();
   });
 

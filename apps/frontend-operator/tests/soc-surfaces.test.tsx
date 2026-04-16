@@ -28,7 +28,11 @@ const mocks = vi.hoisted(() => ({
   useAnalytics: vi.fn(),
   usePlaybooks: vi.fn(),
   useAlertCenter: vi.fn(),
-  useBountyOperations: vi.fn()
+  useBountyOperations: vi.fn(),
+  useCampaigns: vi.fn(),
+  useApprovalQueue: vi.fn(),
+  useFindingsQueue: vi.fn(),
+  useTrackedCampaignData: vi.fn()
 }));
 
 vi.mock("@/hooks/useTrackedCampaignIds", () => ({ useTrackedCampaignIds: mocks.useTrackedCampaignIds }));
@@ -43,6 +47,10 @@ vi.mock("@/hooks/useAnalytics", () => ({ useAnalytics: mocks.useAnalytics }));
 vi.mock("@/hooks/usePlaybooks", () => ({ usePlaybooks: mocks.usePlaybooks }));
 vi.mock("@/hooks/useAlertCenter", () => ({ useAlertCenter: mocks.useAlertCenter }));
 vi.mock("@/hooks/useBountyOperations", () => ({ useBountyOperations: mocks.useBountyOperations }));
+vi.mock("@/hooks/useCampaigns", () => ({ useCampaigns: mocks.useCampaigns }));
+vi.mock("@/hooks/useApprovalQueue", () => ({ useApprovalQueue: mocks.useApprovalQueue }));
+vi.mock("@/hooks/useFindingsQueue", () => ({ useFindingsQueue: mocks.useFindingsQueue }));
+vi.mock("@/hooks/useTrackedCampaignData", () => ({ useTrackedCampaignData: mocks.useTrackedCampaignData }));
 
 describe("SOC dashboard surfaces", () => {
   beforeEach(() => {
@@ -172,6 +180,22 @@ describe("SOC dashboard surfaces", () => {
       healthQuery: { isLoading: false, isError: false, data: null },
       readinessQuery: { isLoading: false, isError: false, data: null }
     });
+
+    mocks.useCampaigns.mockReturnValue([]);
+    mocks.useApprovalQueue.mockReturnValue({ diagnosticsQueries: [], approvalGates: [] });
+    mocks.useFindingsQueue.mockReturnValue({
+      isLoading: false,
+      isError: false,
+      data: { count: 0, items: [] }
+    });
+    mocks.useTrackedCampaignData.mockReturnValue({
+      campaigns: [],
+      diagnostics: [],
+      errors: [],
+      isLoading: false,
+      campaignQueries: [],
+      diagnosticsQueries: []
+    });
   });
 
   it("renders all SOC surface route headers", () => {
@@ -188,7 +212,7 @@ describe("SOC dashboard surfaces", () => {
     renderWithQueryClient(<AlertsPage />);
     renderWithQueryClient(<SystemPage />);
 
-    expect(screen.getByText("Global Security Overview")).toBeInTheDocument();
+    expect(screen.getByText("Action Board")).toBeInTheDocument();
     expect(screen.getByText("Attack Surface Intelligence")).toBeInTheDocument();
     expect(screen.getByText("Reconnaissance Activity")).toBeInTheDocument();
     expect(screen.getByText("Findings Triage Center")).toBeInTheDocument();
@@ -199,7 +223,7 @@ describe("SOC dashboard surfaces", () => {
     expect(screen.getByText("Campaign Performance Analytics")).toBeInTheDocument();
     expect(screen.getByText("Automation and Playbooks")).toBeInTheDocument();
     expect(screen.getByText("Alerting and Notifications")).toBeInTheDocument();
-    expect(screen.getByText("System Diagnostics")).toBeInTheDocument();
+    expect(screen.getByText("System / Logs")).toBeInTheDocument();
   }, 15000);
 
   it("renders loading and error states for key SOC pages", () => {
@@ -225,8 +249,13 @@ describe("SOC dashboard surfaces", () => {
       recommendationsQuery: { isLoading: false, isError: false, data: [] },
       alertSummaryQuery: { isLoading: false, isError: false, data: null },
       toolsHealthQuery: { isLoading: false, isError: false, data: null },
-      healthQuery: { isLoading: false, isError: true, error: new Error("health error"), data: null },
+      healthQuery: { isLoading: false, isError: false, data: null },
       readinessQuery: { isLoading: false, isError: false, data: null }
+    });
+    mocks.useFindingsQueue.mockReturnValue({
+      isLoading: true,
+      isError: false,
+      data: undefined
     });
     mocks.useAttackSurface.mockReturnValue({
       findingsQueueQuery: { isLoading: false, isError: false, data: { count: 0, items: [] } },
@@ -239,8 +268,7 @@ describe("SOC dashboard surfaces", () => {
 
     renderWithQueryClient(<OverviewPage />);
     renderWithQueryClient(<AttackSurfacePage />);
-    expect(screen.getByText("Loading scheduler status...")).toBeInTheDocument();
-    expect(screen.getByText("Liveness failed")).toBeInTheDocument();
+    expect(screen.getByText("Loading findings...")).toBeInTheDocument();
     expect(screen.getByText("Attack surface load failed")).toBeInTheDocument();
   });
 });

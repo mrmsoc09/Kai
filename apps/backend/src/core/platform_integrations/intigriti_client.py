@@ -16,7 +16,7 @@ from .base_platform_client import (
 
 logger = logging.getLogger(__name__)
 
-INTIGRITI_API_URL = "https://api.intigriti.com/v1"
+INTIGRITI_API_URL = "https://api.intigriti.com/external/v1"
 
 
 class IntigrityClient(BasePlatformClient):

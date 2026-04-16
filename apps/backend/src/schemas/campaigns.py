@@ -206,6 +206,7 @@ class ApprovalGateDecision(BaseModel):
     decided_by: str = Field(..., min_length=1, max_length=255)
     operator_notes: str | None = Field(default=None, max_length=4000)
     decision_payload_json: dict = Field(default_factory=dict)
+    reviewer_intention: str | None = Field(default=None, max_length=4000)
 
 
 class ApprovalGateRead(BaseModel):
@@ -226,6 +227,7 @@ class ApprovalGateRead(BaseModel):
     canceled_at: datetime | None = None
     canceled_by: str | None = None
     operator_notes: str | None = None
+    reviewer_intention: str | None = None
     decision_payload_json: dict
     created_at: datetime
     updated_at: datetime
@@ -597,6 +599,7 @@ class CampaignApprovalDecisionRequest(BaseModel):
     decision_payload_json: dict = Field(default_factory=dict)
     intention_id: UUID | None = None
     trigger_scheduler: bool = True
+    reviewer_intention: str | None = Field(default=None, max_length=4000)
 
 
 class CampaignApprovalDecisionResponse(BaseModel):

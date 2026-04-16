@@ -86,6 +86,7 @@ from apps.backend.src.routers import (
     vault,
     workflows,
 )
+from apps.backend.src.routers import terminal_chat
 from apps.backend.src.routers import triage
 from apps.backend.src.routers import (
     hil_embeddings as hil_embeddings_router,
@@ -97,6 +98,11 @@ from apps.backend.src.routers import (
 from apps.backend.src.routers import platform_settings as platform_settings_router
 from apps.backend.src.routers import scan_pool as scan_pool_router
 from apps.backend.src.routers import visualization as visualization_router
+from apps.backend.src.routers import structured_evidence as structured_evidence_router
+from apps.backend.src.routers import attack_paths as attack_paths_router
+from apps.backend.src.routers import signal_scores as signal_scores_router
+from apps.backend.src.routers import evidence_validations as evidence_validations_router
+from apps.backend.src.routers import approval_evidence as approval_evidence_router
 
 
 services = Services()
@@ -428,6 +434,7 @@ app.include_router(embeddings.router)
 app.include_router(intel.router)
 app.include_router(mcp.router)
 app.include_router(realtime.router)
+app.include_router(terminal_chat.router)  # /terminal/providers, /terminal/execute, /terminal/logs
 app.include_router(mission_control.router)
 app.include_router(artifacts.router)
 app.include_router(events.router)
@@ -465,6 +472,15 @@ app.include_router(scan_pool_router.router)
 
 # Visualization — Global Heat Map + Analytics Dashboard (PROMPT 10)
 app.include_router(visualization_router.router)
+
+# Backend Phase 1 Foundation — structured evidence, attack paths, signal scoring
+app.include_router(structured_evidence_router.router)
+app.include_router(attack_paths_router.router)
+app.include_router(signal_scores_router.router)
+
+# Backend Phase 2 — evidence lifecycle, validation workflow, approval-evidence linkage
+app.include_router(evidence_validations_router.router)
+app.include_router(approval_evidence_router.router)
 
 # Evidence and findings lifecycle
 app.include_router(evidence.router)

@@ -5,39 +5,43 @@ import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
-const navGroups = [
+type NavLink = {
+  href: string;
+  label: string;
+  aliases?: string[];
+};
+
+const navGroups: Array<{ title: string; links: NavLink[] }> = [
   {
-    title: "Core Operations",
+    title: "Operator Cockpit",
     links: [
-      { href: "/overview", label: "Overview" },
-      { href: "/programs", label: "Programs" },
-      { href: "/targets", label: "Monitored Targets" },
-      { href: "/opportunities", label: "Opportunities" },
-      { href: "/predictions", label: "Predictions" },
-      { href: "/agents", label: "Agents" },
-      { href: "/retrospective", label: "Retrospective" },
-      { href: "/briefing", label: "Analyst Briefing" },
-      { href: "/cases", label: "Cases" },
-      { href: "/campaigns", label: "Campaigns" },
-      { href: "/recon", label: "Recon" },
-      { href: "/triage", label: "Findings / Triage" },
+      { href: "/overview", label: "Overview / Action Board" },
+      { href: "/missions", label: "Missions", aliases: ["/campaigns"] },
+      { href: "/mission-control", label: "Mission Control" },
+      { href: "/findings", label: "Findings", aliases: ["/triage", "/cases"] },
+      { href: "/evidence", label: "Evidence", aliases: ["/attack-surface"] },
+      { href: "/reports", label: "Reports", aliases: ["/exports"] },
       { href: "/approvals", label: "Approvals" },
-      { href: "/exports", label: "Exports" }
+      { href: "/terminal", label: "Terminal" },
+      { href: "/programs", label: "Programs / Targets", aliases: ["/targets"] },
+      { href: "/system", label: "System / Logs", aliases: ["/logs", "/diagnostics"] }
     ]
   },
   {
-    title: "SOC Intelligence",
+    title: "Extended Surfaces",
     links: [
-      { href: "/attack-surface", label: "Attack Surface" },
-      { href: "/evidence", label: "Evidence" },
+      { href: "/opportunities", label: "Opportunities" },
+      { href: "/predictions", label: "Predictions" },
+      { href: "/agents", label: "Agents" },
+      { href: "/briefing", label: "Analyst Briefing" },
+      { href: "/recon", label: "Recon" },
       { href: "/threat-intel", label: "Threat Intel" },
       { href: "/ioc", label: "IOC" },
       { href: "/timeline", label: "Timeline" },
       { href: "/analytics", label: "Analytics" },
       { href: "/playbooks", label: "Playbooks" },
       { href: "/alerts", label: "Alerts" },
-      { href: "/system", label: "System" },
-      { href: "/diagnostics", label: "Diagnostics (Legacy)" }
+      { href: "/retrospective", label: "Retrospective" }
     ]
   }
 ] as const;
@@ -50,7 +54,10 @@ export function SidebarNav() {
         <div key={group.title} className="space-y-1">
           <p className="px-1 text-xs font-semibold uppercase tracking-wide text-muted">{group.title}</p>
           {group.links.map((link) => {
-            const active = pathname === link.href || pathname.startsWith(`${link.href}/`);
+            const matchable = [link.href, ...(link.aliases ?? [])];
+            const active = matchable.some(
+              (candidate) => pathname === candidate || pathname.startsWith(`${candidate}/`)
+            );
             return (
               <Link
                 key={link.href}

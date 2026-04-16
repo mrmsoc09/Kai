@@ -453,6 +453,7 @@ class ApprovalGate(Base, TimestampMixin):
     canceled_by = Column(Text, nullable=True)
     operator_notes = Column(Text, nullable=True)
     decision_payload_json = Column(JSON, nullable=False, server_default="{}")
+    reviewer_intention = Column(Text, nullable=True)
 
     campaign = relationship("CampaignRun", back_populates="approval_gates")
     tenant = relationship("Tenant") # One-way for tenant_id filtering

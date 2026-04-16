@@ -1,6 +1,6 @@
 import type { CampaignStatusResponse } from "@/lib/types";
 
-import { StatusBadge } from "@/components/status/StatusBadge";
+import { PhaseStatusBadge } from "@/components/status/PhaseStatusBadge";
 
 export function PhaseTimeline({ jobs }: { jobs: CampaignStatusResponse["phase_jobs"] }) {
   const ordered = [...jobs].sort((a, b) => a.phase_order - b.phase_order);
@@ -12,7 +12,7 @@ export function PhaseTimeline({ jobs }: { jobs: CampaignStatusResponse["phase_jo
             <p className="text-sm font-medium text-foreground">{job.phase_name}</p>
             <p className="font-mono text-xs text-muted">{job.id}</p>
           </div>
-          <StatusBadge status={job.status} />
+          <PhaseStatusBadge status={job.status} />
         </div>
       ))}
     </div>

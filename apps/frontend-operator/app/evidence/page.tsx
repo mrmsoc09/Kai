@@ -20,6 +20,8 @@ export default function EvidencePage() {
   const [campaignInput, setCampaignInput] = useState("");
   const [campaignFilter, setCampaignFilter] = useState<string | undefined>();
   const [providerFilter, setProviderFilter] = useState("ALL");
+  const [readinessFilter, setReadinessFilter] = useState("ALL");
+  const [searchText, setSearchText] = useState("");
   const queueQuery = useFindingsQueue(campaignFilter);
 
   function applyCampaignFilter(event: FormEvent) {
@@ -37,13 +39,29 @@ export default function EvidencePage() {
 
   const filteredRows = useMemo(() => {
     const rows = queueQuery.data?.items ?? [];
-    if (providerFilter === "ALL") {
-      return rows;
-    }
-    return rows.filter((item) =>
-      item.observation_summary.items.some((obs) => (obs.summary ?? "").toLowerCase().includes(providerFilter.toLowerCase()))
-    );
-  }, [providerFilter, queueQuery.data?.items]);
+    const loweredSearch = searchText.trim().toLowerCase();
+    return rows.filter((item) => {
+      if (providerFilter !== "ALL") {
+        const matchesProvider = item.observation_summary.items.some((obs) =>
+          (obs.summary ?? "").toLowerCase().includes(providerFilter.toLowerCase())
+        );
+        if (!matchesProvider) {
+          return false;
+        }
+      }
+      if (readinessFilter !== "ALL" && item.readiness_status !== readinessFilter) {
+        return false;
+      }
+      if (!loweredSearch) {
+        return true;
+      }
+      const haystack = [item.title, item.program, item.asset, item.finding_id, item.campaign_id]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(loweredSearch);
+    });
+  }, [providerFilter, queueQuery.data?.items, readinessFilter, searchText]);
 
   return (
     <div className="operator-grid">
@@ -67,12 +85,27 @@ export default function EvidencePage() {
               Apply Campaign Filter
             </Button>
           </form>
-          <Select value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)}>
-            <option value="ALL">All provider context</option>
-            <option value="hackerone">hackerone</option>
-            <option value="bugcrowd">bugcrowd</option>
-            <option value="intigriti">intigriti</option>
-          </Select>
+          <div className="grid gap-2 md:grid-cols-3">
+            <Select value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)}>
+              <option value="ALL">All provider context</option>
+              <option value="hackerone">hackerone</option>
+              <option value="bugcrowd">bugcrowd</option>
+              <option value="intigriti">intigriti</option>
+            </Select>
+            <Select value={readinessFilter} onChange={(event) => setReadinessFilter(event.target.value)}>
+              <option value="ALL">All readiness</option>
+              <option value="READY_FOR_SUBMISSION">READY_FOR_SUBMISSION</option>
+              <option value="READY">READY</option>
+              <option value="INSUFFICIENT_EVIDENCE">INSUFFICIENT_EVIDENCE</option>
+              <option value="BLOCKED">BLOCKED</option>
+            </Select>
+            <Input
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="search title, asset, ids"
+            />
+          </div>
+          <p className="text-xs text-muted">results: {filteredRows.length}</p>
         </CardContent>
       </Card>
 

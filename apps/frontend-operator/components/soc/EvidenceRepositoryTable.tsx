@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { FindingQueueItem } from "@/lib/types";
 
 import { DataTable } from "@/components/data-display/DataTable";
-import { StatusBadge } from "@/components/status/StatusBadge";
+import { EvidenceStateBadge } from "@/components/status/EvidenceStateBadge";
 import { Td, Th } from "@/components/ui/table";
 
 export function EvidenceRepositoryTable({
@@ -38,7 +38,7 @@ export function EvidenceRepositoryTable({
             <Td className="font-mono text-xs">{row.asset}</Td>
             <Td>{row.evidence_count}</Td>
             <Td>
-              <StatusBadge status={row.readiness_status} />
+              <EvidenceStateBadge state={row.readiness_status} />
             </Td>
             <Td className="text-xs text-muted">{syntheticLabel}</Td>
           </tr>

@@ -7,6 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..auth.models import Tenant
+from ..models.approval_evidence_link import ApprovalEvidenceLink
 from ..models.campaign import ApprovalGate
 from ..models.enums import ApprovalGateStatusEnum
 from ..schemas.campaigns import ApprovalGateCreate, ApprovalGateDecision
@@ -186,6 +187,14 @@ class ApprovalGateService:
         actor: str | None = None,
         intention_id: UUID | None = None,
     ) -> ApprovalGate:
+        # Enforce reviewer_intention before any transition checks so this guard
+        # cannot be bypassed by reordering or future additions to the method.
+        if decision.status == ApprovalGateStatusEnum.APPROVED:
+            if not decision.reviewer_intention or not decision.reviewer_intention.strip():
+                raise ValueError(
+                    "reviewer_intention is required when approving a gate: "
+                    f"gate_id={gate.id} campaign_id={gate.campaign_id}"
+                )
         previous = gate.status
         if previous == decision.status:
             await record_transition_event(
@@ -228,6 +237,7 @@ class ApprovalGateService:
         gate.decided_at = _utcnow()
         gate.operator_notes = decision.operator_notes
         gate.decision_payload_json = decision.decision_payload_json
+        gate.reviewer_intention = decision.reviewer_intention
         await self.db.flush()
         await record_transition_event(
             self.db,
@@ -309,6 +319,54 @@ class ApprovalGateService:
             payload={"from": previous.value, "to": ApprovalGateStatusEnum.CANCELED.value},
         )
         return gate
+
+    async def link_approval_to_evidence(
+        self,
+        gate_id: UUID,
+        linked_by: str,
+        *,
+        evidence_id: UUID | None = None,
+        validation_id: UUID | None = None,
+        reason: str | None = None,
+        tenant_id: UUID | None = None,
+    ) -> ApprovalEvidenceLink:
+        """Create an ApprovalEvidenceLink connecting *gate_id* to evidence/validation.
+
+        Fetches the gate to copy ``reviewer_intention`` into the immutable
+        ``reviewer_intention_snapshot`` field on the link record.
+
+        Raises ``LookupError`` when the gate is not found.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+
+        gate = await self.get_gate(gate_id, tenant_id=tenant_id)
+        if gate is None:
+            raise LookupError(
+                f"ApprovalGate not found: gate_id={gate_id}"
+            )
+
+        link = ApprovalEvidenceLink(
+            approval_gate_id=gate_id,
+            evidence_id=evidence_id,
+            validation_id=validation_id,
+            campaign_id=gate.campaign_id,
+            linked_by=linked_by,
+            link_reason=reason,
+            reviewer_intention_snapshot=gate.reviewer_intention,
+        )
+        self.db.add(link)
+        await self.db.flush()
+        await self.db.refresh(link)
+        logger.info(
+            "approval_evidence_link.created id=%s gate_id=%s evidence_id=%s validation_id=%s actor=%s",
+            link.id,
+            gate_id,
+            evidence_id,
+            validation_id,
+            linked_by,
+        )
+        return link
 
     async def expire_gate(
         self,

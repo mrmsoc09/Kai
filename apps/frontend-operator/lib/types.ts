@@ -4,3 +4,5 @@ export * from "@/lib/types/findings";
 export * from "@/lib/types/diagnostics";
 export * from "@/lib/types/soc";
 export * from "@/lib/types/bug-bounty";
+export * from "@/lib/types/approvals";
+export * from "@/lib/types/terminal";

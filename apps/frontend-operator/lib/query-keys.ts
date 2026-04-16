@@ -21,6 +21,11 @@ export const queryKeys = {
   approvals: {
     inferredQueue: (campaignIds: string[]) => ["approvals", "inferred", ...campaignIds] as const
   },
+  terminal: {
+    providers: () => ["terminal", "providers"] as const,
+    logs: (limit: number) => ["terminal", "logs", limit] as const,
+    sessions: () => ["terminal", "sessions"] as const
+  },
   soc: {
     overview: (campaignIds: string[]) => ["soc", "overview", ...campaignIds] as const,
     attackSurface: (campaignId?: string) =>

@@ -78,6 +78,12 @@ from .hil import AuditMerkleRoot, Evidence, Finding, HILApproval, Report
 from .hil_extra import ProgramScope
 from .intention import IntentionRecord
 from .workflow import CorrelationRecord, StageRun, WorkflowFinding, WorkflowRun
+# Phase 1 & 2 evidence, attack path, and signal scoring models
+from .structured_evidence import StructuredEvidence
+from .attack_path import AttackPathEdge, AttackPathNode
+from .signal_score import SignalScore
+from .evidence_validation import EvidenceValidation
+from .approval_evidence_link import ApprovalEvidenceLink
 
 __all__ = [
     "Base",
@@ -149,4 +155,11 @@ __all__ = [
     "StageRun",
     "WorkflowFinding",
     "CorrelationRecord",
+    # Phase 1 & 2
+    "StructuredEvidence",
+    "AttackPathNode",
+    "AttackPathEdge",
+    "SignalScore",
+    "EvidenceValidation",
+    "ApprovalEvidenceLink",
 ]

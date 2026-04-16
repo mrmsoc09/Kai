@@ -1,18 +1,13 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { startCampaign, scheduleCampaign } from "@/lib/api/campaigns";
 import { useCampaigns } from "@/hooks/useCampaigns";
 import { useDiagnosticsSummary } from "@/hooks/useDiagnosticsSummary";
+import { useTrackedCampaignIds } from "@/hooks/useTrackedCampaignIds";
 import { queryKeys } from "@/lib/query-keys";
-import {
-  addTrackedCampaignId,
-  loadTrackedCampaignIds,
-  removeTrackedCampaignId,
-  saveTrackedCampaignIds
-} from "@/lib/tracked-campaigns";
 import { isUuid } from "@/lib/utils";
 import type { CampaignStartRequest } from "@/lib/types";
 
@@ -26,19 +21,14 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 
 export default function CampaignsPage() {
   const queryClient = useQueryClient();
-  const [trackedCampaignIds, setTrackedCampaignIds] = useState<string[]>([]);
+  const { trackedCampaignIds, addCampaignId, removeCampaignId } = useTrackedCampaignIds();
   const [trackInput, setTrackInput] = useState("");
-
-  useEffect(() => {
-    setTrackedCampaignIds(loadTrackedCampaignIds());
-  }, []);
-
-  useEffect(() => {
-    saveTrackedCampaignIds(trackedCampaignIds);
-  }, [trackedCampaignIds]);
+  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [searchText, setSearchText] = useState("");
 
   const diagnosticsSummaryQuery = useDiagnosticsSummary();
   const campaignQueries = useCampaigns(trackedCampaignIds);
@@ -55,6 +45,22 @@ export default function CampaignsPage() {
         })),
     [campaignQueries]
   );
+  const filteredCampaignRows = useMemo(() => {
+    const loweredSearch = searchText.trim().toLowerCase();
+    return campaignRows.filter((row) => {
+      if (statusFilter !== "ALL" && row.status !== statusFilter) {
+        return false;
+      }
+      if (!loweredSearch) {
+        return true;
+      }
+      const haystack = [row.id, row.program_id, row.status]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(loweredSearch);
+    });
+  }, [campaignRows, searchText, statusFilter]);
 
   const scheduleMutation = useMutation({
     mutationFn: (campaignId: string) => scheduleCampaign(campaignId),
@@ -68,7 +74,7 @@ export default function CampaignsPage() {
   const startCampaignMutation = useMutation({
     mutationFn: (body: CampaignStartRequest) => startCampaign(body),
     onSuccess: (response) => {
-      setTrackedCampaignIds((prev) => addTrackedCampaignId(prev, response.campaign_id));
+      addCampaignId(response.campaign_id);
       queryClient.invalidateQueries({ queryKey: queryKeys.diagnostics.summary() });
       queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.detail(response.campaign_id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.campaigns.diagnostics(response.campaign_id) });
@@ -81,7 +87,7 @@ export default function CampaignsPage() {
     if (!isUuid(trimmed)) {
       return;
     }
-    setTrackedCampaignIds((prev) => addTrackedCampaignId(prev, trimmed));
+    addCampaignId(trimmed);
     setTrackInput("");
   }
 
@@ -93,8 +99,8 @@ export default function CampaignsPage() {
   return (
     <div className="operator-grid">
       <PageHeader
-        title="Campaign Dashboard"
-        description="Operator control over campaign lifecycle, scheduling, and execution visibility."
+        title="Missions"
+        description="Mission lifecycle operations for scheduling, execution, approvals, and human decision gates."
       />
 
       <div className="grid gap-4 lg:grid-cols-5">
@@ -139,16 +145,35 @@ export default function CampaignsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Campaigns</CardTitle>
+          <CardTitle>Mission Queue</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {campaignRows.length === 0 ? (
+          <div className="grid gap-2 md:grid-cols-2">
+            <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+              <option value="ALL">All statuses</option>
+              <option value="CREATED">CREATED</option>
+              <option value="READY">READY</option>
+              <option value="RUNNING">RUNNING</option>
+              <option value="WAITING_APPROVAL">WAITING_APPROVAL</option>
+              <option value="BLOCKED">BLOCKED</option>
+              <option value="FAILED">FAILED</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="CANCELED">CANCELED</option>
+            </Select>
+            <Input
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+              placeholder="search mission id, program id, status"
+            />
+          </div>
+          <p className="text-xs text-muted">results: {filteredCampaignRows.length}</p>
+          {filteredCampaignRows.length === 0 ? (
             <EmptyState
-              title="No tracked campaigns"
-              description="Start a campaign or track an existing campaign ID to populate this table."
+              title="No missions match current filters"
+              description="Start a mission or adjust status/search filters."
             />
           ) : (
-            <CampaignTable rows={campaignRows} onSchedule={(campaignId) => scheduleMutation.mutate(campaignId)} />
+            <CampaignTable rows={filteredCampaignRows} onSchedule={(campaignId) => scheduleMutation.mutate(campaignId)} />
           )}
 
           {scheduleMutation.isError ? (
@@ -169,7 +194,7 @@ export default function CampaignsPage() {
                 <button
                   key={campaignId}
                   onClick={() =>
-                    setTrackedCampaignIds((prev) => removeTrackedCampaignId(prev, campaignId))
+                    removeCampaignId(campaignId)
                   }
                   className="rounded-md border border-border bg-elevated px-2 py-1 font-mono text-xs text-muted hover:bg-panel"
                   type="button"
