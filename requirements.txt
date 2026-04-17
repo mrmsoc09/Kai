@@ -107,6 +107,6 @@ isort==5.13.2
 # Optional: For enhanced functionality
 plotly==6.0.0
 hvac==2.3.0
-pypdf==6.10.1
+pypdf==6.10.2
 python-multipart==0.0.26
 transformers==5.0.0rc3
