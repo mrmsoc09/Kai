@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
+from sqlalchemy import select, update
+
 
 class JobState(str, Enum):
     PENDING = "PENDING"
@@ -130,6 +132,105 @@ class ExecutionOrchestrator:
         }
         for job in jobs:
             key = job.state.value.lower()
+            if key in counts:
+                counts[key] += 1
+        return counts
+
+    # ------------------------------------------------------------------
+    # DB-backed methods (require an async SQLAlchemy session)
+    # ------------------------------------------------------------------
+
+    async def submit_job_db(
+        self,
+        campaign_id: str,
+        tool_name: str,
+        target: str,
+        max_attempts: int = 3,
+        db: Any = None,
+    ) -> "ExecutionJobRow":
+        """Persist a new PENDING job to the database and return the row."""
+        from ..models.execution_job import ExecutionJobRow
+
+        now = datetime.now(timezone.utc)
+        job_id = str(uuid.uuid4())
+        row = ExecutionJobRow(
+            id=job_id,
+            campaign_id=campaign_id,
+            tool_name=tool_name,
+            target=target,
+            state="PENDING",
+            attempt=0,
+            max_attempts=max_attempts,
+            error=None,
+            created_at=now,
+            updated_at=now,
+        )
+        db.add(row)
+        await db.flush()
+        return row
+
+    async def _load_job_db(self, job_id: str, db: Any) -> "ExecutionJobRow":
+        from ..models.execution_job import ExecutionJobRow
+
+        result = await db.execute(select(ExecutionJobRow).where(ExecutionJobRow.id == job_id))
+        row = result.scalar_one_or_none()
+        if row is None:
+            raise ValueError(f"ExecutionJob {job_id!r} not found in database")
+        return row
+
+    async def mark_running_db(self, job_id: str, db: Any) -> "ExecutionJobRow":
+        row = await self._load_job_db(job_id, db)
+        row.state = "RUNNING"
+        row.updated_at = datetime.now(timezone.utc)
+        await db.flush()
+        return row
+
+    async def mark_completed_db(self, job_id: str, db: Any) -> "ExecutionJobRow":
+        row = await self._load_job_db(job_id, db)
+        row.state = "COMPLETED"
+        row.error = None
+        row.updated_at = datetime.now(timezone.utc)
+        await db.flush()
+        return row
+
+    async def mark_failed_db(self, job_id: str, error: str, db: Any) -> "ExecutionJobRow":
+        row = await self._load_job_db(job_id, db)
+        row.error = error
+        row.updated_at = datetime.now(timezone.utc)
+        if row.attempt < row.max_attempts:
+            row.state = "RETRYING"
+            row.attempt += 1
+        else:
+            row.state = "FAILED"
+        await db.flush()
+        return row
+
+    async def get_retryable_jobs_db(self, db: Any) -> list["ExecutionJobRow"]:
+        from ..models.execution_job import ExecutionJobRow
+
+        result = await db.execute(
+            select(ExecutionJobRow).where(ExecutionJobRow.state == "RETRYING")
+        )
+        return list(result.scalars().all())
+
+    async def get_campaign_state_db(self, campaign_id: str, db: Any) -> dict[str, int]:
+        from ..models.execution_job import ExecutionJobRow
+
+        result = await db.execute(
+            select(ExecutionJobRow).where(ExecutionJobRow.campaign_id == campaign_id)
+        )
+        rows = result.scalars().all()
+        counts: dict[str, int] = {
+            "total": len(rows),
+            "pending": 0,
+            "running": 0,
+            "completed": 0,
+            "failed": 0,
+            "retrying": 0,
+            "canceled": 0,
+        }
+        for row in rows:
+            key = row.state.lower()
             if key in counts:
                 counts[key] += 1
         return counts

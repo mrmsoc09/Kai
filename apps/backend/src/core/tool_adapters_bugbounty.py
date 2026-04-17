@@ -149,9 +149,16 @@ def _risk_tier_for_autonomy(tier: ToolAutonomyTier) -> ToolRiskTier:
 
 
 class CatalogBackedCLITool(BaseTool):
+    # Rate-limit tracking per instance (sync tools only — see _enforce_rate_limit)
+    _last_run_time: float = 0.0
+
     def __init__(self, catalog_entry: ToolCatalogEntry):
         self.catalog_entry = catalog_entry
         self.catalog_name = catalog_entry.name
+        # Scope lists set externally before execute() — enforcement only fires when non-empty
+        self._allowed_scope: list[str] = []
+        self._denied_scope: list[str] = []
+        self._last_run_time: float = 0.0
         tool_id = REGISTRY_TOOL_ID_ALIASES.get(catalog_entry.name, catalog_entry.name)
         params = [
             ToolParameter("target", "string", "Primary target input"),
@@ -462,6 +469,19 @@ class CatalogBackedCLITool(BaseTool):
 
         return {"items": [line for line in output.splitlines() if line.strip()]}
 
+    def _enforce_rate_limit(self, tool_name: str) -> None:
+        """Sync rate-limit enforcement for the subprocess execution path."""
+        from .execution_safety import TOOL_SAFETY_DEFAULTS
+
+        cfg = TOOL_SAFETY_DEFAULTS.get(tool_name, TOOL_SAFETY_DEFAULTS["default"])
+        min_interval = 1.0 / cfg.rate_limit_rps if cfg.rate_limit_rps > 0 else 0.0
+        now = time.monotonic()
+        elapsed = now - self._last_run_time
+        if elapsed < min_interval:
+            wait = min_interval - elapsed
+            time.sleep(wait)  # subprocess path is already blocking; sleep is acceptable here
+        self._last_run_time = time.monotonic()
+
     def execute(self, headers: Optional[Dict[str, str]] = None, **kwargs) -> ToolResult:
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
@@ -473,6 +493,40 @@ class CatalogBackedCLITool(BaseTool):
         extra_args = kwargs.get("extra_args") if isinstance(kwargs.get("extra_args"), list) else []
         retries = int(kwargs.get("retries") or self.catalog_entry.retry_policy.max_attempts)
         timeout_seconds = int(kwargs.get("timeout_seconds") or self.catalog_entry.timeout_seconds)
+
+        # --- Scope enforcement ---
+        from .scope_ingestion_service import NormalizedScope, ScopeEnforcementGate
+
+        _scope = NormalizedScope(
+            allowed=list(self._allowed_scope),
+            denied=list(self._denied_scope),
+        )
+        if _scope.allowed:
+            _check_target = target or (kwargs.get("tool_inputs") or {}).get("target", "")
+            if _check_target and not ScopeEnforcementGate().check_target(str(_check_target), _scope):
+                return ToolResult(
+                    self.id,
+                    ToolStatus.FAILED,
+                    {},
+                    error=f"Target '{_check_target}' is out of scope — execution blocked",
+                )
+
+        # --- Tool governance: Band 3 unconditional block ---
+        from .tool_risk_registry import get_tool_band
+
+        _band = get_tool_band(self.catalog_name)
+        if _band >= 3:
+            return ToolResult(
+                self.id,
+                ToolStatus.FAILED,
+                {},
+                error=f"Tool '{self.catalog_name}' is Band 3 (exploitation) — blocked unconditionally",
+            )
+        # Band 2 gate check must be performed upstream by ToolGovernanceService
+        # before execute() is called.  Band 0/1 auto-proceed.
+
+        # --- Sync rate limiting before subprocess ---
+        self._enforce_rate_limit(self.catalog_name)
 
         # Reject extra_args entirely at the API level for Tier 2 tools
         if self.autonomy_tier == ToolAutonomyTier.TIER_2_APPROVE and extra_args:

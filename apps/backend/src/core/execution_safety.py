@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import subprocess
 import time
 from dataclasses import dataclass, field
 from typing import Any, Coroutine
@@ -87,6 +88,33 @@ class ExecutionSafetyLayer:
             state = self._get_state(tool_name)
             state.active_count = max(0, state.active_count - 1)
 
+    @staticmethod
+    async def run_subprocess_safe(
+        cmd: list[str],
+        timeout: int = 300,
+        stdin_text: str | None = None,
+    ) -> tuple[int, str, str]:
+        """Run a subprocess without blocking the event loop.
+
+        Wraps subprocess.run in asyncio.to_thread so the async event loop is
+        never blocked by a blocking sys-call.  Tool execute() paths that call
+        subprocess MUST use this helper instead of subprocess.run directly.
+
+        Returns: (returncode, stdout, stderr)
+        """
+
+        def _run() -> tuple[int, str, str]:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                input=stdin_text,
+            )
+            return result.returncode, result.stdout, result.stderr
+
+        return await asyncio.to_thread(_run)
+
     async def execute_with_safety(
         self,
         coro_factory: Any,
@@ -97,6 +125,10 @@ class ExecutionSafetyLayer:
 
         coro_factory must be a callable that returns a new coroutine each call,
         since coroutines can only be awaited once.
+
+        IMPORTANT: The coroutine produced by coro_factory must not call blocking
+        subprocess directly — use ExecutionSafetyLayer.run_subprocess_safe() for
+        subprocess calls so the event loop is never blocked.
         """
         cfg = self._get_config(tool_name)
         effective_timeout = timeout or cfg.timeout_seconds

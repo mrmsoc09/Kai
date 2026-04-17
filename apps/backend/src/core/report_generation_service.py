@@ -38,8 +38,9 @@ class ReportGenerationService:
         description = finding.get("description", "No description provided.")
         asset = finding.get("asset", finding.get("target", "Unknown"))
         vuln_type = finding.get("vulnerability_type", finding.get("vuln_type", "Unknown"))
-        cvss = float(finding.get("cvss_score", 0.0))
-        severity = finding.get("severity", estimate_severity(cvss))
+        _cvss_raw = finding.get("cvss_score")
+        cvss = float(_cvss_raw) if _cvss_raw is not None else 0.0
+        severity = finding.get("severity") or estimate_severity(cvss)
         impact = finding.get("impact", f"This vulnerability ({vuln_type}) on {asset} "
                              f"has been rated as {severity} severity (CVSS: {cvss:.1f}).")
         references = finding.get("references", [])
@@ -130,12 +131,26 @@ class ReportGenerationService:
         )
         evidence_rows = ev_result.scalars().all()
 
+        # Use actual CVSS field (if present on model) or fall back to None.
+        # reproducibility_score is 0.0–1.0 and must NOT be used as a CVSS score.
+        cvss = (
+            getattr(finding_row, "cvss_score", None)
+            or getattr(finding_row, "cvss", None)
+            or getattr(finding_row, "base_score", None)
+        )
+        severity_str = (
+            finding_row.severity.value
+            if hasattr(finding_row.severity, "value")
+            else str(finding_row.severity)
+        )
+
         finding_dict = {
             "title": finding_row.title,
             "description": finding_row.description,
             "asset": finding_row.asset,
-            "severity": finding_row.severity.value if hasattr(finding_row.severity, "value") else str(finding_row.severity),
-            "cvss_score": finding_row.reproducibility_score or 0.0,
+            "severity": severity_str,
+            # Pass the real CVSS value (may be None if the model has no cvss column)
+            "cvss_score": float(cvss) if cvss is not None else None,
         }
 
         evidence_list = []

@@ -110,7 +110,7 @@ class ProgramIngestionService:
     def schedule_program(
         self, program: IngestedProgram, interval_hours: int = 24
     ) -> dict[str, Any]:
-        """Return a schedule descriptor for periodic scanning."""
+        """Return a schedule descriptor for periodic scanning (in-memory, no DB)."""
         now = datetime.now(timezone.utc)
         targets = self.derive_scan_targets(program)
         return {
@@ -118,4 +118,70 @@ class ProgramIngestionService:
             "next_run_at": (now + timedelta(hours=interval_hours)).isoformat(),
             "interval_hours": interval_hours,
             "targets_count": len(targets),
+        }
+
+    async def schedule_program_db(
+        self,
+        program: IngestedProgram,
+        interval_hours: int = 24,
+        db: Any = None,
+    ) -> dict[str, Any]:
+        """Persist a ProgramSchedule row and return the schedule descriptor.
+
+        Performs an upsert: if a schedule for this program_handle already exists
+        it is updated in-place (targets, interval, next_run_at).  Returns the
+        same dict shape as schedule_program() for backward compatibility.
+        """
+        from ..models.program_schedule import ProgramSchedule
+        from sqlalchemy import select
+
+        now = datetime.now(timezone.utc)
+        targets = self.derive_scan_targets(program)
+        next_run_at = now + timedelta(hours=interval_hours)
+
+        if db is None:
+            logger.warning(
+                "schedule_program_db called without db session — falling back to in-memory"
+            )
+            return self.schedule_program(program, interval_hours)
+
+        # Upsert by program_handle
+        result = await db.execute(
+            select(ProgramSchedule).where(
+                ProgramSchedule.program_handle == program.program_handle
+            )
+        )
+        row = result.scalar_one_or_none()
+
+        if row is None:
+            row = ProgramSchedule(
+                program_handle=program.program_handle,
+                platform=program.platform,
+                targets=targets,
+                interval_hours=interval_hours,
+                next_run_at=next_run_at,
+                last_run_at=None,
+            )
+            db.add(row)
+        else:
+            row.targets = targets
+            row.interval_hours = interval_hours
+            row.next_run_at = next_run_at
+            row.platform = program.platform
+
+        await db.flush()
+
+        logger.info(
+            "Scheduled program handle=%s targets=%d next_run_at=%s",
+            program.program_handle,
+            len(targets),
+            next_run_at.isoformat(),
+        )
+
+        return {
+            "program_handle": program.program_handle,
+            "next_run_at": next_run_at.isoformat(),
+            "interval_hours": interval_hours,
+            "targets_count": len(targets),
+            "schedule_id": str(row.id),
         }

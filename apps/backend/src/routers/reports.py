@@ -7,7 +7,11 @@ import logging
 import os
 import json
 import re
+from datetime import datetime, timezone
 from pydantic import BaseModel, Field
+
+from sqlalchemy.ext.asyncio import AsyncSession
+from ..core.hil_db import get_db
 
 from ..core.auth import require_roles, ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN, User, get_current_user
 from ..core.packager import build_submission_package
@@ -802,6 +806,34 @@ async def generate_report(
     return {
         'deduplicated': deduplicated,
         'report': report.to_dict(),
+    }
+
+
+@router.get('/generate')
+async def generate_report_from_finding(
+    finding_id: str = Query(..., description="UUID of the Finding to generate a report for"),
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> Dict[str, Any]:
+    """Generate a HackerOne-compatible markdown report from a persisted Finding row.
+
+    Loads the Finding and all linked StructuredEvidence records, then renders
+    a submission-ready markdown report using ReportGenerationService.
+    """
+    from ..core.report_generation_service import ReportGenerationService
+
+    try:
+        report_md = await ReportGenerationService().generate_from_finding_id(finding_id, db)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:
+        logger.exception("Report generation failed for finding_id=%s", finding_id)
+        raise HTTPException(status_code=500, detail=f"Report generation error: {exc}")
+
+    return {
+        "finding_id": finding_id,
+        "report_markdown": report_md,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
     }
 
 

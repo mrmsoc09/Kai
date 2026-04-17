@@ -8,6 +8,9 @@ from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import urlparse
 
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
+
 logger = logging.getLogger(__name__)
 
 
@@ -130,5 +133,104 @@ class DeduplicationService:
             self._endpoints[campaign_id] = {}
         if path:
             self._endpoints[campaign_id][path] = finding_id
+
+        return finding_id
+
+    # ------------------------------------------------------------------
+    # DB-backed methods (require an async SQLAlchemy session)
+    # ------------------------------------------------------------------
+
+    async def check_duplicate_db(
+        self,
+        finding: dict[str, Any],
+        campaign_id: str,
+        db: Any,
+    ) -> DuplicateCheckResult:
+        """Check for duplicates against the persistent DedupFingerprint table.
+
+        1. Exact fingerprint match → duplicate (score=1.0)
+        2. Same campaign + endpoint (near-dup) → duplicate (score=0.7)
+        """
+        from ..models.dedup_fingerprint import DedupFingerprint
+
+        fp = self._fingerprint(finding)
+        path = self._extract_path(finding)
+
+        # Exact match
+        exact_row = await db.execute(
+            select(DedupFingerprint.finding_id).where(
+                DedupFingerprint.campaign_id == campaign_id,
+                DedupFingerprint.fingerprint == fp,
+            )
+        )
+        exact = exact_row.scalar_one_or_none()
+        if exact is not None:
+            return DuplicateCheckResult(
+                is_duplicate=True,
+                duplicate_of=exact,
+                similarity_score=1.0,
+                match_reason="exact_fingerprint_match_db",
+            )
+
+        # Near-duplicate: same endpoint in same campaign
+        if path:
+            near_row = await db.execute(
+                select(DedupFingerprint.finding_id).where(
+                    DedupFingerprint.campaign_id == campaign_id,
+                    DedupFingerprint.endpoint == path,
+                )
+            )
+            near = near_row.scalar_one_or_none()
+            if near is not None:
+                return DuplicateCheckResult(
+                    is_duplicate=True,
+                    duplicate_of=near,
+                    similarity_score=0.7,
+                    match_reason="near_duplicate_same_path_db",
+                )
+
+        return DuplicateCheckResult(is_duplicate=False, similarity_score=0.0, match_reason="no_match")
+
+    async def register_finding_db(
+        self,
+        finding: dict[str, Any],
+        campaign_id: str,
+        db: Any,
+    ) -> str:
+        """Insert a DedupFingerprint row and return the finding_id.
+
+        Handles UniqueViolation gracefully — returns existing finding_id on conflict.
+        """
+        from ..models.dedup_fingerprint import DedupFingerprint
+
+        fp = self._fingerprint(finding)
+        finding_id = finding.get("id", str(uuid.uuid4()))
+        path = self._extract_path(finding)
+        vuln_type = (
+            finding.get("vuln_type", finding.get("vulnerability_type", "")) or ""
+        ).strip().lower()
+
+        row = DedupFingerprint(
+            id=uuid.uuid4(),
+            campaign_id=campaign_id,
+            finding_id=finding_id,
+            fingerprint=fp,
+            endpoint=path,
+            vuln_type=vuln_type,
+            created_at=datetime.now(timezone.utc),
+        )
+        try:
+            db.add(row)
+            await db.flush()
+        except IntegrityError:
+            await db.rollback()
+            # Row already exists — return the existing finding_id
+            existing = await db.execute(
+                select(DedupFingerprint.finding_id).where(
+                    DedupFingerprint.campaign_id == campaign_id,
+                    DedupFingerprint.fingerprint == fp,
+                )
+            )
+            return existing.scalar_one_or_none() or finding_id
 
         return finding_id
