@@ -226,6 +226,48 @@ async def patch_replay_fields(
     return StructuredEvidenceRead.model_validate(record)
 
 
+class ReplayPackageRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    evidence_id: str
+    request_response_uri: str | None = None
+    command_transcript_uri: str | None = None
+    screen_recording_uri: str | None = None
+    reproduction_steps: str | None = None
+    terminal_ref: str | None = None
+    is_reproducible: bool
+    completeness_score: float
+
+
+@router.get("/{evidence_id}/replay-package", response_model=ReplayPackageRead)
+async def get_replay_package(
+    evidence_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+) -> ReplayPackageRead:
+    """Build a replay package for a piece of structured evidence."""
+    from ..core.replay_service import ReplayService
+
+    result = await db.execute(
+        select(StructuredEvidence).where(StructuredEvidence.id == evidence_id)
+    )
+    record = result.scalar_one_or_none()
+    if record is None:
+        raise HTTPException(status_code=404, detail=f"Structured evidence not found: {evidence_id}")
+    svc = ReplayService()
+    pkg = svc.build_replay_package(record)
+    return ReplayPackageRead(
+        evidence_id=pkg.evidence_id,
+        request_response_uri=pkg.request_response_uri,
+        command_transcript_uri=pkg.command_transcript_uri,
+        screen_recording_uri=pkg.screen_recording_uri,
+        reproduction_steps=pkg.reproduction_steps,
+        terminal_ref=pkg.terminal_ref,
+        is_reproducible=pkg.is_reproducible,
+        completeness_score=pkg.completeness_score,
+    )
+
+
 @router.get("/{evidence_id}/readiness", response_model=EvidenceReadinessReport)
 async def get_evidence_readiness(
     evidence_id: UUID,
