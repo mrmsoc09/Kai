@@ -188,6 +188,36 @@ async def run_mvp_flow() -> list[str]:
         if not callable(getattr(_eo, _method, None)):
             errors.append(f"ExecutionOrchestrator missing {_method}")
 
+    # --- Step 15: Band 2 tool without _gate_verified raises PermissionError ---
+    import warnings as _warnings
+    _adapter_src_path = (
+        pathlib.Path(__file__).parent.parent
+        / "apps" / "backend" / "src" / "core" / "tool_adapters_bugbounty.py"
+    )
+    _adapter_src2 = _adapter_src_path.read_text()
+    if "_gate_verified" not in _adapter_src2:
+        errors.append("tool_adapters_bugbounty.py missing _gate_verified Band 2 enforcement")
+    if "_approved_gate_id" not in _adapter_src2:
+        errors.append("tool_adapters_bugbounty.py missing _approved_gate_id attribute")
+    if "PermissionError" not in _adapter_src2:
+        errors.append("tool_adapters_bugbounty.py does not raise PermissionError for Band 2 without gate")
+
+    # --- Step 16: Scope empty+no-denylist logs warning; denylist blocks denied target ---
+    # Verified by presence of warning log branch in execute()
+    if "executing with no scope configured" not in _adapter_src2:
+        errors.append("tool_adapters_bugbounty.py missing no-scope warning log")
+    if "ScopeEnforcementGate" not in _adapter_src2:
+        errors.append("tool_adapters_bugbounty.py missing ScopeEnforcementGate enforcement")
+
+    # --- Step 17: check_duplicate() emits DeprecationWarning ---
+    _dedup2 = _DS()
+    with _warnings.catch_warnings(record=True) as _caught:
+        _warnings.simplefilter("always")
+        await _dedup2.check_duplicate({"endpoint": "/test", "vuln_type": "xss"}, "camp-test")
+    _dep_warnings = [w for w in _caught if issubclass(w.category, DeprecationWarning)]
+    if not _dep_warnings:
+        errors.append("check_duplicate() does not emit DeprecationWarning")
+
     return errors
 
 

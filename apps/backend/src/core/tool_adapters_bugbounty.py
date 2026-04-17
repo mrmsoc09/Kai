@@ -155,10 +155,15 @@ class CatalogBackedCLITool(BaseTool):
     def __init__(self, catalog_entry: ToolCatalogEntry):
         self.catalog_entry = catalog_entry
         self.catalog_name = catalog_entry.name
-        # Scope lists set externally before execute() — enforcement only fires when non-empty
+        # Scope lists set externally before execute() — enforcement fires based on configuration
         self._allowed_scope: list[str] = []
         self._denied_scope: list[str] = []
         self._last_run_time: float = 0.0
+        # Band 2 gate enforcement — caller must verify gate before setting _gate_verified=True
+        self._approved_gate_id: str | None = None
+        self._gate_verified: bool = False
+        # Thread-safe rate limit lock
+        self._rate_limit_lock = threading.Lock()
         tool_id = REGISTRY_TOOL_ID_ALIASES.get(catalog_entry.name, catalog_entry.name)
         params = [
             ToolParameter("target", "string", "Primary target input"),
@@ -470,17 +475,25 @@ class CatalogBackedCLITool(BaseTool):
         return {"items": [line for line in output.splitlines() if line.strip()]}
 
     def _enforce_rate_limit(self, tool_name: str) -> None:
-        """Sync rate-limit enforcement for the subprocess execution path."""
-        from .execution_safety import TOOL_SAFETY_DEFAULTS
+        """Sync rate-limit enforcement for the subprocess execution path.
+
+        Raises RateLimitExceeded if the minimum interval has not elapsed.
+        The Celery task caller should catch this and use self.retry(countdown=wait).
+        """
+        from .execution_safety import TOOL_SAFETY_DEFAULTS, RateLimitExceeded
 
         cfg = TOOL_SAFETY_DEFAULTS.get(tool_name, TOOL_SAFETY_DEFAULTS["default"])
         min_interval = 1.0 / cfg.rate_limit_rps if cfg.rate_limit_rps > 0 else 0.0
-        now = time.monotonic()
-        elapsed = now - self._last_run_time
-        if elapsed < min_interval:
-            wait = min_interval - elapsed
-            time.sleep(wait)  # subprocess path is already blocking; sleep is acceptable here
-        self._last_run_time = time.monotonic()
+        with self._rate_limit_lock:
+            now = time.monotonic()
+            elapsed = now - self._last_run_time
+            if elapsed < min_interval:
+                wait = min_interval - elapsed
+                self._last_run_time = time.monotonic()
+                raise RateLimitExceeded(
+                    f"Tool '{tool_name}' rate limit: retry after {wait:.2f}s"
+                )
+            self._last_run_time = time.monotonic()
 
     def execute(self, headers: Optional[Dict[str, str]] = None, **kwargs) -> ToolResult:
         ok, err = self.validate_parameters(**kwargs)
@@ -495,23 +508,30 @@ class CatalogBackedCLITool(BaseTool):
         timeout_seconds = int(kwargs.get("timeout_seconds") or self.catalog_entry.timeout_seconds)
 
         # --- Scope enforcement ---
+        import logging as _logging
         from .scope_ingestion_service import NormalizedScope, ScopeEnforcementGate
 
         _scope = NormalizedScope(
             allowed=list(self._allowed_scope),
             denied=list(self._denied_scope),
         )
-        if _scope.allowed:
-            _check_target = target or (kwargs.get("tool_inputs") or {}).get("target", "")
-            if _check_target and not ScopeEnforcementGate().check_target(str(_check_target), _scope):
+        _check_target = target or (kwargs.get("tool_inputs") or {}).get("target", "")
+        if _check_target:
+            if not _scope.allowed and not _scope.denied:
+                _logging.getLogger(__name__).warning(
+                    "Tool '%s' executing with no scope configured. "
+                    "Set _allowed_scope/_denied_scope for enforcement.",
+                    self.catalog_name,
+                )
+            elif not ScopeEnforcementGate().check_target(str(_check_target), _scope):
                 return ToolResult(
                     self.id,
                     ToolStatus.FAILED,
                     {},
-                    error=f"Target '{_check_target}' is out of scope — execution blocked",
+                    error=f"Target '{_check_target}' is out of scope — execution blocked by ScopeEnforcementGate",
                 )
 
-        # --- Tool governance: Band 3 unconditional block ---
+        # --- Tool governance: Band 3 unconditional block; Band 2 gate enforcement ---
         from .tool_risk_registry import get_tool_band
 
         _band = get_tool_band(self.catalog_name)
@@ -522,8 +542,22 @@ class CatalogBackedCLITool(BaseTool):
                 {},
                 error=f"Tool '{self.catalog_name}' is Band 3 (exploitation) — blocked unconditionally",
             )
-        # Band 2 gate check must be performed upstream by ToolGovernanceService
-        # before execute() is called.  Band 0/1 auto-proceed.
+        if _band == 2:
+            if not getattr(self, "_gate_verified", False):
+                gate_id = getattr(self, "_approved_gate_id", None)
+                if not gate_id:
+                    raise PermissionError(
+                        f"Tool '{self.catalog_name}' is Band 2 (fuzzing/intrusive). "
+                        "An approved gate ID is required. Set tool._approved_gate_id "
+                        "and tool._gate_verified=True after calling "
+                        "ToolGovernanceService.check_tool_authorization()."
+                    )
+                # gate_id present but not verified — still block (fail-closed)
+                raise PermissionError(
+                    f"Tool '{self.catalog_name}' is Band 2. Gate '{gate_id}' has not been "
+                    "verified as APPROVED. Call ToolGovernanceService.check_tool_authorization() "
+                    "and set tool._gate_verified=True before execution."
+                )
 
         # --- Sync rate limiting before subprocess ---
         self._enforce_rate_limit(self.catalog_name)

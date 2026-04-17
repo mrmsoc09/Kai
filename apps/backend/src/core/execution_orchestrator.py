@@ -179,31 +179,77 @@ class ExecutionOrchestrator:
         return row
 
     async def mark_running_db(self, job_id: str, db: Any) -> "ExecutionJobRow":
-        row = await self._load_job_db(job_id, db)
-        row.state = "RUNNING"
-        row.updated_at = datetime.now(timezone.utc)
+        from ..models.execution_job import ExecutionJobRow
+
+        result = await db.execute(
+            update(ExecutionJobRow)
+            .where(ExecutionJobRow.id == job_id, ExecutionJobRow.state == "PENDING")
+            .values(state="RUNNING", updated_at=datetime.now(timezone.utc))
+            .returning(ExecutionJobRow)
+        )
+        row = result.first()
+        if row is None:
+            raise ValueError(
+                f"Job {job_id} not in PENDING state — concurrent transition detected"
+            )
         await db.flush()
-        return row
+        return row[0]
 
     async def mark_completed_db(self, job_id: str, db: Any) -> "ExecutionJobRow":
-        row = await self._load_job_db(job_id, db)
-        row.state = "COMPLETED"
-        row.error = None
-        row.updated_at = datetime.now(timezone.utc)
+        from ..models.execution_job import ExecutionJobRow
+
+        result = await db.execute(
+            update(ExecutionJobRow)
+            .where(ExecutionJobRow.id == job_id, ExecutionJobRow.state == "RUNNING")
+            .values(state="COMPLETED", error=None, updated_at=datetime.now(timezone.utc))
+            .returning(ExecutionJobRow)
+        )
+        row = result.first()
+        if row is None:
+            raise ValueError(
+                f"Job {job_id} not in RUNNING state — concurrent transition detected"
+            )
         await db.flush()
-        return row
+        return row[0]
 
     async def mark_failed_db(self, job_id: str, error: str, db: Any) -> "ExecutionJobRow":
-        row = await self._load_job_db(job_id, db)
-        row.error = error
-        row.updated_at = datetime.now(timezone.utc)
-        if row.attempt < row.max_attempts:
-            row.state = "RETRYING"
-            row.attempt += 1
+        from ..models.execution_job import ExecutionJobRow
+
+        # Load current row to determine attempt count for RETRYING vs FAILED transition
+        load_result = await db.execute(
+            select(ExecutionJobRow).where(ExecutionJobRow.id == job_id)
+        )
+        current = load_result.scalar_one_or_none()
+        if current is None:
+            raise ValueError(f"ExecutionJob {job_id!r} not found in database")
+        if current.state != "RUNNING":
+            raise ValueError(
+                f"Job {job_id} not in RUNNING state (current: {current.state}) — "
+                "concurrent transition detected"
+            )
+        next_attempt = current.attempt + 1
+        if current.attempt < current.max_attempts:
+            next_state = "RETRYING"
         else:
-            row.state = "FAILED"
+            next_state = "FAILED"
+        result = await db.execute(
+            update(ExecutionJobRow)
+            .where(ExecutionJobRow.id == job_id, ExecutionJobRow.state == "RUNNING")
+            .values(
+                state=next_state,
+                error=error,
+                attempt=next_attempt if next_state == "RETRYING" else current.attempt,
+                updated_at=datetime.now(timezone.utc),
+            )
+            .returning(ExecutionJobRow)
+        )
+        row = result.first()
+        if row is None:
+            raise ValueError(
+                f"Job {job_id} state changed concurrently — mark_failed_db lost the race"
+            )
         await db.flush()
-        return row
+        return row[0]
 
     async def get_retryable_jobs_db(self, db: Any) -> list["ExecutionJobRow"]:
         from ..models.execution_job import ExecutionJobRow

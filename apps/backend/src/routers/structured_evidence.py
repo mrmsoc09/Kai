@@ -142,7 +142,7 @@ async def list_structured_evidence(
 async def get_structured_evidence(
     evidence_id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
 ) -> StructuredEvidenceRead:
     result = await db.execute(
         select(StructuredEvidence).where(StructuredEvidence.id == evidence_id)
@@ -150,6 +150,8 @@ async def get_structured_evidence(
     record = result.scalar_one_or_none()
     if record is None:
         raise HTTPException(status_code=404, detail=f"Structured evidence not found: {evidence_id}")
+    if current_user.tenant_id and record.tenant_id and record.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail="Evidence not found")
     return StructuredEvidenceRead.model_validate(record)
 
 
@@ -158,7 +160,7 @@ async def advance_evidence_lifecycle(
     evidence_id: UUID,
     body: LifecycleAdvanceRequest,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
 ) -> StructuredEvidenceRead:
     """Advance the lifecycle state of a piece of structured evidence.
 
@@ -178,6 +180,8 @@ async def advance_evidence_lifecycle(
     record = result.scalar_one_or_none()
     if record is None:
         raise HTTPException(status_code=404, detail=f"Structured evidence not found: {evidence_id}")
+    if current_user.tenant_id and record.tenant_id and record.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail="Evidence not found")
     svc = EvidenceLifecycleService(db)
     try:
         record = await svc.advance_lifecycle(record, body.to_status, body.actor)
@@ -193,7 +197,7 @@ async def patch_replay_fields(
     evidence_id: UUID,
     body: ReplayFieldsPatch,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
 ) -> StructuredEvidenceRead:
     # Future: replay engine will POST to this endpoint to auto-populate replay fields after execution.
     """Partially update replay artifact references on a piece of structured evidence.
@@ -207,6 +211,8 @@ async def patch_replay_fields(
     record = result.scalar_one_or_none()
     if record is None:
         raise HTTPException(status_code=404, detail=f"Structured evidence not found: {evidence_id}")
+    if current_user.tenant_id and record.tenant_id and record.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail="Evidence not found")
 
     patch_data = body.model_dump(exclude_none=True)
     if not patch_data:
@@ -243,7 +249,7 @@ class ReplayPackageRead(BaseModel):
 async def get_replay_package(
     evidence_id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
 ) -> ReplayPackageRead:
     """Build a replay package for a piece of structured evidence."""
     from ..core.replay_service import ReplayService
@@ -254,6 +260,8 @@ async def get_replay_package(
     record = result.scalar_one_or_none()
     if record is None:
         raise HTTPException(status_code=404, detail=f"Structured evidence not found: {evidence_id}")
+    if current_user.tenant_id and record.tenant_id and record.tenant_id != current_user.tenant_id:
+        raise HTTPException(status_code=404, detail="Evidence not found")
     svc = ReplayService()
     pkg = svc.build_replay_package(record)
     return ReplayPackageRead(
@@ -272,12 +280,22 @@ async def get_replay_package(
 async def get_evidence_readiness(
     evidence_id: UUID,
     db: AsyncSession = Depends(get_db),
-    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+    current_user: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
 ) -> EvidenceReadinessReport:
     """Compute a report-readiness snapshot for a piece of structured evidence.
 
     Returns computed fields; no additional database table is written.
     """
+    # Tenant check before delegating to service (avoid leaking existence via timing)
+    if current_user.tenant_id:
+        pre_result = await db.execute(
+            select(StructuredEvidence).where(StructuredEvidence.id == evidence_id)
+        )
+        pre_record = pre_result.scalar_one_or_none()
+        if pre_record is None:
+            raise HTTPException(status_code=404, detail=f"Structured evidence not found: {evidence_id}")
+        if pre_record.tenant_id and pre_record.tenant_id != current_user.tenant_id:
+            raise HTTPException(status_code=404, detail="Evidence not found")
     svc = EvidenceLifecycleService(db)
     try:
         return await svc.get_readiness(evidence_id)

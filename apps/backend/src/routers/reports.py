@@ -467,10 +467,12 @@ async def format_check(payload: Dict[str, Any]) -> Dict[str, Any]:
 # ========== Phase 6: Multi-Format Export & Evidence Embedding ==========
 
 from datetime import datetime, timedelta, timezone
+import asyncio
 
 # Cache for generated reports (in production, use Redis)
 _report_cache: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
 _cache_expiry: Dict[str, datetime] = {}
+_cache_lock: asyncio.Lock = asyncio.Lock()
 
 
 def _env_int(name: str, default: int) -> int:
@@ -587,8 +589,9 @@ async def generate_all_formats(payload: Dict[str, Any]) -> Dict[str, Any]:
             )
             result['validation'] = validation
 
-        # Cache result
-        _cache_report(report_id, result)
+        # Cache result (lock protects OrderedDict from concurrent async mutations)
+        async with _cache_lock:
+            _cache_report(report_id, result)
 
         try:
             log_decision(run_id, 'report_generate_all', {
@@ -654,9 +657,10 @@ async def embed_evidence(payload: Dict[str, Any]) -> Dict[str, Any]:
 async def cache_stats() -> Dict[str, Any]:
     """Get report cache statistics."""
     try:
-        _prune_expired_cache()
-        now = datetime.now(timezone.utc)
-        active_count = sum(1 for expiry in _cache_expiry.values() if now <= expiry)
+        async with _cache_lock:
+            _prune_expired_cache()
+            now = datetime.now(timezone.utc)
+            active_count = sum(1 for expiry in _cache_expiry.values() if now <= expiry)
 
         return {
             'ok': True,
@@ -678,7 +682,8 @@ async def cache_stats() -> Dict[str, Any]:
 async def get_cached_report(report_id: str) -> Dict[str, Any]:
     """Retrieve cached report."""
     try:
-        report = _get_from_cache(report_id)
+        async with _cache_lock:
+            report = _get_from_cache(report_id)
 
         if not report:
             raise HTTPException(status_code=404, detail=f"Report {report_id} not found or expired")
@@ -701,15 +706,16 @@ async def get_cached_report(report_id: str) -> Dict[str, Any]:
 async def delete_cached_report(report_id: str) -> Dict[str, Any]:
     """Delete cached report."""
     try:
-        if report_id in _report_cache:
-            del _report_cache[report_id]
-            if report_id in _cache_expiry:
-                del _cache_expiry[report_id]
-            return {
-                'ok': True,
-                'report_id': report_id,
-                'deleted_at': datetime.now(timezone.utc).isoformat(),
-            }
+        async with _cache_lock:
+            if report_id in _report_cache:
+                del _report_cache[report_id]
+                if report_id in _cache_expiry:
+                    del _cache_expiry[report_id]
+                return {
+                    'ok': True,
+                    'report_id': report_id,
+                    'deleted_at': datetime.now(timezone.utc).isoformat(),
+                }
 
         raise HTTPException(status_code=404, detail=f"Report {report_id} not in cache")
 

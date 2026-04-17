@@ -74,17 +74,12 @@ class DeduplicationService:
         endpoint = finding.get("endpoint", finding.get("asset", finding.get("target", "")))
         return _normalize_endpoint(endpoint)
 
-    async def check_duplicate(
+    async def _check_duplicate_memory(
         self,
         finding: dict[str, Any],
         campaign_id: str,
-        db: Any = None,
     ) -> DuplicateCheckResult:
-        """Check if finding is a duplicate within the campaign.
-
-        1. Exact fingerprint match -> duplicate (score=1.0)
-        2. Same path, different parameter -> near duplicate (score=0.7)
-        """
+        """In-memory duplicate check. Internal use only — not safe for multi-worker deployment."""
         fp = self._fingerprint(finding)
         campaign_fps = self._store.get(campaign_id, {})
 
@@ -114,13 +109,12 @@ class DeduplicationService:
             match_reason="no_match",
         )
 
-    async def register_finding(
+    async def _register_finding_memory(
         self,
         finding: dict[str, Any],
         campaign_id: str,
-        db: Any = None,
     ) -> str:
-        """Store fingerprint and return a finding_id."""
+        """In-memory registration. Internal use only — not safe for multi-worker deployment."""
         fp = self._fingerprint(finding)
         finding_id = finding.get("id", str(uuid.uuid4()))
         path = self._extract_path(finding)
@@ -135,6 +129,50 @@ class DeduplicationService:
             self._endpoints[campaign_id][path] = finding_id
 
         return finding_id
+
+    async def check_duplicate(
+        self,
+        finding: dict[str, Any],
+        campaign_id: str,
+        db: Any = None,
+    ) -> DuplicateCheckResult:
+        """Check if finding is a duplicate within the campaign.
+
+        .. deprecated::
+            Uses in-memory store — not safe for multi-worker deployment.
+            Use check_duplicate_db() with a DB session instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "check_duplicate() uses in-memory store — not safe for multi-worker deployment. "
+            "Use check_duplicate_db() with a DB session.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self._check_duplicate_memory(finding, campaign_id)
+
+    async def register_finding(
+        self,
+        finding: dict[str, Any],
+        campaign_id: str,
+        db: Any = None,
+    ) -> str:
+        """Store fingerprint and return a finding_id.
+
+        .. deprecated::
+            Uses in-memory store — not safe for multi-worker deployment.
+            Use register_finding_db() with a DB session instead.
+        """
+        import warnings
+
+        warnings.warn(
+            "register_finding() uses in-memory store — not safe for multi-worker deployment. "
+            "Use register_finding_db() with a DB session.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return await self._register_finding_memory(finding, campaign_id)
 
     # ------------------------------------------------------------------
     # DB-backed methods (require an async SQLAlchemy session)
