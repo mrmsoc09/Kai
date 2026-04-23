@@ -331,6 +331,17 @@ Add the tool name to an agent's `allowed_tools` in `agents.yaml`:
 - `apps/backend/src/core/tool_adapters_bugbounty.py` — custom adapters
 - `apps/backend/src/core/langchain_tool_registry.py` — `K1GovernedTool`, `K1LangChainToolRegistry`
 
+### 4.6 Manual-Only Backlog Entries (Custom Script Pending)
+
+For tools that are intentionally cataloged before wrappers exist:
+
+- set `safety_classification: manual_only`
+- set `enabled_by_default: false`
+- use `execution_mode: optional` with empty `binary_path` (`""`)
+- set dependency markers like `wrapper_pending`, `custom_script_required`, and any required credentials
+
+This keeps tooling discoverable for planning/training while preventing autonomous execution.
+
 ---
 
 ## 5. Adding a New Structured Schema

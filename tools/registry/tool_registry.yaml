@@ -815,3 +815,1159 @@ tools:
     safety_classification: passive
     phase: 2
     enabled: true
+
+  # Wave 8 - User Requested Tool Expansion (cataloged, disabled-by-default, wrapper/script pending)
+  # These entries are intentionally manual-only integration hooks until wrappers are implemented.
+
+  # OSINT & Attack Surface Mapping
+  - name: theharvester
+    display_name: theHarvester
+    agent_class: TheharvesterAgent
+    category: recon_asset_discovery
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain_or_org_or_email"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 180
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: lazyrecon
+    display_name: Lazy Recon
+    agent_class: LazyReconAgent
+    category: recon_asset_discovery
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain_or_org"}
+    output_schema: {"recon_summary": "dict"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: webanalyze
+    display_name: Webanalyze
+    agent_class: WebanalyzeAgent
+    category: technology_fingerprinting
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_host"}
+    output_schema: {"technologies": "list[dict]"}
+    timeout_seconds: 180
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  # Vulnerability Scanning
+  - name: commix
+    display_name: Commix
+    agent_class: CommixAgent
+    category: vulnerability_scanning
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: tplmap
+    display_name: Tplmap
+    agent_class: TplmapAgent
+    category: vulnerability_scanning
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: corstest
+    display_name: CORStest
+    agent_class: CorstestAgent
+    category: vulnerability_scanning
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"cors_findings": "list[dict]"}
+    timeout_seconds: 180
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  # Darkweb & Advanced OSINT
+  - name: onionscan
+    display_name: OnionScan
+    agent_class: OnionscanAgent
+    category: darknet_intelligence
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "onion_or_host"}
+    output_schema: {"darkweb_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: darksearch-api
+    display_name: DarkSearch API
+    agent_class: DarksearchApiAgent
+    category: darknet_intelligence
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "query_or_keyword"}
+    output_schema: {"darkweb_results": "list[dict]"}
+    timeout_seconds: 120
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["api_key_pending", "wrapper_pending"]
+    enabled_by_default: false
+
+  # API Security
+  - name: openapi-introspection
+    display_name: Swagger/OpenAPI Introspection
+    agent_class: OpenapiIntrospectionAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "openapi_spec_or_base_url"}
+    output_schema: {"api_surface": "dict"}
+    timeout_seconds: 240
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: restler
+    display_name: RESTler
+    agent_class: RestlerAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "openapi_spec"}
+    output_schema: {"api_findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: graphqlmap
+    display_name: GraphQLmap
+    agent_class: GraphqlmapAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "graphql_endpoint"}
+    output_schema: {"api_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: inql
+    display_name: InQL
+    agent_class: InqlAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "graphql_endpoint"}
+    output_schema: {"api_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: grpcurl
+    display_name: gRPCurl
+    agent_class: GrpcurlAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "grpc_endpoint"}
+    output_schema: {"grpc_services": "list[dict]"}
+    timeout_seconds: 180
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: wscat
+    display_name: wscat
+    agent_class: WscatAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "ws_or_wss_endpoint"}
+    output_schema: {"ws_findings": "list[dict]"}
+    timeout_seconds: 180
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: authmatrix
+    display_name: AuthMatrix
+    agent_class: AuthmatrixAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_collection"}
+    output_schema: {"authz_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["community_burp_extension_or_replacement", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: autorize-alt
+    display_name: Autorize Replacement
+    agent_class: AutorizeAltAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_proxy_log"}
+    output_schema: {"authz_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "BURP_COMMUNITY_REPLACEMENT", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  # Cloud Infrastructure
+  - name: scoutsuite
+    display_name: ScoutSuite
+    agent_class: ScoutsuiteAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "cloud_account_or_project"}
+    output_schema: {"cloud_findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["cloud_credentials", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: prowler
+    display_name: Prowler
+    agent_class: ProwlerAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "cloud_account_or_project"}
+    output_schema: {"cloud_findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["cloud_credentials", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: cloudsploit
+    display_name: CloudSploit
+    agent_class: CloudsploitAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "cloud_account_or_project"}
+    output_schema: {"cloud_findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["cloud_credentials", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: checkov
+    display_name: Checkov
+    agent_class: CheckovAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "repo_or_iac_path"}
+    output_schema: {"iac_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: tfsec
+    display_name: tfsec
+    agent_class: TfsecAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "terraform_path"}
+    output_schema: {"iac_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: trivy
+    display_name: Trivy
+    agent_class: TrivyAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "image_or_fs_or_repo"}
+    output_schema: {"security_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: grype
+    display_name: Grype
+    agent_class: GrypeAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "image_or_sbom"}
+    output_schema: {"security_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: dockle
+    display_name: Dockle
+    agent_class: DockleAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "container_image"}
+    output_schema: {"hardening_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: kube-bench
+    display_name: kube-bench
+    agent_class: KubeBenchAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "kubernetes_cluster"}
+    output_schema: {"k8s_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["kube_context", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: kube-hunter
+    display_name: kube-hunter
+    agent_class: KubeHunterAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "kubernetes_cluster"}
+    output_schema: {"k8s_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["kube_context", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: trivy-k8s
+    display_name: Trivy K8s
+    agent_class: TrivyK8sAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "kubernetes_cluster"}
+    output_schema: {"k8s_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["kube_context", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: s3scanner
+    display_name: S3Scanner
+    agent_class: S3scannerAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain_or_keyword"}
+    output_schema: {"bucket_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: cloudmapper
+    display_name: CloudMapper
+    agent_class: CloudmapperAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "cloud_account_or_project"}
+    output_schema: {"cloud_graph": "dict"}
+    timeout_seconds: 1800
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["cloud_credentials", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: githound
+    display_name: GitHound
+    agent_class: GithoundAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "github_org_or_repo"}
+    output_schema: {"secret_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["github_token", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: gitrob
+    display_name: Gitrob
+    agent_class: GitrobAgent
+    category: cloud_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "github_org_or_repo"}
+    output_schema: {"secret_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["github_token", "wrapper_pending"]
+    enabled_by_default: false
+
+  # Authentication & Session Management
+  - name: oauth-scan
+    display_name: OAuth Scan
+    agent_class: OauthScanAgent
+    category: auth_session_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_domain"}
+    output_schema: {"auth_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: oidc-scan
+    display_name: OIDC Scan
+    agent_class: OidcScanAgent
+    category: auth_session_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_domain"}
+    output_schema: {"auth_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: mfa-sweep
+    display_name: MFA Sweep
+    agent_class: MfaSweepAgent
+    category: auth_session_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_domain"}
+    output_schema: {"auth_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: hydra
+    display_name: Hydra
+    agent_class: HydraAgent
+    category: auth_session_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_service"}
+    output_schema: {"auth_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: crackmapexec
+    display_name: CrackMapExec
+    agent_class: CrackmapexecAgent
+    category: auth_session_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_subnet"}
+    output_schema: {"auth_findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  # Business & Logic
+  - name: racetheweb
+    display_name: RaceTheWeb
+    agent_class: RacethewebAgent
+    category: business_logic_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"logic_findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: turbo-intruder-alt
+    display_name: Turbo Intruder Alternative
+    agent_class: TurboIntruderAltAgent
+    category: business_logic_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_request_template"}
+    output_schema: {"logic_findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "BURP_COMMUNITY_REPLACEMENT", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: rate-limit-tester
+    display_name: Rate Limit Tester
+    agent_class: RateLimitTesterAgent
+    category: business_logic_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"logic_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: upload-scan-logic
+    display_name: Upload Logic Scanner
+    agent_class: UploadScanLogicAgent
+    category: business_logic_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_upload_endpoint"}
+    output_schema: {"logic_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: payload-generator-verifier
+    display_name: Payload Generation + Verification
+    agent_class: PayloadGeneratorVerifierAgent
+    category: business_logic_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"payload_results": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: gopherus
+    display_name: Gopherus
+    agent_class: GopherusAgent
+    category: business_logic_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "service_type"}
+    output_schema: {"payloads": "list[dict]"}
+    timeout_seconds: 180
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  # Client-Side & DOM
+  - name: domdig
+    display_name: DOMDig
+    agent_class: DomdigAgent
+    category: client_side_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"dom_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: postmessage-tracker
+    display_name: PostMessage Tracker
+    agent_class: PostmessageTrackerAgent
+    category: client_side_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"dom_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: dominvader-community
+    display_name: Burp Community DOM Invader Replacement
+    agent_class: DominvaderCommunityAgent
+    category: client_side_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"dom_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "BURP_COMMUNITY_REPLACEMENT", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: csp-evaluator
+    display_name: CSP Evaluator
+    agent_class: CspEvaluatorAgent
+    category: client_side_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_header"}
+    output_schema: {"csp_findings": "list[dict]"}
+    timeout_seconds: 180
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: google-csp-tester
+    display_name: Google CSP Tester
+    agent_class: GoogleCspTesterAgent
+    category: client_side_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_header"}
+    output_schema: {"csp_findings": "list[dict]"}
+    timeout_seconds: 180
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: ppscan
+    display_name: PPScan
+    agent_class: PpscanAgent
+    category: client_side_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"dom_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: protoscan
+    display_name: ProtoScan
+    agent_class: ProtoscanAgent
+    category: client_side_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"protocol_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  # Network Layer & Internal
+  - name: responder
+    display_name: Responder
+    agent_class: ResponderAgent
+    category: network_internal_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "subnet_or_interface"}
+    output_schema: {"network_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: bloodhound
+    display_name: BloodHound
+    agent_class: BloodhoundAgent
+    category: network_internal_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "ad_domain_or_collection"}
+    output_schema: {"network_findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: sharphound
+    display_name: SharpHound
+    agent_class: SharphoundAgent
+    category: network_internal_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "ad_domain_or_collection"}
+    output_schema: {"network_findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: enum4linux-ng
+    display_name: enum4linux-ng
+    agent_class: Enum4linuxNgAgent
+    category: network_internal_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_subnet"}
+    output_schema: {"network_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: onesixtyone
+    display_name: onesixtyone
+    agent_class: OnesixtyoneAgent
+    category: network_internal_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_subnet"}
+    output_schema: {"network_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: ipv6-toolkit
+    display_name: IPv6 Toolkit
+    agent_class: Ipv6ToolkitAgent
+    category: network_internal_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_subnet_or_interface"}
+    output_schema: {"network_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  # Specialized Injection Types (Partial)
+  - name: cmdi-tester
+    display_name: Command Injection Tester
+    agent_class: CmdiTesterAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: ssti-tester
+    display_name: SSTI Tester
+    agent_class: SstiTesterAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: ldap-tester
+    display_name: LDAP Tester
+    agent_class: LdapTesterAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: xpath-injector
+    display_name: XPath Injector
+    agent_class: XpathInjectorAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: nosqlmap
+    display_name: NoSQLMap
+    agent_class: NosqlmapAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: xxe-injector
+    display_name: XXE Injector
+    agent_class: XxeInjectorAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: spring4shell-scanner
+    display_name: Spring4Shell Scanner
+    agent_class: Spring4shellScannerAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_host"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: spel-tester
+    display_name: SpEL Tester
+    agent_class: SpelTesterAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: hql-injector
+    display_name: HQL Injector
+    agent_class: HqlInjectorAgent
+    category: injection_testing
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"injection_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  # Mobile & Thick Client
+  - name: mobsf
+    display_name: MobSF
+    agent_class: MobsfAgent
+    category: mobile_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "apk_or_ipa_path"}
+    output_schema: {"mobile_findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: apkleaks
+    display_name: APKLeaks
+    agent_class: ApkleaksAgent
+    category: mobile_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "apk_path"}
+    output_schema: {"mobile_findings": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: mobsf-trufflehog-pipeline
+    display_name: MobSF + TruffleHog Pipeline
+    agent_class: MobsfTrufflehogPipelineAgent
+    category: mobile_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "apk_or_ipa_path"}
+    output_schema: {"mobile_findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  # Continuous Monitoring & Regression
+  - name: nuclei-gitversioning
+    display_name: Nuclei + Git Versioning
+    agent_class: NucleiGitversioningAgent
+    category: continuous_monitoring
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_host"}
+    output_schema: {"continuous_findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: observatory
+    display_name: Observatory
+    agent_class: ObservatoryAgent
+    category: continuous_monitoring
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_domain"}
+    output_schema: {"continuous_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: sslyze
+    display_name: SSLyze
+    agent_class: SslyzeAgent
+    category: continuous_monitoring
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_url"}
+    output_schema: {"tls_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: testsslish
+    display_name: testssl.sh
+    agent_class: TestsslishAgent
+    category: continuous_monitoring
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_url"}
+    output_schema: {"tls_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: dnsreaper
+    display_name: DNSReaper
+    agent_class: DnsreaperAgent
+    category: continuous_monitoring
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain"}
+    output_schema: {"dns_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: dnsvalidator
+    display_name: DNSValidator
+    agent_class: DnsvalidatorAgent
+    category: continuous_monitoring
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain"}
+    output_schema: {"dns_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: subover
+    display_name: SubOver
+    agent_class: SuboverAgent
+    category: continuous_monitoring
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain"}
+    output_schema: {"takeover_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: nsbrute
+    display_name: NSBrute
+    agent_class: NsbruteAgent
+    category: continuous_monitoring
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain"}
+    output_schema: {"dns_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  # Multi-engine dorking (Google/Bing/DDG/Yandex and others)
+  - name: multi-engine-dorker
+    display_name: Multi-Engine Dorking Script
+    agent_class: MultiEngineDorkerAgent
+    category: recon_asset_discovery
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "domain_or_company"}
+    output_schema: {"dork_results": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: manual_only
+    tags: ["CUSTOM_SCRIPT_REQUIRED", "SEARCH_AGGREGATION", "catalog_backlog"]
+    dependencies: ["google_bing_ddg_yandex_connectors", "wrapper_pending"]
+    enabled_by_default: false
