@@ -16,11 +16,17 @@ from apps.backend.src.core.tool_registry_catalog import get_catalog_entry
 from apps.backend.src.core.tools import ToolStatus, get_registry
 
 
+def _approve_band2_gate(tool: CatalogBackedCLITool) -> None:
+    tool._approved_gate_id = "gate-test"
+    tool._gate_verified = True
+
+
 def test_catalog_backed_tool_executes_with_mocked_command(monkeypatch, tmp_path):
     monkeypatch.setenv("K1_ARTIFACTS_ROOT", str(tmp_path / "artifacts"))
     entry = get_catalog_entry("assetfinder")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/assetfinder")
     mocked = CommandResult(
         success=True,
@@ -43,6 +49,7 @@ def test_missing_binary_returns_failed_status(monkeypatch, tmp_path):
     entry = get_catalog_entry("assetfinder")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: None)
 
     result = tool.execute(target="example.com")
@@ -55,6 +62,7 @@ def test_tool_timeout_returns_failed_status(monkeypatch, tmp_path):
     entry = get_catalog_entry("assetfinder")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/assetfinder")
     timeout_result = CommandResult(
         success=False,
@@ -76,6 +84,7 @@ def test_malformed_jsonl_output_is_skipped(monkeypatch, tmp_path):
     entry = get_catalog_entry("tlsx")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/tlsx")
     malformed_output = '{"host":"a.example.com"}\nnot json\n{"host":"b.example.com"}\n'
     mocked = CommandResult(
@@ -101,6 +110,7 @@ def test_empty_stdout_produces_empty_items(monkeypatch, tmp_path):
     entry = get_catalog_entry("assetfinder")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/assetfinder")
     mocked = CommandResult(
         success=True,
@@ -122,6 +132,7 @@ def test_nmap_malformed_xml_falls_back_gracefully(monkeypatch, tmp_path):
     entry = get_catalog_entry("nmap")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/nmap")
     bad_xml = "<not valid xml <<>>>"
     mocked = CommandResult(
@@ -145,6 +156,7 @@ def test_nmap_valid_xml_is_parsed(monkeypatch, tmp_path):
     entry = get_catalog_entry("nmap")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/nmap")
     valid_xml = (
         '<?xml version="1.0"?>'
@@ -231,6 +243,7 @@ def test_metasploit_enforces_check_only_command(monkeypatch, tmp_path):
     entry = get_catalog_entry("metasploit-framework")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/msfconsole")
     captured: dict[str, list[str]] = {}
 
@@ -270,12 +283,15 @@ def test_metasploit_requires_safe_module_in_check_only_mode(monkeypatch, tmp_pat
     entry = get_catalog_entry("metasploit-framework")
     assert entry is not None
     tool = CatalogBackedCLITool(entry)
+    _approve_band2_gate(tool)
     monkeypatch.setattr(tool, "_which", lambda: "/usr/bin/msfconsole")
 
     result = tool.execute(target="api.example.com")
     assert result.status == ToolStatus.FAILED
     assert "requires 'module'" in (result.error or "")
 
+    # Avoid deterministic rate-limit collision from back-to-back execute() calls.
+    tool._last_run_time = 0.0
     bad = tool.execute(target="api.example.com", module="exploit/linux/http/mod; run")
     assert bad.status == ToolStatus.FAILED
     assert "safe characters" in (bad.error or "")
