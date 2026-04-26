@@ -541,7 +541,7 @@ exit 64
             scope_target_id = scope_target.id
             schedule_id = schedule.id
 
-        # Stage 11 runtime path: worker trigger blocks when required catalog credential is missing.
+        # Stage 11 runtime path: worker trigger continues with credential fallbacks.
         vault_secret_manager.values.clear()
         monkeypatch.setenv("K1_MISSION_TEST_DAY", "1")
         missing_key_worker = await _bounded(
@@ -854,12 +854,12 @@ exit 64
         "present_keys", []
     )
     assert "TRILIUM_FREE_TIER_API_KEY" in vault_secret_manager.requested_keys
-    assert persisted["missing_key_readiness"].decision_status == hunting_module.READINESS_BLOCKED_CONFIG
+    assert persisted["missing_key_readiness"].decision_status == hunting_module.READINESS_READY
     assert "TRILIUM_FREE_TIER_API_KEY" in (
         persisted["missing_key_readiness"].details.get("credentials", {}).get("missing_keys", [])
     )
-    assert persisted["missing_key_worker"]["decision_status"] == hunting_module.READINESS_BLOCKED_CONFIG
-    assert persisted["missing_key_worker"].get("run_id") is None
+    assert persisted["missing_key_worker"]["decision_status"] == hunting_module.READINESS_READY
+    assert persisted["missing_key_worker"].get("run_id")
 
     # Delta discovery propagation + inference provenance.
     assert any(row.event_type == "bugbounty.delta.detected" for row in audit_rows)

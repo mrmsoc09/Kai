@@ -3,15 +3,17 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
 
-from sqlalchemy import Select, func, or_, select
+from sqlalchemy import Select, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from .audit_events import record_transition_event
@@ -21,6 +23,7 @@ from .evidence_qualification_engine import qualify_evidence
 from .helpers import workflow_output_root
 from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
 from .phase9_alert_case_service import Phase9AlertCaseService
+from .platform_integrations.hackerone_client import HackerOneClient
 from .secret_manager import get_secret_manager
 from .scope_guardrails import ScopePolicy, evaluate_target_scope
 from .tool_health_service import build_dashboard
@@ -46,6 +49,7 @@ from ..schemas.bug_bounty_hunt import (
     ScheduleDispatchResponse,
     ScheduleTriggerResponse,
     SchedulerStatusResponse,
+    ScopeAssetInput,
 )
 
 
@@ -62,6 +66,16 @@ SCHEDULE_ACTIVE = "ACTIVE"
 SCHEDULE_PAUSED = "PAUSED"
 SCHEDULE_DISABLED = "DISABLED"
 SCHEDULE_ERROR = "ERROR"
+
+_HTTP_LINK_RE = re.compile(r"https?://[^\s<>)\"']+", re.IGNORECASE)
+_PLATFORM_API_KEY_HINTS: dict[str, str] = {
+    "GITHUB_TOKEN": "https://github.com/settings/tokens",
+    "SHODAN_API_KEY": "https://account.shodan.io/",
+    "SECURITYTRAILS_API_KEY": "https://securitytrails.com/corp/api",
+    "VIRUSTOTAL_API_KEY": "https://www.virustotal.com/gui/join-us",
+    "CHAOS_API_KEY": "https://chaos.projectdiscovery.io/",
+    "TRILIUM_FREE_TIER_API_KEY": "https://trilium.cc/",
+}
 
 
 def _utcnow() -> datetime:
@@ -91,12 +105,227 @@ class BugBountyHuntingService:
         result = await self.db.execute(select(Program).order_by(Program.created_at.desc()))
         return list(result.scalars().all())
 
+    @staticmethod
+    def _extract_urls(*chunks: str | None) -> list[str]:
+        found: list[str] = []
+        seen: set[str] = set()
+        for chunk in chunks:
+            text = str(chunk or "")
+            for match in _HTTP_LINK_RE.findall(text):
+                cleaned = match.rstrip(".,;)]\"'")
+                if cleaned in seen:
+                    continue
+                seen.add(cleaned)
+                found.append(cleaned)
+        return found
+
+    @staticmethod
+    def _derive_hackerone_handle(payload: ProgramOpportunityImportRequest) -> str | None:
+        handle = str(payload.handle or "").strip()
+        if handle:
+            return handle
+        program_key = str(payload.program_key or "").strip()
+        if ":" in program_key:
+            candidate = program_key.split(":", 1)[1].strip()
+            if candidate:
+                return candidate
+        url = str(payload.program_url or "").strip()
+        if not url:
+            return None
+        parsed = urlparse(url)
+        parts = [item for item in parsed.path.split("/") if item]
+        if not parts:
+            return None
+        return parts[-1]
+
+    @staticmethod
+    def _target_type_from_h1_asset(asset_type: str, identifier: str) -> str:
+        normalized_type = str(asset_type or "").strip().lower()
+        if normalized_type in {"cidr", "url", "domain", "wildcard"}:
+            return normalized_type
+        if normalized_type in {"ip", "ip_address"}:
+            return "ip"
+        if str(identifier).strip().startswith("*."):
+            return "wildcard"
+        if "://" in str(identifier):
+            return "url"
+        return "domain"
+
+    @staticmethod
+    def _looks_out_of_scope(instruction: str | None) -> bool:
+        text = str(instruction or "").strip().lower()
+        if not text:
+            return False
+        flags = (
+            "out of scope",
+            "not in scope",
+            "excluded",
+            "do not test",
+            "prohibited",
+            "forbidden",
+        )
+        return any(flag in text for flag in flags)
+
+    @staticmethod
+    def _merge_scope_assets(
+        explicit_assets: list[ScopeAssetInput],
+        discovered_assets: list[ScopeAssetInput],
+    ) -> list[ScopeAssetInput]:
+        merged: dict[tuple[str, str], ScopeAssetInput] = {}
+        for asset in discovered_assets:
+            key = (asset.target.strip().lower(), asset.target_type.strip().lower())
+            merged[key] = asset
+        for asset in explicit_assets:
+            key = (asset.target.strip().lower(), asset.target_type.strip().lower())
+            merged[key] = asset
+        return list(merged.values())
+
+    async def _fetch_platform_enrichment(
+        self,
+        payload: ProgramOpportunityImportRequest,
+    ) -> dict[str, Any]:
+        enrichment: dict[str, Any] = {
+            "status": "skipped",
+            "source": "none",
+            "warnings": [],
+            "rules_text": None,
+            "submission_guidelines": None,
+            "in_scope_assets": [],
+            "out_of_scope_assets": [],
+            "artifact_urls": [],
+        }
+        platform = str(payload.platform or "").strip().lower()
+        if not payload.auto_fetch_platform_data:
+            return enrichment
+        if platform != "hackerone":
+            enrichment["warnings"].append(
+                "automatic platform enrichment currently supports platform=hackerone"
+            )
+            return enrichment
+
+        handle = self._derive_hackerone_handle(payload)
+        if not handle:
+            enrichment["warnings"].append(
+                "hackerone enrichment skipped: missing handle/program_key/program_url slug"
+            )
+            return enrichment
+
+        api_key = str(payload.platform_api_key or "").strip()
+        api_secret = str(payload.platform_api_secret or "").strip()
+        if not api_key or not api_secret:
+            secret_manager = get_secret_manager()
+            if not api_key:
+                api_key = (
+                    str(secret_manager.get_optional("HACKERONE_API_KEY") or "").strip()
+                    or str(secret_manager.get_optional("H1_API_KEY") or "").strip()
+                )
+            if not api_secret:
+                api_secret = (
+                    str(secret_manager.get_optional("HACKERONE_API_SECRET") or "").strip()
+                    or str(secret_manager.get_optional("H1_API_SECRET") or "").strip()
+                )
+        if not api_key or not api_secret:
+            enrichment["warnings"].append(
+                "hackerone enrichment skipped: missing platform API credentials"
+            )
+            enrichment["artifact_urls"] = ["https://hackerone.com/hackers/settings/api_token"]
+            return enrichment
+
+        client = HackerOneClient(api_key=api_key, api_secret=api_secret)
+        try:
+            if not await client.authenticate():
+                enrichment["warnings"].append(
+                    f"hackerone enrichment failed: authentication failed for handle={handle}"
+                )
+                return enrichment
+            program_details = await client.get_program_details(handle)
+            if not isinstance(program_details, dict):
+                enrichment["warnings"].append(
+                    f"hackerone enrichment failed: no program payload for handle={handle}"
+                )
+                return enrichment
+
+            enrichment["status"] = "fetched"
+            enrichment["source"] = "hackerone_api"
+            policy_text = str(program_details.get("policy") or "").strip()
+            if policy_text:
+                enrichment["rules_text"] = policy_text
+                enrichment["submission_guidelines"] = policy_text
+
+            discovered_in_scope: list[ScopeAssetInput] = []
+            discovered_out_scope: list[ScopeAssetInput] = []
+            scopes = program_details.get("structured_scopes", {})
+            edges = scopes.get("edges", []) if isinstance(scopes, dict) else []
+            for edge in edges:
+                node = edge.get("node", edge) if isinstance(edge, dict) else {}
+                identifier = str(node.get("asset_identifier") or "").strip()
+                if not identifier:
+                    continue
+                asset_type = self._target_type_from_h1_asset(
+                    str(node.get("asset_type") or ""),
+                    identifier,
+                )
+                instruction = str(node.get("instruction") or "").strip()
+                candidate = ScopeAssetInput(
+                    target=identifier,
+                    target_type=asset_type,
+                    monitoring_enabled=not self._looks_out_of_scope(instruction),
+                    safe_mode_required=True,
+                    priority_tier=3,
+                    notes=instruction[:2000] if instruction else None,
+                )
+                if self._looks_out_of_scope(instruction):
+                    discovered_out_scope.append(candidate)
+                else:
+                    discovered_in_scope.append(candidate)
+
+            enrichment["in_scope_assets"] = discovered_in_scope
+            enrichment["out_of_scope_assets"] = discovered_out_scope
+            enrichment["artifact_urls"] = self._extract_urls(
+                payload.program_url,
+                policy_text,
+                str(payload.submission_guidelines or ""),
+            )
+            return enrichment
+        except Exception as exc:
+            enrichment["warnings"].append(f"hackerone enrichment error: {exc}")
+            return enrichment
+        finally:
+            try:
+                await client.close()
+            except Exception:
+                pass
+
     async def import_program_opportunity(
         self,
         payload: ProgramOpportunityImportRequest,
         *,
         actor: str,
     ) -> Program:
+        enrichment = await self._fetch_platform_enrichment(payload)
+        if (
+            payload.auto_fetch_platform_data
+            and not payload.allow_partial_platform_data
+            and enrichment.get("status") != "fetched"
+        ):
+            raise ValueError(
+                "platform enrichment required but unavailable; provide API credentials or disable strict enrichment"
+            )
+
+        resolved_rules_text = payload.rules_text or enrichment.get("rules_text")
+        resolved_submission_guidelines = (
+            payload.submission_guidelines or enrichment.get("submission_guidelines")
+        )
+        resolved_handle = payload.handle or self._derive_hackerone_handle(payload)
+        merged_in_scope_assets = self._merge_scope_assets(
+            explicit_assets=list(payload.in_scope_assets),
+            discovered_assets=list(enrichment.get("in_scope_assets") or []),
+        )
+        merged_out_of_scope_assets = self._merge_scope_assets(
+            explicit_assets=list(payload.out_of_scope_assets),
+            discovered_assets=list(enrichment.get("out_of_scope_assets") or []),
+        )
+
         stmt = select(Program).where(Program.program_key == payload.program_key) if payload.program_key else select(
             Program
         ).where(
@@ -111,7 +340,7 @@ class BugBountyHuntingService:
                 program_key=payload.program_key,
                 name=payload.name,
                 platform=payload.platform,
-                handle=payload.handle,
+                handle=resolved_handle,
                 policy_url=payload.program_url,
                 status=payload.status,
                 created_by=actor,
@@ -122,7 +351,7 @@ class BugBountyHuntingService:
         else:
             program.name = payload.name
             program.platform = payload.platform
-            program.handle = payload.handle
+            program.handle = resolved_handle
             program.policy_url = payload.program_url
             program.status = payload.status
 
@@ -130,8 +359,8 @@ class BugBountyHuntingService:
         config["opportunity"] = {
             "source": payload.source,
             "program_url": payload.program_url,
-            "rules_text": payload.rules_text,
-            "submission_guidelines": payload.submission_guidelines,
+            "rules_text": resolved_rules_text,
+            "submission_guidelines": resolved_submission_guidelines,
             "testing_restrictions": payload.testing_restrictions,
             "disclosure_restrictions": payload.disclosure_restrictions,
             "disclosure_policy": payload.disclosure_policy,
@@ -140,12 +369,19 @@ class BugBountyHuntingService:
             "require_safe_mode": payload.require_safe_mode,
             "reward_metadata": payload.reward_metadata,
             "notes": payload.notes,
+            "platform_enrichment": {
+                "status": enrichment.get("status"),
+                "source": enrichment.get("source"),
+                "warnings": list(enrichment.get("warnings") or []),
+                "artifact_urls": list(enrichment.get("artifact_urls") or []),
+                "last_fetch_at": now.isoformat() if enrichment.get("status") == "fetched" else None,
+            },
             "imported_at": now.isoformat(),
             "last_synced_at": now.isoformat(),
         }
         program.config_json = config
 
-        for asset in payload.in_scope_assets:
+        for asset in merged_in_scope_assets:
             await self._upsert_scope_target(
                 program=program,
                 target=asset.target,
@@ -157,7 +393,7 @@ class BugBountyHuntingService:
                 monitoring_source=f"import:{payload.source}",
                 monitoring_notes=asset.notes,
             )
-        for asset in payload.out_of_scope_assets:
+        for asset in merged_out_of_scope_assets:
             await self._upsert_scope_target(
                 program=program,
                 target=asset.target,
@@ -170,6 +406,12 @@ class BugBountyHuntingService:
                 monitoring_notes=asset.notes,
             )
 
+        await self._ensure_default_access_metadata(
+            program=program,
+            platform=str(payload.platform or ""),
+            enrichment=enrichment,
+        )
+
         await self.db.flush()
         await record_transition_event(
             self.db,
@@ -179,8 +421,9 @@ class BugBountyHuntingService:
             payload={
                 "program_id": str(program.id),
                 "source": payload.source,
-                "in_scope_assets": len(payload.in_scope_assets),
-                "out_of_scope_assets": len(payload.out_of_scope_assets),
+                "in_scope_assets": len(merged_in_scope_assets),
+                "out_of_scope_assets": len(merged_out_of_scope_assets),
+                "platform_enrichment_status": enrichment.get("status"),
             },
         )
         # Refresh to load server-side values (e.g. updated_at set via onupdate)
@@ -200,6 +443,109 @@ class BugBountyHuntingService:
             else:
                 missing.append(key)
         return present, missing
+
+    async def _ensure_default_access_metadata(
+        self,
+        *,
+        program: Program,
+        platform: str,
+        enrichment: dict[str, Any],
+    ) -> None:
+        existing_result = await self.db.execute(
+            text(
+                "SELECT access_type FROM opportunity_access_metadata WHERE program_id = :program_id"
+            ),
+            {"program_id": program.id},
+        )
+        existing_types = {
+            str(row[0]).strip().lower()
+            for row in existing_result.fetchall()
+            if row and str(row[0]).strip()
+        }
+
+        mgr = CredentialsManager(self.db)
+        platform_norm = str(platform or "").strip().lower()
+        defaults: list[tuple[str, str | None, str | None]] = [
+            ("unauthenticated", None, "Public surface scanning without account credentials."),
+        ]
+        if platform_norm == "hackerone":
+            defaults.extend(
+                [
+                    (
+                        "user_account",
+                        "https://hackerone.com/users/sign_up",
+                        "Create or use an existing HackerOne researcher account.",
+                    ),
+                    (
+                        "api_key",
+                        "https://hackerone.com/hackers/settings/api_token",
+                        "Generate a HackerOne API token pair (identifier + secret).",
+                    ),
+                    (
+                        "hunter_account",
+                        "https://hackerone.com/users/sign_up",
+                        "Optional dedicated hunter account for isolated testing.",
+                    ),
+                ]
+            )
+        elif enrichment.get("artifact_urls"):
+            defaults.append(
+                (
+                    "user_account",
+                    list(enrichment.get("artifact_urls"))[0],
+                    "Program documentation contains onboarding links for authenticated testing.",
+                )
+            )
+
+        for access_type, signup_url, instructions in defaults:
+            if access_type in existing_types:
+                continue
+            await mgr.upsert_access_metadata(
+                program_id=program.id,
+                access_type=access_type,
+                enabled=True,
+                signup_url=signup_url,
+                signup_instructions=instructions,
+            )
+
+    @staticmethod
+    def _credential_setup_hints(
+        *,
+        missing_keys: list[str],
+        scanning_warnings: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        hints: list[dict[str, Any]] = []
+        seen_links: set[str] = set()
+        for key in missing_keys:
+            signup_url = _PLATFORM_API_KEY_HINTS.get(key)
+            if not signup_url:
+                continue
+            if signup_url in seen_links:
+                continue
+            seen_links.add(signup_url)
+            hints.append(
+                {
+                    "type": "api_key",
+                    "key": key,
+                    "signup_url": signup_url,
+                    "message": f"Generate/store {key} to unlock higher-coverage scans.",
+                }
+            )
+        for warning in scanning_warnings:
+            signup_url = str(warning.get("signup_url") or "").strip()
+            if not signup_url or signup_url in seen_links:
+                continue
+            seen_links.add(signup_url)
+            hints.append(
+                {
+                    "type": str(warning.get("access_type") or "credential"),
+                    "key": str(warning.get("access_type") or "credential"),
+                    "signup_url": signup_url,
+                    "message": str(warning.get("message") or "Credentials not configured."),
+                    "signup_instructions": warning.get("signup_instructions"),
+                }
+            )
+        return hints
 
     async def _upsert_scope_target(
         self,
@@ -586,13 +932,6 @@ class BugBountyHuntingService:
             "present_keys": present_keys,
             "missing_keys": missing_keys,
         }
-        if missing_keys:
-            decision = _ReadinessDecision(
-                status=READINESS_BLOCKED_CONFIG,
-                reason=f"required credentials missing: {', '.join(missing_keys)}",
-                details=details,
-            )
-            return await self._persist_readiness(decision, schedule, target, trigger_source, persist)
 
         # Check available scanning modes based on stored credentials (Option C: return + filter)
         try:
@@ -611,6 +950,31 @@ class BugBountyHuntingService:
                 "warnings": [{"type": "CREDENTIAL_CHECK_FAILED", "message": str(e)}],
                 "recommendation": "Only unauthenticated scanning available (credential check failed)",
             }
+            scanning_modes_info = {
+                "available_modes": ["unauthenticated"],
+                "warnings": [{"type": "CREDENTIAL_CHECK_FAILED", "message": str(e)}],
+            }
+
+        credential_hints = self._credential_setup_hints(
+            missing_keys=missing_keys,
+            scanning_warnings=list(scanning_modes_info.get("warnings") or []),
+        )
+        details["credentials"]["setup_hints"] = credential_hints
+        details["credentials"]["missing_required_credentials"] = bool(missing_keys)
+
+        schedule_config = _coalesce_json(getattr(schedule, "config_json", {}))
+        block_on_missing_credentials = bool(
+            schedule_config.get("block_on_missing_credentials", False)
+            or config.get("block_on_missing_credentials", False)
+        )
+        details["credentials"]["block_on_missing_credentials"] = block_on_missing_credentials
+        if missing_keys and block_on_missing_credentials:
+            decision = _ReadinessDecision(
+                status=READINESS_BLOCKED_CONFIG,
+                reason=f"required credentials missing (strict mode): {', '.join(missing_keys)}",
+                details=details,
+            )
+            return await self._persist_readiness(decision, schedule, target, trigger_source, persist)
 
         policy = await self._build_program_scope_policy(program.id)
         scope_decision = evaluate_target_scope(target.target, policy, safe_mode=schedule.safe_mode)
@@ -659,7 +1023,11 @@ class BugBountyHuntingService:
 
         decision = _ReadinessDecision(
             status=READINESS_READY,
-            reason="target/workflow ready for execution",
+            reason=(
+                "target/workflow ready with credential fallbacks"
+                if missing_keys
+                else "target/workflow ready for execution"
+            ),
             details=details,
         )
         return await self._persist_readiness(decision, schedule, target, trigger_source, persist)

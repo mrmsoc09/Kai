@@ -70,5 +70,34 @@ Additional secret paths can be stored at:
 - `secret/data/kaison/api-keys` — External API credentials
 - `secret/data/kaison/database` — Database credentials
 - `secret/data/kaison/ssh-keys` — SSH keys for infrastructure
+- `secret/data/kaison/network/<provider_id>` — VPN/proxy credentials for egress automation
+
+### Network Credential GUI Workflow
+
+The **Vault Keys** frontend page supports direct storage of structured network credentials.
+
+- Endpoint: `POST /vault/network/providers/{provider_id}/credentials`
+- Status: `GET /vault/network/providers/status`
+- Supported fields:
+  - `username`
+  - `password`
+  - `pat`
+  - `api_key`
+  - `endpoint`
+  - `proxy_url`
+  - `notes`
+
+Use provider ids such as:
+
+- `protonvpn`
+- `mullvadvpn`
+- `decodo_residential`
+- `decodo_mobile`
+
+To render these into a local env file for rotation automation:
+
+```bash
+./scripts/build_network_egress_env.py --output runtime/network/egress.env
+```
 
 All follow the same automated check → Vault → prompt → store pattern as Docker credentials.

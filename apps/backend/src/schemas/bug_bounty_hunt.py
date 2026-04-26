@@ -36,6 +36,10 @@ class ProgramOpportunityImportRequest(BaseModel):
     notes: str | None = None
     in_scope_assets: list[ScopeAssetInput] = Field(default_factory=list)
     out_of_scope_assets: list[ScopeAssetInput] = Field(default_factory=list)
+    auto_fetch_platform_data: bool = True
+    allow_partial_platform_data: bool = True
+    platform_api_key: str | None = Field(default=None, max_length=2048, repr=False, exclude=True)
+    platform_api_secret: str | None = Field(default=None, max_length=2048, repr=False, exclude=True)
 
 
 class ProgramOpportunityRead(BaseModel):

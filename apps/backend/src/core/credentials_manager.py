@@ -375,7 +375,8 @@ class CredentialsManager:
         warnings = []
 
         # Unauthenticated always possible (if enabled in metadata)
-        if metadata.get("unauthenticated", OpportunityAccessMetadata()).enabled:
+        unauth_meta = metadata.get("unauthenticated")
+        if unauth_meta is None or bool(unauth_meta.enabled):
             modes.append("unauthenticated")
 
         # User account

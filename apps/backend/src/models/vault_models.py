@@ -17,7 +17,14 @@ class StoreSecretRequest(BaseModel):
 
     name: str = Field(..., description="Secret name (e.g., OPENAI_API_KEY)")
     type: str = Field(..., description="Secret type (e.g., api_key, token)")
-    value: str = Field(..., description="The secret value (never logged)")
+    value: Optional[str] = Field(None, description="The secret value (never logged)")
+    fields: Optional[Dict[str, str]] = Field(
+        None,
+        description=(
+            "Optional structured secret fields (e.g., username/token pairs). "
+            "When provided, all non-empty fields are stored."
+        ),
+    )
     description: Optional[str] = Field(None, description="Human-readable description")
     tags: Optional[List[str]] = Field(None, description="Tags for categorization")
 
@@ -29,6 +36,28 @@ class StoreSecretRequest(BaseModel):
                 "value": "sk-...",
                 "description": "OpenAI API key for chat completions",
                 "tags": ["ai", "openai"],
+            }
+        }
+
+
+class StoreNetworkCredentialRequest(BaseModel):
+    """Request to store VPN/Proxy network credential payload in Vault."""
+
+    username: Optional[str] = Field(None, description="Provider username or account id")
+    password: Optional[str] = Field(None, description="Provider password/secret")
+    pat: Optional[str] = Field(None, description="Personal access token")
+    api_key: Optional[str] = Field(None, description="Provider API key")
+    endpoint: Optional[str] = Field(None, description="Endpoint URL or host")
+    proxy_url: Optional[str] = Field(None, description="Full proxy URL")
+    notes: Optional[str] = Field(None, description="Operational notes")
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "username": "acct_123456",
+                "pat": "ptk_live_xxx",
+                "endpoint": "us-proxy.decodo.com:10000",
+                "notes": "Residential pool",
             }
         }
 

@@ -10,6 +10,8 @@ Never logs or exposes secret values in responses or error messages.
 from __future__ import annotations
 
 import logging
+import re
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -30,6 +32,7 @@ from apps.backend.src.core.vault_client import (
 )
 from apps.backend.src.models.vault_models import (
     StoreSecretRequest,
+    StoreNetworkCredentialRequest,
     SecretResponse,
     ListSecretsResponse,
     SecretMetadataResponse,
@@ -44,6 +47,7 @@ from apps.backend.src.models.vault_models import (
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/vault", tags=["vault"])
+_NETWORK_PROVIDER_ID_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{1,63}$")
 
 
 def assert_permission(user: User, required_permission: Permission) -> None:
@@ -149,18 +153,29 @@ async def store_secret(
     """Store a new secret in Vault. Requires MANAGE_CONFIG permission."""
     assert_permission(user, Permission.MANAGE_CONFIG)
 
-    if not request.name or not request.value:
+    request_value = (request.value or "").strip()
+    request_fields = {
+        key: value.strip()
+        for key, value in (request.fields or {}).items()
+        if isinstance(value, str) and value.strip()
+    }
+
+    if not request.name or (not request_value and not request_fields):
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="name and value are required"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="name and one of value or fields are required",
         )
 
     secret_path = f"secret/data/kaison/{request.name.lower()}"
 
     try:
         secret_data = {
-            "value": request.value,
             "type": request.type,
         }
+        if request_value:
+            secret_data["value"] = request_value
+        if request_fields:
+            secret_data.update(request_fields)
         if request.description:
             secret_data["description"] = request.description
         if request.tags:
@@ -173,7 +188,7 @@ async def store_secret(
             name=request.name,
             type=request.type,
             status="stored",
-            last_updated=None,
+            last_updated=datetime.now(timezone.utc),
             environment="production",
         )
 
@@ -182,6 +197,84 @@ async def store_secret(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=f"Failed to store secret: {str(e)}"
         )
+
+
+@router.post("/network/providers/{provider_id}/credentials", response_model=SecretResponse)
+async def store_network_provider_credentials(
+    provider_id: str,
+    request: StoreNetworkCredentialRequest,
+    user: User = Depends(get_current_user),
+    vault: VaultClient = Depends(get_vault_client),
+):
+    """Store structured VPN/proxy credentials for network egress automation."""
+    assert_permission(user, Permission.MANAGE_CONFIG)
+
+    provider_norm = provider_id.strip().lower()
+    if not _NETWORK_PROVIDER_ID_RE.match(provider_norm):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="provider_id must match [a-z0-9][a-z0-9_-]{1,63}",
+        )
+
+    secret_fields = {
+        "username": (request.username or "").strip(),
+        "password": (request.password or "").strip(),
+        "pat": (request.pat or "").strip(),
+        "api_key": (request.api_key or "").strip(),
+        "endpoint": (request.endpoint or "").strip(),
+        "proxy_url": (request.proxy_url or "").strip(),
+        "notes": (request.notes or "").strip(),
+    }
+    secret_data = {key: value for key, value in secret_fields.items() if value}
+
+    if not secret_data:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="At least one credential field is required",
+        )
+
+    has_auth_material = any(
+        secret_data.get(key)
+        for key in ("username", "password", "pat", "api_key", "proxy_url")
+    )
+    if not has_auth_material:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="At least one auth field (username/password/pat/api_key/proxy_url) is required",
+        )
+
+    secret_data["type"] = "network_credential"
+    secret_path = f"secret/data/kaison/network/{provider_norm}"
+
+    try:
+        vault.write_secret(secret_path, secret_data, overwrite=True)
+        logger.info("User %s stored network credentials for provider=%s", user.username, provider_norm)
+        return SecretResponse(
+            name=f"network/{provider_norm}",
+            type="network_credential",
+            status="stored",
+            last_updated=datetime.now(timezone.utc),
+            environment="production",
+        )
+    except VaultException as e:
+        logger.error("Failed to store network credential %s: %s", provider_norm, str(e))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Failed to store network credential: {str(e)}",
+        )
+
+
+@router.get("/network/providers/status")
+async def list_network_provider_status(
+    user: User = Depends(get_current_user),
+    vault: VaultClient = Depends(get_vault_client),
+):
+    """Return configured VPN/proxy provider ids under the network credential namespace."""
+    assert_permission(user, Permission.VIEW_CONFIG)
+    base_prefix = "secret/data/kaison/network"
+    provider_ids = [key.rstrip("/") for key in vault.list_secrets(base_prefix)]
+    provider_ids = sorted({provider_id for provider_id in provider_ids if provider_id})
+    return {"count": len(provider_ids), "providers": provider_ids}
 
 
 @router.get("/secrets/{secret_name}/metadata", response_model=SecretMetadataResponse)

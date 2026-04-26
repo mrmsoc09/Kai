@@ -13,7 +13,10 @@ from .token_blocklist import is_revoked
 
 try:
     import jwt
-    from jwt.exceptions import PyJWTError as JWTError
+    try:
+        from jwt.exceptions import PyJWTError as JWTError
+    except (ImportError, AttributeError):  # pragma: no cover - compatibility fallback
+        JWTError = Exception  # type: ignore[assignment]
 except ModuleNotFoundError:  # pragma: no cover - environment/bootstrap safeguard
     class JWTError(Exception):
         """Fallback JWT error when PyJWT is unavailable."""

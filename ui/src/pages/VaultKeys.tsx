@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { vaultService } from '../api';
 import { 
   Key, 
@@ -27,6 +27,29 @@ interface SecretRecord {
   status: string;
   lastUpdated?: string | null;
 }
+
+interface ListSecretsResponse {
+  secrets: Array<string | SecretRecord>;
+  count: number;
+}
+
+interface NetworkCredentialForm {
+  providerId: string;
+  username: string;
+  password: string;
+  pat: string;
+  apiKey: string;
+  endpoint: string;
+  proxyUrl: string;
+  notes: string;
+}
+
+const NETWORK_PROVIDER_OPTIONS = [
+  { id: 'protonvpn', label: 'ProtonVPN' },
+  { id: 'mullvadvpn', label: 'MullvadVPN' },
+  { id: 'decodo_residential', label: 'Decodo Residential Proxy' },
+  { id: 'decodo_mobile', label: 'Decodo Mobile Proxy' },
+] as const;
 
 const asObject = (value: unknown): Record<string, unknown> =>
   value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
@@ -62,14 +85,29 @@ export function VaultKeys() {
     type: 'API Key',
     description: '',
   });
+  const [networkForm, setNetworkForm] = useState<NetworkCredentialForm>({
+    providerId: NETWORK_PROVIDER_OPTIONS[0].id,
+    username: '',
+    password: '',
+    pat: '',
+    apiKey: '',
+    endpoint: '',
+    proxyUrl: '',
+    notes: '',
+  });
+  const [networkSubmitting, setNetworkSubmitting] = useState(false);
+  const [networkResult, setNetworkResult] = useState<string | null>(null);
+  const [networkError, setNetworkError] = useState<string | null>(null);
+  const [configuredNetworkProviders, setConfiguredNetworkProviders] = useState<string[]>([]);
 
   const loadData = async () => {
     setLoadingSecrets(true);
     try {
-      const [catalogPayload, secretsList, health] = await Promise.all([
+      const [catalogPayload, secretsPayload, health, networkStatus] = await Promise.all([
         vaultService.getProviderCatalog(),
         vaultService.listSecrets(),
-        vaultService.getHealth()
+        vaultService.getHealth(),
+        vaultService.listNetworkCredentialStatus(),
       ]);
 
       // Process Catalog
@@ -87,7 +125,30 @@ export function VaultKeys() {
       }
 
       // Process Secrets
-      setSecrets(secretsList);
+      const normalizedSecrets = asArray((secretsPayload as ListSecretsResponse).secrets).map((entry) => {
+        if (typeof entry === 'string') {
+          return {
+            name: entry,
+            type: 'secret',
+            status: 'stored',
+            lastUpdated: null,
+          } satisfies SecretRecord;
+        }
+        const item = asObject(entry);
+        return {
+          name: asText(item.name),
+          type: asText(item.type, 'secret'),
+          status: asText(item.status, 'stored'),
+          lastUpdated: typeof item.lastUpdated === 'string' ? item.lastUpdated : null,
+        } satisfies SecretRecord;
+      }).filter((entry) => entry.name);
+      setSecrets(normalizedSecrets);
+
+      // Process configured network providers
+      const configuredProviders = asArray(asObject(networkStatus).providers)
+        .map((provider) => asText(provider))
+        .filter((provider) => provider.length > 0);
+      setConfiguredNetworkProviders(configuredProviders);
       
       // Process Health
       setVaultHealth({
@@ -105,11 +166,6 @@ export function VaultKeys() {
   useEffect(() => {
     void loadData();
   }, []);
-
-  const providerLabel = useMemo(() => {
-    const found = providers.find((row) => row.id === selectedProvider);
-    return found ? `${found.name} (${found.market})` : selectedProvider;
-  }, [providers, selectedProvider]);
 
   const uploadCsv = async (event: FormEvent) => {
     event.preventDefault();
@@ -168,6 +224,52 @@ export function VaultKeys() {
       setManualError(error instanceof Error ? error.message : 'Failed to store secret.');
     } finally {
       setManualSubmitting(false);
+    }
+  };
+
+  const saveNetworkCredential = async (event: FormEvent) => {
+    event.preventDefault();
+    if (networkSubmitting) return;
+
+    const payload = {
+      username: networkForm.username.trim() || undefined,
+      password: networkForm.password.trim() || undefined,
+      pat: networkForm.pat.trim() || undefined,
+      api_key: networkForm.apiKey.trim() || undefined,
+      endpoint: networkForm.endpoint.trim() || undefined,
+      proxy_url: networkForm.proxyUrl.trim() || undefined,
+      notes: networkForm.notes.trim() || undefined,
+    };
+
+    const hasAuthField = Boolean(
+      payload.username || payload.password || payload.pat || payload.api_key || payload.proxy_url,
+    );
+    if (!hasAuthField) {
+      setNetworkError('Provide at least one auth field (username/password/PAT/API key/proxy URL).');
+      return;
+    }
+
+    setNetworkSubmitting(true);
+    setNetworkError(null);
+    setNetworkResult(null);
+    try {
+      await vaultService.storeNetworkCredential(networkForm.providerId, payload);
+      setNetworkResult(`Stored ${networkForm.providerId} network credentials in Vault.`);
+      setNetworkForm((prev) => ({
+        ...prev,
+        username: '',
+        password: '',
+        pat: '',
+        apiKey: '',
+        endpoint: '',
+        proxyUrl: '',
+        notes: '',
+      }));
+      void loadData();
+    } catch (error) {
+      setNetworkError(error instanceof Error ? error.message : 'Failed to store network credentials.');
+    } finally {
+      setNetworkSubmitting(false);
     }
   };
 
@@ -348,6 +450,132 @@ export function VaultKeys() {
         </section>
       )}
 
+      <section className="rounded-lg border border-slate-800 bg-slate-900/40 p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-bold text-slate-100">Network Egress Credentials</h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Store VPN and proxy credentials in Vault for autonomous egress routing scripts.
+            </p>
+          </div>
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">
+            Vault-backed
+          </span>
+        </div>
+
+        <form onSubmit={(event) => void saveNetworkCredential(event)} className="mt-4 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-400">Provider</label>
+              <select
+                value={networkForm.providerId}
+                onChange={(event) => setNetworkForm((prev) => ({ ...prev, providerId: event.target.value }))}
+                className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-cyan-500/50"
+              >
+                {NETWORK_PROVIDER_OPTIONS.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-400">Username / Account ID</label>
+              <input
+                value={networkForm.username}
+                onChange={(event) => setNetworkForm((prev) => ({ ...prev, username: event.target.value }))}
+                placeholder="account-id or username"
+                className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-cyan-500/50"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-400">Password / Secret</label>
+              <input
+                type="password"
+                value={networkForm.password}
+                onChange={(event) => setNetworkForm((prev) => ({ ...prev, password: event.target.value }))}
+                placeholder="••••••••"
+                className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-cyan-500/50 font-mono"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-400">PAT / Token</label>
+              <input
+                type="password"
+                value={networkForm.pat}
+                onChange={(event) => setNetworkForm((prev) => ({ ...prev, pat: event.target.value }))}
+                placeholder="ptk_... or token"
+                className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-cyan-500/50 font-mono"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-400">API Key</label>
+              <input
+                type="password"
+                value={networkForm.apiKey}
+                onChange={(event) => setNetworkForm((prev) => ({ ...prev, apiKey: event.target.value }))}
+                placeholder="api_key..."
+                className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-cyan-500/50 font-mono"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-400">Endpoint</label>
+              <input
+                value={networkForm.endpoint}
+                onChange={(event) => setNetworkForm((prev) => ({ ...prev, endpoint: event.target.value }))}
+                placeholder="provider endpoint or host:port"
+                className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-cyan-500/50"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-400">Proxy URL (optional)</label>
+            <input
+              value={networkForm.proxyUrl}
+              onChange={(event) => setNetworkForm((prev) => ({ ...prev, proxyUrl: event.target.value }))}
+              placeholder="socks5://user:pass@host:port"
+              className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-cyan-500/50 font-mono"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-400">Notes</label>
+            <textarea
+              value={networkForm.notes}
+              onChange={(event) => setNetworkForm((prev) => ({ ...prev, notes: event.target.value }))}
+              rows={2}
+              className="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:ring-1 focus:ring-cyan-500/50"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="text-xs text-slate-400">
+              Configured providers: {configuredNetworkProviders.length > 0 ? configuredNetworkProviders.join(', ') : 'none'}
+            </div>
+            <button
+              type="submit"
+              disabled={networkSubmitting}
+              className="flex items-center gap-2 rounded-md bg-cyan-600 px-4 py-2 text-sm font-bold text-white hover:bg-cyan-500 disabled:opacity-50 transition-all"
+            >
+              {networkSubmitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+              Save Network Credential
+            </button>
+          </div>
+
+          {networkError ? (
+            <p className="text-xs text-rose-400 mt-2 flex items-center gap-1">
+              <XCircle className="h-3 w-3" /> {networkError}
+            </p>
+          ) : null}
+          {networkResult ? (
+            <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1">
+              <CheckCircle2 className="h-3 w-3" /> {networkResult}
+            </p>
+          ) : null}
+        </form>
+      </section>
+
       {/* Main Secrets Table */}
       <section className="rounded-lg border border-slate-800 bg-slate-900/60 overflow-hidden">
         <div className="bg-slate-800/50 px-4 py-3 border-b border-slate-800 flex items-center justify-between">
@@ -458,4 +686,3 @@ export function VaultKeys() {
     </div>
   );
 }
-

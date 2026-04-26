@@ -553,15 +553,16 @@ export const vaultService = {
       data: payload,
     }),
   // Enhanced Vault methods
-  listSecrets: (): Promise<any[]> =>
-    request<any[]>({
+  listSecrets: (): Promise<{ secrets: Array<string | { name: string; type?: string; status?: string; lastUpdated?: string | null }>; count: number }> =>
+    request<{ secrets: Array<string | { name: string; type?: string; status?: string; lastUpdated?: string | null }>; count: number }>({
       method: 'GET',
       url: '/vault/secrets/list',
     }),
   storeSecret: (payload: {
     name: string;
     type: string;
-    value: string;
+    value?: string;
+    fields?: Record<string, string>;
     description?: string;
     tags?: string[];
   }): Promise<Record<string, unknown>> =>
@@ -579,6 +580,28 @@ export const vaultService = {
     request<Record<string, unknown>>({
       method: 'GET',
       url: '/vault/health',
+    }),
+  storeNetworkCredential: (
+    providerId: string,
+    payload: {
+      username?: string;
+      password?: string;
+      pat?: string;
+      api_key?: string;
+      endpoint?: string;
+      proxy_url?: string;
+      notes?: string;
+    },
+  ): Promise<Record<string, unknown>> =>
+    request<Record<string, unknown>>({
+      method: 'POST',
+      url: `/vault/network/providers/${encodeURIComponent(providerId)}/credentials`,
+      data: payload,
+    }),
+  listNetworkCredentialStatus: (): Promise<{ count: number; providers: string[] }> =>
+    request<{ count: number; providers: string[] }>({
+      method: 'GET',
+      url: '/vault/network/providers/status',
     }),
 };
 
