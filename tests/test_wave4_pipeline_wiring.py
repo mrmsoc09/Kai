@@ -56,14 +56,14 @@ class TestTopologyConstruction:
             assert node.agent_id == agent_id
 
     def test_graph_has_expected_edge_count(self):
-        """Graph should have 17 edges for proper execution flow."""
+        """Graph should have 13 edges for the sequential execution chain."""
         specs = _make_minimal_agent_specs()
         graph = PraisonTopology.build_standard_bug_bounty(
             workflow_id="test-wf",
             program_id="test-prog",
             agent_specs=specs,
         )
-        assert len(graph.edges) == 17, f"Expected 17 edges, got {len(graph.edges)}"
+        assert len(graph.edges) == 13, f"Expected 13 edges, got {len(graph.edges)}"
 
     def test_entry_and_exit_nodes_configured(self):
         """Entry and exit nodes should be properly set."""
@@ -81,7 +81,7 @@ class TestPhaseGroupEdges:
     """Test that phase groups are properly connected."""
 
     def test_phase_a_parallel_edges_from_coordinator(self):
-        """Phase A agents should receive edges from PhaseCoordinator."""
+        """PhaseCoordinator should chain into SurfaceMapper (sequential topology)."""
         specs = _make_minimal_agent_specs()
         graph = PraisonTopology.build_standard_bug_bounty(
             workflow_id="test-wf",
@@ -89,12 +89,10 @@ class TestPhaseGroupEdges:
             agent_specs=specs,
         )
         phase_a_targets = [e.target for e in graph.edges if e.source == "PhaseCoordinator"]
-        expected_a = ["SurfaceMapper", "OSINTIntelligenceAgent", "DarkWebIntelAgent", "SecretScannerAgent"]
-        for agent in expected_a:
-            assert agent in phase_a_targets, f"{agent} not in Phase A targets"
+        assert "SurfaceMapper" in phase_a_targets, "SurfaceMapper not reachable from PhaseCoordinator"
 
     def test_phase_b_edge_from_surface_mapper(self):
-        """ContentDiscovery should depend on SurfaceMapper (Phase B)."""
+        """SurfaceMapper should chain into OSINTIntelligenceAgent in sequential topology."""
         specs = _make_minimal_agent_specs()
         graph = PraisonTopology.build_standard_bug_bounty(
             workflow_id="test-wf",
@@ -102,10 +100,10 @@ class TestPhaseGroupEdges:
             agent_specs=specs,
         )
         surface_mapper_targets = [e.target for e in graph.edges if e.source == "SurfaceMapper"]
-        assert "ContentDiscoveryAgent" in surface_mapper_targets
+        assert "OSINTIntelligenceAgent" in surface_mapper_targets
 
     def test_phase_c_edges_from_discovery(self):
-        """Vulnerability and APISecurity should depend on ContentDiscovery (Phase C)."""
+        """ContentDiscoveryAgent should chain into VulnerabilityAgent (sequential topology)."""
         specs = _make_minimal_agent_specs()
         graph = PraisonTopology.build_standard_bug_bounty(
             workflow_id="test-wf",
@@ -114,10 +112,9 @@ class TestPhaseGroupEdges:
         )
         discovery_targets = [e.target for e in graph.edges if e.source == "ContentDiscoveryAgent"]
         assert "VulnerabilityAgent" in discovery_targets
-        assert "APISecurityAgent" in discovery_targets
 
     def test_phase_d_convergence_to_faraday(self):
-        """All scanning agents should converge to FaradayCoordinator."""
+        """APISecurityAgent should chain into FaradayCoordinatorAgent (sequential topology)."""
         specs = _make_minimal_agent_specs()
         graph = PraisonTopology.build_standard_bug_bounty(
             workflow_id="test-wf",
@@ -125,17 +122,7 @@ class TestPhaseGroupEdges:
             agent_specs=specs,
         )
         faraday_sources = [e.source for e in graph.edges if e.target == "FaradayCoordinatorAgent"]
-        # Should have edges from: VulnerabilityAgent, APISecurityAgent, OSINTIntelligenceAgent,
-        # DarkWebIntelAgent, SecretScannerAgent
-        expected_sources = [
-            "VulnerabilityAgent",
-            "APISecurityAgent",
-            "OSINTIntelligenceAgent",
-            "DarkWebIntelAgent",
-            "SecretScannerAgent",
-        ]
-        for source in expected_sources:
-            assert source in faraday_sources, f"{source} not connected to FaradayCoordinator"
+        assert "APISecurityAgent" in faraday_sources, "APISecurityAgent not connected to FaradayCoordinator"
 
     def test_final_sequence_edges(self):
         """FaradayCoordinator → EvidenceAnalyst → ReportSynthesis → HandoffLiaison."""
@@ -320,8 +307,8 @@ class TestCrewAgentFactory:
         assert history and history[0].get("status") == "completed"
         assert history[0].get("status") != "deferred_async"
 
-    def test_langgraph_compile_falls_back_for_wave4_fanout(self):
-        """Wave 4 multi-edge fan-out should enforce deterministic fallback compile behavior."""
+    def test_langgraph_compile_succeeds_for_sequential_chain(self):
+        """Sequential topology has no fan-out, so compile() should succeed."""
         from apps.backend.src.core.praison_langgraph_builder import PraisonLangGraphBuilder
 
         specs = _make_minimal_agent_specs()
@@ -335,7 +322,8 @@ class TestCrewAgentFactory:
             for node_id in graph.nodes
         }
         builder = PraisonLangGraphBuilder(graph, callables)
-        assert builder.compile() is None
+        compiled = builder.compile()
+        assert compiled is not None, "Sequential topology should compile successfully"
 
 
 class TestIntegration:

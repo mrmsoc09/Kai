@@ -9,7 +9,13 @@ import re
 import shutil
 from typing import Any, Callable
 
-from apps.backend.src.core.protocol import KaisonResult, KaisonResultMetadata
+from apps.backend.src.core.protocol import (
+    FindingType,
+    KaisonFinding,
+    KaisonResult,
+    KaisonResultMetadata,
+    Severity,
+)
 from apps.backend.src.core.scope_guardrails import (
     audit_scope_decision,
     evaluate_target_scope,
@@ -125,12 +131,10 @@ class ReconftwAgent(BaseToolAgent):
     def build_command(self, target: str, options: dict[str, Any] | None = None) -> list[str]:
         """Support granular flags and ensure SNL interface via generated config."""
         opts = options or {}
-        nvme_root = str(opts.get("nvme_root") or os.getenv("K1_NVME_ROOT", "/mnt/nvme"))
-        reconftw_path = Path(nvme_root) / "reconftw" / "reconftw.sh"
-        
+
         modes = self._normalize_modes(opts)
-        cmd = ["bash", str(reconftw_path), "-d", target]
-        
+        cmd = ["reconftw.sh", "-d", target]
+
         # Selectivity Logic: trigger specific phases
         if "all" in modes:
             cmd.append("-all")
@@ -139,20 +143,20 @@ class ReconftwAgent(BaseToolAgent):
                 flag = _MODE_FLAGS.get(mode)
                 if flag:
                     cmd.append(flag)
-        
-        # Ensure it uses the generated config for SNL enforcement
-        output_root = str(opts.get("output_root") or os.getenv("K1_WORKFLOW_OUTPUT_ROOT", "output"))
-        config_path = str(
-            opts.get("config_path")
-            or (Path(output_root).expanduser().resolve() / "reconftw" / target / "reconftw.cfg")
-        )
-        
-        if Path(config_path).exists():
-            cmd.extend(["--config", config_path])
-            
+
+        # Config path for SNL enforcement: explicit opt takes priority
+        explicit_config = opts.get("config_path")
+        if explicit_config:
+            cmd.extend(["-c", str(explicit_config)])
+        else:
+            output_root = str(opts.get("output_root") or os.getenv("K1_WORKFLOW_OUTPUT_ROOT", "output"))
+            derived_cfg = Path(output_root).expanduser().resolve() / "reconftw" / target / "reconftw.cfg"
+            if derived_cfg.exists():
+                cmd.extend(["-c", str(derived_cfg)])
+
         if bool(opts.get("deep", False)) and "--deep" not in cmd:
             cmd.append("--deep")
-            
+
         return cmd
 
     def install(self, target: str, options: dict[str, Any] | None = None) -> dict[str, Any]:
@@ -453,7 +457,163 @@ class ReconftwAgent(BaseToolAgent):
                             seen.add(key)
                             findings.append(finding)
 
+                for url in self._extract_urls(token):
+                    finding = self._build_inventory_finding(
+                        asset_type="url",
+                        asset_value=url,
+                        target=target,
+                        phase=phase,
+                        evidence=f"{path}:{token}",
+                        metadata={"record_type": "url"},
+                    )
+                    if finding:
+                        key = (finding["type"], finding["value"].lower())
+                        if key not in seen:
+                            seen.add(key)
+                            findings.append(finding)
+
         return findings
+
+    def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:
+        """Parse raw reconftw text output, extracting subdomains, URLs, and IPs."""
+        findings: list[dict[str, Any]] = []
+        if not raw_output.strip():
+            return findings
+        seen: set[tuple[str, str]] = set()
+        for line in raw_output.splitlines():
+            token = line.strip()
+            if not token:
+                continue
+            for domain in self._extract_subdomains(token, target):
+                f = self._build_subdomain_finding(domain, target, "SUBDOMAINS", token)
+                if f:
+                    key = (f["type"], f["value"].lower())
+                    if key not in seen:
+                        seen.add(key)
+                        findings.append(f)
+            for url in self._extract_urls(token):
+                f = self._build_inventory_finding(
+                    asset_type="url", asset_value=url, target=target,
+                    phase="WEB", evidence=token, metadata={"record_type": "url"},
+                )
+                if f:
+                    key = (f["type"], f["value"].lower())
+                    if key not in seen:
+                        seen.add(key)
+                        findings.append(f)
+            for ip in self._extract_ips(token):
+                f = self._build_inventory_finding(
+                    asset_type="ip", asset_value=ip, target=target,
+                    phase="SUBDOMAINS", evidence=token, metadata={"record_type": "ip_address"},
+                )
+                if f:
+                    key = (f["type"], f["value"].lower())
+                    if key not in seen:
+                        seen.add(key)
+                        findings.append(f)
+        return findings
+
+    def map_output(
+        self,
+        *,
+        target: str,
+        command: list[str],
+        stdout: str,
+        stderr: str,
+        exit_code: int,
+        started_at: datetime,
+        ended_at: datetime,
+        runtime_ms: int,
+        mission_id: str,
+        status: str,
+        options: dict[str, Any] | None = None,
+    ) -> KaisonResult:
+        """Convert json-encoded directory findings list from stdout into KaisonResult."""
+        kaison_findings: list[KaisonFinding] = []
+        raw = stdout.strip()
+        if raw:
+            try:
+                raw_list = json.loads(raw)
+                if not isinstance(raw_list, list):
+                    raw_list = []
+            except json.JSONDecodeError:
+                raw_list = []
+
+            for item in raw_list:
+                if not isinstance(item, dict):
+                    continue
+                ftype_str = str(item.get("type", "asset_inventory")).lower()
+                if "subdomain" in ftype_str:
+                    finding_type = FindingType.SUBDOMAIN
+                else:
+                    finding_type = FindingType.CONFIG
+                value = str(item.get("value", "")).strip()[:500]
+                if not value:
+                    continue
+                try:
+                    kaison_findings.append(
+                        KaisonFinding(
+                            finding_type=finding_type,
+                            value=value,
+                            source_agent=self.TOOL_NAME,
+                            confidence=float(item.get("confidence", 0.8)),
+                            severity=Severity.INFO,
+                            raw_evidence=item.get("context") or {},
+                        )
+                    )
+                except Exception:
+                    continue
+
+        return KaisonResult(
+            mission_id=mission_id,
+            source_agent=self.TOOL_NAME,
+            status=status,
+            target_context={
+                "target": target,
+                "command": command,
+                "exit_code": exit_code,
+                "stderr": (stderr or "")[:2000],
+                "options": options,
+            },
+            metadata=KaisonResultMetadata(
+                started_at=started_at,
+                ended_at=ended_at,
+                runtime_ms=runtime_ms,
+            ),
+            findings=kaison_findings,
+        )
+
+    def filter_noise(
+        self, findings: list[dict[str, Any]]
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        signal: list[dict[str, Any]] = []
+        noise: list[dict[str, Any]] = []
+        known = self.load_memory()
+        for finding in findings:
+            value = str(finding.get("value", "")).lower()
+            ftype = str(finding.get("type", "asset_inventory")).lower()
+            tgt = str(finding.get("target", "")).lower()
+            if f"{tgt}|{ftype}|{value}" in known:
+                noise.append(finding)
+                continue
+            if str(finding.get("severity", "info")).lower() == "info":
+                noise.append(finding)
+                continue
+            signal.append(finding)
+        return signal, noise
+
+    def _generate_next_agent_instructions(
+        self,
+        signal: list[dict[str, Any]],
+        target: str,
+    ) -> dict[str, Any]:
+        return {
+            "next_agents": ["OSINTIntelligenceAgent", "VulnerabilityAgent"],
+            "total_findings": len(signal),
+            "operator_summary": (
+                f"ReconFTW meta-orchestrator mapped {len(signal)} assets for {target}."
+            ),
+        }
 
     def _run_phase_gate(self, *, target: str, phase: str, findings_count: int, options: dict[str, Any]) -> dict[str, Any]:
         """Implementation of Phase-Gate where the agent pauses for orchestrator strategy handshake."""
@@ -527,10 +687,13 @@ class ReconftwAgent(BaseToolAgent):
                 findings=[],
             )
 
-        # Simulation of live output for this architect brief
+        fixture = opts.get("fixture_data")
         output_dir = str(opts.get("output_dir", "")).strip()
-        directory_findings = []
-        if output_dir:
+        directory_findings: list[dict[str, Any]] = []
+        if fixture is not None:
+            fixture_text = fixture if isinstance(fixture, str) else json.dumps(fixture)
+            directory_findings = self.parse_output(fixture_text, target)
+        elif output_dir:
             directory_findings = self.parse_output_directory(output_dir, target)
 
         modes = self._normalize_modes(opts)
@@ -540,7 +703,7 @@ class ReconftwAgent(BaseToolAgent):
         
         # Telemetry: Visuals
         self._emit_telemetry("AGENT_STATUS", "ACTIVE")
-        self._emit_telemetry("EventLog", "SATELLITE_SWEEP_SWEEPING_ARCS")
+        self._emit_telemetry("EventLog", "SATELLITE_SWEEP_LARGE_ARCS")
         
         phase_gates = []
         for index, phase in enumerate(phases, start=1):
@@ -573,7 +736,7 @@ class ReconftwAgent(BaseToolAgent):
             options=opts,
         )
 
-        self._emit_telemetry("RECON_TOTAL_ASSETS", len(result.findings))
+        self._emit_telemetry("TOTAL_ASSETS_MAPPED", len(result.findings))
 
         context = dict(result.target_context)
         context.update({
@@ -584,3 +747,6 @@ class ReconftwAgent(BaseToolAgent):
             "telemetry": self.get_telemetry_events(),
         })
         return result.model_copy(update={"target_context": context})
+
+
+ReconftfwAgent = ReconftwAgent

@@ -1,0 +1,71 @@
+provider: huggingface
+description: "HuggingFace Inference API (serverless) — embeddings and specialized models"
+auth:
+  method: env
+  token_env: HUGGINGFACE_TOKEN
+  vault_path: secret/k1/ai/huggingface
+
+models:
+  # Embedding models (primary use — cheaper than OpenAI ada-002)
+  - name: BAAI/bge-m3
+    type: embedding
+    capabilities:
+      tool_calling: false
+      structured_output: false
+      multimodal: false
+      context_window: 8192
+      privacy_tier: 2
+      cost_tier: 1
+      speed_tier: 2
+      local_or_remote: remote
+      preferred_workloads: [embedding, semantic_search]
+      status: active
+
+  - name: sentence-transformers/all-MiniLM-L6-v2
+    type: embedding
+    capabilities:
+      tool_calling: false
+      structured_output: false
+      multimodal: false
+      context_window: 512
+      privacy_tier: 2
+      cost_tier: 1
+      speed_tier: 3
+      local_or_remote: remote
+      preferred_workloads: [embedding, fast_similarity]
+      status: active
+
+  # Security-specialized classification
+  - name: jackaduma/SecRoBERTa
+    type: classification
+    capabilities:
+      tool_calling: false
+      structured_output: true
+      multimodal: false
+      context_window: 512
+      privacy_tier: 2
+      cost_tier: 1
+      speed_tier: 3
+      local_or_remote: remote
+      preferred_workloads: [cve_classification, vuln_triage]
+      status: active
+
+  # Code analysis
+  - name: microsoft/codebert-base
+    type: classification
+    capabilities:
+      tool_calling: false
+      structured_output: true
+      multimodal: false
+      context_window: 512
+      privacy_tier: 2
+      cost_tier: 1
+      speed_tier: 3
+      local_or_remote: remote
+      preferred_workloads: [code_analysis, patch_review]
+      status: active
+
+budget:
+  monthly_usd: 50
+  alert_threshold_pct: 80
+  hard_stop_pct: 95

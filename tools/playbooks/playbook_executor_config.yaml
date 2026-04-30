@@ -130,14 +130,9 @@ executor_config:
           support_personas: ["cvss_scoring_specialist"]
           tool: "none"
           fallback_persona: "report_writer"
-        step_5:
-          assigned_persona: "report_writer"
-          support_personas: ["evidence_collector"]
-          tool: "none"
-          fallback_persona: "evidence_collector"
       execution_flow:
         parallel_steps: []
-        sequential: [1, 2, 3, 4, 5]
+        sequential: [1, 2, 3, 4]
 
     graphql_attacks:
       path: "tools/playbooks/exploitation/graphql_attacks.yaml"

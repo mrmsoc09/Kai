@@ -165,7 +165,7 @@ def test_playbook_objective_fields(playbook_path: Path) -> None:
 def test_playbook_registry_completeness() -> None:
     """Verify all playbooks are registered."""
     registry = _load_yaml(PLAYBOOK_REGISTRY_PATH)["playbook_registry"]
-    registered_paths = {entry["path"] for entry in registry["playbooks"]}
+    registered_paths = {entry["path"] for entry in registry["playbooks"] if "path" in entry}
     expected_paths = {str(p.relative_to(KAI_ROOT)) for p in PLAYBOOK_PATHS}
     assert expected_paths.issubset(registered_paths)
 

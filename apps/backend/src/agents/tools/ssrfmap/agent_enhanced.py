@@ -64,6 +64,15 @@ class SsrfmapAgent(BaseToolAgent):
 
     TOOL_NAME = "ssrfmap"
 
+    # Cloud metadata endpoints targeted by SSRF probes
+    CLOUD_METADATA_TARGETS = [
+        "169.254.169.254",
+        "http://169.254.169.254/latest/meta-data/",
+        "http://169.254.169.254/latest/user-data",
+        "http://metadata.google.internal/computeMetadata/v1/",
+        "http://169.254.169.254/metadata/instance",
+    ]
+
     # SSRF module priorities
     _MODULES = [
         SsrfModule.NETWORK,
@@ -150,13 +159,15 @@ class SsrfmapAgent(BaseToolAgent):
             Command as list of strings for subprocess execution
         """
         options = options or {}
-        cmd = [self.TOOL_NAME, "-u", target_url]
+        cmd = [self.TOOL_NAME, "-u", target_url, "read", "-l", target_url]
 
-        # Module selection
-        modules = options.get("modules", self._MODULES)
+        # Module selection — default to cloud provider modules
+        modules = options.get("modules")
         if modules:
-            module_list = ",".join([m.value for m in modules])
-            cmd.extend(["-m", module_list])
+            module_list = ",".join([m.value if hasattr(m, "value") else str(m) for m in modules])
+        else:
+            module_list = "aws,gcp,azure"
+        cmd.extend(["-m", module_list])
 
         # Timeout
         timeout = options.get("timeout_seconds", 600)
@@ -183,12 +194,13 @@ class SsrfmapAgent(BaseToolAgent):
 
         return cmd
 
-    def parse_output(self, raw_output: str) -> dict[str, Any]:
+    def parse_output(self, raw_output: str, target: str = "") -> dict[str, Any]:
         """
         Parse ssrfmap JSON output and normalize to InternalAccessRegistry.
 
         Args:
             raw_output: Raw ssrfmap command output
+            target: Target URL (optional, for context)
 
         Returns:
             Dictionary with keys:
@@ -670,7 +682,7 @@ class SsrfmapAgent(BaseToolAgent):
 
         return SsrfModule.UNKNOWN
 
-    def filter_noise(self, findings: dict[str, Any]) -> tuple[list, list]:
+    def filter_noise(self, findings: "dict[str, Any] | list") -> tuple[list, list]:
         """
         Separate signal from noise.
 
@@ -689,7 +701,8 @@ class SsrfmapAgent(BaseToolAgent):
         signal = []
         noise = []
 
-        for finding in findings.get("findings", []):
+        raw = findings if isinstance(findings, list) else findings.get("findings", [])
+        for finding in raw:
             is_signal = (
                 finding.ssrf_confirmed
                 and (

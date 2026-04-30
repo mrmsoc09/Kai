@@ -39,6 +39,9 @@ from .bug_bounty import (
     WorkflowDeltaRecord,
     TargetPerformanceRecord,
 )
+# findings.py must be imported before campaign.py (ScanFinding relationship) and
+# before finding_overrides.py (scan_findings FK).
+from .findings import FindingSubmission, ScanExecution, ScanFinding
 from .campaign import (
     ApprovalGate,
     Artifact,
@@ -162,4 +165,7 @@ __all__ = [
     "SignalScore",
     "EvidenceValidation",
     "ApprovalEvidenceLink",
+    "ScanExecution",
+    "ScanFinding",
+    "FindingSubmission",
 ]

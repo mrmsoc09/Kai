@@ -220,6 +220,60 @@ class AhmiaClientAgent(BaseToolAgent):
             findings=findings,
         )
 
+    def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:
+        result: list[dict[str, Any]] = []
+        if not raw_output.strip():
+            return result
+        for line in raw_output.splitlines():
+            url = line.strip()
+            if not url:
+                continue
+            result.append({
+                "type": "darknet_finding",
+                "value": url[:500],
+                "target": target,
+                "severity": "medium",
+                "confidence": 0.75,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": url[:1200],
+                "context": {"ahmia_search": True},
+                "recommended_next_tools": ["EvidenceAnalystAgent"],
+                "recommended_next_actions": ["investigate"],
+            })
+        return result
+
+    def filter_noise(
+        self, findings: list[dict[str, Any]]
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        signal: list[dict[str, Any]] = []
+        noise: list[dict[str, Any]] = []
+        known = self.load_memory()
+        for finding in findings:
+            value = str(finding.get("value", "")).lower()
+            ftype = str(finding.get("type", "darknet_finding")).lower()
+            tgt = str(finding.get("target", "")).lower()
+            if f"{tgt}|{ftype}|{value}" in known:
+                noise.append(finding)
+                continue
+            if str(finding.get("severity", "info")).lower() == "info":
+                noise.append(finding)
+                continue
+            signal.append(finding)
+        return signal, noise
+
+    def _generate_next_agent_instructions(
+        self,
+        signal: list[dict[str, Any]],
+        target: str,
+    ) -> dict[str, Any]:
+        return {
+            "next_agents": ["EvidenceAnalystAgent"],
+            "total_findings": len(signal),
+            "operator_summary": (
+                f"Ahmia search returned {len(signal)} dark web results for {target}."
+            ),
+        }
+
     def execute(
         self,
         target: str,

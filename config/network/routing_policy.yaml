@@ -1,0 +1,123 @@
+---
+# Network routing policy — governs which VPN/proxy is used per scan phase.
+# Credentials are stored in Vault (secret/k1/network/*), never here.
+# Configure active providers via frontend: Settings > Network Routing
+
+version: "1.0"
+
+providers:
+  vpn:
+    mullvad:
+      enabled: true
+      config_dir_vault_key: mullvad_config_dir
+      privkey_vault_key: mullvad_privkey
+      wg_interface_prefix: "wg-mlvd"
+      preferred_countries: [US, NL, CH, SE, IS, DE]
+      rotate_every_minutes: 30
+      rotate_on_block: true
+
+    protonvpn:
+      enabled: true
+      configs:
+        - id: "us-free-122"
+          pubkey: "BjZdo7pghhm6xC6IQrAItH4O2QEKB5EGAYco60X4Vng="
+          endpoint: "149.40.51.231:51820"
+          privkey_vault_key: protonvpn_privkey_1
+          wg_interface: "wg-proton0"
+        - id: "us-free-86"
+          pubkey: "oOweBQMuJhyG8mY9D/zoRmnxZ1V6HcyND5HGKbWyZDg="
+          endpoint: "149.34.251.134:51820"
+          privkey_vault_key: protonvpn_privkey_2
+          wg_interface: "wg-proton1"
+      rotate_on_block: true
+
+    ivpn:
+      enabled: false   # Set true once credentials added via frontend
+      config_dir_vault_key: ivpn_config_dir
+      privkey_vault_key: ivpn_privkey
+      wg_interface_prefix: "wg-ivpn"
+      preferred_countries: [US, CH, SE]
+      rotate_every_minutes: 45
+
+  proxy:
+    decodo:
+      enabled: false   # Set true once credentials added via frontend
+      type: residential
+      endpoint_vault_key: decodo_endpoint
+      username_vault_key: decodo_username
+      password_vault_key: decodo_password
+      rotate_per_request: true
+      session_sticky: false
+
+    scrapingbee:
+      enabled: false   # Set true once API key added via frontend
+      type: residential
+      api_key_vault_key: scrapingbee_api_key
+      base_url: "https://app.scrapingbee.com/api/v1/"
+
+    openproxy:
+      enabled: false   # Set true once credentials added via frontend
+      type: datacenter
+      endpoint_vault_key: openproxy_endpoint
+      username_vault_key: openproxy_username
+      password_vault_key: openproxy_password
+
+# Per-phase routing policy
+phase_routing:
+  passive_recon:
+    preferred: [decodo, scrapingbee]   # residential looks organic
+    fallback: [mullvad, protonvpn]
+    allow_direct: false
+
+  active_recon:
+    preferred: [mullvad, protonvpn]
+    fallback: [openproxy]
+    allow_direct: false
+
+  osint_api_calls:
+    preferred: [direct]   # API keys already authenticate; proxy adds latency
+    fallback: [mullvad]
+    allow_direct: true
+
+  dark_web:
+    preferred: [tor]      # onionscan/torbot handle Tor internally
+    fallback: []
+    allow_direct: false
+
+  cloud_audit:
+    preferred: [direct]   # cloud SDKs use IAM auth
+    fallback: [mullvad]
+    allow_direct: true
+
+  vuln_scan:
+    preferred: [mullvad, protonvpn]
+    fallback: [openproxy]
+    allow_direct: false
+
+  report_generation:
+    preferred: [direct]
+    fallback: []
+    allow_direct: true
+
+# IP rotation settings
+rotation:
+  health_check_url: "https://ifconfig.me/ip"
+  health_check_timeout_seconds: 10
+  verify_ip_changed: true
+  max_rotation_attempts: 5
+
+# User-agent pool size and refresh
+fingerprint:
+  ua_pool_size: 50
+  ua_refresh_hours: 24
+  device_ratio:   # desktop/mobile/tablet
+    desktop: 0.50
+    mobile:  0.40
+    tablet:  0.10
+  session_sticky: true   # same UA for entire target scan
+
+# Stealth mode (minimal footprint)
+stealth_mode:
+  enabled_during_hours_utc: [2, 3, 4, 5]  # 02:00-06:00 UTC
+  max_concurrent_tools: 1
+  jitter_multiplier: 3.0

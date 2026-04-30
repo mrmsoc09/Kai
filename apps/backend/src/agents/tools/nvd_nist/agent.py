@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
-import os
 from typing import Any
 
+from apps.backend.src.core.secret_manager import get_secret_manager
 from ..base_tool_agent import BaseToolAgent
 
 
@@ -26,7 +26,7 @@ class NvdNistAgent(BaseToolAgent):
             if isinstance(candidate, str) and candidate.strip():
                 version = candidate.strip()
 
-        api_key = os.environ.get("NVD_NIST_API_KEY", "")
+        api_key = get_secret_manager().get_optional("NVD_NIST_API_KEY") or ""
         return [
             "python3",
             "-c",

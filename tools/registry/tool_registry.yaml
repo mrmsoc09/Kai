@@ -1971,3 +1971,251 @@ tools:
     tags: ["CUSTOM_SCRIPT_REQUIRED", "SEARCH_AGGREGATION", "catalog_backlog"]
     dependencies: ["google_bing_ddg_yandex_connectors", "wrapper_pending"]
     enabled_by_default: false
+
+  # Wave 9 - AI/LLM and OWASP Playbook Support Tools (manual_only)
+  - name: api_client
+    display_name: API Client
+    agent_class: ApiClientAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "api_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 300
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["api_security", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: api_fuzzer
+    display_name: API Fuzzer
+    agent_class: ApiFuzzerAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "api_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["api_security", "fuzzing", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: burp_suite
+    display_name: Burp Suite Community
+    agent_class: BurpSuiteAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1800
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["api_security", "web_security", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: checkpoint_analyzer
+    display_name: Model Checkpoint Analyzer
+    agent_class: CheckpointAnalyzerAgent
+    category: ai_ml_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "model_checkpoint_path"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 900
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["ai_ml_security", "supply_chain", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: custom_authz_tester
+    display_name: Custom Authorization Tester
+    agent_class: CustomAuthzTesterAgent
+    category: api_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "url_or_endpoint"}
+    output_schema: {"authz_findings": "list[dict]"}
+    timeout_seconds: 600
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["api_security", "authorization_testing", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: custom_container_tools
+    display_name: Custom Container Security Tools
+    agent_class: CustomContainerToolsAgent
+    category: container_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "container_or_cluster"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 900
+    phase: 7
+    band: 3
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["container_security", "infrastructure", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: custom_llm_tester
+    display_name: Custom LLM Security Tester
+    agent_class: CustomLlmTesterAgent
+    category: ai_ml_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "llm_api_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["ai_ml_security", "llm_testing", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: custom_vector_tools
+    display_name: Custom Vector Database Security Tools
+    agent_class: CustomVectorToolsAgent
+    category: ai_ml_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "vector_db_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["ai_ml_security", "vector_database", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: dependency_checker
+    display_name: Dependency Security Checker
+    agent_class: DependencyCheckerAgent
+    category: supply_chain_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "repo_or_manifest_path"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    phase: 1
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["supply_chain_security", "dependency_analysis", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: exploit_tools
+    display_name: Exploit Tools
+    agent_class: ExploitToolsAgent
+    category: exploitation
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_service"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1200
+    phase: 7
+    band: 3
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["exploitation", "container_security", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["authorization_gate", "wrapper_pending"]
+    enabled_by_default: false
+
+  - name: openssl
+    display_name: OpenSSL
+    agent_class: OpensslAgent
+    category: vulnerability_scanning
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "host_or_url"}
+    output_schema: {"tls_findings": "list[dict]"}
+    timeout_seconds: 300
+    phase: 2
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["tls_security", "cryptography", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: semantic_analyzer
+    display_name: Semantic Analyzer
+    agent_class: SemanticAnalyzerAgent
+    category: ai_ml_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "vector_db_or_embedding_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["ai_ml_security", "semantic_analysis", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false
+
+  - name: statistical_analyzer
+    display_name: Statistical Analyzer
+    agent_class: StatisticalAnalyzerAgent
+    category: ai_ml_security
+    execution_mode: optional
+    binary_path: ""
+    install_verification_cmd: []
+    input_schema: {"target": "api_endpoint_or_model"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    phase: 7
+    band: 2
+    safety_classification: manual_only
+    wrapper_status: manual
+    categories: ["ai_ml_security", "statistical_analysis", "manual_testing"]
+    tags: ["MANUAL_ONLY", "catalog_backlog"]
+    dependencies: ["wrapper_pending"]
+    enabled_by_default: false

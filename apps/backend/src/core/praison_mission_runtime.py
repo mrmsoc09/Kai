@@ -1471,10 +1471,33 @@ class MissionRuntime:
             ))
             raise
 
+    def _validate_checkpoint_state(self, mission_id: str, current_state: dict) -> tuple[bool, str]:
+        """Verify checkpoint state is consistent before resume."""
+        if not current_state:
+            return False, "empty checkpoint state"
+        # Check for required state fields
+        required_keys = {"mission_id", "phase"}
+        missing = required_keys - set(current_state.keys())
+        if missing:
+            return False, f"checkpoint missing required fields: {missing}"
+        # Verify mission_id matches
+        stored_mission = current_state.get("mission_id", "")
+        if stored_mission and stored_mission != mission_id:
+            return False, f"checkpoint mission_id mismatch: stored={stored_mission!r} expected={mission_id!r}"
+        return True, "valid"
+
     def _resume_langgraph(self, handle: MissionHandle) -> dict[str, Any]:
         """Resume LangGraph execution from checkpoint."""
         config = {"configurable": {"thread_id": handle.mission_id}}
         current = self._states.get(handle.mission_id, {})
+        valid, reason = self._validate_checkpoint_state(handle.mission_id, current)
+        if not valid:
+            logger.error(
+                "Checkpoint validation FAILED for mission %s: %s — restarting from beginning",
+                handle.mission_id,
+                reason,
+            )
+            current = self._states.get(handle.mission_id, {})  # reset to initial state
         try:
             result = handle.compiled_graph.invoke(current, config)
             final = dict(result) if result else current

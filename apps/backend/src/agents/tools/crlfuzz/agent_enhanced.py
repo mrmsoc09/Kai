@@ -117,7 +117,7 @@ class CrlfuzzAgent(BaseToolAgent):
             Command as list of strings for subprocess execution
         """
         options = options or {}
-        cmd = [self.TOOL_NAME, "-u", target_url]
+        cmd = [self.TOOL_NAME, "-u", target_url, "-silent"]
 
         # Output format
         cmd.extend(["-o", "json"])
@@ -148,12 +148,13 @@ class CrlfuzzAgent(BaseToolAgent):
 
         return cmd
 
-    def parse_output(self, raw_output: str) -> dict[str, Any]:
+    def parse_output(self, raw_output: str, target: str = "") -> dict[str, Any]:
         """
         Parse crlfuzz JSON output and normalize to CrlfVulnerabilityRegistry.
 
         Args:
             raw_output: Raw crlfuzz command output
+            target: Target URL (optional, for context)
 
         Returns:
             Dictionary with keys:
@@ -553,7 +554,7 @@ class CrlfuzzAgent(BaseToolAgent):
         match = re.search(r"https?://[^/]+(/[^?#]*)", url)
         return match.group(1) if match else "/"
 
-    def filter_noise(self, findings: dict[str, Any]) -> tuple[list, list]:
+    def filter_noise(self, findings: "dict[str, Any] | list") -> tuple[list, list]:
         """
         Separate signal from noise.
 
@@ -573,7 +574,8 @@ class CrlfuzzAgent(BaseToolAgent):
         signal = []
         noise = []
 
-        for finding in findings.get("findings", []):
+        raw = findings if isinstance(findings, list) else findings.get("findings", [])
+        for finding in raw:
             is_signal = (
                 finding.confirmation_method
                 == ConfirmationMethod.RESPONSE_BODY_SPLIT

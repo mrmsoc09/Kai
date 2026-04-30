@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import base64
 import json
-import os
 from typing import Any
 
+from apps.backend.src.core.secret_manager import get_secret_manager
 from ..base_tool_agent import BaseToolAgent
 
 
@@ -19,7 +19,7 @@ class DehashedAgent(BaseToolAgent):
     def build_command(
         self, target: str, options: dict[str, Any] | None = None
     ) -> list[str]:
-        api_key = os.environ.get("DEHASHED_API_KEY", "")
+        api_key = get_secret_manager().get_optional("DEHASHED_API_KEY") or ""
         creds = base64.b64encode(f"username:{api_key}".encode()).decode()
         return [
             "python3",

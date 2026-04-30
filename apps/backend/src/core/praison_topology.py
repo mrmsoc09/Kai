@@ -291,31 +291,32 @@ class PraisonTopology:
         _add_edge_if_present("GovernanceDirector", "MissionDirector", EdgeCondition.ON_SUCCESS)
         _add_edge_if_present("MissionDirector", "PhaseCoordinator", EdgeCondition.ON_SUCCESS)
 
-        # Phase Group A (parallel from PhaseCoordinator: surface mapping + OSINT + dark web + secrets)
+        # Phase Group A (sequential recon chain: PhaseCoordinator → SurfaceMapper entry point)
+        # NOTE: Original topology had a 4-way fan-out from PhaseCoordinator and a 2-way fan-out from
+        # ContentDiscoveryAgent. LangGraph's K1GraphState uses scalar last-write-wins fields so
+        # concurrent branch execution causes silent state clobbers. All fan-outs are serialized here.
+        # True parallelism can be restored once branch-merge reducers are confirmed working.
         _add_edge_if_present("PhaseCoordinator", "SurfaceMapper", EdgeCondition.ON_SUCCESS)
-        _add_edge_if_present("PhaseCoordinator", "OSINTIntelligenceAgent", EdgeCondition.ON_SUCCESS)
-        _add_edge_if_present("PhaseCoordinator", "DarkWebIntelAgent", EdgeCondition.ON_SUCCESS)
-        _add_edge_if_present("PhaseCoordinator", "SecretScannerAgent", EdgeCondition.ON_SUCCESS)
 
-        # Phase Group B (content discovery after Phase 1-2: depends on SurfaceMapper completion)
+        # Phase Group A (continued): sequential OSINT/dark-web/secrets chain after surface mapping
+        _add_edge_if_present("SurfaceMapper", "OSINTIntelligenceAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("OSINTIntelligenceAgent", "DarkWebIntelAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("DarkWebIntelAgent", "SecretScannerAgent", EdgeCondition.ON_SUCCESS)
+
+        # Phase Group B (content discovery after full recon chain completes)
         if "ContentDiscoveryAgent" in graph.nodes:
-            _add_edge_if_present("SurfaceMapper", "ContentDiscoveryAgent", EdgeCondition.ON_SUCCESS)
+            _add_edge_if_present("SecretScannerAgent", "ContentDiscoveryAgent", EdgeCondition.ON_SUCCESS)
         else:
             # Backward-compatible legacy flow when Wave 4 content discovery is absent.
-            _add_edge_if_present("SurfaceMapper", "ReconSpecialist", EdgeCondition.ON_SUCCESS)
+            # SecretScannerAgent is the tail of the recon chain; route directly to ReconSpecialist.
+            _add_edge_if_present("SecretScannerAgent", "ReconSpecialist", EdgeCondition.ON_SUCCESS)
 
-        # Phase Group C (vulnerability & API testing after content discovery)
+        # Phase Group C (vulnerability & API testing sequentially after content discovery)
         _add_edge_if_present("ContentDiscoveryAgent", "VulnerabilityAgent", EdgeCondition.ON_SUCCESS)
-        _add_edge_if_present("ContentDiscoveryAgent", "APISecurityAgent", EdgeCondition.ON_SUCCESS)
+        _add_edge_if_present("VulnerabilityAgent", "APISecurityAgent", EdgeCondition.ON_SUCCESS)
 
-        # Phase Group D (aggregation & evidence analysis after all scanning complete)
-        # All scanning agents converge into faraday coordinator
-        _add_edge_if_present("VulnerabilityAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
+        # Phase Group D (aggregation: APISecurityAgent is the single entry into FaradayCoordinator)
         _add_edge_if_present("APISecurityAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
-        # Parallel agents (OSINT, dark web, secrets) also feed to faraday
-        _add_edge_if_present("OSINTIntelligenceAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
-        _add_edge_if_present("DarkWebIntelAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
-        _add_edge_if_present("SecretScannerAgent", "FaradayCoordinatorAgent", EdgeCondition.ON_SUCCESS)
 
         # Evidence analysis → reporting → handoff (final convergence)
         if "FaradayCoordinatorAgent" in graph.nodes:

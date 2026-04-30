@@ -281,6 +281,112 @@ class OnionsearchAgent(BaseToolAgent):
             findings=findings,
         )
 
+    def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:
+        result: list[dict[str, Any]] = []
+        if not raw_output.strip():
+            return result
+        try:
+            data = json.loads(raw_output)
+        except json.JSONDecodeError:
+            data = None
+
+        if isinstance(data, dict) and isinstance(data.get("results"), list):
+            url_engines: dict[str, list[str]] = {}
+            url_snippets: dict[str, str] = {}
+            for item in data["results"]:
+                if not isinstance(item, dict):
+                    continue
+                url = str(item.get("url", "")).strip()
+                if not url:
+                    continue
+                engine = str(item.get("engine", "unknown")).strip()
+                url_engines.setdefault(url, [])
+                if engine not in url_engines[url]:
+                    url_engines[url].append(engine)
+                if url not in url_snippets:
+                    url_snippets[url] = str(item.get("snippet", ""))
+            for url, engines in url_engines.items():
+                parsed = urlparse(url)
+                onion_host = parsed.netloc or parsed.path.split("/")[0]
+                ctx: dict[str, Any] = {
+                    "source_engines": sorted(engines),
+                    "snippet": url_snippets.get(url, ""),
+                    "intel_source": "INTEL:DARKNET",
+                }
+                try:
+                    dr = DiscoveryRegistry(
+                        discovered_domain=onion_host,
+                        intel_source="darknet_tor",
+                        onion_url=url[:255],
+                        source_engine=engines[0] if engines else None,
+                    )
+                    ctx["discovery_registry"] = dr.model_dump(mode="json")
+                except Exception:
+                    pass
+                result.append({
+                    "type": "darknet_finding",
+                    "value": url[:500],
+                    "target": target,
+                    "severity": "high",
+                    "confidence": 0.85,
+                    "source_tool": self.TOOL_NAME,
+                    "raw_evidence": json.dumps({"url": url, "engines": engines}, ensure_ascii=True)[:1200],
+                    "context": ctx,
+                    "recommended_next_tools": ["EvidenceAnalystAgent"],
+                    "recommended_next_actions": ["investigate"],
+                })
+            return result
+
+        for line in raw_output.splitlines():
+            url = line.strip()
+            if not url:
+                continue
+            result.append({
+                "type": "darknet_finding",
+                "value": url[:500],
+                "target": target,
+                "severity": "medium",
+                "confidence": 0.75,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": url[:1200],
+                "context": {"source_engines": []},
+                "recommended_next_tools": ["EvidenceAnalystAgent"],
+                "recommended_next_actions": ["investigate"],
+            })
+        return result
+
+    def filter_noise(
+        self, findings: list[dict[str, Any]]
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        signal: list[dict[str, Any]] = []
+        noise: list[dict[str, Any]] = []
+        known = self.load_memory()
+        for finding in findings:
+            value = str(finding.get("value", "")).lower()
+            ftype = str(finding.get("type", "darknet_finding")).lower()
+            tgt = str(finding.get("target", "")).lower()
+            if f"{tgt}|{ftype}|{value}" in known:
+                noise.append(finding)
+                continue
+            if str(finding.get("severity", "info")).lower() == "info":
+                noise.append(finding)
+                continue
+            signal.append(finding)
+        return signal, noise
+
+    def _generate_next_agent_instructions(
+        self,
+        signal: list[dict[str, Any]],
+        target: str,
+    ) -> dict[str, Any]:
+        return {
+            "next_agents": ["EvidenceAnalystAgent"],
+            "total_findings": len(signal),
+            "operator_summary": (
+                f"Onionsearch returned {len(signal)} dark web results for {target}."
+            ),
+        }
+
     def execute(
         self,
         target: str,

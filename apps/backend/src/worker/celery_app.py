@@ -23,8 +23,83 @@ celery_app.conf.update(
     result_serializer="json",
     task_acks_late=True,
     worker_prefetch_multiplier=1,
+    task_create_missing_queues=True,
     broker_transport_options={"visibility_timeout": 3600},
 )
+
+
+# ---------------------------------------------------------------------------
+# Result encryption helpers (A.8)
+# ---------------------------------------------------------------------------
+
+def _get_fernet():
+    """Return a Fernet instance keyed from K1_CELERY_RESULT_KEY or a deterministic dev fallback."""
+    import base64
+    import hashlib
+    from cryptography.fernet import Fernet
+
+    raw = os.getenv("K1_CELERY_RESULT_KEY", "").strip()
+    if raw:
+        return Fernet(raw.encode() if isinstance(raw, str) else raw)
+
+    logger.warning("K1_CELERY_RESULT_KEY not set — using insecure dev key; set in production")
+    seed = b"k1-celery-dev-result-key-v1"
+    key = base64.urlsafe_b64encode(hashlib.sha256(seed).digest())
+    return Fernet(key)
+
+
+def _encrypt_result(data: object) -> str:
+    """Encrypt a task result payload with Fernet; returns URL-safe base64 token string."""
+    import json as _json
+    return _get_fernet().encrypt(_json.dumps(data).encode()).decode()
+
+
+def _decrypt_result(token: "str | bytes") -> object:
+    """Decrypt a Fernet token (str or bytes) back to the original payload."""
+    import json as _json
+    if isinstance(token, str):
+        token = token.encode()
+    return _json.loads(_get_fernet().decrypt(token))
+
+
+# ---------------------------------------------------------------------------
+# PKI task signing configuration (A.8)
+# ---------------------------------------------------------------------------
+
+def _configure_pki_signing() -> None:
+    security_key = os.getenv("K1_CELERY_SECURITY_KEY", "").strip()
+    security_cert = os.getenv("K1_CELERY_SECURITY_CERT", "").strip()
+    security_cert_dir = os.getenv("K1_CELERY_SECURITY_CERT_DIR", "").strip()
+    legacy_secret = os.getenv("K1_CELERY_SECRET_KEY", "").strip()
+
+    if legacy_secret:
+        logger.warning(
+            "K1_CELERY_SECRET_KEY is set but Celery task signing requires PKI "
+            "(K1_CELERY_SECURITY_KEY + K1_CELERY_SECURITY_CERT or "
+            "K1_CELERY_SECURITY_CERT_DIR). Shared-secret signing is not supported."
+        )
+
+    if security_key and (security_cert or security_cert_dir):
+        try:
+            celery_app.conf.update(
+                task_serializer="auth",
+                accept_content=["auth"],
+                security_key=security_key,
+                security_certificate=security_cert or None,
+                security_cert_store=security_cert_dir or None,
+            )
+            logger.info("Celery task signing ENABLED via PKI")
+            return
+        except Exception as exc:
+            logger.warning("Failed to enable PKI task signing: %s", exc)
+
+    logger.warning(
+        "Celery task signing DISABLED — set K1_CELERY_SECURITY_KEY + "
+        "K1_CELERY_SECURITY_CERT (or K1_CELERY_SECURITY_CERT_DIR) to enable"
+    )
+
+
+_configure_pki_signing()
 
 
 K1_TASK_MAX_RETRIES = int(os.getenv("K1_TASK_MAX_RETRIES", "3"))

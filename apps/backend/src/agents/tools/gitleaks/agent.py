@@ -288,6 +288,78 @@ class GitleaksAgent(BaseToolAgent):
             findings=findings,
         )
 
+    def parse_output(self, raw_output: str, target: str) -> list[dict[str, Any]]:
+        result: list[dict[str, Any]] = []
+        if not raw_output.strip():
+            return result
+        try:
+            entries = json.loads(raw_output)
+            if not isinstance(entries, list):
+                entries = [entries]
+        except json.JSONDecodeError:
+            entries = []
+            for line in raw_output.splitlines():
+                token = line.strip()
+                if not token:
+                    continue
+                try:
+                    entries.append(json.loads(token))
+                except json.JSONDecodeError:
+                    entries.append({"raw": token})
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            vuln_type = self._derive_vuln_type(entry)
+            location = self._derive_location(entry)
+            if any(m in location.lower() for m in ["test", "fixture", "mock", "example"]):
+                continue
+            derived = {"vuln_type": vuln_type, "location": location}
+            result.append({
+                "type": "secret_exposure",
+                "value": f"{vuln_type}@{location}"[:500],
+                "target": target,
+                "severity": "critical",
+                "confidence": 0.9,
+                "source_tool": self.TOOL_NAME,
+                "raw_evidence": json.dumps(derived, ensure_ascii=True)[:1200],
+                "context": {"vuln_type": vuln_type, "location": location},
+                "recommended_next_tools": ["EvidenceAnalystAgent"],
+                "recommended_next_actions": ["rotate_credential", "investigate"],
+            })
+        return result
+
+    def filter_noise(
+        self, findings: list[dict[str, Any]]
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        signal: list[dict[str, Any]] = []
+        noise: list[dict[str, Any]] = []
+        known = self.load_memory()
+        for finding in findings:
+            value = str(finding.get("value", "")).lower()
+            ftype = str(finding.get("type", "secret_exposure")).lower()
+            tgt = str(finding.get("target", "")).lower()
+            if f"{tgt}|{ftype}|{value}" in known:
+                noise.append(finding)
+                continue
+            if str(finding.get("severity", "info")).lower() == "info":
+                noise.append(finding)
+                continue
+            signal.append(finding)
+        return signal, noise
+
+    def _generate_next_agent_instructions(
+        self,
+        signal: list[dict[str, Any]],
+        target: str,
+    ) -> dict[str, Any]:
+        return {
+            "next_agents": ["EvidenceAnalystAgent"],
+            "total_findings": len(signal),
+            "operator_summary": (
+                f"Gitleaks found {len(signal)} credential exposures in {target}."
+            ),
+        }
+
     def execute(
         self,
         target: str,

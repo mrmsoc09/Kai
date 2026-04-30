@@ -1,0 +1,182 @@
+---
+# LLM task routing — maps task types to preferred model tier.
+# Tiers: 0=local-ollama, 1=openrouter, 2=huggingface, 3=gemini-free, 4=anthropic/openai
+# Budget caps enforced by llm_budget_router.py
+
+task_routing:
+  # --- Tier 0 (local, free) — maximize usage ---
+  osint_parse:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Parse raw tool output into structured JSON"
+
+  tool_selection:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Choose which tool runs next in a phase"
+
+  log_summarization:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Summarize scan logs for human review"
+
+  classification:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Classify findings, severity, or vuln type"
+
+  scope_validation:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Validate target is in scope"
+
+  script_generation:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Write bash/python tool wrapper scripts"
+
+  cve_lookup:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Look up CVE details, CVSS scores, and severity ratings from structured data"
+
+  port_scan_analysis:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Parse and analyze port scan results, identify open services and versions"
+
+  dns_analysis:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Analyze DNS records for anomalies, misconfigurations, and zone transfer issues"
+
+  certificate_analysis:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Analyze TLS certificate details, expiry, SAN entries, and issuer anomalies"
+
+  credentials_analysis:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Analyze discovered credentials or tokens for type, entropy, and exposure risk"
+
+  subdomain_analysis:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Analyze subdomain enumeration results for takeover candidates and scope expansion"
+
+  web_tech_fingerprinting:
+    tier: 0
+    fallback: 1
+    tool_calling: false
+    description: "Identify web technologies, frameworks, and versions from HTTP responses"
+
+  # --- Tier 1 (OpenRouter cheap open-source) ---
+  mission_planning:
+    tier: 1
+    fallback: 3
+    tool_calling: true
+    preferred_model: "qwen/qwen3-235b-a22b"
+    description: "Multi-step mission strategy and phase ordering"
+
+  vuln_correlation:
+    tier: 1
+    fallback: 3
+    tool_calling: true
+    preferred_model: "deepseek/deepseek-r1"
+    description: "Correlate findings across phases into exploitable chains"
+
+  report_writing:
+    tier: 1
+    fallback: 3
+    tool_calling: false
+    preferred_model: "meta-llama/llama-3.3-70b-instruct"
+    description: "Write professional vulnerability reports"
+
+  exploit_validation:
+    tier: 1
+    fallback: 3
+    tool_calling: true
+    preferred_model: "deepseek/deepseek-r1"
+    description: "Hunter vs Skeptic exploit validation reasoning"
+
+  stakeholder_email:
+    tier: 1
+    fallback: 4
+    tool_calling: false
+    preferred_model: "moonshotai/kimi-k2"
+    description: "Draft stakeholder emails with payout advocacy"
+
+  chain_of_thought_analysis:
+    tier: 1
+    fallback: 3
+    tool_calling: true
+    preferred_model: "deepseek/deepseek-r1"
+    description: "Deep reasoning tasks requiring CoT"
+
+  ambiguous_task:
+    tier: 1
+    fallback: 3
+    tool_calling: true
+    preferred_model: "openrouter/auto"   # Let OpenRouter pick best model
+    description: "Unknown task type — use OpenRouter auto-router"
+
+  # --- Tier 2 (HuggingFace — specialized) ---
+  embedding:
+    tier: 2
+    fallback: 1
+    tool_calling: false
+    preferred_model: "BAAI/bge-m3"
+    description: "Generate vector embeddings for semantic search"
+
+  cve_classification:
+    tier: 2
+    fallback: 1
+    tool_calling: false
+    preferred_model: "jackaduma/SecRoBERTa"
+    description: "Classify CVEs by type, severity, exploitability"
+
+  code_patch_analysis:
+    tier: 2
+    fallback: 1
+    tool_calling: false
+    preferred_model: "microsoft/codebert-base"
+    description: "Analyze code diffs for vulnerability fixes"
+
+  # --- Tier 3 (Gemini free — large context / multimodal) ---
+  screenshot_analysis:
+    tier: 3
+    fallback: 4
+    tool_calling: false
+    description: "Analyze screenshots for exploit evidence (vision model)"
+
+  large_doc_summary:
+    tier: 3
+    fallback: 1
+    tool_calling: false
+    description: "Summarize large documents using 1M context window"
+
+  # --- Tier 4 (Anthropic/OpenAI — last resort, $25/mo hard cap) ---
+  final_report_review:
+    tier: 4
+    fallback: null
+    tool_calling: false
+    description: "Final quality review of complete report before submission"
+
+  novel_vuln_analysis:
+    tier: 4
+    fallback: 3
+    tool_calling: true
+    description: "Analysis of novel/zero-day vulnerabilities where all other tiers fail"

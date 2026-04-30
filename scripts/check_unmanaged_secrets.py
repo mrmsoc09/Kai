@@ -16,6 +16,17 @@ ALLOW_FILES = {
     # mailer reads SMTP credentials from env by design: prevents SSRF via
     # caller-injected credentials. See docstring in _send_via_smtp.
     Path("apps/backend/src/routers/mailer.py"),
+    # Vault bootstrap: these files MUST read VAULT_TOKEN from env to initialise
+    # the Vault client — you cannot use the secret manager before Vault is ready.
+    Path("apps/backend/src/main.py"),
+    Path("apps/backend/src/core/vault_auth.py"),
+    Path("apps/backend/src/core/vault_client.py"),
+    # Notification sink: reads Telegram bot token by design (same rationale as mailer).
+    Path("apps/backend/src/core/trilium/alerter.py"),
+    # Finance read-only mirrors: API keys are injected at construction or from env
+    # as a last-resort fallback; caller (Celery task) is responsible for Vault injection.
+    Path("apps/backend/src/executive/mirrors/kraken.py"),
+    Path("apps/backend/src/executive/mirrors/coinbase.py"),
 }
 
 SECRET_ENV_RE = re.compile(

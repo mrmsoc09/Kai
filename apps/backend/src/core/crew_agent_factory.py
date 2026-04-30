@@ -11,6 +11,7 @@ import logging
 import threading
 from typing import Any, Callable
 
+from apps.backend.src.agents.crew.surface_mapper_agent import SurfaceMapper
 from apps.backend.src.agents.crew.osint_intelligence_agent import OSINTIntelligenceAgent
 from apps.backend.src.agents.crew.dark_web_intel_agent import DarkWebIntelAgent
 from apps.backend.src.agents.crew.secret_scanner_agent import SecretScannerAgent
@@ -123,6 +124,13 @@ def instantiate_crew_agents() -> dict[str, Callable[[dict[str, Any]], dict[str, 
         dict mapping agent_id (node name) → callable for execution
     """
     agents: dict[str, Callable[[dict[str, Any]], dict[str, Any]]] = {}
+
+    try:
+        surface_agent = SurfaceMapper()
+        agents["SurfaceMapper"] = _wrap_async_execute(surface_agent, "SurfaceMapper")
+        logger.info("Instantiated SurfaceMapper")
+    except Exception as e:
+        logger.warning(f"Failed to instantiate SurfaceMapper: {e}")
 
     try:
         osint_agent = OSINTIntelligenceAgent()

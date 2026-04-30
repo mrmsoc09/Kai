@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import json
-import os
 from typing import Any
 
+from apps.backend.src.core.secret_manager import get_secret_manager
 from ..base_tool_agent import BaseToolAgent
 
 
@@ -18,7 +18,7 @@ class LeakIXAgent(BaseToolAgent):
     def build_command(
         self, target: str, options: dict[str, Any] | None = None
     ) -> list[str]:
-        api_key = os.environ.get("LEAKIX_API_KEY", "")
+        api_key = get_secret_manager().get_optional("LEAKIX_API_KEY") or ""
         return [
             "python3",
             "-c",
