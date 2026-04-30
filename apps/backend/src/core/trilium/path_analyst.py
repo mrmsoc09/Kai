@@ -136,9 +136,14 @@ class PathAnalyst:
         # High-Value Targets
         hvt_counter = 0
         for move in lateral_movements:
-            from_node = next((node_id for pid, node_id in pivot_nodes.items() if move["from"] in pivot[
-... [TRUNCATED] ...
-hvt_node_id}({move['to']})
+            from_node = next(
+                (node_id for pid, node_id in pivot_nodes.items()
+                 if move["from"] in pid),
+                "B"  # fallback to entry node
+            )
+            hvt_node_id = f"H{hvt_counter}"
+            hvt_counter += 1
+            graph_elements.append(f"    {hvt_node_id}({move['to']})")
             graph_elements.append(f"    {from_node} --> {hvt_node_id}")
 
         # Styling
@@ -147,8 +152,7 @@ hvt_node_id}({move['to']})
         graph_elements.append(f"classDef pivot fill:#a1a1aa,stroke:#71717a,stroke-width:2px,color:#fff;")
         graph_elements.append(f"classDef hvt fill:#fbbf24,stroke:#f59e0b,stroke-width:2px,color:#000;") # Gold
 
-        return "
-".join(graph_elements)
+        return "\n".join(graph_elements)
 
     def _calculate_bounty_multiplier(
         self, 
