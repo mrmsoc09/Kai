@@ -1,0 +1,17 @@
+
+## API Endpoints
+
+- `POST /scripts` - Create script
+- `GET /scripts` - List scripts with filters
+- `POST /scripts/{id}/execute` - Execute script
+- `POST /workflows/execute` - Execute workflow with dependencies
+- `POST /generate` - AI script generation
+- `POST /analyze/{id}` - AI security analysis
+
+## Security Features
+
+- Pattern-based dangerous code detection
+- Resource limits (memory, CPU, time)
+- Sandboxed execution environments
+- Input validation and sanitization
+- AI-generated code security review

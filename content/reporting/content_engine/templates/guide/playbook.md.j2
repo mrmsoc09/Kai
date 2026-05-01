@@ -1,0 +1,45 @@
+# OPERATIONAL PLAYBOOK
+## {{ metadata.title }}
+
+**Classification:** {{ metadata.classification.value }}  
+**Version:** {{ metadata.version }}  
+**Last Updated:** {{ metadata.updated_at | format_date("%Y-%m-%d") }}
+
+---
+
+## TRIGGER CONDITIONS
+
+This playbook is activated when:
+{% for condition in trigger_conditions %}
+- {{ condition }}
+{% endfor %}
+
+## ROLES AND RESPONSIBILITIES
+
+{% for role, responsibility in roles_responsibilities.items() %}
+### {{ role }}
+{{ responsibility }}
+
+{% endfor %}
+
+## PROCEDURES
+
+{% for step in steps %}
+### Step {{ step.number }}: {{ step.title }}
+{% if step.duration_minutes %}*Estimated time: {{ step.duration_minutes }} minutes*{% endif %}
+
+{{ step.description }}
+
+**Instructions:**
+{{ step.instructions }}
+
+{% if step.tools_required %}
+**Tools Required:**
+{% for tool in step.tools_required %}
+- {{ tool }}
+{% endfor %}
+{% endif %}
+
+{% if step.commands %}
+**Commands:**
+{% for cmd in step.commands %}

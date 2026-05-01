@@ -1,0 +1,49 @@
+
+Explanation:
+[Brief explanation of the code and security considerations]"""
+        
+        return prompt
+    
+    def _parse_response(self, content: str, language: ScriptLanguage) -> Tuple[str, str]:
+        """Extract code and explanation from AI response."""
+        # Extract code block
+        code_start = content.find("```")
+        if code_start == -1:
+            code_start = content.find("```code")
+        
+        code = ""
+        explanation = content
+        
+        if code_start != -1:
+            code_end = content.find("```", code_start + 3)
+            if code_end != -1:
+                code = content[code_start:code_end].strip()
+                # Remove language identifier
+                if code.startswith("```code"):
+                    code = code[7:].strip()
+                elif code.startswith("```"):
+                    first_line = code.split('\n')[0]
+                    if first_line.strip() != "```":
+                        code = code[len(first_line):].strip()
+                    else:
+                        code = code[3:].strip()
+                    if code.endswith("```"):
+                        code = code[:-3].strip()
+                
+                explanation = content[code_end + 3:].strip()
+        
+        # Clean up explanation
+        if explanation.startswith("Explanation:"):
+            explanation = explanation[12:].strip()
+        
+        return code, explanation
+    
+    async def analyze_script(self, script_content: str, language: ScriptLanguage) -> Dict:
+        """Analyze existing script for security and quality."""
+        prompt = f"""Analyze this {language.value} script for:
+1. Security vulnerabilities
+2. Code quality issues
+3. Performance bottlenecks
+4. Best practice violations
+
+Script:

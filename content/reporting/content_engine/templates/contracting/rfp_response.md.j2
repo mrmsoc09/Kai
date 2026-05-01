@@ -1,0 +1,63 @@
+# RESPONSE TO {{ metadata.solicitation_number }}
+## {{ metadata.title }}
+
+**Submitted by:** {{ metadata.author }}  
+**Date:** {{ metadata.created_at | format_date("%Y-%m-%d") }}  
+**Solicitation:** {{ metadata.solicitation_number }}  
+**Agency:** {{ metadata.agency }}{% if metadata.sub_agency %} / {{ metadata.sub_agency }}{% endif %}
+
+---
+
+## 1. EXECUTIVE SUMMARY
+
+{{ summary or "We are pleased to submit our proposal in response to " ~ metadata.solicitation_number ~ "." }}
+
+## 2. TECHNICAL APPROACH
+
+{{ content_body }}
+
+### 2.1 Understanding of Requirements
+
+{% for req in requirements %}
+- **{{ req }}**
+{% endfor %}
+
+### 2.2 Key Personnel
+
+{% for person in key_personnel %}
+- **{{ person.name }}** - {{ person.role }} ({{ person.qualifications }})
+{% endfor %}
+
+## 3. PAST PERFORMANCE
+
+{% for pp in past_performance_reqs %}
+{{ loop.index }}. {{ pp }}
+{% endfor %}
+
+## 4. DELIVERABLES
+
+{% for item in deliverables %}
+- {{ item }}
+{% endfor %}
+
+## 5. CONTRACT TERMS
+
+**Type:** {{ metadata.contract_type.value }}  
+**Period of Performance:** {{ period_of_performance or "TBD" }}  
+**Place of Performance:** {{ metadata.place_of_performance or "TBD" }}
+
+{% if metadata.naics_codes %}
+**NAICS Codes:** {{ metadata.naics_codes | join(", ") }}
+{% endif %}
+
+{% if clauses %}
+## 6. REPRESENTATIONS AND CERTIFICATIONS
+
+{% for clause in clauses %}
+- {{ clause }}
+{% endfor %}
+{% endif %}
+
+---
+
+*Submitted electronically via {{ metadata.custom_fields.get('submission_method', 'email') }}*

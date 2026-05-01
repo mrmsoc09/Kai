@@ -1,0 +1,56 @@
+{{ metadata.classification | classification_banner }}
+
+# INTELLIGENCE REPORT
+## {{ metadata.title }}
+
+**Report ID:** {{ id }}  
+**Date:** {{ metadata.report_date | format_date("%Y-%m-%d") }}  
+**Classification:** {{ metadata.classification.value }}  
+**Distribution:** {{ metadata.distribution }}  
+**Source Type:** {{ metadata.intel_type.value }}
+
+---
+
+### EXECUTIVE SUMMARY
+
+{{ summary or "No summary provided." }}
+
+### KEY FINDINGS
+
+{% for finding in key_findings %}
+{{ loop.index }}. {{ finding }}
+{% else %}
+* No key findings recorded.
+{% endfor %}
+
+### ASSESSMENT
+
+{{ assessment }}
+
+**Confidence Level:** {{ confidence_level }}
+
+### SOURCES
+
+{% for source in sources %}
+- **{{ source.name }}** (Reliability: {{ source.reliability }}/{{ source.credibility }})
+  {% if source.description %}- {{ source.description }}{% endif %}
+{% else %}
+* No sources listed.
+{% endfor %}
+
+### HANDLING INSTRUCTIONS
+
+{{ handling_instructions or "Standard handling procedures apply." }}
+
+{% if include_annexes and annexes %}
+### ANNEXES
+
+{% for annex in annexes %}
+#### Annex {{ loop.index }}: {{ annex.title }}
+
+{{ annex.content }}
+
+{% endfor %}
+{% endif %}
+
+{{ metadata.classification | classification_banner }}

@@ -1,41 +1,23 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { ProtectedRoute } from './components/ProtectedRoute';
-import { AppLayout } from './layouts/AppLayout';
-import { Artifacts } from './pages/Artifacts';
-import { Dashboard } from './pages/Dashboard';
-import { Governance } from './pages/Governance';
-import { IntelligenceCenter } from './pages/IntelligenceCenter';
-import { LangGraphBuilder } from './pages/LangGraphBuilder';
-import { Login } from './pages/Login';
-import { MissionControl } from './pages/MissionControl';
-import { Opportunities } from './pages/Opportunities';
-import { Reports } from './pages/Reports';
-import { Simulation } from './pages/Simulation';
-import { VaultKeys } from './pages/VaultKeys';
+import { Routes, Route } from 'react-router-dom'
+import { DashboardLayout } from './components/Layout/DashboardLayout'
+import { AgentControlPanel } from './features/Agents/AgentControlPanel'
+import { ScanDashboard } from './features/Scans/ScanDashboard'
+import { MindmapCanvas } from './features/Mindmap/MindmapCanvas'
+import { WordlistManager } from './features/Wordlists/WordlistManager'
+import { Overview } from './features/Overview/Overview'
 
 function App() {
   return (
-    <BrowserRouter>
+    <DashboardLayout>
       <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/vault-keys" element={<VaultKeys />} />
-            <Route path="/langgraph-builder" element={<LangGraphBuilder />} />
-            <Route path="/mission-control" element={<MissionControl />} />
-            <Route path="/intelligence-center" element={<IntelligenceCenter />} />
-            <Route path="/opportunities" element={<Opportunities />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/artifacts" element={<Artifacts />} />
-            <Route path="/governance" element={<Governance />} />
-            <Route path="/simulation" element={<Simulation />} />
-          </Route>
-        </Route>
+        <Route path="/" element={<Overview />} />
+        <Route path="/agents" element={<AgentControlPanel />} />
+        <Route path="/scans" element={<ScanDashboard />} />
+        <Route path="/mindmap" element={<MindmapCanvas />} />
+        <Route path="/wordlists" element={<WordlistManager />} />
       </Routes>
-    </BrowserRouter>
-  );
+    </DashboardLayout>
+  )
 }
 
-export default App;
+export default App

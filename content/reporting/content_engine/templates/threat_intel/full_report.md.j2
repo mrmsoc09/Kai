@@ -1,0 +1,60 @@
+{{ metadata.classification | classification_banner }}
+
+# THREAT INTELLIGENCE REPORT
+## {{ metadata.title }}
+
+**Report ID:** {{ id }}  
+**Threat Level:** {{ metadata.threat_level }}  
+**Date:** {{ metadata.created_at | format_date("%Y-%m-%d") }}  
+**Classification:** {{ metadata.classification.value }}
+
+---
+
+## EXECUTIVE SUMMARY
+
+{{ summary or "Threat intelligence summary pending." }}
+
+## THREAT ACTORS
+
+{% for actor in threat_actors %}
+### {{ actor.name }}
+{% if actor.aliases %}- **Aliases:** {{ actor.aliases | join(", ") }}{% endif %}
+{% if actor.sophistication %}- **Sophistication:** {{ actor.sophistication }}{% endif %}
+{% if actor.motivation %}- **Motivation:** {{ actor.motivation }}{% endif %}
+{% if actor.description %}- **Description:** {{ actor.description }}{% endif %}
+
+{% endfor %}
+
+{% if include_iocs %}
+## INDICATORS OF COMPROMISE (IOCs)
+
+| Indicator | Type | Confidence | First Seen | Context |
+|-----------|------|------------|------------|---------|
+{% for ioc in indicators %}
+| {{ ioc.value }} | {{ ioc.type.value }} | {{ ioc.confidence }}% | {{ ioc.first_seen | format_date("%Y-%m-%d") if ioc.first_seen else "N/A" }} | {{ ioc.context or "N/A" }} |
+{% endfor %}
+{% endif %}
+
+{% if include_ttps %}
+## TACTICS, TECHNIQUES, AND PROCEDURES
+
+{% for ttp in ttps %}
+### {{ ttp.mitre_id or "TBD" }}: {{ ttp.name }}
+{{ ttp.description }}
+
+**Tactics:** {{ ttp.tactics | join(", ") }}
+
+{% endfor %}
+{% endif %}
+
+## IMPACT ASSESSMENT
+
+{{ impact_assessment or "Assessment pending." }}
+
+## RECOMMENDED ACTIONS
+
+{% for action in recommended_actions %}
+{{ loop.index }}. {{ action }}
+{% endfor %}
+
+{{ metadata.classification | classification_banner }}

@@ -1,0 +1,40 @@
+
+## Architecture
+
+The system uses a three-phase pipeline:
+
+1. **Architect** (`architect.py`): Analyzes requirements using chain-of-thought reasoning to select primitives and design workflows
+2. **Scaffolder** (`scaffolder.py`): Generates project files, source code, and configuration
+3. **Builder** (`builder.py`): Manages dependencies and compiles to standalone binaries
+
+## Primitive Library
+
+### Scanners
+- `TCPScanner`: Multi-threaded TCP port scanning with banner grabbing
+- `UDPScanner`: UDP service discovery
+- `ServiceDetector`: Deep service fingerprinting
+
+### Exploits
+- `RemoteExploit`: Remote code execution framework with safety controls
+- `LocalExploit`: Local privilege escalation primitives
+- `WebExploit`: Web vulnerability exploitation (SQLi, XSS)
+
+### Parsers
+- `LogParser`: Multi-format log analysis (Apache, Syslog, SSH)
+- `NetworkPacketParser`: PCAP analysis
+- `JSONAnalyzer`: Structured data analysis
+
+## Safety and Ethics
+
+This tool includes several safety mechanisms:
+
+- **Target Validation**: Prevents accidental scanning of private/loopback addresses
+- **Rate Limiting**: Built-in throttling to prevent DoS
+- **Explicit Confirmation**: Requires confirmation for high-risk operations
+- **Audit Logging**: All operations are logged for review
+
+**Warning**: This tool is intended for authorized security testing and research only. Always ensure you have explicit permission before testing any systems you do not own.
+
+## License
+
+MIT License - See LICENSE file for details

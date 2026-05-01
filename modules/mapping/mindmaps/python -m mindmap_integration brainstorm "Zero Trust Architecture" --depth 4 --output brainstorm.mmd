@@ -1,0 +1,31 @@
+
+## Supported Formats
+
+### Input
+- **Codebases**: Python (AST), JavaScript, Java, Go, Rust (file structure)
+- **Security Scans**: SARIF 2.1.0, Generic JSON (OWASP Dependency Check style)
+
+### Output
+- **Mermaid.js**: Mindmaps, Flowcharts, Graphs
+- **PlantUML**: Mindmap syntax with styling
+- **Markdown**: Embedded Mermaid diagrams with metadata
+
+## Architecture
+
+The system consists of modular components:
+
+- **Parsers**: Extract structural information from code and scan results
+- **Generators**: Convert internal models to target visualization formats
+- **AI Engine**: Pattern recognition, architectural analysis, and creative expansion
+- **Core Mapper**: Orchestration and workflow management
+
+## Configuration
+
+Environment variables:
+- `MINDMAP_OUTPUT_DIR`: Default output directory (default: ./output)
+- `MINDMAP_DEFAULT_FORMAT`: Default output format (default: mermaid)
+- `MINDMAP_AI_ENHANCE`: Enable AI enhancement (default: true)
+- `BRAINSTORM_DEPTH`: Default brainstorming depth (default: 3)
+
+## Programmatic Usage
+

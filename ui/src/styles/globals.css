@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #0a0a0f;
+    --color-surface: #12121a;
+    --color-border: #252536;
+  }
+  
+  * {
+    @apply border-kai-700;
+  }
+  
+  body {
+    @apply bg-kai-950 text-gray-100 font-sans;
+  }
+  
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-kai-900;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-kai-600 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-kai-500;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-kai-900/80 backdrop-blur-md border border-kai-700 rounded-lg;
+  }
+  
+  .cyber-input {
+    @apply bg-kai-950 border border-kai-600 rounded px-3 py-2 text-sm 
+           focus:outline-none focus:border-kai-accent-cyan focus:ring-1 
+           focus:ring-kai-accent-cyan/50 transition-all;
+  }
+  
+  .cyber-button {
+    @apply px-4 py-2 bg-kai-800 hover:bg-kai-700 border border-kai-600 
+           rounded text-sm font-medium transition-all active:scale-95
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .cyber-button-primary {
+    @apply cyber-button bg-kai-accent-cyan/10 border-kai-accent-cyan/50 
+           text-kai-accent-cyan hover:bg-kai-accent-cyan/20;
+  }
+  
+  .status-dot {
+    @apply w-2 h-2 rounded-full;
+  }
+  
+  .status-active {
+    @apply bg-kai-accent-green animate-pulse;
+  }
+  
+  .status-idle {
+    @apply bg-kai-400;
+  }
+  
+  .status-error {
+    @apply bg-kai-accent-red;
+  }
+  
+  .status-warning {
+    @apply bg-kai-accent-yellow;
+  }
+}
+
+@layer utilities {
+  .text-glow {
+    text-shadow: 0 0 10px currentColor;
+  }
+}

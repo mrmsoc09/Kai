@@ -1,0 +1,49 @@
+{% endfor %}
+{% endif %}
+
+{% if step.warnings %}
+{% for warning in step.warnings %}
+⚠️ **WARNING:** {{ warning }}
+{% endfor %}
+{% endif %}
+
+{% if step.tips %}
+{% for tip in step.tips %}
+💡 **TIP:** {{ tip }}
+{% endfor %}
+{% endif %}
+
+{% if step.expected_outcome %}
+**Expected Outcome:** {{ step.expected_outcome }}
+{% endif %}
+
+{% if include_checklists %}
+- [ ] Step {{ step.number }} completed
+{% endif %}
+
+---
+{% endfor %}
+
+## ESCALATION PATHS
+
+{% for path in escalation_paths %}
+- **{{ path.condition }}:** Contact {{ path.contact }} via {{ path.method }}
+{% endfor %}
+
+{% if rollback_procedure %}
+## ROLLBACK PROCEDURE
+
+{{ rollback_procedure }}
+{% endif %}
+
+{% if success_metrics %}
+## SUCCESS METRICS
+
+{% for metric in success_metrics %}
+- {{ metric }}
+{% endfor %}
+{% endif %}
+
+---
+
+*End of Playbook*

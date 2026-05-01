@@ -1,0 +1,7 @@
+aiohttp>=3.8.0
+beautifulsoup4>=4.11.0
+lxml>=4.9.0
+tldextract>=3.4.0
+pydantic>=2.0.0
+rich>=13.0.0
+asyncio-throttle>=1.0.0
