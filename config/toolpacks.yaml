@@ -33,6 +33,35 @@ toolpacks:
         safety:
           requires_scope: true
           rate_limit_class: "medium"
+
+  ai_agents:
+    description: "Autonomous AI agents for deep vulnerability discovery and reasoning."
+    enabled: true
+    opsec_profile: "high"
+    allowed_methods:
+      - "autonomous_discovery"
+      - "chain_analysis"
+      - "deep_reasoning"
+    tools:
+      - id: "cai_autonomous_agent"
+        adapter_id: "cai_security_agent"
+        enabled: true
+        method: "autonomous_discovery"
+        evidence_type: "ai_analysis"
+        integration_mode: "python_module"
+        module_path: "tools.wrappers.cai_autonomous_agent"
+        wrapper_class: "CAIAutonomousAgent"
+        allowed_targets: ["url", "domain", "api"]
+        triggers:
+          - "complex_target"
+          - "spa_detected"
+          - "auth_detected"
+          - "api_surface_large"
+        safety:
+          requires_scope: true
+          rate_limit_class: "high"
+          requires_hil: true
+          max_execution_time: 600
       - id: "httpx"
         adapter_id: "httpx_probe"
         enabled: true
