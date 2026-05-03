@@ -132,8 +132,7 @@ class RalphFuzzerAgent:
     def _record_progress(self, message: str):
         """Records progress to a local file for persistence across reboots."""
         with open(self.progress_file, "a") as f:
-            f.write(f"{datetime.now(UTC).isoformat()} - {message}
-")
+            f.write(f"{datetime.now(UTC).isoformat()} - {message}\n")
 
     async def stop_fuzzing(self):
         """Stops the fuzzing loop."""

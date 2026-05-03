@@ -1,0 +1,19 @@
+
+## Architecture
+
+The system follows a pipeline architecture:
+
+1. **Scraping**: `IntelligentSpider` crawls target and extracts keywords
+2. **AI Expansion**: `KimiK25Logic` performs semantic expansion and contextual analysis
+3. **Permutation**: `PermutationEngine` generates variations using pattern library
+4. **Filtering**: `FilterChain` applies entropy, length, and pattern filters
+5. **Mutation**: `MutatorChain` applies final transformations
+
+## Module Structure
+
+- `core/`: Pipeline and engine orchestration
+- `scrapers/`: Web scraping and spider logic
+- `ai/`: AI-driven expansion (Kimi k2.5 style)
+- `permutators/`: Pattern-based permutation engine
+- `filters/`: Output filtering system
+- `mutators/`: Final transformation mutators

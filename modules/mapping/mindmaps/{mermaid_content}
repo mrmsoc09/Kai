@@ -1,0 +1,7 @@
+
+## Metadata
+- Generated: {mindmap.metadata.get('timestamp', 'Unknown')}
+- Nodes: {len(mindmap.nodes)}
+- Edges: {len(mindmap.edges)}
+"""
+        return md

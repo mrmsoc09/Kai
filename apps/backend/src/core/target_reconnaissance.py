@@ -20,8 +20,7 @@ class TechStackFingerprint:
     """Detected technology stack for a target."""
 
     target: str
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).iso
-format())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
     # Web servers
     web_servers: Set[str] = field(default_factory=set)

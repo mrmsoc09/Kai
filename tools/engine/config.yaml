@@ -1,0 +1,43 @@
+# Forge Engine Configuration
+# Global settings for the Custom Script and Tool Creation Engine
+
+engine:
+  name: "Forge Engine"
+  version: "1.0.0"
+  max_threads: 100
+  default_timeout: 30
+  
+# Security and safety settings
+security:
+  # Prevent generation of tools targeting private IPs without explicit flag
+  allow_private_targets: false
+  # Require confirmation for high-risk primitives (exploits)
+  confirm_exploits: true
+  # Maximum scan rate (packets/requests per second)
+  rate_limit: 100
+  
+# Build configuration
+build:
+  pyinstaller_version: ">=5.0"
+  python_version: ">=3.8"
+  default_compression: true
+  strip_binaries: true
+  
+# Primitive library paths
+library:
+  primitives_path: "./primitives"
+  templates_path: "./templates"
+  custom_primitives: []
+  
+# Output settings
+output:
+  default_directory: "./forged_tools"
+  create_git_repo: false
+  include_source: true
+  include_tests: true
+  
+# Logging
+logging:
+  level: "INFO"
+  file: "forge_engine.log"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"

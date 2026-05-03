@@ -1,0 +1,193 @@
+{# Jinja2 Template for Nuclei HTTP-based vulnerability detection #}
+{# Architecture: Declarative YAML generation with conditional blocks #}
+
+id: {{ metadata.id }}
+
+info:
+  name: "{{ metadata.name }}"
+  author: {{ metadata.author }}
+  severity: {{ metadata.severity }}
+  description: |
+    {{ metadata.description | indent(width=4) }}
+  {%- if metadata.tags %}
+  tags: {{ metadata.tags | join(', ') }}
+  {%- endif %}
+  {%- if metadata.reference %}
+  reference:
+    {%- for ref in metadata.reference %}
+    - {{ ref }}
+    {%- endfor %}
+  {%- endif %}
+  {%- if metadata.classification %}
+  classification:
+    {%- if metadata.classification.cve_id %}
+    cve-id: {{ metadata.classification.cve_id }}
+    {%- endif %}
+    {%- if metadata.classification.cwe_id %}
+    cwe-id: {{ metadata.classification.cwe_id }}
+    {%- endif %}
+    {%- if metadata.classification.cvss_metrics %}
+    cvss-metrics: {{ metadata.classification.cvss_metrics }}
+    {%- endif %}
+    {%- if metadata.classification.cvss_score %}
+    cvss-score: {{ metadata.classification.cvss_score }}
+    {%- endif %}
+  {%- endif %}
+  {%- if metadata.metadata %}
+  metadata:
+    {%- for key, value in metadata.metadata.items() %}
+    {{ key }}: {{ value }}
+    {%- endfor %}
+  {%- endif %}
+
+{%- if template_type == "http" %}
+
+http:
+  - method: {{ request.method }}
+    path:
+      {%- for p in request.path %}
+      - "{{ p }}"
+      {%- endfor %}
+    {%- if request.headers %}
+    headers:
+      {%- for header, value in request.headers.items() %}
+      {{ header }}: {{ value }}
+      {%- endfor %}
+    {%- endif %}
+    {%- if request.body %}
+    body: |
+      {{ request.body | indent(width=6) }}
+    {%- endif %}
+    {%- if request.redirects is defined %}
+    redirects: {{ request.redirects | lower }}
+    {%- endif %}
+    {%- if request.max_redirects %}
+    max-redirects: {{ request.max_redirects }}
+    {%- endif %}
+    
+    {%- if matchers %}
+    matchers-condition: {{ request.matchers_condition | default('or') }}
+    matchers:
+      {%- for matcher in matchers %}
+      - type: {{ matcher.type }}
+        {%- if matcher.part %}
+        part: {{ matcher.part }}
+        {%- endif %}
+        {%- if matcher.words %}
+        words:
+          {%- for word in matcher.words %}
+          - "{{ word }}"
+          {%- endfor %}
+        {%- endif %}
+        {%- if matcher.regex %}
+        regex:
+          {%- for rx in matcher.regex %}
+          - "{{ rx | regex_escape }}"
+          {%- endfor %}
+        {%- endif %}
+        {%- if matcher.status %}
+        status:
+          {%- for s in matcher.status %}
+          - {{ s }}
+          {%- endfor %}
+        {%- endif %}
+        {%- if matcher.binary %}
+        binary:
+          {%- for b in matcher.binary %}
+          - "{{ b }}"
+          {%- endfor %}
+        {%- endif %}
+        {%- if matcher.dsl %}
+        dsl:
+          {%- for d in matcher.dsl %}
+          - "{{ d }}"
+          {%- endfor %}
+        {%- endif %}
+        {%- if matcher.condition %}
+        condition: {{ matcher.condition }}
+        {%- endif %}
+        {%- if matcher.negative %}
+        negative: true
+        {%- endif %}
+      {%- endfor %}
+    {%- endif %}
+    
+    {%- if extractors %}
+    extractors:
+      {%- for extractor in extractors %}
+      - type: {{ extractor.type }}
+        {%- if extractor.name %}
+        name: {{ extractor.name }}
+        {%- endif %}
+        {%- if extractor.part %}
+        part: {{ extractor.part }}
+        {%- endif %}
+        {%- if extractor.regex %}
+        regex:
+          {%- for rx in extractor.regex %}
+          - "{{ rx | regex_escape }}"
+          {%- endfor %}
+        {%- endif %}
+        {%- if extractor.json %}
+        json:
+          {%- for j in extractor.json %}
+          - "{{ j }}"
+          {%- endfor %}
+        {%- endif %}
+        {%- if extractor.kval %}
+        kval:
+          {%- for k in extractor.kval %}
+          - {{ k }}
+          {%- endfor %}
+        {%- endif %}
+        {%- if extractor.xpath %}
+        xpath:
+          {%- for x in extractor.xpath %}
+          - "{{ x }}"
+          {%- endfor %}
+        {%- endif %}
+        {%- if extractor.group %}
+        group: {{ extractor.group }}
+        {%- endif %}
+      {%- endfor %}
+    {%- endif %}
+    
+    {%- if payloads %}
+    payloads:
+      {%- for key, values in payloads.items() %}
+      {{ key }}:
+        {%- for v in values %}
+        - "{{ v }}"
+        {%- endfor %}
+      {%- endfor %}
+    {%- endif %}
+    
+    {%- if stop_at_first_match %}
+    stop-at-first-match: true
+    {%- endif %}
+    {%- if req_condition %}
+    req-condition: true
+    {%- endif %}
+
+{%- elif template_type == "network" %}
+
+network:
+  - inputs:
+      - data: |
+          {{ request.body | indent(width=10) | default('') }}
+    host:
+      - "{{ request.host | default('{{Hostname}}') }}"
+    {%- if matchers %}
+    matchers:
+      {%- for matcher in matchers %}
+      - type: {{ matcher.type }}
+        {%- if matcher.regex %}
+        regex:
+          {%- for rx in matcher.regex %}
+          - "{{ rx | regex_escape }}"
+          {%- endfor %}
+        {%- endif %}
+      {%- endfor %}
+    {%- endif %}
+
+{%- endif %}

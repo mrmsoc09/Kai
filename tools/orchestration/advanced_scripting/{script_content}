@@ -1,0 +1,49 @@
+
+Provide a JSON response with:
+{{
+    "security_score": 1-10,
+    "quality_score": 1-10,
+    "issues": [
+        {{"severity": "high|medium|low", "description": "...", "line": number}}
+    ],
+    "recommendations": ["..."]
+}}"""
+        
+        async with aiohttp.ClientSession() as session:
+            headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            
+            payload = {
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": "You are a code reviewer. Respond only with valid JSON."},
+                    {"role": "user", "content": prompt}
+                ],
+                "temperature": 0.1,
+                "max_tokens": 2000
+            }
+            
+            async with session.post(self.endpoint, headers=headers, json=payload) as response:
+                data = await response.json()
+                content = data["choices"][0]["message"]["content"]
+                
+                # Try to parse JSON
+                try:
+                    # Find JSON block
+                    json_start = content.find("{")
+                    json_end = content.rfind("}") + 1
+                    if json_start != -1 and json_end > json_start:
+                        analysis = json.loads(content[json_start:json_end])
+                    else:
+                        analysis = json.loads(content)
+                    return analysis
+                except json.JSONDecodeError:
+                    return {
+                        "security_score": 0,
+                        "quality_score": 0,
+                        "issues": [{"severity": "high", "description": "Failed to parse analysis", "line": 0}],
+                        "recommendations": ["Manual review required"],
+                        "raw_response": content
+                    }

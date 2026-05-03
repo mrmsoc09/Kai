@@ -1,0 +1,138 @@
+# BBP Modes Configuration
+# Defines scan profiles for Public BBP, Private Contracts, and Enterprise Audits
+
+modes:
+  public_bbp:
+    description: "Public bug bounty programs - speed over thoroughness"
+    targets:
+      max_depth: 3
+      max_pages: 100
+      crawl_rate: "aggressive"
+    focus_categories:
+      - xss
+      - idor
+      - sqli
+      - ssrf
+      - info_disclosure
+      - authentication_bypass
+    scan_timeout: "2h"
+    parallel_targets: 5
+    tool_priority:
+      high: ["nmap", "ffuf", "katana", "trufflehog"]
+      medium: ["nikto", "dalfox"]
+      low: ["burp_community"]
+    auto_filter_duplicates: true
+    bounty_estimation: true
+    reporting_template: "hackerone_public"
+    reward_weights:
+      critical: 100
+      high: 50
+      medium: 20
+      low: 5
+      duplicate: 5  # Training data value
+
+  private_contract:
+    description: "Private contracts - thoroughness required"
+    targets:
+      max_depth: 10
+      max_pages: 0  # Unlimited
+      crawl_rate: "thorough"
+    focus_categories:
+      - all
+    scan_timeout: "8h"
+    parallel_targets: 1
+    tool_priority:
+      high: ["burp_pro", "pentagi", "cai", "masscan"]
+      medium: ["nmap", "ffuf", "katana"]
+      low: []
+    auto_filter_duplicates: false
+    bounty_estimation: false
+    reporting_template: "private_contract"
+    reward_weights:
+      critical: 500
+      high: 200
+      medium: 100
+      low: 50
+      duplicate: 20
+
+  enterprise_audit:
+    description: "Enterprise audit - comprehensive with compliance"
+    targets:
+      max_depth: 20
+      max_pages: 0
+      crawl_rate: "exhaustive"
+    focus_categories:
+      - all
+      - compliance
+      - business_logic
+    scan_timeout: "24h"
+    parallel_targets: 2
+    tool_priority:
+      high: ["burp_enterprise", "pentagi", "cai", "metasploit"]
+      medium: ["nmap", "masscan", "ffuf"]
+      low: []
+    auto_filter_duplicates: false
+    bounty_estimation: false
+    reporting_template: "enterprise_audit"
+    reward_weights:
+      critical: 1000
+      high: 500
+      medium: 200
+      low: 100
+      duplicate: 50
+
+# Burp Suite bAPP Configuration
+burp_bapps:
+  autorize:
+    enabled: true
+    priority: "critical"
+    mode: ["public_bbp", "private_contract", "enterprise_audit"]
+    config:
+      intercept_login: true
+      compare_responses: true
+      detect_missing_auth: true
+      detect_weak_auth: true
+    
+  turbo_intruder:
+    enabled: true
+    priority: "critical"
+    mode: ["public_bbp", "private_contract", "enterprise_audit"]
+    config:
+      race_condition_detection: true
+      concurrent_requests: 30
+      race_interval_ms: 100
+      
+  upload_scanner:
+    enabled: true
+    priority: "high"
+    mode: ["private_contract", "enterprise_audit"]
+    
+  backslash_powered_scanner:
+    enabled: false  # Enable when Pro license active
+    priority: "medium"
+    mode: ["enterprise_audit"]
+
+# LLM/AI Configuration per mode
+ai_config:
+  public_bbp:
+    model: "openrouter/openai/gpt-4o-mini"  # Cost effective
+    batch_size: 10
+    max_tokens_per_finding: 500
+    
+  private_contract:
+    model: "openrouter/openai/gpt-4o"
+    batch_size: 5
+    max_tokens_per_finding: 1000
+    
+  enterprise_audit:
+    model: "openrouter/openai/gpt-4o"
+    batch_size: 3
+    max_tokens_per_finding: 2000
+
+# Reward Multipliers (for ML training)
+reward_multipliers:
+  zero_day: 10.0        # First discovery ever
+  payout_10k_plus: 5.0  # $10K+ bounty
+  payout_50k_plus: 20.0 # $50K+ bounty
+  duplicate: 0.5        # Training value
+  tool_efficiency: 2.0  # Fast discovery

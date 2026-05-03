@@ -1,0 +1,31 @@
+# Nuclei Template Generator Configuration
+# Architecture: Modular pipeline with pluggable parsers and pattern matchers
+
+template_engine:
+  autoescape: true
+  trim_blocks: true
+  lstrip_blocks: true
+
+output:
+  directory: "./generated_templates"
+  validate_yaml: true
+  auto_format: true
+
+patterns:
+  load_builtin: true
+  custom_paths: []
+  
+cve:
+  api_endpoint: "https://services.nvd.nist.gov/rest/json/cves/2.0"
+  api_key: null
+  rate_limit: 6  # requests per 10 seconds (NVD rate limit)
+
+http:
+  default_severity: "high"
+  max_redirects: 3
+  timeout: 10
+
+validation:
+  strict_mode: true
+  require_matcher: true
+  require_description: true

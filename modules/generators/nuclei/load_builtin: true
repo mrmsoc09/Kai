@@ -1,0 +1,16 @@
+
+## Pattern Library
+
+Built-in patterns include:
+- SQL Injection (Error-based)
+- Cross-Site Scripting (XSS)
+- Local File Inclusion (LFI)
+- Remote Code Execution (RCE)
+- XML External Entity (XXE)
+- Server-Side Request Forgery (SSRF)
+- Information Disclosure
+
+## Extending
+
+Add custom patterns by modifying `src/nuclei_generator/patterns/common_patterns.py`:
+

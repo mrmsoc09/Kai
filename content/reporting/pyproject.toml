@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "content-generation-engine"
+version = "0.1.0"
+description = "Modular content generation engine for intelligence, contracting, and educational materials"
+requires-python = ">=3.9"
+dependencies = [
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+    "jinja2>=3.1.0",
+    "pyyaml>=6.0",
+    "click>=8.1.0",
+    "python-dateutil>=2.8.0",
+    "markdown>=3.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "black>=23.0.0",
+    "mypy>=1.0.0",
+]
+
+[project.scripts]
+cge = "content_engine.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["content_engine*"]

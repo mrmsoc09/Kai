@@ -1,0 +1,73 @@
+---
+title: "{{ metadata.title }}"
+{% if metadata.subtitle %}subtitle: "{{ metadata.subtitle }}"{% endif %}
+author: {{ metadata.author }}
+date: {{ metadata.publication_date | format_date("%Y-%m-%d") if metadata.publication_date else metadata.created_at | format_date("%Y-%m-%d") }}
+edition: {{ metadata.edition }}
+{% if metadata.isbn %}isbn: {{ metadata.isbn }}{% endif %}
+---
+
+# {{ metadata.title }}
+
+{% if metadata.subtitle %}## {{ metadata.subtitle }}{% endif %}
+
+**By {{ metadata.author }}**
+
+{% if metadata.cover_image %}
+![Cover]({{ metadata.cover_image }})
+{% endif %}
+
+---
+
+## Front Matter
+
+{% if front_matter.dedication %}
+### Dedication
+{{ front_matter.dedication }}
+{% endif %}
+
+{% if front_matter.foreword %}
+### Foreword
+{{ front_matter.foreword }}
+{% endif %}
+
+## Table of Contents
+
+{% for entry in table_of_contents %}
+{{ entry.number }}. {{ entry.title }}
+{% endfor %}
+
+---
+
+{% for chapter in chapters %}
+# Chapter {{ chapter.number }}: {{ chapter.title }}
+
+{% if chapter.summary %}*{{ chapter.summary }}*{% endif %}
+
+{{ chapter.content }}
+
+{% if chapter.references %}
+### References
+{% for ref in chapter.references %}
+- {{ ref.citation }}
+{% endfor %}
+{% endif %}
+
+---
+{% endfor %}
+
+## Back Matter
+
+{% if back_matter.appendix %}
+### Appendix
+{{ back_matter.appendix }}
+{% endif %}
+
+{% if back_matter.index %}
+### Index
+{{ back_matter.index }}
+{% endif %}
+
+---
+
+*Published {{ metadata.publication_date | format_date("%B %Y") if metadata.publication_date else metadata.created_at | format_date("%B %Y") }}*

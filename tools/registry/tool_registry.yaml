@@ -1,14 +1,17 @@
-version: "1.0"
-
-# Consolidated tool registry for KAISON AI (51 tools total)
-# Cleaned of duplicates 2026-04-04
-# All entries standardized to common schema
+version: "2.0"
+# Streamlined 35-Tool Registry for KaisonOne
+# Optimized for 70-80% valid finding rate with Phase 6 ML/RL
+# Date: 2026-05-01
+# Removed: 117 redundant tools for surgical precision
 
 tools:
-  # Wave 0 - Core Recon (7 tools)
+  # === TIER 1: CORE RECONNAISSANCE (17 tools) ===
+  # These tools run on EVERY scan
+  
+  # OSINT & Attack Surface (4 tools)
   - name: amass
     agent_class: AmassAgent
-    category: recon_asset_discovery
+    category: osint_asset_discovery
     execution_mode: native
     binary_path: amass
     install_verification_cmd: ["amass", "-version"]
@@ -16,2206 +19,462 @@ tools:
     output_schema: {"subdomains": "list[str]"}
     timeout_seconds: 900
     safety_classification: passive
-
+    tier: 1
+    
   - name: subfinder
     agent_class: SubfinderAgent
-    category: recon_asset_discovery
+    category: osint_asset_discovery
     execution_mode: native
     binary_path: subfinder
     install_verification_cmd: ["subfinder", "-version"]
     input_schema: {"target": "domain"}
-    output_schema: {"intel_registry": "list[json]"}
+    output_schema: {"subdomains": "list[str]"}
     timeout_seconds: 600
     safety_classification: passive
-    tags: ["RECON_PASSIVE", "passive_discovery", "one-agent-one-tool"]
-    dependencies: ["provider-config.yaml"]
-    api_keys_required: ["CHAOS_API_KEY", "GITHUB_TOKEN", "SHODAN_API_KEY", "TRILIUM_FREE_TIER_API_KEY"]
-
-  - name: dnsx
-    agent_class: DnsxAgent
-    category: recon_asset_discovery
+    tier: 1
+    api_keys_required: ["CHAOS_API_KEY", "GITHUB_TOKEN", "SHODAN_API_KEY"]
+    
+  - name: spiderfoot
+    agent_class: SpiderFootAgent
+    category: osint_intelligence
     execution_mode: native
-    binary_path: dnsx
-    install_verification_cmd: ["dnsx", "-version"]
-    input_schema: {"target": "host_or_domain"}
-    output_schema: {"records": "list[json]"}
-    timeout_seconds: 180
-    safety_classification: passive
-
-  - name: gau
-    agent_class: GauAgent
-    category: recon_asset_discovery
-    execution_mode: fixture_stub
-    binary_path: gau
-    install_verification_cmd: ["gau", "--version"]
+    binary_path: spiderfoot
+    install_verification_cmd: ["spiderfoot", "-h"]
     input_schema: {"target": "domain"}
-    output_schema: {"web_discovery_registry": "list[WebDiscoveryRegistry]"}
-    timeout_seconds: 900
+    output_schema: {"intelligence": "dict"}
+    timeout_seconds: 1800
     safety_classification: passive
-    tags: ["ARCHIVE_URL_MINING", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: waybackurls
-    agent_class: WaybackurlsAgent
-    category: recon_asset_discovery
+    tier: 1
+    
+  - name: theharvester
+    agent_class: TheHarvesterAgent
+    category: osint_email_discovery
     execution_mode: native
-    binary_path: waybackurls
-    install_verification_cmd: ["waybackurls", "-h"]
+    binary_path: theHarvester
+    install_verification_cmd: ["theHarvester", "-h"]
     input_schema: {"target": "domain"}
-    output_schema: {"urls": "list[str]"}
-    timeout_seconds: 180
+    output_schema: {"emails": "list[str]", "hosts": "list[str]"}
+    timeout_seconds: 600
     safety_classification: passive
-
-  - name: httpx_probe
-    agent_class: HttpxProbeAgent
-    category: http_live_host
+    tier: 1
+  
+  # Network Enumeration (4 tools)
+  - name: masscan
+    agent_class: MasscanAgent
+    category: network_port_scanning
     execution_mode: native
-    binary_path: httpx
-    install_verification_cmd: ["httpx", "-version"]
-    input_schema: {"target": "url_or_host_or_domain_list"}
-    output_schema: {"service_registry": "list[json]"}
-    timeout_seconds: 180
+    binary_path: masscan
+    install_verification_cmd: ["masscan", "--version"]
+    input_schema: {"target": "cidr_or_ip", "ports": "list[int]"}
+    output_schema: {"open_ports": "list[dict]"}
+    timeout_seconds: 600
     safety_classification: active
-    tags: ["SERVICE_ENUMERATION", "web_probing", "one-agent-one-tool"]
-    service_category: SERVICE_ENUMERATION
-    dependencies: ["vpn_or_socks5_tunnel"]
-
+    tier: 1
+    requires_root: true
+    
+  - name: nmap
+    agent_class: NmapAgent
+    category: network_enumeration
+    execution_mode: native
+    binary_path: nmap
+    install_verification_cmd: ["nmap", "--version"]
+    input_schema: {"target": "ip_or_host", "ports": "list[int]"}
+    output_schema: {"services": "list[dict]", "os_info": "dict"}
+    timeout_seconds: 900
+    safety_classification: active
+    tier: 1
+    
   - name: naabu
     agent_class: NaabuAgent
-    category: network_enumeration
+    category: network_port_scanning
     execution_mode: native
     binary_path: naabu
     install_verification_cmd: ["naabu", "-version"]
-    input_schema: {"target": "ip_or_fqdn_or_cidr_or_list"}
-    output_schema: {"port_registry": "list[json]"}
+    input_schema: {"target": "ip_or_fqdn"}
+    output_schema: {"open_ports": "list[dict]"}
     timeout_seconds: 240
     safety_classification: active
-    tags: ["NETWORK_ENUMERATION", "port_scanning", "one-agent-one-tool"]
-    service_category: NETWORK_ENUMERATION
-    dependencies: ["vpn_or_socks5_tunnel"]
-
-  # Wave 0 - Vulnerability Scanning (3 tools)
-  - name: nuclei_scan
-    agent_class: NucleiScanAgent
-    category: vulnerability_assessment
-    execution_mode: docker
-    binary_path: nuclei
-    container_image: projectdiscovery/nuclei:latest
-    install_verification_cmd: ["nuclei", "-version"]
-    input_schema: {"target": "url_or_host_or_list"}
-    output_schema: {"vulnerability_registry": "list[json]"}
-    timeout_seconds: 600
-    safety_classification: intrusive
-    tags: ["VULNERABILITY_ASSESSMENT", "template_scanning", "one-agent-one-tool"]
-    service_category: VULNERABILITY_ASSESSMENT
-    dependencies: ["sovereign_network_layer", "nuclei_templates_repo"]
-
-  - name: dalfox
-    agent_class: DalfoxAgent
-    category: vulnerability_scanning
-    execution_mode: fixture_stub
-    binary_path: dalfox
-    install_verification_cmd: ["dalfox", "version"]
-    input_schema: {"target": "url"}
-    output_schema: {"xss_registry": "list[XssRegistry]"}
-    timeout_seconds: 600
-    safety_classification: intrusive
-    tags: ["XSS_VALIDATION", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer", "arjun_parameter_context"]
-
-  - name: sqlmap
-    agent_class: SqlmapAgent
-    category: database_exploitation
-    execution_mode: native
-    binary_path: sqlmap
-    install_verification_cmd: ["sqlmap", "--version"]
-    input_schema: {"target": "url_or_candidate_list"}
-    output_schema: {"database_security_registry": "list[json]"}
-    timeout_seconds: 900
-    safety_classification: intrusive
-    tags: ["DATABASE_EXPLOITATION", "sqli_validation", "one-agent-one-tool"]
-    service_category: DATABASE_EXPLOITATION
-    dependencies: ["sovereign_network_layer", "sqlmap_session_store"]
-
-  # Wave 0 - Advanced Vulns (5 tools)
-  - name: ssrfmap
-    agent_class: SsrfmapAgent
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: ssrfmap
-    install_verification_cmd: ["ssrfmap", "-h"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 600
-    safety_classification: intrusive
-
-  - name: corsy
-    agent_class: CorsyAgent
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: corsy
-    install_verification_cmd: ["corsy", "-h"]
-    input_schema: {"target": "url"}
-    output_schema: {"web_policy_registry": "list[json]"}
-    timeout_seconds: 300
-    safety_classification: intrusive
-    tags: ["ACCESS_CONTROL_AUDIT", "cors", "one-agent-one-tool"]
-    service_category: ACCESS_CONTROL_AUDIT
-    dependencies: ["sovereign_network_layer", "httpx_probe_output"]
-
-  - name: crlfuzz
-    agent_class: CrlfuzzAgent
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: crlfuzz
-    install_verification_cmd: ["crlfuzz", "-h"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 300
-    safety_classification: intrusive
-
-  - name: jwt_tool
-    agent_class: JwtToolAgent
-    category: api_auth_testing
-    execution_mode: native
-    binary_path: jwt_tool
-    install_verification_cmd: ["jwt_tool", "-h"]
-    input_schema: {"target": "token"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 300
-    safety_classification: intrusive
-
-  - name: kiterunner
-    agent_class: KiterunnerAgent
-    category: endpoint_enumeration
-    execution_mode: native
-    binary_path: kr
-    install_verification_cmd: ["kr", "version"]
-    input_schema: {"target": "url_or_host_or_port_list"}
-    output_schema: {"endpoint_registry": "list[json]"}
-    timeout_seconds: 600
-    safety_classification: intrusive
-    tags: ["ENDPOINT_ENUMERATION", "api_discovery", "one-agent-one-tool"]
-    service_category: ENDPOINT_ENUMERATION
-    dependencies: ["sovereign_network_layer", "kiterunner_wordlists"]
-
-  # Wave 1 (10 tools)
-  - name: assetfinder
-    agent_class: AssetfinderAgent
-    category: recon_asset_discovery
-    execution_mode: native
-    binary_path: assetfinder
-    install_verification_cmd: ["assetfinder", "--help"]
-    input_schema: {"target": "domain"}
-    output_schema: {"discovery_registry": "list[json]"}
-    timeout_seconds: 180
-    safety_classification: passive
-    tags: ["PASSIVE_RECON", "subdomain_discovery", "one-agent-one-tool"]
-    service_category: PASSIVE_RECON
-    dependencies: ["sovereign_network_layer_proxy_config"]
-
-  - name: findomain
-    agent_class: FindomainAgent
-    category: recon_asset_discovery
-    execution_mode: native
-    binary_path: findomain
-    install_verification_cmd: ["findomain", "--help"]
-    input_schema: {"target": "domain"}
-    output_schema: {"discovery_registry": "list[json]"}
-    timeout_seconds: 180
-    safety_classification: passive
-    tags: ["SUBDOMAIN_ENUMERATION", "passive_active_bridge", "one-agent-one-tool"]
-    service_category: SUBDOMAIN_ENUMERATION
-    dependencies: ["secret_manager_env_injection", "sovereign_network_layer"]
-    api_keys_required: ["SPYSE_API_KEY", "SECURITYTRAILS_API_KEY", "VIRUSTOTAL_API_KEY"]
-
-  - name: chaos
-    agent_class: ChaosAgent
-    category: recon_asset_discovery
-    execution_mode: fixture_stub
-    binary_path: chaos
-    install_verification_cmd: ["chaos", "-version"]
-    input_schema: {"target": "domain"}
-    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
-    timeout_seconds: 180
-    safety_classification: passive
-    tags: ["PASSIVE_RECON", "osint_stub", "snl_guarded"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: github-subdomains
-    agent_class: GithubSubdomainsAgent
-    category: recon_asset_discovery
-    execution_mode: fixture_stub
-    binary_path: github-subdomains
-    install_verification_cmd: ["github-subdomains", "-h"]
-    input_schema: {"target": "domain"}
-    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
-    timeout_seconds: 300
-    safety_classification: passive
-    tags: ["PASSIVE_RECON", "osint_stub", "snl_guarded"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: nmap
-    agent_class: NmapAgent
-    category: network_service_scanning
-    execution_mode: fixture_stub
-    binary_path: nmap
-    install_verification_cmd: ["nmap", "--version"]
-    input_schema: {"target": "host_or_cidr"}
-    output_schema: {"port_service_registry": "list[PortServiceRegistry]"}
-    timeout_seconds: 900
-    safety_classification: active
-    tags: ["NETWORK_ENUMERATION", "service_fingerprinting", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: masscan
-    agent_class: MasscanAgent
-    category: network_service_scanning
-    execution_mode: fixture_stub
-    binary_path: masscan
-    install_verification_cmd: ["masscan", "--version"]
-    input_schema: {"target": "host_or_cidr"}
-    output_schema: {"port_service_registry": "list[PortServiceRegistry]"}
-    timeout_seconds: 360
-    safety_classification: intrusive
-    tags: ["NETWORK_ENUMERATION", "cidr_discovery_buffer", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: metasploit-framework
-    agent_class: MetasploitFrameworkAgent
-    category: vulnerability_scanning
-    execution_mode: fixture_stub
-    binary_path: msfconsole
-    install_verification_cmd: ["msfconsole", "-v"]
-    input_schema: {"target": "host_or_url"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 900
-    safety_classification: intrusive
-    tags: ["CHECK_ONLY", "LISTENER_MODE", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer", "msfrpcd"]
-
-  - name: wafw00f
-    agent_class: Wafw00fAgent
-    category: http_live_host
-    execution_mode: fixture_stub
-    binary_path: wafw00f
-    install_verification_cmd: ["wafw00f", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"target_registry": "list[TargetRegistry]"}
-    timeout_seconds: 180
-    safety_classification: active
-    tags: ["WAF_DETECTION", "pre_scan_gate", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: gowitness
-    agent_class: GoWitnessAgent
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: gowitness
-    install_verification_cmd: ["gowitness", "version"]
-    input_schema: {"target": "url_or_file"}
-    output_schema: {"screenshots": "list[json]"}
-    timeout_seconds: 600
-    safety_classification: active
-
-  - name: eyewitness
-    agent_class: EyewitnessAgent
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: eyewitness
-    install_verification_cmd: ["eyewitness", "--help"]
-    input_schema: {"target": "url_or_file"}
-    output_schema: {"screenshots": "list[json]"}
-    timeout_seconds: 600
-    safety_classification: active
-
-  - name: whatweb
-    agent_class: WhatwebAgent
-    category: http_live_host
-    execution_mode: fixture_stub
-    binary_path: whatweb
-    install_verification_cmd: ["whatweb", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"techstack_registry": "list[TechStackRegistry]"}
-    timeout_seconds: 300
-    safety_classification: active
-    tags: ["TECH_FINGERPRINTING", "stack_mapping", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  # Wave 2 (12 tools)
-  - name: feroxbuster
-    agent_class: FeroxbusterAgent
-    category: crawling_url_discovery
-    execution_mode: fixture_stub
-    binary_path: feroxbuster
-    install_verification_cmd: ["feroxbuster", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"crawl_registry": "list[CrawlRegistry]"}
-    timeout_seconds: 600
-    safety_classification: intrusive
-    tags: ["CONTENT_DISCOVERY", "recursive_busting", "async_stub"]
-    dependencies: ["scope_guardrails", "wordlist_manager"]
-
-  - name: katana
-    agent_class: KatanaAgent
-    category: crawling_url_discovery
-    execution_mode: fixture_stub
-    binary_path: katana
-    install_verification_cmd: ["katana", "-version"]
-    input_schema: {"target": "url"}
-    output_schema: {"crawl_registry": "list[CrawlRegistry]"}
-    timeout_seconds: 600
-    safety_classification: active
-    tags: ["CONTENT_DISCOVERY", "headless_crawl", "js_mapping", "async_stub"]
-    dependencies: ["scope_guardrails", "wordlist_manager"]
-
-  - name: paramspider
-    agent_class: ParamspiderAgent
-    category: crawling_url_discovery
-    execution_mode: fixture_stub
-    binary_path: paramspider
-    install_verification_cmd: ["paramspider", "--help"]
-    input_schema: {"target": "domain"}
-    output_schema: {"parameter_registry": "list[ParameterRegistry]"}
-    timeout_seconds: 300
-    safety_classification: passive
-    tags: ["PARAM_DISCOVERY", "dalfox_sqlmap_handoff", "async_stub"]
-    dependencies: ["scope_guardrails"]
-
-  - name: arjun
-    agent_class: ArjunAgent
-    category: crawling_url_discovery
-    execution_mode: fixture_stub
-    binary_path: arjun
-    install_verification_cmd: ["arjun", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"parameter_registry": "list[ParameterRegistry]"}
-    timeout_seconds: 300
-    safety_classification: active
-    tags: ["PARAM_DISCOVERY", "dalfox_ssrfmap_context", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: hakrawler
-    agent_class: HakrawlerAgent
-    category: crawling_url_discovery
-    execution_mode: fixture_stub
-    binary_path: hakrawler
-    install_verification_cmd: ["hakrawler", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"web_discovery_registry": "list[WebDiscoveryRegistry]"}
-    timeout_seconds: 300
-    safety_classification: active
-    tags: ["LIVE_CRAWL_DISCOVERY", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: ffuf
-    agent_class: FfufAgent
-    category: crawling_url_discovery
-    execution_mode: fixture_stub
-    binary_path: ffuf
-    install_verification_cmd: ["ffuf", "-V"]
-    input_schema: {"target": "url"}
-    output_schema: {"web_discovery_registry": "list[WebDiscoveryRegistry]"}
-    timeout_seconds: 600
-    safety_classification: intrusive
-    tags: ["CONTENT_DISCOVERY", "recursive_busting", "async_stub"]
-    dependencies: ["scope_guardrails", "wordlist_manager", "sovereign_network_layer"]
-
-  - name: gf
-    agent_class: GfAgent
-    category: crawling_url_discovery
-    execution_mode: native
-    binary_path: gf
-    install_verification_cmd: ["gf", "-h"]
-    input_schema: {"target": "file"}
-    output_schema: {"findings": "list[str]"}
-    timeout_seconds: 60
-    safety_classification: passive
-
-  - name: spiderfoot
-    agent_class: SpiderfootAgent
-    category: intelligence_osint
-    execution_mode: fixture_stub
-    binary_path: spiderfoot
-    install_verification_cmd: ["spiderfoot", "--help"]
-    input_schema: {"target": "domain_or_handle"}
-    output_schema: {"identity_registry": "list[IdentityRegistry]", "discovery_registry": "list[DiscoveryRegistry]"}
-    timeout_seconds: 600
-    safety_classification: passive
-    tags: ["INTEL_ORCHESTRATION", "recursive_osint", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer", "fixture_data"]
-
-  - name: sherlock
-    agent_class: SherlockAgent
-    category: intelligence_osint
-    execution_mode: fixture_stub
-    binary_path: sherlock
-    install_verification_cmd: ["sherlock", "--version"]
-    input_schema: {"target": "username"}
-    output_schema: {"identity_registry": "list[IdentityRegistry]"}
-    timeout_seconds: 300
-    safety_classification: passive
-    tags: ["IDENTITY_OSINT", "osint_stub", "snl_guarded"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: phoneinfoga
-    agent_class: PhoneinfogaAgent
-    category: intelligence_osint
-    execution_mode: native
-    binary_path: phoneinfoga
-    install_verification_cmd: ["phoneinfoga", "version"]
-    input_schema: {"target": "phone"}
-    output_schema: {"findings": "list[json]"}
-    timeout_seconds: 300
-    safety_classification: passive
-
-  - name: social-analyzer
-    agent_class: SocialAnalyzerAgent
-    category: intelligence_osint
-    execution_mode: fixture_stub
-    binary_path: social-analyzer
-    install_verification_cmd: ["social-analyzer", "--help"]
-    input_schema: {"target": "username"}
-    output_schema: {"identity_registry": "list[IdentityRegistry]"}
-    timeout_seconds: 600
-    safety_classification: passive
-    tags: ["IDENTITY_OSINT", "osint_stub", "snl_guarded"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: reconftw
-    agent_class: ReconftwAgent
-    category: recon_asset_discovery
-    execution_mode: fixture_stub
-    binary_path: reconftw.sh
-    install_verification_cmd: ["reconftw.sh", "-h"]
-    input_schema: {"target": "domain", "mode": "subdomains|web|deep|all"}
-    output_schema: {"discovery_registry": "list[DiscoveryRegistry]", "asset_inventory_registry": "list[AssetInventoryRegistry]"}
-    timeout_seconds: 1800
-    safety_classification: intrusive
-    service_category: RECON_ORCHESTRATION
-    tags: ["MACRO_SCOUT", "SELECTIVE_MODE", "PLAYBOOK_HANDSHAKE", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer", "reconftw_config", "playbook_library"]
-
-  # Wave 3 (14 tools)
-  - name: torbot
-    agent_class: TorbotAgent
-    category: dark_web_intelligence
-    execution_mode: fixture_stub
-    binary_path: torbot
-    install_verification_cmd: ["torbot", "--help"]
-    input_schema: {"target": "url_or_domain"}
-    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
-    timeout_seconds: 300
-    safety_classification: passive
-    tags: ["DARKNET_INTEL", "tor_proxy_required", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer", "tor_proxy"]
-
-  - name: onionsearch
-    agent_class: OnionsearchAgent
-    category: dark_web_intelligence
-    execution_mode: fixture_stub
-    binary_path: onionsearch
-    install_verification_cmd: ["onionsearch", "--help"]
-    input_schema: {"target": "url_or_domain"}
-    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
-    timeout_seconds: 180
-    safety_classification: passive
-    tags: ["DARKNET_INTEL", "engine_aggregation", "tor_proxy_required", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer", "tor_proxy"]
-
-  - name: ahmia-client
-    agent_class: AhmiaClientAgent
-    category: dark_web_intelligence
-    execution_mode: fixture_stub
-    binary_path: ahmia
-    install_verification_cmd: ["ahmia", "--help"]
-    input_schema: {"target": "url_or_domain"}
-    output_schema: {"discovery_registry": "list[DiscoveryRegistry]"}
-    timeout_seconds: 60
-    safety_classification: passive
-    tags: ["DARKNET_INTEL", "index_lookup", "tor_proxy_required", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer", "tor_proxy"]
-
-  - name: trufflehog
-    agent_class: TrufflehogAgent
-    category: secret_scanning
-    execution_mode: fixture_stub
-    binary_path: trufflehog
-    install_verification_cmd: ["trufflehog", "version"]
-    input_schema: {"target": "git_repo_url_or_local_path"}
-    output_schema: {"secret_leak_registry": "list[SecretLeakRegistry]"}
-    timeout_seconds: 600
-    safety_classification: passive
-    tags: ["SECRET_DETECTION", "masked_output", "v2_v3_compatible", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: gitleaks
-    agent_class: GitleaksAgent
-    category: secret_scanning
-    execution_mode: fixture_stub
-    binary_path: gitleaks
-    install_verification_cmd: ["gitleaks", "version"]
-    input_schema: {"target": "git_repo_url_or_path"}
-    output_schema: {"secret_leak_registry": "list[SecretLeakRegistry]"}
-    timeout_seconds: 300
-    safety_classification: passive
-    tags: ["SECRET_DETECTION", "masked_output", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: nikto
-    agent_class: NiktoAgent
-    category: vulnerability_scanning
-    execution_mode: fixture_stub
-    binary_path: nikto
-    install_verification_cmd: ["nikto", "-h"]
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"service_registry": "list[ServiceRegistry]"}
-    timeout_seconds: 300
-    safety_classification: active
-    tags: ["WEB_SERVER_AUDIT", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer", "httpx_probe.schemas.ServiceRegistry"]
-
-  - name: testssl
-    agent_class: TestsslAgent
-    category: vulnerability_scanning
-    execution_mode: native
-    binary_path: testssl.sh
-    install_verification_cmd: ["testssl.sh", "--version"]
-    input_schema: {"target": "url_https"}
-    output_schema: {"ssl_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: passive
-
-  - name: smuggler
-    agent_class: SmugglerAgent
-    category: vulnerability_scanning
-    execution_mode: fixture_stub
-    binary_path: smuggler
-    install_verification_cmd: ["smuggler", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"smuggling_variants": "list[json]"}
-    timeout_seconds: 300
-    safety_classification: active
-    tags: ["REQUEST_SMUGGLING_TEST", "snl_guarded", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: searchsploit
-    agent_class: SearchsploitAgent
-    category: vulnerability_scanning
-    execution_mode: fixture_stub
-    binary_path: searchsploit
-    install_verification_cmd: ["searchsploit", "--help"]
-    input_schema: {"target": "software_version"}
-    output_schema: {"cve_matches": "list[dict]"}
-    timeout_seconds: 30
-    safety_classification: passive
-    tags: ["POST_EXPLOIT_INTEL", "poc_lookup", "stub_only"]
-    dependencies: ["scope_guardrails", "sovereign_network_layer"]
-
-  - name: graphql-cop
-    agent_class: GraphqlCopAgent
-    category: api_security
-    execution_mode: native
-    binary_path: graphql-cop
-    install_verification_cmd: ["graphql-cop", "--help"]
-    input_schema: {"target": "graphql_endpoint"}
-    output_schema: {"test_results": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: intrusive
-
-  - name: clairvoyance
-    agent_class: ClairvoyanceAgent
-    category: api_security
-    execution_mode: native
-    binary_path: clairvoyance
-    install_verification_cmd: ["clairvoyance", "--help"]
-    input_schema: {"target": "graphql_endpoint"}
-    output_schema: {"recovered_schema": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: intrusive
-
-  - name: owasp-zap
-    agent_class: OwaspZapAgent
-    category: api_security
-    execution_mode: native
-    binary_path: zap-cli
-    install_verification_cmd: ["zap-cli", "--version"]
-    input_schema: {"target": "url"}
-    output_schema: {"vulnerabilities": "list[dict]"}
-    timeout_seconds: 1800
-    safety_classification: intrusive
-
-  - name: caido
-    agent_class: CaidoAgent
-    category: api_security
-    execution_mode: native
-    binary_path: caido
-    install_verification_cmd: ["caido", "--help"]
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: active
-
-  - name: faraday-community
-    agent_class: FaradaycommunityAgent
-    category: aggregation
-    execution_mode: integration_hook
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "any"}
-    output_schema: {"master_findings": "list[dict]"}
-    timeout_seconds: 60
-    safety_classification: passive
-
-  # Legacy name aliases (backward compatibility)
+    tier: 1
+    
   - name: httpx
-    agent_class: HttpxProbeAgent
-    category: http_live_host
+    agent_class: HttpxAgent
+    category: http_service_enumeration
     execution_mode: native
     binary_path: httpx
     install_verification_cmd: ["httpx", "-version"]
-    input_schema: {"target": "url_or_host_or_domain_list"}
-    output_schema: {"service_registry": "list[json]"}
-    timeout_seconds: 300
+    input_schema: {"target": "list[str]"}
+    output_schema: {"live_hosts": "list[dict]"}
+    timeout_seconds: 180
     safety_classification: active
-    tags: ["SERVICE_ENUMERATION", "web_probing", "alias"]
-    service_category: SERVICE_ENUMERATION
-
-  - name: nuclei
-    agent_class: NucleiScanAgent
-    category: vulnerability_assessment
-    execution_mode: docker
-    binary_path: nuclei
-    container_image: projectdiscovery/nuclei:latest
-    install_verification_cmd: ["nuclei", "-version"]
-    input_schema: {"target": "url_or_host_or_list"}
-    output_schema: {"vulnerability_registry": "list[json]"}
-    timeout_seconds: 1800
-    safety_classification: intrusive
-    tags: ["VULNERABILITY_ASSESSMENT", "template_scanning", "alias"]
-    service_category: VULNERABILITY_ASSESSMENT
-
-  - name: tlsx
-    agent_class: TlsxAgent
-    category: http_live_host
+    tier: 1
+  
+  # Web Discovery (3 tools)
+  - name: gau
+    agent_class: GauAgent
+    category: web_discovery
     execution_mode: native
-    binary_path: tlsx
-    install_verification_cmd: ["tlsx", "-version"]
-    input_schema: {"target": "host_or_domain"}
-    output_schema: {"records": "list[json]"}
+    binary_path: gau
+    install_verification_cmd: ["gau", "--version"]
+    input_schema: {"target": "domain"}
+    output_schema: {"urls": "list[str]"}
+    timeout_seconds: 900
+    safety_classification: passive
+    tier: 1
+    
+  - name: katana
+    agent_class: KatanaAgent
+    category: web_crawling
+    execution_mode: native
+    binary_path: katana
+    install_verification_cmd: ["katana", "-version"]
+    input_schema: {"target": "url"}
+    output_schema: {"endpoints": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: active
+    tier: 1
+    
+  - name: arjun
+    agent_class: ArjunAgent
+    category: parameter_discovery
+    execution_mode: native
+    binary_path: arjun
+    install_verification_cmd: ["arjun", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"parameters": "list[str]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+  
+  # Content Discovery (2 tools)
+  - name: ffuf
+    agent_class: FfufAgent
+    category: content_discovery
+    execution_mode: native
+    binary_path: ffuf
+    install_verification_cmd: ["ffuf", "-V"]
+    input_schema: {"target": "url"}
+    output_schema: {"discovered_paths": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+  
+  # Vulnerability Scanning - Primary (5 tools)
+  - name: nuclei
+    agent_class: NucleiAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: nuclei
+    install_verification_cmd: ["nuclei", "-version"]
+    input_schema: {"target": "url_or_host"}
+    output_schema: {"findings": "list[json]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 1
+    templates_required: true
+    
+  - name: dalfox
+    agent_class: DalfoxAgent
+    category: xss_scanning
+    execution_mode: native
+    binary_path: dalfox
+    install_verification_cmd: ["dalfox", "version"]
+    input_schema: {"target": "url"}
+    output_schema: {"xss_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+    
+  - name: sqlmap
+    agent_class: SQLMapAgent
+    category: sql_injection_scanning
+    execution_mode: native
+    binary_path: sqlmap
+    install_verification_cmd: ["sqlmap", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"sqli_findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: active
+    tier: 1
+    
+  - name: ghauri
+    agent_class: GhauriAgent
+    category: sql_injection_scanning
+    execution_mode: native
+    binary_path: ghauri
+    install_verification_cmd: ["ghauri", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"sqli_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+    redundancy_for: sqlmap
+    
+  - name: ssrfmap
+    agent_class: SSRFMapAgent
+    category: ssrf_scanning
+    execution_mode: native
+    binary_path: SSRFmap
+    install_verification_cmd: ["ssrfmap.py", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"ssrf_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+  
+  # XSS Secondary (1 tool)
+  - name: xsstrike
+    agent_class: XSStrikeAgent
+    category: xss_scanning
+    execution_mode: native
+    binary_path: xsstrike
+    install_verification_cmd: ["xsstrike", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"xss_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+    redundancy_for: dalfox
+
+  # === TIER 2: TARGETED ASSESSMENT (14 tools) ===
+  # Run conditionally based on asset type
+  
+  # API Testing (3 tools)
+  - name: kiterunner
+    agent_class: KiterunnerAgent
+    category: api_security_scanning
+    execution_mode: native
+    binary_path: kr
+    install_verification_cmd: ["kr", "version"]
+    input_schema: {"target": "url"}
+    output_schema: {"api_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["api_endpoint_detected"]
+    
+  - name: graphqlmap
+    agent_class: GraphQLMapAgent
+    category: graphql_scanning
+    execution_mode: native
+    binary_path: graphqlmap
+    install_verification_cmd: ["graphqlmap", "-h"]
+    input_schema: {"target": "graphql_endpoint"}
+    output_schema: {"graphql_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["graphql_detected"]
+    
+  - name: restler
+    agent_class: RESTlerAgent
+    category: api_fuzzing
+    execution_mode: native
+    binary_path: RESTler
+    install_verification_cmd: ["Restler", "--version"]
+    input_schema: {"target": "api_spec"}
+    output_schema: {"api_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["openapi_spec_detected"]
+  
+  # Cloud Security (3 tools)
+  - name: proler
+    agent_class: ProwlerAgent
+    category: cloud_security_scanning
+    execution_mode: native
+    binary_path: proler
+    install_verification_cmd: ["proler", "-v"]
+    input_schema: {"target": "cloud_account"}
+    output_schema: {"cloud_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["cloud_assets_detected"]
+    
+  - name: scoutsuite
+    agent_class: ScoutSuiteAgent
+    category: cloud_security_auditing
+    execution_mode: native
+    binary_path: scoutsuite
+    install_verification_cmd: ["scoutsuite", "--version"]
+    input_schema: {"target": "cloud_provider"}
+    output_schema: {"cloud_findings": "list[dict]"}
+    timeout_seconds: 7200
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["multi_cloud_environment"]
+    
+  - name: trivy
+    agent_class: TrivyAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: trivy
+    install_verification_cmd: ["trivy", "version"]
+    input_schema: {"target": "image_or_filesystem"}
+    output_schema: {"vulnerabilities": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["container_or_code_detected"]
+  
+  # Authentication (3 tools)
+  - name: jwt-tool
+    agent_class: JWTToolAgent
+    category: jwt_security_testing
+    execution_mode: native
+    binary_path: jwt_tool
+    install_verification_cmd: ["jwt_tool", "-h"]
+    input_schema: {"target": "jwt_token_or_endpoint"}
+    output_schema: {"jwt_findings": "list[dict]"}
     timeout_seconds: 300
     safety_classification: active
-
-  - name: postman_collection_export
-    agent_class: PostmanCollectionImportAgent
-    category: orchestration
-    execution_mode: integration_hook
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "path_to_collection_json"}
-    output_schema: {"collection_summary": "dict_or_none"}
-    timeout_seconds: 60
-    safety_classification: passive
-
-  # Integration Agents - Intelligence Chain
-  - name: thehive-handoff
-    display_name: TheHive Case Management
-    agent_class: TheHiveHandoffAgent
-    category: intelligence
-    execution_mode: integration_hook
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"finding": "dict", "scan_context": "dict"}
-    output_schema: {"case_id": "str", "observables_added": "int", "tasks_created": "int"}
-    timeout_seconds: 60
-    safety_classification: passive
-    enabled: true
-
-  # Wave 7 - Orphaned API Key Integrations (6 tools)
-  - name: fullhunt
-    display_name: FullHunt Attack Surface Intelligence
-    agent_class: FullHuntAgent
-    category: recon_passive_osint
-    execution_mode: api_integration
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain"}
-    output_schema: {"hosts": "list[dict]"}
-    timeout_seconds: 60
-    safety_classification: passive
-    phase: 1
-    enabled: true
-
-  - name: leakix
-    display_name: LeakIX Exposed Service Index
-    agent_class: LeakIXAgent
-    category: osint_breach_database
-    execution_mode: api_integration
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain"}
-    output_schema: {"services": "list[dict]"}
-    timeout_seconds: 60
-    safety_classification: passive
-    phase: 6
-    enabled: true
-
-  - name: dehashed
-    display_name: Dehashed Credential Breach Database
-    agent_class: DehashedAgent
-    category: osint_breach_database
-    execution_mode: api_integration
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain"}
-    output_schema: {"credentials": "list[dict]"}
-    timeout_seconds: 60
-    safety_classification: passive
-    phase: 4
-    enabled: true
-
-  - name: grayhatwarfare
-    display_name: Gray Hat Warfare Cloud Storage
-    agent_class: GrayHatWarfareAgent
-    category: osint_cloud_exposure
-    execution_mode: api_integration
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain"}
-    output_schema: {"buckets": "list[dict]"}
-    timeout_seconds: 60
-    safety_classification: passive
-    phase: 4
-    enabled: true
-
-  - name: nvd-nist
-    display_name: NVD/NIST CVE Data
-    agent_class: NvdNistAgent
-    category: vulnerability_cve_data
-    execution_mode: api_integration
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "software_version"}
-    output_schema: {"cves": "list[dict]"}
-    timeout_seconds: 60
-    safety_classification: passive
-    phase: 7
-    enabled: true
-
-  - name: ipinfo
-    display_name: IPInfo Intelligence
-    agent_class: IpInfoAgent
-    category: recon_fingerprinting
-    execution_mode: api_integration
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "ip_address"}
-    output_schema: {"intelligence": "dict"}
-    timeout_seconds: 30
-    safety_classification: passive
-    phase: 2
-    enabled: true
-
-  # Wave 8 - User Requested Tool Expansion (cataloged, disabled-by-default, wrapper/script pending)
-  # These entries are intentionally manual-only integration hooks until wrappers are implemented.
-
-  # OSINT & Attack Surface Mapping
-  - name: theharvester
-    display_name: theHarvester
-    agent_class: TheharvesterAgent
-    category: recon_asset_discovery
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain_or_org_or_email"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: lazyrecon
-    display_name: Lazy Recon
-    agent_class: LazyReconAgent
-    category: recon_asset_discovery
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain_or_org"}
-    output_schema: {"recon_summary": "dict"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: webanalyze
-    display_name: Webanalyze
-    agent_class: WebanalyzeAgent
-    category: technology_fingerprinting
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"technologies": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  # Vulnerability Scanning
-  - name: commix
-    display_name: Commix
-    agent_class: CommixAgent
-    category: vulnerability_scanning
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: tplmap
-    display_name: Tplmap
-    agent_class: TplmapAgent
-    category: vulnerability_scanning
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: corstest
-    display_name: CORStest
-    agent_class: CorstestAgent
-    category: vulnerability_scanning
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
-    output_schema: {"cors_findings": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  # Darkweb & Advanced OSINT
-  - name: onionscan
-    display_name: OnionScan
-    agent_class: OnionscanAgent
-    category: darknet_intelligence
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "onion_or_host"}
-    output_schema: {"darkweb_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: darksearch-api
-    display_name: DarkSearch API
-    agent_class: DarksearchApiAgent
-    category: darknet_intelligence
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "query_or_keyword"}
-    output_schema: {"darkweb_results": "list[dict]"}
-    timeout_seconds: 120
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["api_key_pending", "wrapper_pending"]
-    enabled_by_default: false
-
-  # API Security
-  - name: openapi-introspection
-    display_name: Swagger/OpenAPI Introspection
-    agent_class: OpenapiIntrospectionAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "openapi_spec_or_base_url"}
-    output_schema: {"api_surface": "dict"}
-    timeout_seconds: 240
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: restler
-    display_name: RESTler
-    agent_class: RestlerAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "openapi_spec"}
-    output_schema: {"api_findings": "list[dict]"}
-    timeout_seconds: 1800
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: graphqlmap
-    display_name: GraphQLmap
-    agent_class: GraphqlmapAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "graphql_endpoint"}
-    output_schema: {"api_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: inql
-    display_name: InQL
-    agent_class: InqlAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "graphql_endpoint"}
-    output_schema: {"api_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: grpcurl
-    display_name: gRPCurl
-    agent_class: GrpcurlAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "grpc_endpoint"}
-    output_schema: {"grpc_services": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: wscat
-    display_name: wscat
-    agent_class: WscatAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "ws_or_wss_endpoint"}
-    output_schema: {"ws_findings": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
+    tier: 2
+    triggers_on: ["jwt_detected"]
+    
   - name: authmatrix
-    display_name: AuthMatrix
-    agent_class: AuthmatrixAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_collection"}
-    output_schema: {"authz_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["community_burp_extension_or_replacement", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: autorize-alt
-    display_name: Autorize Replacement
-    agent_class: AutorizeAltAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_proxy_log"}
-    output_schema: {"authz_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "BURP_COMMUNITY_REPLACEMENT", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  # Cloud Infrastructure
-  - name: scoutsuite
-    display_name: ScoutSuite
-    agent_class: ScoutsuiteAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "cloud_account_or_project"}
-    output_schema: {"cloud_findings": "list[dict]"}
+    agent_class: AuthMatrixAgent
+    category: authorization_testing
+    execution_mode: native
+    binary_path: AuthMatrix
+    install_verification_cmd: ["AuthMatrix.py", "-h"]
+    input_schema: {"target": "web_application"}
+    output_schema: {"idor_findings": "list[dict]"}
     timeout_seconds: 1800
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["cloud_credentials", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: prowler
-    display_name: Prowler
-    agent_class: ProwlerAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "cloud_account_or_project"}
-    output_schema: {"cloud_findings": "list[dict]"}
-    timeout_seconds: 1800
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["cloud_credentials", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: cloudsploit
-    display_name: CloudSploit
-    agent_class: CloudsploitAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "cloud_account_or_project"}
-    output_schema: {"cloud_findings": "list[dict]"}
-    timeout_seconds: 1200
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["cloud_credentials", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: checkov
-    display_name: Checkov
-    agent_class: CheckovAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "repo_or_iac_path"}
-    output_schema: {"iac_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: tfsec
-    display_name: tfsec
-    agent_class: TfsecAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "terraform_path"}
-    output_schema: {"iac_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: trivy
-    display_name: Trivy
-    agent_class: TrivyAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "image_or_fs_or_repo"}
-    output_schema: {"security_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: grype
-    display_name: Grype
-    agent_class: GrypeAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "image_or_sbom"}
-    output_schema: {"security_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: dockle
-    display_name: Dockle
-    agent_class: DockleAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "container_image"}
-    output_schema: {"hardening_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: kube-bench
-    display_name: kube-bench
-    agent_class: KubeBenchAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "kubernetes_cluster"}
-    output_schema: {"k8s_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["kube_context", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: kube-hunter
-    display_name: kube-hunter
-    agent_class: KubeHunterAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "kubernetes_cluster"}
-    output_schema: {"k8s_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["kube_context", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: trivy-k8s
-    display_name: Trivy K8s
-    agent_class: TrivyK8sAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "kubernetes_cluster"}
-    output_schema: {"k8s_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["kube_context", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: s3scanner
-    display_name: S3Scanner
-    agent_class: S3scannerAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain_or_keyword"}
-    output_schema: {"bucket_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: cloudmapper
-    display_name: CloudMapper
-    agent_class: CloudmapperAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "cloud_account_or_project"}
-    output_schema: {"cloud_graph": "dict"}
-    timeout_seconds: 1800
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["cloud_credentials", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: githound
-    display_name: GitHound
-    agent_class: GithoundAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "github_org_or_repo"}
-    output_schema: {"secret_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["github_token", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: gitrob
-    display_name: Gitrob
-    agent_class: GitrobAgent
-    category: cloud_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "github_org_or_repo"}
-    output_schema: {"secret_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["github_token", "wrapper_pending"]
-    enabled_by_default: false
-
-  # Authentication & Session Management
-  - name: oauth-scan
-    display_name: OAuth Scan
-    agent_class: OauthScanAgent
-    category: auth_session_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_domain"}
-    output_schema: {"auth_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: oidc-scan
-    display_name: OIDC Scan
-    agent_class: OidcScanAgent
-    category: auth_session_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_domain"}
-    output_schema: {"auth_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: mfa-sweep
-    display_name: MFA Sweep
-    agent_class: MfaSweepAgent
-    category: auth_session_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_domain"}
-    output_schema: {"auth_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
+    safety_classification: active
+    tier: 2
+    triggers_on: ["role_based_access_detected"]
+    
   - name: hydra
-    display_name: Hydra
     agent_class: HydraAgent
-    category: auth_session_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_service"}
-    output_schema: {"auth_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: crackmapexec
-    display_name: CrackMapExec
-    agent_class: CrackmapexecAgent
-    category: auth_session_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_subnet"}
-    output_schema: {"auth_findings": "list[dict]"}
-    timeout_seconds: 1200
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
-  # Business & Logic
+    category: brute_force_testing
+    execution_mode: native
+    binary_path: hydra
+    install_verification_cmd: ["hydra", "-h"]
+    input_schema: {"target": "login_service"}
+    output_schema: {"brute_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["brute_force_authorized_in_scope"]
+  
+  # Secrets Detection (2 tools)
+  - name: trufflehog
+    agent_class: TruffleHogAgent
+    category: secrets_scanning
+    execution_mode: native
+    binary_path: trufflehog
+    install_verification_cmd: ["trufflehog", "version"]
+    input_schema: {"target": "repo_or_filesystem"}
+    output_schema: {"secrets": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["git_repository_detected"]
+    
+  - name: gitleaks
+    agent_class: GitLeaksAgent
+    category: secrets_scanning
+    execution_mode: native
+    binary_path: gitleaks
+    install_verification_cmd: ["gitleaks", "version"]
+    input_schema: {"target": "git_repo"}
+    output_schema: {"secrets": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    redundancy_for: trufflehog
+    triggers_on: ["git_repository_detected"]
+  
+  # Business Logic (2 tools)
   - name: racetheweb
-    display_name: RaceTheWeb
-    agent_class: RacethewebAgent
-    category: business_logic_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
-    output_schema: {"logic_findings": "list[dict]"}
-    timeout_seconds: 1200
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: turbo-intruder-alt
-    display_name: Turbo Intruder Alternative
-    agent_class: TurboIntruderAltAgent
-    category: business_logic_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_request_template"}
-    output_schema: {"logic_findings": "list[dict]"}
-    timeout_seconds: 1200
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "BURP_COMMUNITY_REPLACEMENT", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: rate-limit-tester
-    display_name: Rate Limit Tester
-    agent_class: RateLimitTesterAgent
-    category: business_logic_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"logic_findings": "list[dict]"}
+    agent_class: RaceTheWebAgent
+    category: race_condition_testing
+    execution_mode: native
+    binary_path: racetheweb
+    install_verification_cmd: ["racetheweb", "-h"]
+    input_schema: {"target": "web_endpoint"}
+    output_schema: {"race_findings": "list[dict]"}
     timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: upload-scan-logic
-    display_name: Upload Logic Scanner
-    agent_class: UploadScanLogicAgent
-    category: business_logic_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_upload_endpoint"}
-    output_schema: {"logic_findings": "list[dict]"}
+    safety_classification: active
+    tier: 2
+    triggers_on: ["state_changing_endpoint_detected"]
+    
+  - name: fuxploider
+    agent_class: FuxploiderAgent
+    category: file_upload_testing
+    execution_mode: native
+    binary_path: fuxploider
+    install_verification_cmd: ["fuxploider.py", "-h"]
+    input_schema: {"target": "upload_endpoint"}
+    output_schema: {"upload_findings": "list[dict]"}
     timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
+    safety_classification: active
+    tier: 2
+    triggers_on: ["file_upload_endpoint_detected"]
 
-  - name: payload-generator-verifier
-    display_name: Payload Generation + Verification
-    agent_class: PayloadGeneratorVerifierAgent
-    category: business_logic_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"payload_results": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: gopherus
-    display_name: Gopherus
-    agent_class: GopherusAgent
-    category: business_logic_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "service_type"}
-    output_schema: {"payloads": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  # Client-Side & DOM
+  # === TIER 3: SPECIALIZED VALIDATION (4 tools) ===
+  # Manual trigger or high-value targets
+  
   - name: domdig
-    display_name: DOMDig
-    agent_class: DomdigAgent
-    category: client_side_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
+    agent_class: DOMDigAgent
+    category: client_side_testing
+    execution_mode: native
+    binary_path: domdig
+    install_verification_cmd: ["domdig", "-h"]
+    input_schema: {"target": "web_application"}
     output_schema: {"dom_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: postmessage-tracker
-    display_name: PostMessage Tracker
-    agent_class: PostmessageTrackerAgent
-    category: client_side_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
-    output_schema: {"dom_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: dominvader-community
-    display_name: Burp Community DOM Invader Replacement
-    agent_class: DominvaderCommunityAgent
-    category: client_side_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
-    output_schema: {"dom_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "BURP_COMMUNITY_REPLACEMENT", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
+    timeout_seconds: 1800
+    safety_classification: active
+    tier: 3
+    
   - name: csp-evaluator
-    display_name: CSP Evaluator
-    agent_class: CspEvaluatorAgent
-    category: client_side_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_header"}
-    output_schema: {"csp_findings": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: google-csp-tester
-    display_name: Google CSP Tester
-    agent_class: GoogleCspTesterAgent
-    category: client_side_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_header"}
-    output_schema: {"csp_findings": "list[dict]"}
-    timeout_seconds: 180
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: ppscan
-    display_name: PPScan
-    agent_class: PpscanAgent
-    category: client_side_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
+    agent_class: CSPEvaluatorAgent
+    category: csp_analysis
+    execution_mode: native
+    binary_path: csp-evaluator
+    install_verification_cmd: ["csp-evaluator", "-h"]
     input_schema: {"target": "url"}
-    output_schema: {"dom_findings": "list[dict]"}
+    output_schema: {"csp_findings": "list[dict]"}
     timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: protoscan
-    display_name: ProtoScan
-    agent_class: ProtoscanAgent
-    category: client_side_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
-    output_schema: {"protocol_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  # Network Layer & Internal
-  - name: responder
-    display_name: Responder
-    agent_class: ResponderAgent
-    category: network_internal_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "subnet_or_interface"}
-    output_schema: {"network_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
+    safety_classification: passive
+    tier: 3
+    
   - name: bloodhound
-    display_name: BloodHound
-    agent_class: BloodhoundAgent
-    category: network_internal_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "ad_domain_or_collection"}
+    agent_class: BloodHoundAgent
+    category: active_directory_analysis
+    execution_mode: native
+    binary_path: bloodhound-python
+    install_verification_cmd: ["bloodhound-python", "-h"]
+    input_schema: {"target": "domain_controller"}
+    output_schema: {"ad_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 3
+    requires_authorization: true
+    
+  - name: crackmapexec
+    agent_class: CrackMapExecAgent
+    category: network_lateral_movement
+    execution_mode: native
+    binary_path: crackmapexec
+    install_verification_cmd: ["cme", "--version"]
+    input_schema: {"target": "network_range"}
     output_schema: {"network_findings": "list[dict]"}
-    timeout_seconds: 1200
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: sharphound
-    display_name: SharpHound
-    agent_class: SharphoundAgent
-    category: network_internal_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "ad_domain_or_collection"}
-    output_schema: {"network_findings": "list[dict]"}
-    timeout_seconds: 1200
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: enum4linux-ng
-    display_name: enum4linux-ng
-    agent_class: Enum4linuxNgAgent
-    category: network_internal_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_subnet"}
-    output_schema: {"network_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: onesixtyone
-    display_name: onesixtyone
-    agent_class: OnesixtyoneAgent
-    category: network_internal_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_subnet"}
-    output_schema: {"network_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: ipv6-toolkit
-    display_name: IPv6 Toolkit
-    agent_class: Ipv6ToolkitAgent
-    category: network_internal_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_subnet_or_interface"}
-    output_schema: {"network_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
-  # Specialized Injection Types (Partial)
-  - name: cmdi-tester
-    display_name: Command Injection Tester
-    agent_class: CmdiTesterAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: ssti-tester
-    display_name: SSTI Tester
-    agent_class: SstiTesterAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: ldap-tester
-    display_name: LDAP Tester
-    agent_class: LdapTesterAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: xpath-injector
-    display_name: XPath Injector
-    agent_class: XpathInjectorAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: nosqlmap
-    display_name: NoSQLMap
-    agent_class: NosqlmapAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: xxe-injector
-    display_name: XXE Injector
-    agent_class: XxeInjectorAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: spring4shell-scanner
-    display_name: Spring4Shell Scanner
-    agent_class: Spring4shellScannerAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: spel-tester
-    display_name: SpEL Tester
-    agent_class: SpelTesterAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: hql-injector
-    display_name: HQL Injector
-    agent_class: HqlInjectorAgent
-    category: injection_testing
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"injection_findings": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  # Mobile & Thick Client
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 3
+    requires_authorization: true
+    
   - name: mobsf
-    display_name: MobSF
-    agent_class: MobsfAgent
-    category: mobile_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "apk_or_ipa_path"}
+    agent_class: MobSFAgent
+    category: mobile_security_testing
+    execution_mode: native
+    binary_path: mobsf
+    install_verification_cmd: ["mobsf", "-h"]
+    input_schema: {"target": "mobile_app_binary"}
     output_schema: {"mobile_findings": "list[dict]"}
-    timeout_seconds: 1800
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: apkleaks
-    display_name: APKLeaks
-    agent_class: ApkleaksAgent
-    category: mobile_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "apk_path"}
-    output_schema: {"mobile_findings": "list[dict]"}
-    timeout_seconds: 900
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: mobsf-trufflehog-pipeline
-    display_name: MobSF + TruffleHog Pipeline
-    agent_class: MobsfTrufflehogPipelineAgent
-    category: mobile_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "apk_or_ipa_path"}
-    output_schema: {"mobile_findings": "list[dict]"}
-    timeout_seconds: 1800
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  # Continuous Monitoring & Regression
-  - name: nuclei-gitversioning
-    display_name: Nuclei + Git Versioning
-    agent_class: NucleiGitversioningAgent
-    category: continuous_monitoring
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_host"}
-    output_schema: {"continuous_findings": "list[dict]"}
-    timeout_seconds: 1200
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: observatory
-    display_name: Observatory
-    agent_class: ObservatoryAgent
-    category: continuous_monitoring
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_domain"}
-    output_schema: {"continuous_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: sslyze
-    display_name: SSLyze
-    agent_class: SslyzeAgent
-    category: continuous_monitoring
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_url"}
-    output_schema: {"tls_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: testsslish
-    display_name: testssl.sh
-    agent_class: TestsslishAgent
-    category: continuous_monitoring
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_url"}
-    output_schema: {"tls_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: dnsreaper
-    display_name: DNSReaper
-    agent_class: DnsreaperAgent
-    category: continuous_monitoring
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain"}
-    output_schema: {"dns_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: dnsvalidator
-    display_name: DNSValidator
-    agent_class: DnsvalidatorAgent
-    category: continuous_monitoring
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain"}
-    output_schema: {"dns_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: subover
-    display_name: SubOver
-    agent_class: SuboverAgent
-    category: continuous_monitoring
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain"}
-    output_schema: {"takeover_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: nsbrute
-    display_name: NSBrute
-    agent_class: NsbruteAgent
-    category: continuous_monitoring
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain"}
-    output_schema: {"dns_findings": "list[dict]"}
-    timeout_seconds: 300
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  # Multi-engine dorking (Google/Bing/DDG/Yandex and others)
-  - name: multi-engine-dorker
-    display_name: Multi-Engine Dorking Script
-    agent_class: MultiEngineDorkerAgent
-    category: recon_asset_discovery
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "domain_or_company"}
-    output_schema: {"dork_results": "list[dict]"}
-    timeout_seconds: 600
-    safety_classification: manual_only
-    tags: ["CUSTOM_SCRIPT_REQUIRED", "SEARCH_AGGREGATION", "catalog_backlog"]
-    dependencies: ["google_bing_ddg_yandex_connectors", "wrapper_pending"]
-    enabled_by_default: false
-
-  # Wave 9 - AI/LLM and OWASP Playbook Support Tools (manual_only)
-  - name: api_client
-    display_name: API Client
-    agent_class: ApiClientAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "api_endpoint"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 300
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["api_security", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: api_fuzzer
-    display_name: API Fuzzer
-    agent_class: ApiFuzzerAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "api_endpoint"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 600
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["api_security", "fuzzing", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: burp_suite
-    display_name: Burp Suite Community
-    agent_class: BurpSuiteAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 1800
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["api_security", "web_security", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: checkpoint_analyzer
-    display_name: Model Checkpoint Analyzer
-    agent_class: CheckpointAnalyzerAgent
-    category: ai_ml_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "model_checkpoint_path"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 900
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["ai_ml_security", "supply_chain", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: custom_authz_tester
-    display_name: Custom Authorization Tester
-    agent_class: CustomAuthzTesterAgent
-    category: api_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "url_or_endpoint"}
-    output_schema: {"authz_findings": "list[dict]"}
-    timeout_seconds: 600
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["api_security", "authorization_testing", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: custom_container_tools
-    display_name: Custom Container Security Tools
-    agent_class: CustomContainerToolsAgent
-    category: container_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "container_or_cluster"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 900
-    phase: 7
-    band: 3
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["container_security", "infrastructure", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: custom_llm_tester
-    display_name: Custom LLM Security Tester
-    agent_class: CustomLlmTesterAgent
-    category: ai_ml_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "llm_api_endpoint"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 600
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["ai_ml_security", "llm_testing", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: custom_vector_tools
-    display_name: Custom Vector Database Security Tools
-    agent_class: CustomVectorToolsAgent
-    category: ai_ml_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "vector_db_endpoint"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 600
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["ai_ml_security", "vector_database", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: dependency_checker
-    display_name: Dependency Security Checker
-    agent_class: DependencyCheckerAgent
-    category: supply_chain_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "repo_or_manifest_path"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 600
-    phase: 1
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["supply_chain_security", "dependency_analysis", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: exploit_tools
-    display_name: Exploit Tools
-    agent_class: ExploitToolsAgent
-    category: exploitation
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_service"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 1200
-    phase: 7
-    band: 3
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["exploitation", "container_security", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["authorization_gate", "wrapper_pending"]
-    enabled_by_default: false
-
-  - name: openssl
-    display_name: OpenSSL
-    agent_class: OpensslAgent
-    category: vulnerability_scanning
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "host_or_url"}
-    output_schema: {"tls_findings": "list[dict]"}
-    timeout_seconds: 300
-    phase: 2
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["tls_security", "cryptography", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: semantic_analyzer
-    display_name: Semantic Analyzer
-    agent_class: SemanticAnalyzerAgent
-    category: ai_ml_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "vector_db_or_embedding_endpoint"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 600
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["ai_ml_security", "semantic_analysis", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
-
-  - name: statistical_analyzer
-    display_name: Statistical Analyzer
-    agent_class: StatisticalAnalyzerAgent
-    category: ai_ml_security
-    execution_mode: optional
-    binary_path: ""
-    install_verification_cmd: []
-    input_schema: {"target": "api_endpoint_or_model"}
-    output_schema: {"findings": "list[dict]"}
-    timeout_seconds: 600
-    phase: 7
-    band: 2
-    safety_classification: manual_only
-    wrapper_status: manual
-    categories: ["ai_ml_security", "statistical_analysis", "manual_testing"]
-    tags: ["MANUAL_ONLY", "catalog_backlog"]
-    dependencies: ["wrapper_pending"]
-    enabled_by_default: false
+    timeout_seconds: 3600
+    safety_classification: passive
+    tier: 3
+    triggers_on: ["mobile_application_detected"]

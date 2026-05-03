@@ -1,0 +1,6 @@
+[submodule "vendor/pentagi"]
+	path = vendor/pentagi
+	url = https://github.com/vxcontrol/pentagi.git
+[submodule "vendor/cai"]
+	path = vendor/cai
+	url = https://github.com/aliasrobotics/cai.git

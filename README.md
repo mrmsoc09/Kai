@@ -1,193 +1,218 @@
-# KAISON AI — Autonomous Bug Bounty Platform
+# KaisonOne — Autonomous Bug Bounty Platform
 
-> Governance-first autonomous vulnerability research platform for authorized bug bounty programs.
-> Built by Spec.1 | Combat-Jack Security Research | SDVOSB
+> **Governance-first autonomous vulnerability research for authorized bug bounty programs**
 
-KAISON AI runs autonomous bug bounty hunts across HackerOne, Bugcrowd, and Intigriti programs. It coordinates 51 specialist tool agents across 9 hunt phases, applies governance controls at every phase transition, and produces professional reports ready for program submission.
+[![Version](https://img.shields.io/badge/version-0.9--Streamlined-blue)]()
+[![Tools](https://img.shields.io/badge/tools-35%20essential-brightgreen)]()
+[![License](https://img.shields.io/badge/license-Apache%202.0-lightgrey)]()
 
-## What It Does
+KaisonOne runs autonomous bug bounty hunts across HackerOne, Bugcrowd, and private programs. It coordinates **35 specialist security tools** across **3 execution tiers**, applies governance controls at every phase, and produces professional reports ready for program submission.
 
-**51 specialist tool agents** coordinated across 9 hunt phases:
-- **Phase 1-2**: Passive recon (subfinder, amass, dnsx, chaos, github-subdomains)
-- **Phase 2**: Active fingerprinting (httpx, naabu, masscan, wafw00f, gowitness)
-- **Phase 3**: Content discovery (feroxbuster, katana, paramspider, arjun, gf)
-- **Phase 4**: OSINT intelligence (spiderfoot, sherlock, phoneinfoga, social-analyzer)
-- **Phase 5**: Dark web intelligence (torbot, onionsearch, ahmia-client)
-- **Phase 6**: Secret scanning (trufflehog, gitleaks)
-- **Phase 7**: Vulnerability scanning (nuclei, nikto, testssl, dalfox, sqlmap)
-- **Phase 8**: API security (jwt_tool, kiterunner, graphql-cop, clairvoyance)
-- **Phase 9**: Aggregation (faraday-community)
+---
 
-**13 CrewAI and AutoGen2 crews** for intelligent pre-scan reasoning and adversarial finding validation.
+## Architecture
 
-**Real-time frontend**: Tool agent dashboard, crew monitor, orchestrator panel, master findings, approval gates.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    KAISONONE PLATFORM ARCHITECTURE                   │
+├─────────────────────────────────────────────────────────────────────┤
+│                                                                      │
+│  ┌─────────────┐     ┌─────────────┐     ┌─────────────┐           │
+│  │   BBP APIs  │────▶│   Ingest    │────▶│   Scope     │           │
+│  │  H1, BC, etc│     │   Engine    │     │  Guardrails │           │
+│  └─────────────┘     └─────────────┘     └──────┬──────┘           │
+│                                                  │                  │
+│                          ┌───────────────────────┘                  │
+│                          ▼                                          │
+│               ┌───────────────────────┐                             │
+│               │  TIERED WORKFLOW      │                             │
+│               │  ORCHESTRATOR         │                             │
+│               └───────────┬───────────┘                             │
+│                           │                                         │
+│       ┌───────────────────┼───────────────────┐                     │
+│       ▼                   ▼                   ▼                     │
+│  ┌─────────┐        ┌─────────┐        ┌─────────┐                 │
+│  │ TIER 1  │        │ TIER 2  │        │ TIER 3  │                 │
+│  │Core     │───────▶│Targeted │───────▶│Special  │                 │
+│  │(Always) │        │(Trigger)│        │(Manual) │                 │
+│  └────┬────┘        └────┬────┘        └────┬────┘                 │
+│       │                  │                  │                       │
+│       ▼                  ▼                  ▼                       │
+│  [17 tools]         [11 tools]         [7 tools]                   │
+│                                                                      │
+└────────────────────────────────┬────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    INTELLIGENCE & REPORTING LAYER                   │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐ │
+│  │ Deduplicate │─▶│ CVE Enrich  │─▶│   Bounty    │─▶│  Platform  │ │
+│  │   Engine    │  │   Engine    │  │   Estimate  │  │  Formatter │ │
+│  └─────────────┘  └─────────────┘  └─────────────┘  └────────────┘ │
+│                                                                      │
+└────────────────────────────────┬────────────────────────────────────┘
+                                 │
+                                 ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    HUMAN-IN-THE-LOOP GATE                           │
+│                     (Review → Approve → Submit)                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## The 35-Tool Stack
+
+### Tier 1 — Core (Always Run)
+*Complete reconnaissance and primary vulnerability detection*
+
+| Category | Tools |
+|----------|-------|
+| **OSINT** | Amass, Subfinder, SpiderFoot, TheHarvester |
+| **Network** | Masscan, Nmap, Naabu, HTTPX |
+| **Discovery** | GAU, Katana, Arjun, FFUF |
+| **Vulnerability** | Nuclei, Dalfox, SQLMap, Ghauri, SSRFMap, XSStrike |
+
+**17 tools | Coverage: Attack surface → Primary vuln detection | Redundancy: 2x for XSS, SQLi**
+
+### Tier 2 — Targeted (Conditional)
+*Triggered by asset type detection*
+
+| Trigger | Tools |
+|---------|-------|
+| API endpoints detected | Kiterunner, GraphQLMap, RESTler |
+| Cloud assets found | Prowler, ScoutSuite, Trivy |
+| JWT/auth detected | JWT-Tool, AuthMatrix, Hydra |
+| Git repos found | TruffleHog, Gitleaks |
+| File uploads found | Fuxploider, RaceTheWeb |
+
+**11 tools | Coverage: Specialized assessment | Redundancy: Dual secrets scanning**
+
+### Tier 3 — Specialized (Manual/High-Value)
+*Deep inspection for high-value targets*
+
+| Domain | Tools |
+|--------|-------|
+| Client-Side | DOMDig, CSP-Evaluator |
+| Network Internal | BloodHound, CrackMapExec |
+| Mobile | MobSF |
+
+**7 tools | Coverage: Niche vulnerabilities | Requires authorization**
+
+---
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/mrmsoc09/Kai
+# Clone repository
+git clone https://github.com/your-handle/Kai.git
 cd Kai
-cp .env.example .env
-# Add API keys to .env
+
+# Bootstrap — auto-installs missing 35 tools
 ./bootstrap.sh
+
+# Configure API keys
+cp .env.example .env
+# Edit .env with your keys
+
+# Start platform
 ./k1 start
+
+# Access
+# Frontend: http://localhost:8081
+# API Docs: http://localhost:8080/docs
 ```
 
-Open http://localhost:8081 (frontend) | http://localhost:8080/docs (API)
+---
 
 ## Prerequisites
 
-- Python 3.11+
-- Node.js 18+
-- Docker and Docker Compose
-- 8GB RAM minimum (40GB recommended)
-- Linux (Ubuntu 22.04+ recommended)
+- **OS:** Linux (Ubuntu 22.04+ recommended) or macOS
+- **Python:** 3.11+
+- **Node.js:** 18+
+- **Docker:** 20.10+ with Compose
+- **RAM:** 8GB minimum, 16GB recommended
+- **Disk:** 20GB for tools + scan data
 
-## Installation
+---
 
-```bash
-# Install Python dependencies
-pip install -r requirements.txt
+## API Keys (Essential Tools)
 
-# Install all 51 tool agent binaries
-./scripts/install_community_tools.sh
+| Variable | Tools | Required | Get Key |
+|----------|-------|----------|---------|
+| `CHAOS_API_KEY` | Subfinder | Recommended | [ProjectDiscovery](https://chaos.projectdiscovery.io/) |
+| `GITHUB_TOKEN` | Subfinder, TruffleHog | Recommended | [GitHub](https://github.com/settings/tokens) |
+| `SHODAN_API_KEY` | Amass | Optional | [Shodan](https://account.shodan.io/) |
+| `OPENAI_API_KEY` | Intelligence Engine | Optional | [OpenAI](https://platform.openai.com/) |
 
-# Initialize database
-alembic upgrade head
+Full API key matrix: [docs/api-keys.md](docs/api-keys.md)
 
-# Start all services
-./k1 start
+---
+
+## Workflow Execution
+
+```python
+from modules.orchestration.tiered_orchestrator import TieredWorkflowOrchestrator
+
+# Initialize orchestrator
+orchestrator = TieredWorkflowOrchestrator()
+
+# Run tiered scan
+results = await orchestrator.execute_scan(
+    target="example.com",
+    bbp_mode="public_bbp",  # or "private_contract", "enterprise_audit"
+    enable_redundancy=True  # Run secondary tools for 2x coverage
+)
+
+# Results include:
+# - Tier 1: 17 core tool outputs
+# - Tier 2: 11 conditional tool outputs (if triggered)
+# - Tier 3: 7 specialized outputs (if requested)
+# - Aggregated findings with deduplication
+# - Bounty estimate recommendations
 ```
 
-## Configuration
+---
 
-Copy `.env.example` to `.env` and configure:
+## Autonomous Mode
 
-```bash
-# Required
-OPENAI_API_KEY=your_key
-ANTHROPIC_API_KEY=your_key
+KaisonOne operates as an agentic system:
 
-# Optional but recommended
-GEMINI_API_KEY=your_key
-SHODAN_API_KEY=your_key
-GITHUB_TOKEN=your_token
-CHAOS_API_KEY=your_key
+1. **Ingest** → Parse BBP scope from API
+2. **Recon** → Tier 1 tools map attack surface
+3. **Trigger** → Detect assets, activate Tier 2 tools
+4. **Analyze** → Intelligence engine scores findings
+5. **Report** → Generate platform-ready submissions
+6. **Review** → HiL gate for human approval
+
+---
+
+## Project Structure
+
+```
+KaisonOne/
+├── tools/wrappers/       # 35 tool wrappers (one per tool)
+├── modules/
+│   ├── orchestration/    # Tiered orchestrator, selection engine
+│   └── reporting/        # Intelligence + report generation
+├── config/
+│   └── bbp_modes.yaml    # Public/Private/Enterprise configs
+├── scripts/
+│   └── bootstrap.sh      # Auto-installation script
+├── docs/                 # Architecture, operator guides
+└── vendor/               # PentAGI, CAI submodules
 ```
 
-## API Key Matrix (Front-Page Reference)
+---
 
-This is the deduplicated key list for Kai's current toolchain, grouped in a SpiderFoot-style format.
+## Contributing
 
-### Open Source (No API key required)
-
-These run without external account keys: `amass`, `subfinder`, `dnsx`, `naabu`, `nmap`, `masscan`, `reconftw`, `trufflehog`, `gitleaks`, `nikto`, `testssl`, `sqlmap`, `dalfox`, `feroxbuster`, `katana`, `arjun`, `ffuf`, `spiderfoot` (core local modules), `torbot`, `searchsploit`, `metasploit-framework` (local CLI, CHECK-only guardrails in Kai).
-
-### Free Tier Keys
-
-| Environment Variable | Tool(s) | Get API Key |
-|---|---|---|
-| `GITHUB_TOKEN` | `github-subdomains` (recommended for higher rate limits) | https://github.com/settings/tokens |
-| `CHAOS_API_KEY` (or `PDCP_API_KEY`) | `chaos` | https://chaos.projectdiscovery.io/docs/api-key |
-| `FULLHUNT_API_KEY` | `fullhunt` | https://docs.fullhunt.io/docs/ |
-| `LEAKIX_API_KEY` | `leakix` | https://docs.leakix.net/docs/api/authentication/ |
-| `NVD_NIST_API_KEY` | `nvd-nist` | https://nvd.nist.gov/developers/request-an-api-key |
-| `IPINFO_API_KEY` | `ipinfo` | https://ipinfo.io/docs |
-
-### Paid / Commercial Keys
-
-| Environment Variable | Tool(s) | Get API Key |
-|---|---|---|
-| `DEHASHED_API_KEY` | `dehashed` | https://www.dehashed.com/api |
-| `GRAYHATWARFARE_API_KEY` | `grayhatwarfare` | https://buckets.grayhatwarfare.com/early-access/docs/api/v2 |
-
-### Platform LLM Keys (At least one required)
-
-| Environment Variable | Purpose | Get API Key |
-|---|---|---|
-| `OPENAI_API_KEY` | Primary/fallback LLM provider | https://platform.openai.com/api-keys |
-| `ANTHROPIC_API_KEY` | Primary/fallback LLM provider | https://console.anthropic.com/settings/keys |
-| `GOOGLE_API_KEY` | Gemini provider | https://aistudio.google.com/app/apikey |
-
-## Running a Hunt
-
-1. Navigate to http://localhost:8081
-2. Add a bug bounty program (scope and rules)
-3. Click Start Mission
-4. Monitor progress in Mission Control
-5. Review findings in Master Findings view
-6. Approve Band 2 actions in Approvals dashboard
-7. Export report when complete
-
-## CrewAI and AutoGen2 Integration
-
-Install optional crew support:
-```bash
-pip install "praisonai[crewai]" "praisonai[autogen]"
-```
-
-Crews run before tool agents to produce strategic scanning plans. AutoGen2 validation crews run Hunter vs Skeptic adversarial review on every finding before submission.
-
-## Commands
-
-```bash
-./k1 start                  # Build and launch all services
-./k1 stop                   # Stop all services
-./k1 restart                # Stop then start
-./k1 setup                  # Configuration wizard
-./k1 logs                   # Tail container logs
-
-python -m pytest tests/ -q  # Run tests
-cd apps/frontend && npm run dev   # Frontend dev server
-```
-
-## Governance
-
-- **Band 0**: Passive tools (auto-approved)
-- **Band 1**: Active probing (auto-approved)
-- **Band 2**: Intrusive scanning (requires approval)
-- **Band 3**: Exploitation (blocked in Community Edition)
-
-All tool execution passes through authorization gates with scope validation and audit logging.
-
-## Architecture
-
-**Backend**: FastAPI with 70+ routers, SQLAlchemy ORM, Celery workers, multi-provider LLM routing.
-
-**Frontend**: React + Material UI with real-time WebSocket updates and agent streaming.
-
-**Database**: PostgreSQL 16 with async SQLAlchemy, Alembic migrations.
-
-**Orchestration**: LangGraph pipeline with Kahn's algorithm topology, GeminiOrchestrator, MidnightOrchestrator.
-
-**Security**: httpOnly sessions, CSRF protection, Vault secrets, scope validation at every phase.
-
-**Services**: Backend (8080), Frontend (8081), Worker (Celery), PostgreSQL, Redis, Vault.
-
-## Testing
-
-```bash
-# Backend tests
-python -m pytest tests/ -q --ignore=tests/integration --ignore=tests/test_simulation_mode.py
-
-# Full suite (requires PostgreSQL, Redis, Vault)
-pytest
-```
-
-## Community Edition vs Pro/Enterprise
-
-| Feature | Community | Pro | Enterprise |
-|---------|-----------|-----|------------|
-| Tool agents | 51 | 60+ | 70+ |
-| Hunt phases | 9 | 9 | 9 |
-| Programs | Unlimited | Unlimited | Unlimited |
-| Support | GitHub | Email | SLA |
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT License — see LICENSE file.
+Apache 2.0 — See [LICENSE](LICENSE)
 
-## Author
+---
 
-Spec.1 | Combat-Jack Security Research  
-kaisonai.com | combat-jack.com
+**Built for autonomous security research. Authorized bug bounty programs only.**
