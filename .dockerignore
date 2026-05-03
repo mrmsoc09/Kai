@@ -1,50 +1,89 @@
-# Version control
-.git
-.gitignore
-
-# Python
-__pycache__
-*.pyc
-*.pyo
-*.pyd
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
 .Python
-*.egg-info
-dist
-build
-.eggs
-.mypy_cache
-.ruff_cache
-.pytest_cache
-.coverage
-coverage.xml
-htmlcov
 
 # Virtual environments
-.venv
-venv
-env
-
-# Node
-apps/frontend/node_modules
-apps/frontend/dist
-
-# Secrets and local config
 .env
-.env.*
-!.env.example
-*.pem
-*.key
-*.crt
+.venv
+env/
+venv/
+ENV/
 
-# Dev / editor artifacts
-.idea
-.vscode
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# IDE and AI Assistants (Explicitly Excluded)
+.idea/
+.vscode/
+.claude/
+.codex/
+.aider/
+.cursor/
 *.swp
 *.swo
+
+# Testing
+tests/
+test/
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+pytest.ini
+
+# Documentation
+docs/
+*.md
+!README.md
+!LICENSE
+
+# K1 artifacts (mount as volumes instead)
+artifacts/
+logs/
+.k1/
+checkpoints/
+var/
+data/
+outputs/
+reports/
+memory/
+runtime/
+cache/
+.pytest_artifacts/
+
+# Node modules (if building frontend in same context)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# OS
 .DS_Store
 Thumbs.db
 
-# Large data / runtime dirs that are bind-mounted at runtime
-artifacts
-var
-data
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Docker files themselves (optional, reduces context)
+Dockerfile*
+docker-compose*.yml
+.docker/
+
+# Secrets (safety)
+*.pem
+*.key
+*.crt
+.env.*
+secrets/

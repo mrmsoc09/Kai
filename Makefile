@@ -1,35 +1,56 @@
 PYTHON ?= python3
 PIP ?= $(PYTHON) -m pip
+COMPOSE ?= docker-compose
 
-.PHONY: install test migrate verify-tools workflow-templates health-check smoke-workflow run-workflow-local seed-mvp
+.PHONY: help install dev-setup test clean lint format migrate build up down
 
-install:
+help: ## Show this help message
+	@echo "KAISON AI - Developer Commands"
+	@echo "================================"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-20s %s\n", $$1, $$2}'
+
+install: ## Install Python dependencies
 	$(PIP) install -r requirements.txt
+	$(PIP) install -e .
 
-test:
-	$(PYTHON) -m pytest -q
-
-migrate:
+dev-setup: install ## Full development setup
+	cp -n .env.example .env || true
+	$(COMPOSE) up -d postgres redis
+	sleep 5
 	alembic upgrade head
 
-verify-tools:
-	$(PYTHON) scripts/verify_tool_registry_install.py
+test: ## Run all tests
+	$(PYTHON) -m pytest -v
 
-workflow-templates:
-	$(PYTHON) - <<'PY'
-from apps.backend.src.core.bugbounty_workflow_engine import list_workflow_templates
-import json
-print(json.dumps(list_workflow_templates(), indent=2))
-PY
+clean: ## Clean Python cache, AI assistant directories, and artifacts
+	@echo "Cleaning Python cache files..."
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete
+	find . -type f -name "*.pyo" -delete
+	find . -type f -name ".coverage" -delete
+	rm -rf .pytest_cache htmlcov .mypy_cache .ruff_cache build/ dist/ *.egg-info
+	@echo "Removing AI assistant directories (.claude, .codex)..."
+	rm -rf .claude/ .codex/
+	@echo "Cache and AI directories cleaned."
 
-health-check:
-	bash scripts/health_check.sh
+lint: ## Run linting
+	ruff check apps/backend/src tests scripts
 
-smoke-workflow:
-	bash scripts/smoke_test_workflow.sh
+format: ## Auto-format code
+	black apps/backend/src tests scripts
+	isort apps/backend/src tests scripts
 
-run-workflow-local:
-	$(PYTHON) scripts/run_workflow_local.py --template workflow_recon_surface_map --target example.com --safe-mode
+migrate: ## Run database migrations
+	alembic upgrade head
 
-seed-mvp:
-	$(PYTHON) scripts/seed_mvp_demo.py --apply --trigger-run
+build: ## Build Docker images
+	$(COMPOSE) build
+
+up: ## Start all services
+	$(COMPOSE) up -d
+
+down: ## Stop all services
+	$(COMPOSE) down
+
+logs: ## Tail logs
+	$(COMPOSE) logs -f

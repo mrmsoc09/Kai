@@ -1,116 +1,180 @@
-# Core artifacts and logs
-artifacts/
-.pytest_artifacts/
-var/
-*.log
-*.pem
-*.lock
-coverage.xml
-.coverage
-htmlcov/
-
-# Python
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-.venv
-venv
-.mypy_cache/
-.ruff_cache/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
 .pytest_cache/
+cover/
 
-# Node
-node_modules/
-apps/frontend/node_modules/
-apps/frontend-operator/.next/
-apps/frontend-operator/tsconfig.tsbuildinfo
-*.cache
+# Translations
+*.mo
+*.pot
 
-# OS / editor
-.DS_Store
-Thumbs.db
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# poetry
+poetry.lock
+
+# pdm
+.pdm.toml
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
 .idea/
+
+# VS Code
 .vscode/
 
-# Archives / generated
-*.tar.gz
-*.zip
-*.tgz
-dist/
-build/
-*.egg-info/
+# AI Assistant Directories (Explicitly Excluded)
+.claude/
+.codex/
+.aider/
+.cursor/
 
-# Backup files
-*.bak
-*.bak.*
-*.bak_*
-
-# Environment files (never commit secrets)
-.env
-.env.*
-*.env
-!.env.example
-!.env.mvp.example
-
-.gemini/
-gha-creds-*.json
-
-# Vault
-.vault_token
-.vault_keys
-.vault_init.json
-vault_data/
-kaison_fix.sh
-test_output_*.txt
-KAISON_GO_NOGO_*.txt
-kaison_fix.log
-
-# External tool source directories
-tools-src/
-tool-repos/
-/opt/
-~/.local/share/kaison-tools/
-
-# Backup and temporary files
-*.bak
-*.bak.*
-AGENTS.md.bak.*
-*_backup.*
-
-# Test and verification scripts at root
-test_phase*.py
-verify_*.py
-test_orchestrator.py
-configure_k1.py
-bootstrap_codex_kai.sh
-
-# Duplicate documentation
-README_FRONT_PAGE.md
-README_GITHUB_IMPROVED.md
-README_IMPROVEMENTS.md
-README_IMPROVEMENTS_*.md
-REASONING_LOOP*.md
-UNIFIED_K1_PLATFORM_GUIDE.md
-SETUP_SCRIPTS_README.md
-
-# Scan outputs and logs
-test_output_*.txt
-*.output
-build_*.log
-deployment_*.log
-
-# Runtime directories that shouldn't be tracked
+# K1 Specific
+artifacts/
+.pytest_artifacts/
 logs/
-memory/
+*.log
+.k1/
+checkpoints/
 var/
-runtime/
-output/
+data/
+outputs/
 reports/
+memory/
+runtime/
 cache/
 
-# IDE and temp files
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
 *.swp
 *.swo
 *~
-.tmp/
-outputs/
-.aider*
+
+# Node (if applicable)
+node_modules/
+npm-debug.log
+yarn-error.log
