@@ -13,8 +13,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 interface DashboardHeaderProps {
   autoRefresh: boolean;
   onAutoRefreshToggle: () => void;
-  viewMode?: 'split' | 'full' | 'single';
-  onViewModeChange?: (mode: 'split' | 'full' | 'single') => void;
+  viewMode?: 'split' | 'full' | 'single' | 'cockpit';
+  onViewModeChange?: (mode: 'split' | 'full' | 'single' | 'cockpit') => void;
   activeScansCount?: number;
 }
 
@@ -116,7 +116,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                                    '#ff6b6b';
 
   const handleViewMode = useCallback(
-    (mode: 'split' | 'full' | 'single') => onViewModeChange?.(mode),
+    (mode: 'split' | 'full' | 'single' | 'cockpit') => onViewModeChange?.(mode),
     [onViewModeChange]
   );
 
@@ -189,6 +189,14 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
               aria-pressed={viewMode === 'split'}
             >
               ⊞ Ultra
+            </button>
+            <button
+              className={`k1-view-btn${viewMode === 'cockpit' ? ' active' : ''}`}
+              onClick={() => handleViewMode('cockpit')}
+              title="Tactical Cockpit view"
+              aria-pressed={viewMode === 'cockpit'}
+            >
+              ⌬ Cockpit
             </button>
             <button
               className={`k1-view-btn${viewMode === 'full' ? ' active' : ''}`}

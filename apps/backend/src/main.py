@@ -542,6 +542,16 @@ except Exception as exc:
         {"module": "apps.backend.src.routers.websocket", "error": str(exc)}
     )
 
+# Terminal Bridge (Tmux) for Sovereign Console
+try:
+    from apps.backend.src.terminal_bridge import terminal_websocket
+    @app.websocket("/ws/terminal")
+    async def terminal_ws_endpoint(websocket: WebSocket):
+        await terminal_websocket(websocket)
+except Exception as exc:
+    logger.warning("Terminal Bridge unavailable: %s", exc)
+    _OPTIONAL_ROUTER_ERRORS.append({"module": "terminal_bridge", "error": str(exc)})
+
 
 # ==================== INITIALIZE K1 SYSTEMS ====================
 

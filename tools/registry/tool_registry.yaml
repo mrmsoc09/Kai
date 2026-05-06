@@ -1,14 +1,14 @@
 version: "2.0"
-# Streamlined 35-Tool Registry for KaisonOne
-# Optimized for 70-80% valid finding rate with Phase 6 ML/RL
-# Date: 2026-05-01
-# Removed: 117 redundant tools for surgical precision
+# Expanded ~130-Tool Registry for KaisonOne
+# Tiered architecture: Tier 1 (core), Tier 2 (targeted), Tier 3 (specialized)
+# Date: 2026-05-06
+# Organized: Tier 1 (core recon), Tier 2 (conditional), Tier 3 (specialized validation)
 
 tools:
-  # === TIER 1: CORE RECONNAISSANCE (17 tools) ===
+  # === TIER 1: CORE RECONNAISSANCE ===
   # These tools run on EVERY scan
-  
-  # OSINT & Attack Surface (4 tools)
+
+  # OSINT & Attack Surface
   - name: amass
     agent_class: AmassAgent
     category: osint_asset_discovery
@@ -20,7 +20,7 @@ tools:
     timeout_seconds: 900
     safety_classification: passive
     tier: 1
-    
+
   - name: subfinder
     agent_class: SubfinderAgent
     category: osint_asset_discovery
@@ -33,7 +33,7 @@ tools:
     safety_classification: passive
     tier: 1
     api_keys_required: ["CHAOS_API_KEY", "GITHUB_TOKEN", "SHODAN_API_KEY"]
-    
+
   - name: spiderfoot
     agent_class: SpiderFootAgent
     category: osint_intelligence
@@ -45,7 +45,7 @@ tools:
     timeout_seconds: 1800
     safety_classification: passive
     tier: 1
-    
+
   - name: theharvester
     agent_class: TheHarvesterAgent
     category: osint_email_discovery
@@ -57,8 +57,8 @@ tools:
     timeout_seconds: 600
     safety_classification: passive
     tier: 1
-  
-  # Network Enumeration (4 tools)
+
+  # Network Enumeration
   - name: masscan
     agent_class: MasscanAgent
     category: network_port_scanning
@@ -71,7 +71,7 @@ tools:
     safety_classification: active
     tier: 1
     requires_root: true
-    
+
   - name: nmap
     agent_class: NmapAgent
     category: network_enumeration
@@ -83,7 +83,7 @@ tools:
     timeout_seconds: 900
     safety_classification: active
     tier: 1
-    
+
   - name: naabu
     agent_class: NaabuAgent
     category: network_port_scanning
@@ -95,7 +95,7 @@ tools:
     timeout_seconds: 240
     safety_classification: active
     tier: 1
-    
+
   - name: httpx
     agent_class: HttpxAgent
     category: http_service_enumeration
@@ -107,8 +107,8 @@ tools:
     timeout_seconds: 180
     safety_classification: active
     tier: 1
-  
-  # Web Discovery (3 tools)
+
+  # Web Discovery
   - name: gau
     agent_class: GauAgent
     category: web_discovery
@@ -120,7 +120,7 @@ tools:
     timeout_seconds: 900
     safety_classification: passive
     tier: 1
-    
+
   - name: katana
     agent_class: KatanaAgent
     category: web_crawling
@@ -132,7 +132,7 @@ tools:
     timeout_seconds: 1800
     safety_classification: active
     tier: 1
-    
+
   - name: arjun
     agent_class: ArjunAgent
     category: parameter_discovery
@@ -144,8 +144,8 @@ tools:
     timeout_seconds: 600
     safety_classification: active
     tier: 1
-  
-  # Content Discovery (2 tools)
+
+  # Content Discovery
   - name: ffuf
     agent_class: FfufAgent
     category: content_discovery
@@ -157,8 +157,8 @@ tools:
     timeout_seconds: 600
     safety_classification: active
     tier: 1
-  
-  # Vulnerability Scanning - Primary (5 tools)
+
+  # Vulnerability Scanning - Primary
   - name: nuclei
     agent_class: NucleiAgent
     category: vulnerability_scanning
@@ -171,7 +171,7 @@ tools:
     safety_classification: active
     tier: 1
     templates_required: true
-    
+
   - name: dalfox
     agent_class: DalfoxAgent
     category: xss_scanning
@@ -183,7 +183,7 @@ tools:
     timeout_seconds: 600
     safety_classification: active
     tier: 1
-    
+
   - name: sqlmap
     agent_class: SQLMapAgent
     category: sql_injection_scanning
@@ -195,7 +195,7 @@ tools:
     timeout_seconds: 1800
     safety_classification: active
     tier: 1
-    
+
   - name: ghauri
     agent_class: GhauriAgent
     category: sql_injection_scanning
@@ -208,7 +208,7 @@ tools:
     safety_classification: active
     tier: 1
     redundancy_for: sqlmap
-    
+
   - name: ssrfmap
     agent_class: SSRFMapAgent
     category: ssrf_scanning
@@ -220,8 +220,8 @@ tools:
     timeout_seconds: 600
     safety_classification: active
     tier: 1
-  
-  # XSS Secondary (1 tool)
+
+  # XSS Secondary
   - name: xsstrike
     agent_class: XSStrikeAgent
     category: xss_scanning
@@ -235,10 +235,83 @@ tools:
     tier: 1
     redundancy_for: dalfox
 
-  # === TIER 2: TARGETED ASSESSMENT (14 tools) ===
+  # Tier 1 Additions
+  - name: waybackurls
+    agent_class: WaybackurlsAgent
+    category: web_archive_discovery
+    execution_mode: native
+    binary_path: waybackurls
+    install_verification_cmd: ["waybackurls", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"urls": "list[str]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 1
+
+  - name: webanalyze
+    agent_class: WebanalyzeAgent
+    category: technology_fingerprinting
+    execution_mode: native
+    binary_path: webanalyze
+    install_verification_cmd: ["webanalyze", "-version"]
+    input_schema: {"target": "url"}
+    output_schema: {"technologies": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 1
+
+  - name: corsy
+    agent_class: CorsyAgent
+    category: cors_scanning
+    execution_mode: native
+    binary_path: corsy.py
+    install_verification_cmd: ["python3", "/opt/tools/Corsy/corsy.py", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"cors_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+
+  - name: feroxbuster
+    agent_class: FeroxbusterAgent
+    category: content_discovery
+    execution_mode: native
+    binary_path: feroxbuster
+    install_verification_cmd: ["feroxbuster", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"discovered_paths": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+
+  - name: hakrawler
+    agent_class: HakrawlerAgent
+    category: web_crawling
+    execution_mode: native
+    binary_path: hakrawler
+    install_verification_cmd: ["hakrawler", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"endpoints": "list[str]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 1
+
+  - name: whatweb
+    agent_class: WhatwebAgent
+    category: technology_fingerprinting
+    execution_mode: native
+    binary_path: whatweb
+    install_verification_cmd: ["whatweb", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"technologies": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 1
+
+  # === TIER 2: TARGETED ASSESSMENT ===
   # Run conditionally based on asset type
-  
-  # API Testing (3 tools)
+
+  # API Testing
   - name: kiterunner
     agent_class: KiterunnerAgent
     category: api_security_scanning
@@ -251,7 +324,7 @@ tools:
     safety_classification: active
     tier: 2
     triggers_on: ["api_endpoint_detected"]
-    
+
   - name: graphqlmap
     agent_class: GraphQLMapAgent
     category: graphql_scanning
@@ -264,7 +337,7 @@ tools:
     safety_classification: active
     tier: 2
     triggers_on: ["graphql_detected"]
-    
+
   - name: restler
     agent_class: RESTlerAgent
     category: api_fuzzing
@@ -277,21 +350,21 @@ tools:
     safety_classification: active
     tier: 2
     triggers_on: ["openapi_spec_detected"]
-  
-  # Cloud Security (3 tools)
-  - name: proler
+
+  # Cloud Security
+  - name: prowler
     agent_class: ProwlerAgent
     category: cloud_security_scanning
     execution_mode: native
-    binary_path: proler
-    install_verification_cmd: ["proler", "-v"]
+    binary_path: prowler
+    install_verification_cmd: ["prowler", "-v"]
     input_schema: {"target": "cloud_account"}
     output_schema: {"cloud_findings": "list[dict]"}
     timeout_seconds: 3600
     safety_classification: passive
     tier: 2
     triggers_on: ["cloud_assets_detected"]
-    
+
   - name: scoutsuite
     agent_class: ScoutSuiteAgent
     category: cloud_security_auditing
@@ -304,7 +377,7 @@ tools:
     safety_classification: passive
     tier: 2
     triggers_on: ["multi_cloud_environment"]
-    
+
   - name: trivy
     agent_class: TrivyAgent
     category: vulnerability_scanning
@@ -317,8 +390,8 @@ tools:
     safety_classification: passive
     tier: 2
     triggers_on: ["container_or_code_detected"]
-  
-  # Authentication (3 tools)
+
+  # Authentication
   - name: jwt-tool
     agent_class: JWTToolAgent
     category: jwt_security_testing
@@ -331,7 +404,7 @@ tools:
     safety_classification: active
     tier: 2
     triggers_on: ["jwt_detected"]
-    
+
   - name: authmatrix
     agent_class: AuthMatrixAgent
     category: authorization_testing
@@ -344,7 +417,7 @@ tools:
     safety_classification: active
     tier: 2
     triggers_on: ["role_based_access_detected"]
-    
+
   - name: hydra
     agent_class: HydraAgent
     category: brute_force_testing
@@ -357,8 +430,8 @@ tools:
     safety_classification: active
     tier: 2
     triggers_on: ["brute_force_authorized_in_scope"]
-  
-  # Secrets Detection (2 tools)
+
+  # Secrets Detection
   - name: trufflehog
     agent_class: TruffleHogAgent
     category: secrets_scanning
@@ -371,7 +444,7 @@ tools:
     safety_classification: passive
     tier: 2
     triggers_on: ["git_repository_detected"]
-    
+
   - name: gitleaks
     agent_class: GitLeaksAgent
     category: secrets_scanning
@@ -385,8 +458,8 @@ tools:
     tier: 2
     redundancy_for: trufflehog
     triggers_on: ["git_repository_detected"]
-  
-  # Business Logic (2 tools)
+
+  # Business Logic
   - name: racetheweb
     agent_class: RaceTheWebAgent
     category: race_condition_testing
@@ -399,7 +472,7 @@ tools:
     safety_classification: active
     tier: 2
     triggers_on: ["state_changing_endpoint_detected"]
-    
+
   - name: fuxploider
     agent_class: FuxploiderAgent
     category: file_upload_testing
@@ -413,9 +486,883 @@ tools:
     tier: 2
     triggers_on: ["file_upload_endpoint_detected"]
 
-  # === TIER 3: SPECIALIZED VALIDATION (4 tools) ===
+  # OSINT / Social
+  - name: lazyrecon
+    agent_class: LazyreconAgent
+    category: recon_automation
+    execution_mode: native
+    binary_path: lazyrecon.sh
+    install_verification_cmd: ["lazyrecon.sh", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["full_scope_recon"]
+
+  - name: sherlock
+    agent_class: SherlockAgent
+    category: social_media_osint
+    execution_mode: native
+    binary_path: sherlock
+    install_verification_cmd: ["sherlock", "-h"]
+    input_schema: {"target": "username"}
+    output_schema: {"profiles": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["username_osint_requested"]
+
+  - name: maigret
+    agent_class: MaigretAgent
+    category: social_media_osint
+    execution_mode: native
+    binary_path: maigret
+    install_verification_cmd: ["maigret", "-h"]
+    input_schema: {"target": "username"}
+    output_schema: {"profiles": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["username_osint_requested"]
+
+  - name: socialscan
+    agent_class: SocialscanAgent
+    category: social_media_osint
+    execution_mode: native
+    binary_path: socialscan
+    install_verification_cmd: ["socialscan", "--version"]
+    input_schema: {"target": "username"}
+    output_schema: {"profiles": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["username_osint_requested"]
+
+  - name: whatsmyname
+    agent_class: WhatsmynameAgent
+    category: social_media_osint
+    execution_mode: native
+    binary_path: whats-my-name.py
+    install_verification_cmd: ["python3", "/opt/tools/WhatsMyName/whats-my-name.py", "-h"]
+    input_schema: {"target": "username"}
+    output_schema: {"profiles": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["username_osint_requested"]
+
+  - name: reconftw
+    agent_class: ReconftwAgent
+    category: recon_automation
+    execution_mode: native
+    binary_path: reconftw.sh
+    install_verification_cmd: ["reconftw.sh", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 7200
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["full_scope_recon"]
+
+  # Dark Web
+  - name: onionsearch
+    agent_class: OnionsearchAgent
+    category: darkweb_osint
+    execution_mode: native
+    binary_path: onionsearch
+    install_verification_cmd: ["onionsearch", "-h"]
+    input_schema: {"target": "keyword_or_domain"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["dark_web_scope_enabled"]
+
+  - name: torbot
+    agent_class: TorbotAgent
+    category: darkweb_crawler
+    execution_mode: native
+    binary_path: torbot
+    install_verification_cmd: ["torbot", "-h"]
+    input_schema: {"target": "onion_url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["dark_web_scope_enabled"]
+
+  - name: onionscan
+    agent_class: OnionscanAgent
+    category: onion_service_analysis
+    execution_mode: native
+    binary_path: onionscan
+    install_verification_cmd: ["onionscan", "-h"]
+    input_schema: {"target": "onion_url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["onion_service_detected"]
+
+  - name: darksearch
+    agent_class: DarksearchAgent
+    category: darkweb_search_api
+    execution_mode: native
+    binary_path: darksearch
+    install_verification_cmd: ["darksearch", "-h"]
+    input_schema: {"target": "keyword"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["dark_web_scope_enabled"]
+    api_keys_required: ["DARKSEARCH_API_KEY"]
+
+  # Vulnerability Scanning
+  - name: commix
+    agent_class: CommixAgent
+    category: command_injection_scanning
+    execution_mode: native
+    binary_path: commix
+    install_verification_cmd: ["commix", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: active
+    tier: 2
+    triggers_on: ["command_injection_vectors_detected"]
+
+  - name: tplmap
+    agent_class: TplmapAgent
+    category: template_injection_scanning
+    execution_mode: native
+    binary_path: tplmap.py
+    install_verification_cmd: ["python3", "/opt/tools/tplmap/tplmap.py", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: active
+    tier: 2
+    triggers_on: ["template_injection_vectors_detected"]
+
+  - name: nosqlmap
+    agent_class: NoSQLMapAgent
+    category: nosql_injection_scanning
+    execution_mode: native
+    binary_path: nosqlmap.py
+    install_verification_cmd: ["python3", "/opt/tools/NoSQLMap/nosqlmap.py", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: active
+    tier: 2
+    triggers_on: ["nosql_database_detected"]
+
+  - name: xxeinjector
+    agent_class: XXEInjectorAgent
+    category: xxe_injection_scanning
+    execution_mode: native
+    binary_path: XXEinjector.rb
+    install_verification_cmd: ["ruby", "/opt/tools/XXEinjector/XXEinjector.rb", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: active
+    tier: 2
+    triggers_on: ["xml_processing_detected"]
+
+  - name: crlfuzz
+    agent_class: CRLFFuzzAgent
+    category: crlf_injection_scanning
+    execution_mode: native
+    binary_path: crlfuzz
+    install_verification_cmd: ["crlfuzz", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["http_headers_injectable"]
+
+  - name: testssl
+    agent_class: TestsslAgent
+    category: tls_configuration_testing
+    execution_mode: native
+    binary_path: testssl.sh
+    install_verification_cmd: ["testssl.sh", "--version"]
+    input_schema: {"target": "hostname_or_ip"}
+    output_schema: {"tls_findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["tls_service_detected"]
+
+  - name: sslyze
+    agent_class: SSLyzeAgent
+    category: tls_configuration_testing
+    execution_mode: native
+    binary_path: sslyze
+    install_verification_cmd: ["sslyze", "--version"]
+    input_schema: {"target": "hostname_or_ip"}
+    output_schema: {"tls_findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["tls_service_detected"]
+    redundancy_for: testssl
+
+  - name: observatory
+    agent_class: ObservatoryAgent
+    category: http_observatory_scanning
+    execution_mode: native
+    binary_path: observatory
+    install_verification_cmd: ["observatory", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["web_application_detected"]
+
+  - name: spring4shell-scanner
+    agent_class: Spring4ShellScannerAgent
+    category: spring_rce_scanning
+    execution_mode: native
+    binary_path: spring4shell-scan
+    install_verification_cmd: ["spring4shell-scan", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["spring_framework_detected"]
+
+  # API Security
+  - name: inql
+    agent_class: InqlAgent
+    category: graphql_introspection
+    execution_mode: native
+    binary_path: inql
+    install_verification_cmd: ["inql", "-h"]
+    input_schema: {"target": "graphql_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["graphql_detected"]
+
+  - name: graphql-cop
+    agent_class: GraphQLCopAgent
+    category: graphql_security_testing
+    execution_mode: native
+    binary_path: graphql-cop
+    install_verification_cmd: ["graphql-cop", "-h"]
+    input_schema: {"target": "graphql_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["graphql_detected"]
+
+  - name: grpcurl
+    agent_class: GrpcurlAgent
+    category: grpc_service_testing
+    execution_mode: native
+    binary_path: grpcurl
+    install_verification_cmd: ["grpcurl", "-version"]
+    input_schema: {"target": "grpc_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["grpc_service_detected"]
+
+  - name: wscat
+    agent_class: WscatAgent
+    category: websocket_testing
+    execution_mode: native
+    binary_path: wscat
+    install_verification_cmd: ["wscat", "--version"]
+    input_schema: {"target": "websocket_url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["websocket_detected"]
+
+  - name: swagger-inspector
+    agent_class: SwaggerInspectorAgent
+    category: openapi_inspection
+    execution_mode: api
+    binary_path: swagger-inspector
+    install_verification_cmd: ["swagger-inspector", "-h"]
+    input_schema: {"target": "openapi_spec_url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["openapi_spec_detected"]
+
+  # Cloud Infrastructure
+  - name: cloudsploit
+    agent_class: CloudsploitAgent
+    category: cloud_security_scanning
+    execution_mode: native
+    binary_path: index.js
+    install_verification_cmd: ["node", "/opt/tools/cloudsploit/index.js", "--help"]
+    input_schema: {"target": "cloud_account"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["cloud_assets_detected"]
+
+  - name: checkov
+    agent_class: CheckovAgent
+    category: iac_security_scanning
+    execution_mode: native
+    binary_path: checkov
+    install_verification_cmd: ["checkov", "--version"]
+    input_schema: {"target": "iac_directory"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["iac_detected"]
+
+  - name: tfsec
+    agent_class: TfsecAgent
+    category: terraform_security_scanning
+    execution_mode: native
+    binary_path: tfsec
+    install_verification_cmd: ["tfsec", "--version"]
+    input_schema: {"target": "terraform_directory"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["terraform_detected"]
+
+  - name: grype
+    agent_class: GrypeAgent
+    category: container_vulnerability_scanning
+    execution_mode: native
+    binary_path: grype
+    install_verification_cmd: ["grype", "version"]
+    input_schema: {"target": "image_or_sbom"}
+    output_schema: {"vulnerabilities": "list[dict]"}
+    timeout_seconds: 900
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["container_or_code_detected"]
+
+  - name: dockle
+    agent_class: DockleAgent
+    category: container_lint_scanning
+    execution_mode: native
+    binary_path: dockle
+    install_verification_cmd: ["dockle", "--version"]
+    input_schema: {"target": "docker_image"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["docker_image_detected"]
+
+  - name: kube-bench
+    agent_class: KubeBenchAgent
+    category: kubernetes_cis_benchmark
+    execution_mode: native
+    binary_path: kube-bench
+    install_verification_cmd: ["kube-bench", "version"]
+    input_schema: {"target": "kubernetes_cluster"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["kubernetes_detected"]
+
+  - name: kube-hunter
+    agent_class: KubeHunterAgent
+    category: kubernetes_security_scanning
+    execution_mode: native
+    binary_path: kube-hunter
+    install_verification_cmd: ["kube-hunter", "--version"]
+    input_schema: {"target": "kubernetes_cluster"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: active
+    tier: 2
+    triggers_on: ["kubernetes_detected"]
+
+  - name: s3scanner
+    agent_class: S3ScannerAgent
+    category: s3_bucket_scanning
+    execution_mode: native
+    binary_path: s3scanner
+    install_verification_cmd: ["s3scanner", "-h"]
+    input_schema: {"target": "domain_or_org"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["aws_s3_detected"]
+    api_keys_required: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+
+  - name: cloudmapper
+    agent_class: CloudmapperAgent
+    category: aws_network_mapping
+    execution_mode: native
+    binary_path: cloudmapper
+    install_verification_cmd: ["cloudmapper", "-h"]
+    input_schema: {"target": "aws_account"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["aws_environment_detected"]
+    api_keys_required: ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+
+  - name: githound
+    agent_class: GitHoundAgent
+    category: git_secrets_hunting
+    execution_mode: native
+    binary_path: git-hound
+    install_verification_cmd: ["git-hound", "-h"]
+    input_schema: {"target": "github_org_or_user"}
+    output_schema: {"secrets": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["git_organization_detected"]
+    api_keys_required: ["GITHUB_TOKEN"]
+
+  - name: gitrob
+    agent_class: GitrobAgent
+    category: git_secrets_hunting
+    execution_mode: native
+    binary_path: gitrob
+    install_verification_cmd: ["gitrob", "-h"]
+    input_schema: {"target": "github_org_or_user"}
+    output_schema: {"secrets": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["git_organization_detected"]
+    api_keys_required: ["GITHUB_TOKEN"]
+
+  # Authentication / Brute Force
+  - name: oauth-scan
+    agent_class: OAuthScanAgent
+    category: oauth_security_testing
+    execution_mode: native
+    binary_path: oauthscan
+    install_verification_cmd: ["oauthscan", "-h"]
+    input_schema: {"target": "oauth_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["oauth_flow_detected"]
+
+  - name: oidc-scan
+    agent_class: OIDCScanAgent
+    category: oidc_security_testing
+    execution_mode: native
+    binary_path: oidcscan
+    install_verification_cmd: ["oidcscan", "-h"]
+    input_schema: {"target": "oidc_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["oidc_detected"]
+
+  - name: mfa-sweep
+    agent_class: MFASweepAgent
+    category: mfa_bypass_testing
+    execution_mode: native
+    binary_path: MFASweep.ps1
+    install_verification_cmd: ["pwsh", "/opt/tools/MFASweep/MFASweep.ps1", "-h"]
+    input_schema: {"target": "login_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1200
+    safety_classification: active
+    tier: 2
+    triggers_on: ["mfa_mechanism_detected"]
+
+  - name: medusa
+    agent_class: MedusaAgent
+    category: brute_force_testing
+    execution_mode: native
+    binary_path: medusa
+    install_verification_cmd: ["medusa", "-h"]
+    input_schema: {"target": "login_service"}
+    output_schema: {"brute_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["brute_force_authorized_in_scope"]
+
+  - name: patator
+    agent_class: PatatorAgent
+    category: brute_force_testing
+    execution_mode: native
+    binary_path: patator
+    install_verification_cmd: ["patator", "-h"]
+    input_schema: {"target": "login_service"}
+    output_schema: {"brute_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["brute_force_authorized_in_scope"]
+
+  - name: crowbar
+    agent_class: CrowbarAgent
+    category: brute_force_vpn_rdp
+    execution_mode: native
+    binary_path: crowbar
+    install_verification_cmd: ["crowbar", "-h"]
+    input_schema: {"target": "vpn_or_rdp_endpoint"}
+    output_schema: {"brute_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["vpn_or_rdp_service_detected"]
+
+  - name: ncrack
+    agent_class: NcrackAgent
+    category: network_auth_cracking
+    execution_mode: native
+    binary_path: ncrack
+    install_verification_cmd: ["ncrack", "--version"]
+    input_schema: {"target": "network_service"}
+    output_schema: {"brute_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["brute_force_authorized_in_scope"]
+
+  - name: hashcat
+    agent_class: HashcatAgent
+    category: hash_cracking
+    execution_mode: native
+    binary_path: hashcat
+    install_verification_cmd: ["hashcat", "--version"]
+    input_schema: {"target": "hash_file"}
+    output_schema: {"cracked_hashes": "list[dict]"}
+    timeout_seconds: 86400
+    safety_classification: active
+    tier: 2
+    triggers_on: ["hash_cracking_authorized"]
+    requires_authorization: true
+
+  - name: john
+    agent_class: JohnAgent
+    category: hash_cracking
+    execution_mode: native
+    binary_path: john
+    install_verification_cmd: ["john", "--version"]
+    input_schema: {"target": "hash_file"}
+    output_schema: {"cracked_hashes": "list[dict]"}
+    timeout_seconds: 86400
+    safety_classification: active
+    tier: 2
+    triggers_on: ["hash_cracking_authorized"]
+    requires_authorization: true
+    redundancy_for: hashcat
+
+  - name: spray
+    agent_class: SprayAgent
+    category: password_spraying
+    execution_mode: native
+    binary_path: spray
+    install_verification_cmd: ["spray", "-h"]
+    input_schema: {"target": "login_endpoint"}
+    output_schema: {"spray_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["password_spray_authorized"]
+    requires_authorization: true
+
+  - name: mailsniper
+    agent_class: MailsniperAgent
+    category: exchange_enumeration
+    execution_mode: native
+    binary_path: MailSniper.ps1
+    install_verification_cmd: ["pwsh", "/opt/tools/MailSniper/MailSniper.ps1", "-h"]
+    input_schema: {"target": "exchange_server"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: active
+    tier: 2
+    triggers_on: ["exchange_server_detected"]
+
+  - name: o365spray
+    agent_class: O365SprayAgent
+    category: office365_spray
+    execution_mode: native
+    binary_path: o365spray
+    install_verification_cmd: ["o365spray", "-h"]
+    input_schema: {"target": "office365_domain"}
+    output_schema: {"spray_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["office365_detected"]
+
+  # Business Logic / SSRF
+  - name: gopherus
+    agent_class: GopherusAgent
+    category: ssrf_payload_generation
+    execution_mode: native
+    binary_path: gopherus.py
+    install_verification_cmd: ["python3", "/opt/tools/Gopherus/gopherus.py", "-h"]
+    input_schema: {"target": "ssrf_endpoint"}
+    output_schema: {"payloads": "list[str]"}
+    timeout_seconds: 300
+    safety_classification: active
+    tier: 2
+    triggers_on: ["ssrf_vulnerability_confirmed"]
+
+  - name: rate-limit-tester
+    agent_class: RateLimitTesterAgent
+    category: rate_limit_testing
+    execution_mode: native
+    binary_path: rate-limit-tester
+    install_verification_cmd: ["rate-limit-tester", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["rate_limiting_mechanism_detected"]
+
+  # Client-Side
+  - name: ppscan
+    agent_class: PPScanAgent
+    category: prototype_pollution_scanning
+    execution_mode: native
+    binary_path: ppscan
+    install_verification_cmd: ["ppscan", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["javascript_client_side_detected"]
+
+  - name: protoscan
+    agent_class: ProtoscanAgent
+    category: protocol_buffer_testing
+    execution_mode: native
+    binary_path: protoscan
+    install_verification_cmd: ["protoscan", "-h"]
+    input_schema: {"target": "grpc_or_protobuf_endpoint"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["protobuf_detected"]
+
+  - name: post-message-tracker
+    agent_class: PostMessageTrackerAgent
+    category: postmessage_analysis
+    execution_mode: native
+    binary_path: postmessage-tracker
+    install_verification_cmd: ["postmessage-tracker", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["spa_application_detected"]
+
+  # Injection Specialized
+  - name: ldaptester
+    agent_class: LDAPTesterAgent
+    category: ldap_injection_testing
+    execution_mode: native
+    binary_path: ldapdomaindump
+    install_verification_cmd: ["ldapdomaindump", "-h"]
+    input_schema: {"target": "ldap_service"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["ldap_service_detected"]
+
+  - name: spel-tester
+    agent_class: SpelTesterAgent
+    category: spring_expression_injection
+    execution_mode: native
+    binary_path: ssti-payload-generator.py
+    install_verification_cmd: ["python3", "/opt/tools/ssti-payload-generator/ssti-payload-generator.py", "-h"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["spring_framework_detected"]
+
+  # Continuous Monitoring
+  - name: dnsreaper
+    agent_class: DNSReaperAgent
+    category: dns_misconfiguration_detection
+    execution_mode: native
+    binary_path: dnsreaper
+    install_verification_cmd: ["dnsreaper", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["dns_records_available"]
+
+  - name: dnsvalidator
+    agent_class: DNSValidatorAgent
+    category: dns_validation
+    execution_mode: native
+    binary_path: dnsvalidator
+    install_verification_cmd: ["dnsvalidator", "-h"]
+    input_schema: {"target": "subdomain_list"}
+    output_schema: {"valid_resolvers": "list[str]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["subdomain_list_available"]
+
+  - name: subover
+    agent_class: SuboverAgent
+    category: subdomain_takeover_detection
+    execution_mode: native
+    binary_path: SubOver
+    install_verification_cmd: ["SubOver", "-h"]
+    input_schema: {"target": "subdomain_list"}
+    output_schema: {"takeover_candidates": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["subdomains_enumerated"]
+
+  - name: nsbrute
+    agent_class: NSBruteAgent
+    category: dns_brute_force
+    execution_mode: native
+    binary_path: subbrute
+    install_verification_cmd: ["python3", "/opt/tools/subbrute/subbrute.py", "-h"]
+    input_schema: {"target": "domain"}
+    output_schema: {"subdomains": "list[str]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 2
+    triggers_on: ["dns_brute_force_authorized"]
+
+  # Report Generation
+  - name: defectdojo
+    agent_class: DefectDojoAgent
+    category: vulnerability_management
+    execution_mode: api
+    binary_path: dojo
+    install_verification_cmd: ["dojo", "-h"]
+    input_schema: {"target": "scan_results"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["scan_phase_complete"]
+    api_keys_required: ["DEFECTDOJO_API_KEY", "DEFECTDOJO_URL"]
+
+  # Extended Data Sources (API mode)
+  - name: misp
+    agent_class: MISPAgent
+    category: threat_intelligence
+    execution_mode: api
+    binary_path: misp-client
+    install_verification_cmd: ["misp-client", "-h"]
+    input_schema: {"target": "ioc_or_domain"}
+    output_schema: {"threat_intel": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["threat_intel_enrichment_needed"]
+    api_keys_required: ["MISP_URL", "MISP_API_KEY"]
+
+  - name: cortex
+    agent_class: CortexAgent
+    category: threat_analysis
+    execution_mode: api
+    binary_path: cortex-client
+    install_verification_cmd: ["cortex-client", "-h"]
+    input_schema: {"target": "ioc"}
+    output_schema: {"analysis": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["ioc_analysis_needed"]
+    api_keys_required: ["CORTEX_URL", "CORTEX_API_KEY"]
+
+  - name: thehive
+    agent_class: TheHiveAgent
+    category: case_management
+    execution_mode: api
+    binary_path: thehive-client
+    install_verification_cmd: ["thehive-client", "-h"]
+    input_schema: {"target": "finding"}
+    output_schema: {"case_id": "str"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["finding_case_creation"]
+    api_keys_required: ["THEHIVE_URL", "THEHIVE_API_KEY"]
+
+  - name: shuffle
+    agent_class: ShuffleAgent
+    category: soar_automation
+    execution_mode: api
+    binary_path: shuffle
+    install_verification_cmd: ["shuffle", "-h"]
+    input_schema: {"target": "workflow_trigger"}
+    output_schema: {"workflow_result": "dict"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["workflow_automation_needed"]
+    api_keys_required: ["SHUFFLE_URL", "SHUFFLE_API_KEY"]
+
+  - name: wazuh
+    agent_class: WazuhAgent
+    category: siem_integration
+    execution_mode: api
+    binary_path: wazuh-cli
+    install_verification_cmd: ["wazuh-cli", "-h"]
+    input_schema: {"target": "host_or_agent"}
+    output_schema: {"alerts": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["siem_integration_enabled"]
+    api_keys_required: ["WAZUH_URL", "WAZUH_API_KEY"]
+
+  - name: opencti
+    agent_class: OpenCTIAgent
+    category: threat_intel_platform
+    execution_mode: api
+    binary_path: opencti-client
+    install_verification_cmd: ["opencti-client", "-h"]
+    input_schema: {"target": "ioc_or_indicator"}
+    output_schema: {"cti_data": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 2
+    triggers_on: ["cti_enrichment_needed"]
+    api_keys_required: ["OPENCTI_URL", "OPENCTI_API_KEY"]
+
+  # === TIER 3: SPECIALIZED VALIDATION ===
   # Manual trigger or high-value targets
-  
+
   - name: domdig
     agent_class: DOMDigAgent
     category: client_side_testing
@@ -427,7 +1374,7 @@ tools:
     timeout_seconds: 1800
     safety_classification: active
     tier: 3
-    
+
   - name: csp-evaluator
     agent_class: CSPEvaluatorAgent
     category: csp_analysis
@@ -439,7 +1386,7 @@ tools:
     timeout_seconds: 300
     safety_classification: passive
     tier: 3
-    
+
   - name: bloodhound
     agent_class: BloodHoundAgent
     category: active_directory_analysis
@@ -452,7 +1399,7 @@ tools:
     safety_classification: active
     tier: 3
     requires_authorization: true
-    
+
   - name: crackmapexec
     agent_class: CrackMapExecAgent
     category: network_lateral_movement
@@ -465,7 +1412,7 @@ tools:
     safety_classification: active
     tier: 3
     requires_authorization: true
-    
+
   - name: mobsf
     agent_class: MobSFAgent
     category: mobile_security_testing
@@ -478,3 +1425,138 @@ tools:
     safety_classification: passive
     tier: 3
     triggers_on: ["mobile_application_detected"]
+
+  - name: sharphound
+    agent_class: SharpHoundAgent
+    category: active_directory_collection
+    execution_mode: native
+    binary_path: SharpHound
+    install_verification_cmd: ["SharpHound", "-h"]
+    input_schema: {"target": "active_directory_domain"}
+    output_schema: {"ad_findings": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 3
+    triggers_on: ["active_directory_scope_authorized"]
+    requires_authorization: true
+
+  - name: enum4linux-ng
+    agent_class: Enum4LinuxNGAgent
+    category: smb_enumeration
+    execution_mode: native
+    binary_path: enum4linux-ng
+    install_verification_cmd: ["enum4linux-ng", "-h"]
+    input_schema: {"target": "smb_host"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: active
+    tier: 3
+    triggers_on: ["smb_service_detected"]
+
+  - name: onesixtyone
+    agent_class: OnesixtyoneAgent
+    category: snmp_scanning
+    execution_mode: native
+    binary_path: onesixtyone
+    install_verification_cmd: ["onesixtyone", "-h"]
+    input_schema: {"target": "ip_or_cidr"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 3
+    triggers_on: ["snmp_service_detected"]
+
+  - name: responder
+    agent_class: ResponderAgent
+    category: network_poisoning
+    execution_mode: native
+    binary_path: Responder.py
+    install_verification_cmd: ["python3", "/opt/tools/Responder/Responder.py", "-h"]
+    input_schema: {"target": "network_interface"}
+    output_schema: {"captured_hashes": "list[dict]"}
+    timeout_seconds: 3600
+    safety_classification: active
+    tier: 3
+    triggers_on: ["network_pentest_authorized"]
+    requires_authorization: true
+
+  - name: ipv6toolkit
+    agent_class: IPv6ToolkitAgent
+    category: ipv6_network_scanning
+    execution_mode: native
+    binary_path: scan6
+    install_verification_cmd: ["scan6", "-h"]
+    input_schema: {"target": "ipv6_network"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: active
+    tier: 3
+    triggers_on: ["ipv6_network_detected"]
+
+  - name: apkleaks
+    agent_class: ApkleaksAgent
+    category: android_secrets_scanning
+    execution_mode: native
+    binary_path: apkleaks
+    install_verification_cmd: ["apkleaks", "-h"]
+    input_schema: {"target": "apk_file"}
+    output_schema: {"secrets": "list[dict]"}
+    timeout_seconds: 1800
+    safety_classification: passive
+    tier: 3
+    triggers_on: ["android_application_detected"]
+
+  - name: metasploit
+    agent_class: MetasploitAgent
+    category: exploitation_framework
+    execution_mode: native
+    binary_path: msfconsole
+    install_verification_cmd: ["msfconsole", "--version"]
+    input_schema: {"target": "host_or_service"}
+    output_schema: {"exploit_results": "list[dict]"}
+    timeout_seconds: 7200
+    safety_classification: active
+    tier: 3
+    triggers_on: ["exploitation_authorized"]
+    requires_authorization: true
+
+  - name: caido
+    agent_class: CaidoAgent
+    category: http_proxy_interceptor
+    execution_mode: native
+    binary_path: caido
+    install_verification_cmd: ["caido", "--version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 0
+    safety_classification: passive
+    tier: 3
+    triggers_on: ["always_active"]
+
+  - name: pentagi
+    agent_class: PentagiAgent
+    category: autonomous_pentest_agent
+    execution_mode: docker
+    binary_path: pentagi
+    install_verification_cmd: ["pentagi", "--version"]
+    input_schema: {"target": "host_or_application"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 7200
+    safety_classification: active
+    tier: 3
+    triggers_on: ["autonomous_pentest_authorized"]
+    requires_authorization: true
+
+  - name: cai
+    agent_class: CAIAgent
+    category: ai_pentest_agent
+    execution_mode: native
+    binary_path: cai
+    install_verification_cmd: ["cai", "-h"]
+    input_schema: {"target": "host_or_application"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 7200
+    safety_classification: active
+    tier: 3
+    triggers_on: ["ai_pentest_authorized"]
+    requires_authorization: true

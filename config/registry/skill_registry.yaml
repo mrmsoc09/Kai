@@ -1,13 +1,13 @@
 skills:
   - name: governance
-    path: ai-kernel/skills/governance/SKILL.md
+    path: ai_kernel/skills/governance/SKILL.md
   - name: recon
-    path: ai-kernel/skills/recon/SKILL.md
+    path: ai_kernel/skills/recon/SKILL.md
   - name: triage
-    path: ai-kernel/skills/triage/SKILL.md
+    path: ai_kernel/skills/triage/SKILL.md
   - name: reporting
-    path: ai-kernel/skills/reporting/SKILL.md
+    path: ai_kernel/skills/reporting/SKILL.md
   - name: provider-routing
-    path: ai-kernel/skills/provider-routing/SKILL.md
+    path: ai_kernel/skills/provider-routing/SKILL.md
   - name: evidence-normalization
-    path: ai-kernel/skills/evidence-normalization/SKILL.md
+    path: ai_kernel/skills/evidence-normalization/SKILL.md

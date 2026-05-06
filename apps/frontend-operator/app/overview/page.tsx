@@ -9,9 +9,12 @@ import { useCampaigns } from "@/hooks/useCampaigns";
 import { useFindingsQueue } from "@/hooks/useFindingsQueue";
 import { useTrackedCampaignIds } from "@/hooks/useTrackedCampaignIds";
 import { gateIsPending } from "@/lib/approval-gates";
+import { deriveMissionCockpitModel } from "@/lib/utils/cockpit";
 
 import { PendingApprovalPanel } from "@/components/approvals/PendingApprovalPanel";
 import { ActionCard } from "@/components/cockpit/ActionCard";
+import { BackendCapabilityCoveragePanel } from "@/components/cockpit/BackendCapabilityCoveragePanel";
+import { OverviewMissionCockpit } from "@/components/cockpit/OverviewMissionCockpit";
 import { ProgramFilterCard } from "@/components/bugbounty/ProgramFilterCard";
 import { EmptyState } from "@/components/data-display/EmptyState";
 import { ErrorState } from "@/components/data-display/ErrorState";
@@ -83,6 +86,37 @@ export default function OverviewPage() {
       .sort((a, b) => b.findings - a.findings)
       .slice(0, 8);
   }, [findings]);
+  const missionCockpitRows = useMemo(() => {
+    return missionTracking.trackedCampaignIds
+      .map((missionId, index) => {
+        const missionQuery = missionQueries[index];
+        const diagnosticsQuery = approvals.diagnosticsQueries[index];
+        if (!missionQuery?.isSuccess || !diagnosticsQuery?.isSuccess) {
+          return null;
+        }
+        const missionFindingsCount = findings.filter((row) => row.campaign_id === missionId).length;
+        const missionApprovalCount = pendingApprovals.filter((row) => row.campaign_id === missionId).length;
+        return {
+          missionId,
+          programId: missionQuery.data.campaign.program_id,
+          missionStatus: missionQuery.data.campaign.status,
+          model: deriveMissionCockpitModel({
+            missionId,
+            campaign: missionQuery.data,
+            diagnostics: diagnosticsQuery.data,
+            findingsCount: missionFindingsCount,
+            approvalCount: missionApprovalCount
+          })
+        };
+      })
+      .filter((row): row is NonNullable<typeof row> => row !== null);
+  }, [
+    approvals.diagnosticsQueries,
+    findings,
+    missionQueries,
+    missionTracking.trackedCampaignIds,
+    pendingApprovals
+  ]);
 
   const toolsSummary = data.toolsHealthQuery.data?.summary;
   const pipelineFailureCount =
@@ -97,6 +131,10 @@ export default function OverviewPage() {
       />
 
       <ProgramFilterCard value={programIdFilter} onChange={setProgramIdFilter} />
+
+      <OverviewMissionCockpit rows={missionCockpitRows} />
+
+      <BackendCapabilityCoveragePanel />
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <ActionCard

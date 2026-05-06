@@ -15,6 +15,7 @@ import type { ArtifactReference } from "@/components/cockpit/ArtifactDrawer";
 
 import { ApprovalGateTable } from "@/components/approvals/ApprovalGateTable";
 import { ArtifactDrawer } from "@/components/cockpit/ArtifactDrawer";
+import { HuntExecutionCockpit } from "@/components/cockpit/HuntExecutionCockpit";
 import { MissionLinkedSidePanel } from "@/components/cockpit/MissionLinkedSidePanel";
 import { PhaseProgressRibbon } from "@/components/cockpit/PhaseProgressRibbon";
 import { EmptyState } from "@/components/data-display/EmptyState";
@@ -186,6 +187,14 @@ export function MissionControlWorkspace({ missionId }: { missionId: string }) {
           </div>
         </CardContent>
       </Card>
+
+      <HuntExecutionCockpit
+        missionId={missionId}
+        campaign={campaignQuery.data}
+        diagnostics={diagnosticsQuery.data}
+        findingsCount={findingsQuery.data?.count ?? 0}
+        approvalCount={approvalGates.length}
+      />
 
       <PhaseProgressRibbon jobs={campaignQuery.data.phase_jobs} />
 

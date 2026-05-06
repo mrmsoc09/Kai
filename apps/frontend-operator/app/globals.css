@@ -30,3 +30,19 @@ body {
 .operator-panel-elevated {
   @apply rounded-lg border border-border bg-elevated;
 }
+
+.cockpit-flightdeck {
+  background-image: linear-gradient(140deg, rgba(59, 130, 246, 0.16) 0%, rgba(11, 15, 20, 0.92) 55%);
+}
+
+.cockpit-flightdeck-header {
+  background-image: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(11, 15, 20, 0.05) 100%);
+}
+
+.cockpit-kpi {
+  @apply rounded-md border border-border bg-elevated/80 p-3;
+}
+
+.cockpit-lane {
+  @apply rounded-md border border-border bg-elevated/70 p-3;
+}

@@ -1,1 +1,87 @@
-# entire file content here
+# === Secrets & Credentials ===
+.env
+.env.*
+!.env.example
+!.env.mvp.example
+!.env.template
+.env.api-keys
+.env.vault
+.env.local
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+vault-tokens/
+
+# === Python ===
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+pip-wheel-metadata/
+
+# === Test Artifacts ===
+.pytest_cache/
+.pytest_artifacts/
+*.db
+*.sqlite3
+htmlcov/
+.coverage
+coverage.xml
+*.lcov
+
+# === Linter / Formatter Caches ===
+.ruff_cache/
+.mypy_cache/
+.dmypy.json
+
+# === Node / Frontend ===
+node_modules/
+dist/
+.npm/
+*.tsbuildinfo
+
+# === Aider AI ===
+.aider.chat.history.md
+.aider.input.history
+.aider.tags.cache.v4/
+
+# === Editor & OS ===
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === Build & Runtime Artifacts ===
+output/
+artifacts/
+*.log
+*.pid
+*.sock
+
+# === Docker ===
+.docker/
+
+# === Tool Runtime State ===
+.runtime/
+apps/backend/src/agents/tools/*/memory/
+apps/backend/src/agents/tools/caido/memory/
+ai_kernel/templates/memory/
+
+# === Misc ===
+*.bak
+*.orig
+.aider*

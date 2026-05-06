@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILLS = ROOT / "ai-kernel" / "skills"
+SKILLS = ROOT / "ai_kernel" / "skills"
 
 
 def export(target: Path):

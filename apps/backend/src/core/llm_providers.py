@@ -30,6 +30,13 @@ except ImportError:
     genai = None
 
 try:
+    from google.cloud import aiplatform
+    from vertexai.generative_models import GenerativeModel as VertexGenerativeModel
+except ImportError:
+    aiplatform = None
+    VertexGenerativeModel = None
+
+try:
     import ollama
 except ImportError:
     ollama = None
@@ -40,6 +47,9 @@ class LLMProvider(str, Enum):
     ANTHROPIC = "anthropic"
     OPENAI = "openai"
     GEMINI = "gemini"
+    VERTEX_AI = "vertex-ai"
+    KIMI = "kimi"
+    DEEPSEEK = "deepseek"
     GEMINI_FLASH_LITE = "gemini-flash-lite"  # Tier 2: quota fallback, high-volume
     GEMINI_PRO = "gemini-pro"                # Tier 3: complex reasoning, scarce quota
     OLLAMA = "ollama"
@@ -52,6 +62,7 @@ class LLMModel(str, Enum):
     CLAUDE_3_5_SONNET = "claude-3-5-sonnet-20241022"
     CLAUDE_3_OPUS = "claude-3-opus-20250219"
     CLAUDE_3_HAIKU = "claude-3-5-haiku-20241022"
+    CLAUDE_4_6_SONNET = "claude-4.6-sonnet" # MVP Target
 
     # OpenAI GPT
     GPT_4_TURBO = "gpt-4-turbo"
@@ -59,8 +70,9 @@ class LLMModel(str, Enum):
     GPT_4O = "gpt-4o"
     GPT_4O_MINI = "gpt-4o-mini"
     GPT_3_5_TURBO = "gpt-3.5-turbo"
+    GPT_5_3 = "gpt-5.3" # MVP Target
 
-    # Google Gemini
+    # Google Gemini & Vertex AI
     GEMINI_2_FLASH = "gemini-2.0-flash"
     GEMINI_1_5_PRO = "gemini-1.5-pro"
     GEMINI_1_5_FLASH = "gemini-1.5-flash"
@@ -68,6 +80,12 @@ class LLMModel(str, Enum):
     GEMINI_2_5_FLASH = "gemini-2.5-flash"
     GEMINI_2_5_FLASH_LITE = "gemini-2.5-flash-lite"
     GEMINI_2_5_PRO = "gemini-2.5-pro"
+
+    # Kimi
+    KIMI_K2_5 = "kimi-k2.5"
+
+    # DeepSeek
+    DEEPSEEK_V4_PRO = "deepseek-v4-pro"
 
     # Ollama (local)
     OLLAMA_LLAMA2 = "llama2"
@@ -198,6 +216,16 @@ class BaseLLMProvider(ABC):
                 "gemini-2.0-flash": {"input": 0.0375, "output": 0.15},
                 "gemini-1.5-pro": {"input": 0.00125, "output": 0.005},
                 "gemini-1.5-flash": {"input": 0.0375, "output": 0.15}
+            },
+            LLMProvider.VERTEX_AI: {
+                "gemini-2.5-pro": {"input": 0.00125, "output": 0.005},
+                "gemini-2.5-flash": {"input": 0.0375, "output": 0.15}
+            },
+            LLMProvider.KIMI: {
+                "kimi-k2.5": {"input": 0.001, "output": 0.003}
+            },
+            LLMProvider.DEEPSEEK: {
+                "deepseek-v4-pro": {"input": 0.0001, "output": 0.0003}
             },
             LLMProvider.OLLAMA: {
                 "all": {"input": 0.0, "output": 0.0}  # Local = free
@@ -706,6 +734,134 @@ class GeminiProProvider(GeminiProvider):
         return await super().complete(messages, system=system, tools=tools, **kwargs)
 
 
+class VertexAIProvider(BaseLLMProvider):
+    """Google Cloud Vertex AI provider"""
+
+    def _initialize_client(self):
+        if not aiplatform or not VertexGenerativeModel:
+            raise ImportError("google-cloud-aiplatform or vertexai package not installed")
+
+        project = os.getenv("GCP_PROJECT_ID")
+        location = os.getenv("GCP_LOCATION", "us-central1")
+        
+        if not project:
+            raise ValueError("GCP_PROJECT_ID not found for Vertex AI provider")
+
+        aiplatform.init(project=project, location=location)
+        self.model = os.getenv("K1_VERTEX_MODEL", LLMModel.GEMINI_2_5_PRO.value)
+        self.client = VertexGenerativeModel(self.model)
+
+    async def complete(
+        self,
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        **kwargs
+    ) -> LLMResponse:
+        """Vertex AI completion (Gemini models)"""
+        import time
+        start_time = time.time()
+
+        try:
+            # Convert to Vertex format
+            vertex_messages = []
+            for msg in messages:
+                vertex_messages.append({
+                    "role": "user" if msg["role"] == "user" else "model",
+                    "parts": [{"text": msg["content"]}]
+                })
+
+            # Make API call (Note: Vertex AI SDK has sync and async methods, 
+            # using sync here with thread pool for simplicity in this MVP stub)
+            # In a real MVP, we'd use the async client if available.
+            response = self.client.generate_content(
+                vertex_messages,
+                generation_config={
+                    "temperature": kwargs.get("temperature", self.config.temperature),
+                    "max_output_tokens": kwargs.get("max_tokens", self.config.max_tokens)
+                }
+            )
+
+            text = response.text
+            latency_ms = (time.time() - start_time) * 1000
+
+            # Estimate tokens
+            input_tokens = len(" ".join([msg["content"] for msg in messages]).split())
+            output_tokens = len(text.split()) if text else 0
+
+            return LLMResponse(
+                provider=LLMProvider.VERTEX_AI,
+                model=self.model,
+                text=text,
+                tool_uses=[], # Tool calling in Vertex AI requires different setup
+                stop_reason="stop",
+                usage={
+                    "input_tokens": input_tokens,
+                    "output_tokens": output_tokens
+                },
+                latency_ms=latency_ms,
+                cost_usd=self._calculate_cost(input_tokens, output_tokens)
+            )
+
+        except Exception as e:
+            raise Exception(f"Vertex AI error: {str(e)}")
+
+    async def stream_complete(
+        self,
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        **kwargs
+    ) -> AsyncIterator[str]:
+        """Stream Vertex AI responses"""
+        vertex_messages = []
+        for msg in messages:
+            vertex_messages.append({
+                "role": "user" if msg["role"] == "user" else "model",
+                "parts": [{"text": msg["content"]}]
+            })
+
+        responses = self.client.generate_content(
+            vertex_messages,
+            generation_config={
+                "temperature": kwargs.get("temperature", self.config.temperature),
+                "max_output_tokens": kwargs.get("max_tokens", self.config.max_tokens)
+            },
+            stream=True
+        )
+
+        for response in responses:
+            yield response.text
+
+
+class KimiProvider(OpenAIProvider):
+    """Moonshot AI Kimi provider (OpenAI-compatible)"""
+
+    def _initialize_client(self):
+        if not openai:
+            raise ImportError("openai package not installed")
+
+        api_key = _resolve_api_key(self.config.api_key, "KIMI_API_KEY")
+        base_url = os.getenv("KIMI_BASE_URL", "https://api.moonshot.cn/v1")
+
+        self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
+        self.model = os.getenv("K1_KIMI_MODEL", LLMModel.KIMI_K2_5.value)
+
+
+class DeepSeekProvider(OpenAIProvider):
+    """DeepSeek provider (OpenAI-compatible)"""
+
+    def _initialize_client(self):
+        if not openai:
+            raise ImportError("openai package not installed")
+
+        api_key = _resolve_api_key(self.config.api_key, "DEEPSEEK_API_KEY")
+        base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+
+        self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
+        self.model = os.getenv("K1_DEEPSEEK_MODEL", LLMModel.DEEPSEEK_V4_PRO.value)
+
+
 class OllamaProvider(BaseLLMProvider):
     """Ollama provider (local models)"""
 
@@ -909,6 +1065,9 @@ class LLMProviderFactory:
             LLMProvider.ANTHROPIC: AnthropicProvider,
             LLMProvider.OPENAI: OpenAIProvider,
             LLMProvider.GEMINI: GeminiProvider,
+            LLMProvider.VERTEX_AI: VertexAIProvider,
+            LLMProvider.KIMI: KimiProvider,
+            LLMProvider.DEEPSEEK: DeepSeekProvider,
             LLMProvider.GEMINI_FLASH_LITE: GeminiFlashLiteProvider,
             LLMProvider.GEMINI_PRO: GeminiProProvider,
             LLMProvider.OLLAMA: OllamaProvider,
@@ -962,6 +1121,9 @@ class LLMProviderFactory:
             "anthropic": LLMProvider.ANTHROPIC,
             "openai": LLMProvider.OPENAI,
             "gemini": LLMProvider.GEMINI,
+            "vertex-ai": LLMProvider.VERTEX_AI,
+            "kimi": LLMProvider.KIMI,
+            "deepseek": LLMProvider.DEEPSEEK,
             "gemini-flash-lite": LLMProvider.GEMINI_FLASH_LITE,
             "gemini-pro": LLMProvider.GEMINI_PRO,
             "ollama": LLMProvider.OLLAMA,

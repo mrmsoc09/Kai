@@ -25,8 +25,14 @@
   - approval pressure
   - attack-path concentration
   - scheduler/tool failures
+  - cross-mission flight deck (autonomous coverage, manual blocker load, confidence average, next-action routing)
+  - expandable per-mission manual checklist preview (guided steps + AI signal excerpts)
+  - backend capability coverage ledger (router + middleware mapping to frontend representation status)
 - Mission Control cockpit introduced as central mission workspace:
   - mission summary
+  - pilot + copilot mission deck (autonomous lane + manual hunt lane)
+  - guided manual scan checklist generated from incomplete phase jobs
+  - AI signal brief derived from recent mission audit telemetry
   - phase progress ribbon
   - execution timeline
   - agent actions
@@ -62,6 +68,17 @@
   - optional mission context
 - Outputs:
   - campaign diagnostics-backed mission cockpit views
+  - mission cockpit guidance model with:
+    - autonomy coverage
+    - manual coverage
+    - confidence score
+    - prioritized autonomous and manual actions
+  - backend/frontend capability accounting output with explicit status:
+    - full UI
+    - linked UI
+    - API-only
+    - optional
+    - unmapped gaps
   - governance queue decisions via `/api/v1/campaigns/approvals/{gateId}/decision`
   - terminal transcript/history via `/terminal/logs`
 

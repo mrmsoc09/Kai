@@ -19,7 +19,7 @@ def copy_if_missing(src: Path, dst: Path):
 
 
 def main():
-    templates = ROOT / "ai-kernel" / "templates"
+    templates = ROOT / "ai_kernel" / "templates"
     copy_if_missing(templates / "memory" / "GEMINI.template.md", ROOT / "adapters/gemini/.gemini/GEMINI.md")
     copy_if_missing(templates / "memory" / "CLAUDE.template.md", ROOT / "adapters/claude/.claude/CLAUDE.md")
     copy_if_missing(templates / "memory" / "AGENTS.template.md", ROOT / "adapters/codex/AGENTS.md")

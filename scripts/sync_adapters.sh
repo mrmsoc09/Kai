@@ -10,10 +10,10 @@ sync_dir() {
   rsync -a --delete "$src/" "$dst/"
 }
 
-sync_dir "$ROOT/ai-kernel/governance/hooks" "$ROOT/adapters/gemini/.gemini/hooks"
-sync_dir "$ROOT/ai-kernel/skills" "$ROOT/adapters/gemini/.gemini/skills"
-sync_dir "$ROOT/ai-kernel/governance/hooks" "$ROOT/adapters/claude/.claude/hooks"
-sync_dir "$ROOT/ai-kernel/skills" "$ROOT/adapters/claude/.claude/skills"
-sync_dir "$ROOT/ai-kernel/skills" "$ROOT/adapters/codex/skills"
+sync_dir "$ROOT/ai_kernel/governance/hooks" "$ROOT/adapters/gemini/.gemini/hooks"
+sync_dir "$ROOT/ai_kernel/skills" "$ROOT/adapters/gemini/.gemini/skills"
+sync_dir "$ROOT/ai_kernel/governance/hooks" "$ROOT/adapters/claude/.claude/hooks"
+sync_dir "$ROOT/ai_kernel/skills" "$ROOT/adapters/claude/.claude/skills"
+sync_dir "$ROOT/ai_kernel/skills" "$ROOT/adapters/codex/skills"
 
 echo "adapter sync complete"

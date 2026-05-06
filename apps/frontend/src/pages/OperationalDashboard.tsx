@@ -19,6 +19,8 @@ import { DashboardLayout }       from '@/components/DashboardLayout';
 import { MissionOverviewPanel }  from '@/components/MissionOverviewPanel';
 import { ScanControlPanel }      from '@/components/ScanControlPanel';
 import { LogStreamViewer }       from '@/components/LogStreamViewer';
+import { CommandConsole }        from '@/components/CommandConsole';
+import AttackSurfaceGraph        from '@/components/graph/AttackSurfaceGraph';
 
 /* Import new branding/layout styles first, then existing dashboard styles */
 import '@/styles/branding.css';
@@ -29,7 +31,7 @@ import '@/styles/dashboard.css';  /* keeps existing ScanControlPanel / LogStream
 /* ── State ──────────────────────────────────────────────────────────────── */
 interface DashboardState {
   selectedScanId: string | null;
-  viewMode: 'split' | 'full' | 'single';
+  viewMode: 'split' | 'full' | 'single' | 'cockpit';
   autoRefresh: boolean;
   activeScansCount: number;
 }
@@ -51,7 +53,7 @@ export default function OperationalDashboard() {
     setState(prev => ({ ...prev, autoRefresh: !prev.autoRefresh }));
   }, []);
 
-  const handleViewModeChange = useCallback((mode: 'split' | 'full' | 'single') => {
+  const handleViewModeChange = useCallback((mode: 'split' | 'full' | 'single' | 'cockpit') => {
     setState(prev => ({ ...prev, viewMode: mode }));
   }, []);
 
@@ -65,13 +67,41 @@ export default function OperationalDashboard() {
       <DashboardHeader
         autoRefresh={state.autoRefresh}
         onAutoRefreshToggle={handleAutoRefreshToggle}
-        viewMode={state.viewMode}
+        viewMode={state.viewMode as any}
         onViewModeChange={handleViewModeChange}
         activeScansCount={state.activeScansCount}
       />
 
+      {/* ── COCKPIT MODE ────────────────────────────────────────────── */}
+      {state.viewMode === 'cockpit' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '10px', height: 'calc(100vh - 120px)', padding: '10px' }}>
+          <div style={{ background: '#000', border: '1px solid #D4AF37', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ background: '#D4AF37', color: '#000', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold' }}>TMUX SOVEREIGN CONSOLE</div>
+            <CommandConsole />
+          </div>
+          <div style={{ background: '#000', border: '1px solid #D4AF37', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ background: '#D4AF37', color: '#000', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold' }}>ATTACK SURFACE GRAPH</div>
+            <AttackSurfaceGraph />
+          </div>
+          <div style={{ background: '#000', border: '1px solid #D4AF37', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ background: '#D4AF37', color: '#000', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold' }}>BURP SUITE PRO INTERCEPTOR</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#D4AF37', fontSize: '14px', fontStyle: 'italic' }}>
+              Burp Suite API Bridge Active. Intercepting Proxy: localhost:8080
+            </div>
+          </div>
+          <div style={{ background: '#000', border: '1px solid #D4AF37', borderRadius: '8px', overflow: 'hidden' }}>
+            <div style={{ background: '#D4AF37', color: '#000', padding: '4px 10px', fontSize: '12px', fontWeight: 'bold' }}>ACTIVE SCAN METRICS</div>
+            {state.selectedScanId ? (
+              <MissionOverviewPanel selectedScanId={state.selectedScanId} totalActiveScans={state.activeScansCount} />
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#D4AF37' }}>Select a scan to view metrics</div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── ULTRAWIDE THREE-COLUMN CONTENT ──────────────────────────── */}
-      {state.viewMode !== 'full' && (
+      {state.viewMode !== 'full' && state.viewMode !== 'cockpit' && (
         <DashboardLayout
           leftPanel={
             <ScanControlPanel

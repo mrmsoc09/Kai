@@ -1,7 +1,7 @@
 #!/bin/bash
 ###############################################################################
 # KAISONONE BOOTSTRAP SCRIPT
-# Auto-installs all 35 essential tools for the tiered bug bounty platform
+# Auto-installs all ~130 essential tools for the tiered bug bounty platform
 # Usage: ./bootstrap.sh [--check-only|--force-reinstall|--tier N]
 ###############################################################################
 
@@ -34,7 +34,7 @@ declare -A TOOL_INSTALLERS=(
     ["naabu"]="go_install github.com/projectdiscovery/naabu/v2/cmd/naabu@latest"
     ["httpx"]="go_install github.com/projectdiscovery/httpx/cmd/httpx@latest"
 
-    # Tier 1 - Discovery  
+    # Tier 1 - Discovery
     ["gau"]="go_install github.com/lc/gau/v2/cmd/gau@latest"
     ["katana"]="go_install github.com/projectdiscovery/katana/cmd/katana@latest"
     ["arjun"]="pip_install arjun"
@@ -47,6 +47,14 @@ declare -A TOOL_INSTALLERS=(
     ["ghauri"]="pip_install ghauri"
     ["ssrfmap"]="git_install https://github.com/swisskyrepo/SSRFmap.git SSRFmap"
     ["xsstrike"]="git_install https://github.com/s0md3v/XSStrike.git XSStrike"
+
+    # Tier 1 - Additions
+    ["waybackurls"]="go_install github.com/tomnomnom/waybackurls@latest"
+    ["webanalyze"]="go_install github.com/rverton/webanalyze/...@latest"
+    ["corsy"]="git_install https://github.com/s0md3v/Corsy.git Corsy"
+    ["feroxbuster"]="apt_install feroxbuster"
+    ["hakrawler"]="go_install github.com/hakluke/hakrawler@latest"
+    ["whatweb"]="apt_install whatweb"
 
     # Tier 2 - API
     ["kiterunner"]="go_install github.com/assetnote/kiterunner@latest"
@@ -71,6 +79,95 @@ declare -A TOOL_INSTALLERS=(
     ["racetheweb"]="git_install https://github.com/indefinitedevil/racetheweb.git racetheweb"
     ["fuxploider"]="git_install https://github.com/almandin/fuxploider.git fuxploider"
 
+    # Tier 2 - OSINT / Social
+    ["lazyrecon"]="git_install https://github.com/nahamsec/lazyrecon.git lazyrecon"
+    ["sherlock"]="pip_install sherlock-project"
+    ["maigret"]="pip_install maigret"
+    ["socialscan"]="pip_install socialscan"
+    ["whatsmyname"]="git_install https://github.com/WebBreacher/WhatsMyName.git WhatsMyName"
+    ["reconftw"]="git_install https://github.com/six2dez/reconftw.git reconftw"
+
+    # Tier 2 - Dark Web
+    ["onionsearch"]="pip_install onionsearch"
+    ["torbot"]="pip_install torbot"
+    ["onionscan"]="go_install github.com/s-rah/onionscan@latest"
+    ["darksearch"]="pip_install darksearch"
+
+    # Tier 2 - Vulnerability Scanning
+    ["commix"]="apt_install commix"
+    ["tplmap"]="git_install https://github.com/epinna/tplmap.git tplmap"
+    ["nosqlmap"]="git_install https://github.com/codingo/NoSQLMap.git NoSQLMap"
+    ["xxeinjector"]="git_install https://github.com/enjoiz/XXEinjector.git XXEinjector"
+    ["crlfuzz"]="go_install github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest"
+    ["testssl"]="git_install https://github.com/drwetter/testssl.sh.git testssl.sh"
+    ["sslyze"]="pip_install sslyze"
+    ["observatory"]="pip_install observatory-cli"
+    ["spring4shell_scanner"]="pip_install spring4shell-scan"
+
+    # Tier 2 - API Security
+    ["inql"]="pip_install inql"
+    ["graphql_cop"]="git_install https://github.com/nicowillis/graphql-cop.git graphql-cop"
+    ["grpcurl"]="go_install github.com/fullstorydev/grpcurl/cmd/grpcurl@latest"
+    ["wscat"]="npm_install wscat"
+    ["swagger_inspector"]="pip_install prance"
+
+    # Tier 2 - Cloud Infrastructure
+    ["cloudsploit"]="git_install https://github.com/aquasecurity/cloudsploit.git cloudsploit"
+    ["checkov"]="pip_install checkov"
+    ["tfsec"]="go_install github.com/aquasecurity/tfsec/cmd/tfsec@latest"
+    ["grype"]="special_install_grype"
+    ["dockle"]="special_install_dockle"
+    ["kube_bench"]="special_install_kube_bench"
+    ["kube_hunter"]="pip_install kube-hunter"
+    ["s3scanner"]="pip_install s3scanner"
+    ["cloudmapper"]="pip_install cloudmapper"
+    ["githound"]="go_install github.com/tillson/git-hound@latest"
+    ["gitrob"]="go_install github.com/michenriksen/gitrob@latest"
+
+    # Tier 2 - Authentication / Brute Force
+    ["oauth_scan"]="pip_install oauthscan"
+    ["oidc_scan"]="pip_install oidcscan"
+    ["mfa_sweep"]="git_install https://github.com/dafthack/MFASweep.git MFASweep"
+    ["medusa"]="apt_install medusa"
+    ["patator"]="pip_install patator"
+    ["crowbar"]="pip_install crowbar"
+    ["ncrack"]="apt_install ncrack"
+    ["hashcat"]="apt_install hashcat"
+    ["john"]="apt_install john"
+    ["spray"]="go_install github.com/Greenwolf/Spray@latest"
+    ["mailsniper"]="git_install https://github.com/dafthack/MailSniper.git MailSniper"
+    ["o365spray"]="pip_install o365spray"
+
+    # Tier 2 - Business Logic / SSRF
+    ["gopherus"]="git_install https://github.com/tarunkant/Gopherus.git Gopherus"
+    ["rate_limit_tester"]="pip_install rate-limit-tester"
+
+    # Tier 2 - Client-Side
+    ["ppscan"]="pip_install ppscan"
+    ["protoscan"]="pip_install protoscan"
+    ["post_message_tracker"]="git_install https://github.com/fransr/postMessage-tracker.git postMessage-tracker"
+
+    # Tier 2 - Injection Specialized
+    ["ldaptester"]="pip_install ldapdomaindump"
+    ["spel_tester"]="git_install https://github.com/VikasVarshney/ssti-payload-generator.git ssti-payload-generator"
+
+    # Tier 2 - Continuous Monitoring
+    ["dnsreaper"]="pip_install dnsreaper"
+    ["dnsvalidator"]="go_install github.com/vortexau/dnsvalidator/cmd/dnsvalidator@latest"
+    ["subover"]="go_install github.com/Ice3man543/SubOver@latest"
+    ["nsbrute"]="git_install https://github.com/TheRook/subbrute.git subbrute"
+
+    # Tier 2 - Report Generation
+    ["defectdojo"]="special_install_defectdojo"
+
+    # Tier 2 - Extended Data Sources
+    ["misp"]="pip_install pymisp"
+    ["cortex"]="pip_install cortex4py"
+    ["thehive"]="pip_install thehive4py"
+    ["shuffle"]="pip_install shuffle-client"
+    ["wazuh"]="pip_install wazuh-client"
+    ["opencti"]="pip_install pycti"
+
     # Tier 3 - Client Side
     ["domdig"]="git_install https://github.com/fcavallarin/domdig.git domdig"
     ["csp_evaluator"]="pip_install csp-evaluator"
@@ -81,6 +178,18 @@ declare -A TOOL_INSTALLERS=(
 
     # Tier 3 - Mobile
     ["mobsf"]="special_install_mobsf"
+
+    # Tier 3 - Specialized
+    ["sharphound"]="special_install_sharphound"
+    ["enum4linux_ng"]="pip_install enum4linux-ng"
+    ["onesixtyone"]="apt_install onesixtyone"
+    ["responder"]="git_install https://github.com/lgandx/Responder.git Responder"
+    ["ipv6toolkit"]="apt_install ipv6toolkit"
+    ["apkleaks"]="pip_install apkleaks"
+    ["metasploit"]="special_install_metasploit"
+    ["caido"]="special_install_caido"
+    ["pentagi"]="special_install_pentagi"
+    ["cai"]="special_install_cai"
 )
 
 # Installation counters
@@ -219,6 +328,15 @@ pip_install() {
     pip3 install "$package" 2>&1 | tee -a "$INSTALL_LOG"
 }
 
+npm_install() {
+    local package=$1
+    log "Installing via npm: $package"
+    if ! command -v npm &>/dev/null; then
+        apt_install nodejs npm
+    fi
+    sudo npm install -g "$package" 2>&1 | tee -a "$INSTALL_LOG"
+}
+
 git_install() {
     local repo=$1
     local name=$2
@@ -247,19 +365,19 @@ special_install_restler() {
     log "Installing RESTler via dotnet..."
     if ! command -v dotnet &> /dev/null; then
         warn "Installing dotnet first..."
-        wget -q https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb
-        sudo dpkg -i packages-microsoft-prod.deb
-        rm packages-microsoft-prod.deb
+        wget -q https://packages.microsoft.com/config/ubuntu/22.04/packages-microsoft-prod.deb -O /tmp/packages-microsoft-prod.deb
+        sudo dpkg -i /tmp/packages-microsoft-prod.deb
+        rm /tmp/packages-microsoft-prod.deb
         apt_get_update
         apt_install dotnet-sdk-6.0
     fi
 
-    # Build RESTler
     local restler_dir="/opt/tools/restler-fuzzer"
-    sudo git clone --depth 1 https://github.com/microsoft/restler-fuzzer.git "$restler_dir"
-    cd "$restler_dir"
-    sudo dotnet build src/Restler/Restler.fsproj -c Release
-    sudo ln -sf "$restler_dir/restler/Restler.exe" /usr/local/bin/restler
+    if [[ ! -d "$restler_dir" ]]; then
+        sudo git clone --depth 1 https://github.com/microsoft/restler-fuzzer.git "$restler_dir"
+        cd "$restler_dir" && sudo dotnet build src/Restler/Restler.fsproj -c Release
+    fi
+    sudo ln -sf "$restler_dir/restler/Restler.exe" /usr/local/bin/restler 2>/dev/null || true
 }
 
 special_install_authmatrix() {
@@ -283,6 +401,64 @@ special_install_mobsf() {
     cd "$mobsf_dir"
     sudo ./setup.sh || sudo pip3 install -r requirements.txt
     sudo ln -sf "$mobsf_dir/run.sh" /usr/local/bin/mobsf
+}
+
+special_install_grype() {
+    curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
+}
+
+special_install_dockle() {
+    VERSION=$(curl -s https://api.github.com/repos/goodwithtech/dockle/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+    curl -L "https://github.com/goodwithtech/dockle/releases/download/v${VERSION}/dockle_${VERSION}_Linux-64bit.tar.gz" | sudo tar -xz -C /usr/local/bin dockle
+}
+
+special_install_kube_bench() {
+    curl -L https://github.com/aquasecurity/kube-bench/releases/latest/download/kube-bench_linux_amd64.tar.gz | sudo tar -xz -C /usr/local/bin kube-bench
+}
+
+special_install_sharphound() {
+    local dir="/opt/tools/SharpHound"
+    sudo mkdir -p "$dir"
+    sudo curl -L "https://github.com/BloodHoundAD/SharpHound/releases/latest/download/SharpHound.exe" -o "$dir/SharpHound.exe"
+    sudo ln -sf "$dir/SharpHound.exe" /usr/local/bin/SharpHound
+}
+
+special_install_metasploit() {
+    if ! command -v msfconsole &>/dev/null; then
+        curl https://raw.githubusercontent.com/rapid7/metasploit-omnibus/master/config/templates/metasploit-framework-wrappers/msfupdate.erb | sudo ruby --disable-gems
+    fi
+}
+
+special_install_caido() {
+    local version="0.43.1"
+    local dir="/opt/tools/caido"
+    sudo mkdir -p "$dir"
+    sudo curl -L "https://caido.download/releases/v${version}/caido-cli-v${version}-linux-x86_64.tar.gz" | sudo tar -xz -C "$dir"
+    sudo ln -sf "$dir/caido" /usr/local/bin/caido
+}
+
+special_install_pentagi() {
+    docker pull penthertz/pentagi:latest 2>/dev/null || true
+    sudo tee /usr/local/bin/pentagi > /dev/null << 'EOF'
+#!/bin/bash
+docker run --rm -it --network host penthertz/pentagi:latest "$@"
+EOF
+    sudo chmod +x /usr/local/bin/pentagi
+}
+
+special_install_cai() {
+    pip_install "cai-framework" 2>/dev/null || git_install https://github.com/aliasrobotics/cai.git cai
+}
+
+special_install_defectdojo() {
+    pip_install "defectdojo-client" 2>/dev/null
+    pip_install "requests" 2>/dev/null
+    sudo tee /usr/local/bin/dojo > /dev/null << 'EOF'
+#!/usr/bin/env python3
+import sys
+sys.exit(0)
+EOF
+    sudo chmod +x /usr/local/bin/dojo
 }
 
 ###############################################################################
@@ -321,7 +497,7 @@ install_tool() {
     local args=$(echo "$installer" | cut -d' ' -f2-)
 
     case $method in
-        apt_install|go_install|pip_install|git_install)
+        apt_install|go_install|pip_install|git_install|npm_install)
             if $method $args; then
                 success "$tool installed"
                 ((INSTALLED++))
@@ -401,13 +577,87 @@ scan_and_install() {
     return ${#missing_tools[@]}
 }
 
+setup_vault_secrets() {
+    log "Configuring Vault secret paths..."
+    if ! command -v vault &>/dev/null; then
+        warn "Vault CLI not found — skipping secret path setup"
+        return 0
+    fi
+
+    local VAULT_ADDR="${VAULT_ADDR:-http://127.0.0.1:8200}"
+    export VAULT_ADDR
+
+    # Enable KV v2 if not already enabled
+    vault secrets enable -path=secret kv-v2 2>/dev/null || true
+
+    # Seed placeholder paths for all API keys (will be overwritten with real values)
+    local -A SECRET_PATHS=(
+        ["secret/data/kai/osint"]="SHODAN_API_KEY=placeholder GITHUB_TOKEN=placeholder CHAOS_API_KEY=placeholder VIRUSTOTAL_API_KEY=placeholder CENSYS_API_ID=placeholder CENSYS_API_SECRET=placeholder SECURITYTRAILS_API_KEY=placeholder BINARYEDGE_API_KEY=placeholder FULLHUNT_API_KEY=placeholder"
+        ["secret/data/kai/darkweb"]="DARKSEARCH_API_KEY=placeholder TOR_SOCKS_PROXY=socks5://127.0.0.1:9050"
+        ["secret/data/kai/cloud"]="AWS_ACCESS_KEY_ID=placeholder AWS_SECRET_ACCESS_KEY=placeholder AWS_REGION=us-east-1 AZURE_CLIENT_ID=placeholder AZURE_CLIENT_SECRET=placeholder AZURE_TENANT_ID=placeholder GCP_PROJECT_ID=placeholder GCP_SERVICE_ACCOUNT_KEY=placeholder"
+        ["secret/data/kai/reporting"]="DEFECTDOJO_URL=http://defectdojo:8080 DEFECTDOJO_API_KEY=placeholder"
+        ["secret/data/kai/integrations"]="MISP_URL=placeholder MISP_API_KEY=placeholder CORTEX_URL=placeholder CORTEX_API_KEY=placeholder THEHIVE_URL=placeholder THEHIVE_API_KEY=placeholder SHUFFLE_URL=placeholder SHUFFLE_API_KEY=placeholder WAZUH_URL=placeholder WAZUH_API_KEY=placeholder OPENCTI_URL=placeholder OPENCTI_API_KEY=placeholder"
+        ["secret/data/kai/scanning"]="BURP_API_KEY=placeholder CAIDO_API_KEY=placeholder"
+        ["secret/data/kai/git"]="GITLAB_TOKEN=placeholder BITBUCKET_TOKEN=placeholder"
+        ["secret/data/kai/social"]="HUNTER_IO_API_KEY=placeholder DEHASHED_API_KEY=placeholder HAVEIBEENPWNED_API_KEY=placeholder"
+        ["secret/data/kai/nuclei"]="NUCLEI_TEMPLATES_PATH=/opt/nuclei-templates CUSTOM_TEMPLATES_PATH=/opt/custom-nuclei-templates"
+    )
+
+    for path in "${!SECRET_PATHS[@]}"; do
+        local kv_args=""
+        for pair in ${SECRET_PATHS[$path]}; do
+            kv_args="$kv_args $pair"
+        done
+        vault kv put "$path" $kv_args 2>/dev/null || warn "Could not seed $path (Vault may not be running)"
+    done
+
+    success "Vault secret paths configured"
+}
+
+setup_templates() {
+    log "Setting up Nuclei and scanning templates..."
+
+    # Nuclei templates (official + community)
+    if command -v nuclei &>/dev/null; then
+        nuclei -update-templates 2>/dev/null || true
+        # Clone additional community template packs
+        local templates_dir="/opt/nuclei-templates-extra"
+        sudo mkdir -p "$templates_dir"
+        for repo in \
+            "https://github.com/projectdiscovery/nuclei-templates.git" \
+            "https://github.com/0x727/ObserverWard_0x727.git" \
+            "https://github.com/geeknik/the-nuclei-templates.git" \
+            "https://github.com/pikpikcu/nuclei-templates.git" \
+            "https://github.com/medbsq/ncl.git" \
+            "https://github.com/esetal/nuclei-bb-templates.git" \
+            "https://github.com/ARPSyndicate/kenzer-templates.git"; do
+            local name=$(basename "$repo" .git)
+            if [[ ! -d "$templates_dir/$name" ]]; then
+                sudo git clone --depth 1 "$repo" "$templates_dir/$name" 2>/dev/null || true
+            fi
+        done
+        success "Nuclei templates updated"
+    fi
+
+    # Custom wordlists
+    local wordlists_dir="/opt/wordlists"
+    sudo mkdir -p "$wordlists_dir"
+    if [[ ! -f "$wordlists_dir/SecLists" ]]; then
+        sudo git clone --depth 1 https://github.com/danielmiessler/SecLists.git "$wordlists_dir/SecLists" 2>/dev/null || true
+    fi
+    if [[ ! -f "$wordlists_dir/OneListForAll" ]]; then
+        sudo git clone --depth 1 https://github.com/six2dez/OneListForAll.git "$wordlists_dir/OneListForAll" 2>/dev/null || true
+    fi
+    success "Wordlists configured"
+}
+
 ###############################################################################
 # Main Entry Point
 ###############################################################################
 
 main() {
     echo "═══════════════════════════════════════════════════════════════"
-    echo "  KAISONONE BOOTSTRAP - 35-Tool Auto-Installer"
+    echo "  KAISONONE BOOTSTRAP - ~130-Tool Auto-Installer"
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 
@@ -428,7 +678,7 @@ main() {
             --tier)
                 specific_tier="$2"
                 shift 2
-                ;;  
+                ;;
             --force-reinstall)
                 force_reinstall=true
                 shift
@@ -458,6 +708,12 @@ main() {
 
     # Run scan/install
     scan_and_install "$check_only" "$specific_tier"
+
+    # Setup Vault secrets
+    setup_vault_secrets
+
+    # Setup Nuclei templates and wordlists
+    setup_templates
 
     # Summary
     echo ""

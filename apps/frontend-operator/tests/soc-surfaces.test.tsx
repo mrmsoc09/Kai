@@ -213,6 +213,8 @@ describe("SOC dashboard surfaces", () => {
     renderWithQueryClient(<SystemPage />);
 
     expect(screen.getByText("Action Board")).toBeInTheDocument();
+    expect(screen.getByText("Cross-Mission Flight Deck")).toBeInTheDocument();
+    expect(screen.getByText("Backend Capability Coverage")).toBeInTheDocument();
     expect(screen.getByText("Attack Surface Intelligence")).toBeInTheDocument();
     expect(screen.getByText("Reconnaissance Activity")).toBeInTheDocument();
     expect(screen.getByText("Findings Triage Center")).toBeInTheDocument();
