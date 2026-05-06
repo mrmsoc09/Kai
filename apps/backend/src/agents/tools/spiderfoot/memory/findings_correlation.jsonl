@@ -1,1 +1,0 @@
-{"finding_id": "0ad766c6-c719-4d34-b48b-9df5f7f44222", "tool": "spiderfoot", "target": "example.com", "value": "spiderfoot:telemetry:failure", "first_seen": "2026-04-05T09:44:59.413204+00:00", "last_seen": "2026-04-05T09:44:59.413204+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}

@@ -1,1 +1,0 @@
-{"finding_id": "f9629b03-09f1-4f6a-a3e9-0d13313d1bf7", "tool": "jwt_tool", "target": "https://example.com", "value": "jwt_tool:telemetry:failure", "first_seen": "2026-04-05T09:45:10.352282+00:00", "last_seen": "2026-04-05T09:45:10.352282+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}

@@ -1,1 +1,0 @@
-{"run_id": "wf-9421cffd-9b31-4bed-805e-c0145f26dfe3", "generated_at": "2026-03-12 04:25:54.363272", "summary": {"workflow_template": "workflow_recon_surface_map", "target": "example.com", "stages": 6, "executions": 11}, "prioritized_findings": [], "raw_report_path": null}

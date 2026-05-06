@@ -1,1 +1,0 @@
-{"finding_id": "19e7067d-5ed3-4383-b74f-e5c8d864a3a7", "tool": "nuclei_scan", "target": "https://example.com", "value": "nuclei_scan:telemetry:failure", "first_seen": "2026-04-05T09:45:09.677175+00:00", "last_seen": "2026-04-05T09:45:09.677175+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}

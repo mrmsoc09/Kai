@@ -1,1 +1,0 @@
-{"finding_id": "38f7f02e-e11f-4357-9147-7b176db05bea", "tool": "caido", "target": "https://example.com", "value": "caido:telemetry:failure", "first_seen": "2026-04-12T09:08:56.681888+00:00", "last_seen": "2026-04-12T09:08:56.681888+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}

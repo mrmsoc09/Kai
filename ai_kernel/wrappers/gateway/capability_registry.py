@@ -4,7 +4,7 @@ import yaml
 from pathlib import Path
 from typing import Dict, Any
 
-REGISTRY_PATH = Path("config/registry/model_capabilities.yaml")
+REGISTRY_PATH = Path(__file__).resolve().parents[3] / "config" / "registry" / "model_capabilities.yaml"
 
 
 def load_capabilities(path: Path = REGISTRY_PATH) -> Dict[str, Any]:

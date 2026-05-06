@@ -1,1 +1,0 @@
-{"finding_id": "1a1699f1-0f16-410c-83fe-2ee9f2037f03", "tool": "smuggler", "target": "https://example.com", "value": "smuggler:telemetry:failure", "first_seen": "2026-04-05T09:45:09.672190+00:00", "last_seen": "2026-04-05T09:45:09.672190+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}

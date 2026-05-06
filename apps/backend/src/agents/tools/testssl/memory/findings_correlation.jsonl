@@ -1,1 +1,0 @@
-{"finding_id": "3cb76bf4-7940-4290-9576-20809782b132", "tool": "testssl", "target": "https://example.com", "value": "testssl:telemetry:failure", "first_seen": "2026-04-05T09:45:09.662736+00:00", "last_seen": "2026-04-05T09:45:09.662736+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}

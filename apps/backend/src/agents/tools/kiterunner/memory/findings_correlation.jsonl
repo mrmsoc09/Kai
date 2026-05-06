@@ -1,1 +1,0 @@
-{"finding_id": "ad891eac-4f6c-408e-82bc-63038ad4b0f4", "tool": "kiterunner", "target": "https://example.com", "value": "kiterunner:telemetry:failure", "first_seen": "2026-04-05T09:45:10.347678+00:00", "last_seen": "2026-04-05T09:45:10.347678+00:00", "seen_count": 1, "confirmed": false, "tags": ["config", "info"]}
