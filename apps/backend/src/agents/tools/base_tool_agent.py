@@ -5,6 +5,7 @@ import os
 import resource
 import signal
 import subprocess
+import tempfile
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
@@ -20,6 +21,7 @@ from apps.backend.src.core.protocol import (
     Severity,
 )
 from apps.backend.src.core.governor import StealthWrapper
+from apps.backend.src.core.docker_executor import get_executor as _get_docker_executor
 from apps.backend.src.agents.tools.handoff_report import HandoffReport
 from apps.backend.src.tools.knowledge.loader import ToolKnowledgeLoader
 from apps.backend.src.tools.knowledge.interpreter import ToolOutputInterpreter
@@ -383,6 +385,11 @@ class BaseToolAgent(ABC):
             findings=findings,
         )
 
+    def docker_image_available(self) -> bool:
+        """Return True when this tool's Docker image is built and the daemon is reachable."""
+        executor = _get_docker_executor()
+        return executor.image_exists(executor.tool_image(self.TOOL_NAME))
+
     def execute(
         self,
         target: str,
@@ -393,10 +400,18 @@ class BaseToolAgent(ABC):
         """
         Execute tool command with timeout/stdio capture and CDS normalization.
 
+        Execution order:
+          1. Docker container (``kai-<TOOL_NAME>``), if image is present.
+          2. Local subprocess fallback (requires binary on PATH).
+
+        Subclasses that override ``execute()`` and guard on ``fixture_data``
+        can opt in to live execution by calling ``super().execute()`` when
+        ``fixture_data`` is absent and ``self.docker_image_available()`` is True.
+
         Hardening:
-          - `shell=False` enforced
+          - ``shell=False`` enforced on all subprocess calls
           - process-group kill on timeout to avoid zombies
-          - resource telemetry emitted into target_context.resource_usage
+          - resource telemetry emitted into ``target_context.resource_usage``
         """
         opts = options or {}
         timeout_seconds = max(1, int(opts.get("timeout_seconds", self.DEFAULT_TIMEOUT_SECONDS)))
@@ -420,6 +435,7 @@ class BaseToolAgent(ABC):
 
         process: subprocess.Popen[bytes] | None = None
         stealth_context = None
+        used_docker = False
         try:
             stealth_context = StealthWrapper.prepare_sync_command(
                 command,
@@ -431,20 +447,37 @@ class BaseToolAgent(ABC):
                 },
             )
             command = stealth_context.command
-            process = subprocess.Popen(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=False,
-                shell=False,
-                start_new_session=True,
-            )
 
-            out_bytes, err_bytes = process.communicate(timeout=timeout_seconds)
-            stdout = self._decode_stream(out_bytes)
-            stderr = self._decode_stream(err_bytes)
-            exit_code = int(process.returncode or 0)
-            status = "success" if exit_code == 0 else "failure"
+            # --- Docker execution path -------------------------------------------
+            # cmd_args strips the binary name: ENTRYPOINT is already set in the
+            # Dockerfile, so we only pass the arguments that follow the binary.
+            docker_result = self._try_docker(command, timeout_seconds, opts)
+            if docker_result is not None:
+                used_docker = True
+                stdout = docker_result.stdout
+                stderr = docker_result.stderr
+                exit_code = docker_result.exit_code
+                if exit_code == 124:
+                    status = "timeout"
+                    stderr = f"timeout_exceeded:{timeout_seconds}s {stderr}".strip()
+                else:
+                    status = "success" if exit_code == 0 else "failure"
+            else:
+                # --- Local subprocess fallback ------------------------------------
+                process = subprocess.Popen(
+                    command,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=False,
+                    shell=False,
+                    start_new_session=True,
+                )
+
+                out_bytes, err_bytes = process.communicate(timeout=timeout_seconds)
+                stdout = self._decode_stream(out_bytes)
+                stderr = self._decode_stream(err_bytes)
+                exit_code = int(process.returncode or 0)
+                status = "success" if exit_code == 0 else "failure"
 
         except subprocess.TimeoutExpired as exc:
             stdout = self._decode_stream(exc.stdout)
@@ -460,7 +493,7 @@ class BaseToolAgent(ABC):
             stderr = str(exc)
 
         finally:
-            if process is not None and process.poll() is None:
+            if not used_docker and process is not None and process.poll() is None:
                 kill_telemetry = self._kill_process_group(process)
             StealthWrapper.finalize_context(
                 stealth_context,
@@ -512,6 +545,7 @@ class BaseToolAgent(ABC):
 
         enriched_context = dict(result.target_context)
         enriched_context["resource_usage"] = resource_usage
+        enriched_context["execution_mode"] = "docker" if used_docker else "local"
         if kill_telemetry:
             enriched_context["process_termination"] = kill_telemetry
         result = result.model_copy(update={"target_context": enriched_context})
@@ -684,6 +718,51 @@ class BaseToolAgent(ABC):
             metadata={"options_supplied": bool(options)},
         )
         return report.to_dict()
+
+    def _try_docker(
+        self,
+        command: list[str],
+        timeout: int,
+        opts: dict[str, Any],
+    ) -> Any | None:
+        """
+        Attempt Docker execution; return DockerExecutionResult or None.
+
+        Returns None when:
+          - Docker daemon is unreachable
+          - The ``kai-<TOOL_NAME>`` image does not exist locally
+          - Docker execution is explicitly disabled via ``KAI_DOCKER_EXEC=false``
+        """
+        if os.environ.get("KAI_DOCKER_EXEC", "true").lower() in {"0", "false", "no"}:
+            return None
+
+        executor = _get_docker_executor()
+        image = executor.tool_image(self.TOOL_NAME)
+        if not executor.image_exists(image):
+            return None
+
+        # cmd_args: drop command[0] (the binary) because the Dockerfile
+        # ENTRYPOINT already names the binary.
+        cmd_args = command[1:]
+
+        # Mount the host's tmp dir so tools that write files (e.g. nmap -oX)
+        # produce host-readable artifacts at the same path.
+        tmp_host_dir: str | None = opts.get("artifact_dir") or opts.get("tmp_dir")
+        if tmp_host_dir is None:
+            # Detect output file flags and use their parent dir.
+            for idx, token in enumerate(command):
+                if token in {"-o", "--output", "-oX", "-oN", "-oG"} and idx + 1 < len(command):
+                    tmp_host_dir = str(Path(command[idx + 1]).parent)
+                    break
+
+        return executor.execute_in_container(
+            image,
+            cmd_args,
+            timeout=timeout,
+            tmp_host_dir=tmp_host_dir,
+            max_output_chars=self.MAX_STDIO_CHARS,
+            tool_name=self.TOOL_NAME,
+        )
 
     def _kill_process_group(self, process: subprocess.Popen[bytes] | None) -> dict[str, Any]:
         if process is None:

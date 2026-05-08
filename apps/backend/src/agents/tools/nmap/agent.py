@@ -315,6 +315,9 @@ class NmapAgent(BaseToolAgent):
             fixture = Path(opts["fixture_path"]).read_text(encoding="utf-8")
 
         if fixture is None:
+            # Prefer Docker live execution when the kai-nmap image is available.
+            if self.docker_image_available():
+                return super().execute(target, options, mission_id=mission_id)
             ended_at = datetime.now(UTC)
             return KaisonResult(
                 mission_id=mission_id,
