@@ -14,11 +14,15 @@ async def list_logs(limit: int = 200):
 
 @router.get("/{run_id}/decision_trace")
 async def get_decision_trace(run_id: str):
+    if not re.match(r'^[a-zA-Z0-9_-]{1,64}$', run_id):
+        raise HTTPException(status_code=400, detail=f"Invalid run_id format: {run_id}")
     return {"run_id": run_id, "decision_trace": read_decision_trace(run_id)}
 
 
 @router.get("/{run_id}/summary")
 async def get_summary(run_id: str):
+    if not re.match(r'^[a-zA-Z0-9_-]{1,64}$', run_id):
+        raise HTTPException(status_code=400, detail=f"Invalid run_id format: {run_id}")
     return {"run_id": run_id, "summary": read_summary(run_id)}
 
 

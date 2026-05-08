@@ -386,12 +386,13 @@ class SandboxHandle:
         # This removes powerful primitives such as open/eval/exec/compile/input.
         import builtins as _builtins
 
+        # object and __build_class__ are excluded: access to object.__subclasses__()
+        # enables full MRO traversal and sandbox escape regardless of import restrictions.
         allowed_builtin_names = {
             "abs", "all", "any", "bool", "bytes", "dict", "enumerate", "filter",
             "float", "frozenset", "int", "isinstance", "issubclass", "len", "list",
             "map", "max", "min", "pow", "print", "range", "repr", "reversed",
             "round", "set", "sorted", "str", "sum", "tuple", "type", "zip",
-            "object", "__build_class__",
             "Exception", "RuntimeError", "ValueError", "TypeError", "KeyError",
             "IndexError", "AssertionError", "ZeroDivisionError",
         }

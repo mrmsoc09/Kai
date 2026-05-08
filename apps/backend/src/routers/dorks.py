@@ -1,7 +1,9 @@
 
 from pathlib import Path as _P
-import json as _json, time as _time
+import json as _json, re as _re, time as _time
 import os
+
+_RUN_ID_RE = _re.compile(r'^[a-zA-Z0-9_-]{1,64}$')
 ROOT = _P(__file__).resolve().parents[4]
 ENV_ARTIFACTS = os.getenv("K1_ARTIFACTS_ROOT")
 ARTIFACTS_ROOT = _P(ENV_ARTIFACTS) if ENV_ARTIFACTS else (ROOT / 'artifacts')
@@ -116,9 +118,11 @@ async def run(
     chain = payload.get("chain")
     limit = int(payload.get("limit") or 5)
     run_id_provided = payload.get("run_id")
+    if run_id_provided is not None and not _RUN_ID_RE.match(str(run_id_provided)):
+        raise HTTPException(400, "run_id must be 1-64 alphanumeric/dash/underscore characters")
 
     planned = _resolve_queries(target, query, chain)
-    
+
     run_id = run_id_provided or f"dorks-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     record = _init_run_record(run_id, target, mode, planned)
 
@@ -153,15 +157,13 @@ async def run(
         pass
     external_enabled = bool(policies.get("external_queries_enabled") is True)
 
-    # Fast-fail when no approval context is supplied; avoids unnecessary DB dependency
-    # for blocked execute attempts.
-    explicit_hil_flag = bool(payload.get("hil_approved") is True)
-    if not explicit_hil_flag and not run_id_provided:
-        append_decision_trace(run_id, {"run_id": run_id, "agent_id": "K1", "phase": {"strategic": record["loops"]["strategic"]["step"], "tactical": record["loops"]["tactical"]["step"]}, "category": "execute", "options_considered": record["decision"]["candidates"], "chosen_option": record["decision"]["chosen"], "why_summary": "Execute requested without HiL approval context", "evidence_refs": [], "policy_gate": policy_gate_info(mode, external=True), "outcome": "blocked"})
+    # A run_id is required for execute mode so the DB gate lookup has an exact key.
+    if not run_id_provided:
+        append_decision_trace(run_id, {"run_id": run_id, "agent_id": "K1", "phase": {"strategic": record["loops"]["strategic"]["step"], "tactical": record["loops"]["tactical"]["step"]}, "category": "execute", "options_considered": record["decision"]["candidates"], "chosen_option": record["decision"]["chosen"], "why_summary": "Execute requested without run_id for gate lookup", "evidence_refs": [], "policy_gate": policy_gate_info(mode, external=True), "outcome": "blocked"})
         return JSONResponse(status_code=409, content={
             "status": "blocked",
-            "reason": "hil_approval_required",
-            "next": "use mode=plan or set hil_approved=true after human review",
+            "reason": "run_id_required_for_execute",
+            "next": "use mode=plan first to obtain a run_id, then submit execute with that run_id after human approval",
             "approval_request": {"tier": 2, "plan": {"queries": planned, "limit": limit}, "run_id": run_id}
         })
 
@@ -172,19 +174,17 @@ async def run(
             "next": "enable external_queries_enabled in config/policies.yaml"
         })
 
-    # Approval status must be read from the database keyed to the dork run ID
-    # We search for an approved gate for this dork run using gate_reason as a key
+    # Approval status must be read from the database keyed to the dork run ID.
+    # Use exact equality — wildcard matches would allow any approved gate to satisfy
+    # any run, bypassing per-run approval isolation.
     gate = None
-    if explicit_hil_flag and os.getenv("ENVIRONMENT", "development").strip().lower() in {"test", "development", "dev"}:
-        hil_approved = True
-    else:
-        stmt = select(ApprovalGate).where(
-            ApprovalGate.gate_reason.like(f"%{run_id}%"),
-            ApprovalGate.status == ApprovalGateStatusEnum.APPROVED
-        )
-        result = await db.execute(stmt)
-        gate = result.scalars().first()
-        hil_approved = gate is not None
+    stmt = select(ApprovalGate).where(
+        ApprovalGate.gate_reason == run_id,
+        ApprovalGate.status == ApprovalGateStatusEnum.APPROVED
+    )
+    result = await db.execute(stmt)
+    gate = result.scalars().first()
+    hil_approved = gate is not None
 
     # Enforce that the approver identity must differ from the submitter
     if gate and gate.decided_by == gate.requested_by:

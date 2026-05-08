@@ -1,16 +1,21 @@
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from typing import Dict, Any
 from ..core.obsidian import ObsidianConnector
 from ..core.hybrid_retriever import hybrid_retrieve
+from ..core.auth import require_roles, ROLE_VIEWER, ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN
 
-router = APIRouter(prefix="/knowledge", tags=["knowledge"])
+router = APIRouter(
+    prefix="/knowledge",
+    tags=["knowledge"],
+    dependencies=[Depends(require_roles(ROLE_VIEWER, ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN))],
+)
 
 @router.get('/status')
 def status() -> Dict[str, Any]:
     return ObsidianConnector().status()
 
-@router.post('/refresh')
+@router.post('/refresh', dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ADMIN))])
 def refresh() -> Dict[str, Any]:
     return ObsidianConnector().refresh()
 

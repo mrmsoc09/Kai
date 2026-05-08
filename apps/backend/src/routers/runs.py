@@ -1,9 +1,14 @@
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any, List
 from ..core.run_store import load_all_runs
+from ..core.auth import require_roles, ROLE_VIEWER, ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN
 
-router = APIRouter(prefix="/runs", tags=["runs"])
+router = APIRouter(
+    prefix="/runs",
+    tags=["runs"],
+    dependencies=[Depends(require_roles(ROLE_VIEWER, ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN))],
+)
 
 @router.get("")
 @router.get("/")

@@ -5,12 +5,46 @@ Detects technologies, frameworks, versions, and services running on target.
 
 from __future__ import annotations
 
+import ipaddress
 import logging
+import socket
+import urllib.parse
 import httpx
 import re
 from typing import Any, Dict, Optional, Set
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+
+# RFC-1918 / loopback / link-local / cloud-metadata ranges blocked for SSRF.
+_BLOCKED_NETWORKS = [
+    ipaddress.ip_network("10.0.0.0/8"),
+    ipaddress.ip_network("172.16.0.0/12"),
+    ipaddress.ip_network("192.168.0.0/16"),
+    ipaddress.ip_network("127.0.0.0/8"),
+    ipaddress.ip_network("169.254.0.0/16"),  # link-local / cloud metadata
+    ipaddress.ip_network("100.64.0.0/10"),   # shared address space
+    ipaddress.ip_network("::1/128"),
+    ipaddress.ip_network("fc00::/7"),
+]
+
+
+def _assert_no_ssrf(url: str) -> None:
+    """Raise ValueError if *url* resolves to a private/internal IP address."""
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError(f"Unsupported scheme '{parsed.scheme}'; only http/https allowed")
+    hostname = parsed.hostname
+    if not hostname:
+        raise ValueError("URL has no hostname")
+    try:
+        addr = ipaddress.ip_address(socket.gethostbyname(hostname))
+    except socket.gaierror as exc:
+        raise ValueError(f"DNS resolution failed for '{hostname}': {exc}") from exc
+    for net in _BLOCKED_NETWORKS:
+        if addr in net:
+            raise ValueError(
+                f"Target '{hostname}' resolves to private/internal address {addr} — SSRF blocked"
+            )
 
 logger = logging.getLogger(__name__)
 
@@ -148,9 +182,10 @@ class TargetReconnaissanceEngine:
         fp = TechStackFingerprint(target=target)
 
         try:
+            _assert_no_ssrf(target)
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.get(
-                    target, follow_redirects=True, verify=False
+                    target, follow_redirects=False, verify=True
                 )
 
                 # Store headers
