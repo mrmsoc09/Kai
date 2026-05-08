@@ -7,12 +7,24 @@ RUN rm /etc/nginx/conf.d/default.conf
 # Copy custom Nginx config
 COPY nginx.conf /etc/nginx/conf.d/
 
-# Copy static HTML files for the admin GUI (placeholder for now)
+# Copy static HTML files for the admin GUI
 WORKDIR /usr/share/nginx/html
 COPY admin-gui/ .
 
-# Create a non-root user
-RUN adduser --system --group kaiuser
+# Alpine BusyBox adduser syntax (no --group flag)
+# Grant kaiuser ownership of all nginx writable directories so the process
+# can run on an unprivileged port (8081) without root.
+RUN addgroup -S kaigroup && adduser -S -G kaigroup -H -D kaiuser \
+ && chown -R kaiuser:kaigroup \
+        /usr/share/nginx/html \
+        /etc/nginx/conf.d \
+        /var/cache/nginx \
+        /var/log/nginx \
+ && touch /var/run/nginx.pid \
+ && chown kaiuser:kaigroup /var/run/nginx.pid
+
 USER kaiuser
+
+EXPOSE 8081
 
 CMD ["nginx", "-g", "daemon off;"]

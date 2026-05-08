@@ -28,6 +28,9 @@ services:
       - qdrant
     # Ensuring no elevated privileges for the orchestrator itself
     read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run
 
   postgres:
     image: postgres:13-alpine
@@ -60,20 +63,25 @@ services:
     networks:
       - kai_internal
 
-  # Admin GUI (Placeholder for now)
+  # Admin GUI — nginx running as non-root kaiuser on port 8081
   admin_gui:
     build:
       context: .
-      dockerfile: Dockerfile.admin # Assuming a Dockerfile.admin exists or will be created for the admin GUI
+      dockerfile: Dockerfile.admin
     image: kai-admin-gui
     container_name: kai_admin_gui
     ports:
-      - "8080:80" # Example port, can be adjusted
+      - "8080:8081"
     networks:
       - kai_admin
     depends_on:
-      - orchestrator # Admin GUI interacts with the orchestrator API
+      - orchestrator
     read_only: true
+    tmpfs:
+      - /var/cache/nginx:uid=1000,gid=1000
+      - /var/run:uid=1000,gid=1000
+      - /var/log/nginx:uid=1000,gid=1000
+      - /tmp:uid=1000,gid=1000
 
   # Dedicated service for network-privileged tools
   network-tools-runner:
