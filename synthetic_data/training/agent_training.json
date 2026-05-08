@@ -1,0 +1,2983 @@
+[
+  {
+    "id": "agent-train-0000",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0001",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: RCE detected on endpoint /api/login. CVSS Score: 5.4. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk RCE vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 3 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0002",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0003",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0004",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0005",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0006",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0007",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0008",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0009",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0010",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0011",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0012",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0013",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0014",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0015",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0016",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Buffer Overflow detected on endpoint /api/login. CVSS Score: 5.6. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk Buffer Overflow vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 4 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0017",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0018",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: RCE detected on endpoint /api/login. CVSS Score: 5.0. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk RCE vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 4 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0019",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0020",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0021",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0022",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0023",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0024",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0025",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0026",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0027",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0028",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0029",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0030",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0031",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: SQL Injection detected on endpoint /api/login. CVSS Score: 8.2. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk SQL Injection vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 2 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0032",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0033",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0034",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0035",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0036",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0037",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: SQL Injection detected on endpoint /api/login. CVSS Score: 8.8. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk SQL Injection vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 6 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0038",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0039",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0040",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0041",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0042",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0043",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: XSS detected on endpoint /api/login. CVSS Score: 4.7. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk XSS vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 6 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0044",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0045",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0046",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Auth Bypass detected on endpoint /api/login. CVSS Score: 6.2. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk Auth Bypass vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 7 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0047",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0048",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0049",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0050",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0051",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: RCE detected on endpoint /api/login. CVSS Score: 4.7. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk RCE vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 3 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0052",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0053",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0054",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0055",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0056",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0057",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0058",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0059",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0060",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0061",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0062",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: SQL Injection detected on endpoint /api/login. CVSS Score: 5.0. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk SQL Injection vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 1 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0063",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0064",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0065",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0066",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0067",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Buffer Overflow detected on endpoint /api/login. CVSS Score: 4.5. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk Buffer Overflow vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 6 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0068",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0069",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0070",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0071",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0072",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0073",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0074",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0075",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0076",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0077",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0078",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0079",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0080",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0081",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0082",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0083",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0084",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0085",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0086",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0087",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0088",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0089",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0090",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0091",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: SQL Injection detected on endpoint /api/login. CVSS Score: 4.1. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk SQL Injection vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 6 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0092",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Auth Bypass detected on endpoint /api/login. CVSS Score: 7.1. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk Auth Bypass vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 6 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0093",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0094",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0095",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0096",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0097",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0098",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0099",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0100",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0101",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0102",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0103",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0104",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0105",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: XSS detected on endpoint /api/login. CVSS Score: 4.1. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk XSS vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 1 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0106",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0107",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Buffer Overflow detected on endpoint /api/login. CVSS Score: 5.2. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk Buffer Overflow vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 2 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0108",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0109",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0110",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0111",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0112",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: SQL Injection detected on endpoint /api/login. CVSS Score: 7.3. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk SQL Injection vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 4 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0113",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0114",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: RCE detected on endpoint /api/login. CVSS Score: 8.7. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk RCE vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 2 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0115",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0116",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0117",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0118",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0119",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0120",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: SQL Injection detected on endpoint /api/login. CVSS Score: 6.5. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk SQL Injection vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 6 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0121",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0122",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0123",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0124",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0125",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0126",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0127",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0128",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0129",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0130",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: RCE detected on endpoint /api/login. CVSS Score: 5.6. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk RCE vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 3 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0131",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0132",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0133",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0134",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0135",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Auth Bypass detected on endpoint /api/login. CVSS Score: 8.0. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk Auth Bypass vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 1 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0136",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0137",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0138",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0139",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Auth Bypass detected on endpoint /api/login. CVSS Score: 7.9. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk Auth Bypass vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 5 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0140",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: XSS detected on endpoint /api/login. CVSS Score: 4.2. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk XSS vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 7 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0141",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0142",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0143",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0144",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Auth Bypass detected on endpoint /api/login. CVSS Score: 5.0. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk Auth Bypass vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 4 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0145",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0146",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0147",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0148",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0149",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0150",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0151",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0152",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0153",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0154",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0155",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0156",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0157",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0158",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0159",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0160",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0161",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0162",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Auth Bypass detected on endpoint /api/login. CVSS Score: 8.7. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk Auth Bypass vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 1 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0163",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Auth Bypass detected on endpoint /api/login. CVSS Score: 8.1. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk Auth Bypass vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 7 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0164",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0165",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0166",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0167",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0168",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0169",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0170",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0171",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0172",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0173",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0174",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0175",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0176",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0177",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0178",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0179",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0180",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0181",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0182",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Auth Bypass detected on endpoint /api/login. CVSS Score: 8.6. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk Auth Bypass vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 4 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0183",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0184",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: XSS detected on endpoint /api/login. CVSS Score: 5.1. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk XSS vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 1 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0185",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0186",
+    "scenario_type": "incident_response",
+    "input": "Active breach detected: External attacker gained admin access via SQL injection. Database contains customer PII. Attacker active for 48 hours. Respond according to NIST framework.",
+    "expected_output": "Execute incident response: IDENTIFY: Confirm breach scope and data exposure. PROTECT: Isolate compromised systems, revoke credentials. DETECT: Enhance monitoring. RESPOND: Notify affected customers, preserve evidence. RECOVER: Restore from clean backups, validate integrity.",
+    "context": {
+      "breach_type": "sql_injection_to_admin_access",
+      "data_exposed": "customer_PII",
+      "dwell_time": "48_hours"
+    },
+    "difficulty": "advanced",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0187",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: SQL Injection detected on endpoint /api/login. CVSS Score: 4.1. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a CRITICAL risk SQL Injection vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 3 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0188",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "intermediate",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0189",
+    "scenario_type": "remediation_planning",
+    "input": "Create remediation plan for Apache Struts RCE vulnerability (CVE-2017-5638) affecting 50 web servers. Current version: 2.3.31. Business constraint: Zero downtime allowed.",
+    "expected_output": "Remediation plan: 1) Patch to Struts 2.3.32+ (addresses CVE), 2) Implement WAF rules as temporary mitigation, 3) Schedule rolling updates during low-traffic windows, 4) Test patches in staging, 5) Monitor for exploitation attempts, 6) Validate fix effectiveness. Timeline: 2 weeks.",
+    "context": {
+      "vulnerability": "CVE-2017-5638",
+      "affected_systems": 50,
+      "downtime_constraint": "ZERO_ALLOWED"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0190",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: SQL Injection detected on endpoint /api/login. CVSS Score: 7.2. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk SQL Injection vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 2 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0191",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "intermediate",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0192",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0193",
+    "scenario_type": "risk_assessment",
+    "input": "Assess risk for: Multiple critical vulnerabilities found in production web application. Includes RCE (CVSS 9.8), SQL injection (CVSS 8.5), and weak authentication (CVSS 7.2). System handles payment data and serves 10k daily users.",
+    "expected_output": "CRITICAL risk assessment. Business impact: High financial loss potential, regulatory compliance violations, reputational damage. Technical impact: Complete system compromise possible. Priority: Immediate remediation required. Recommend: 1) Emergency patching, 2) Traffic monitoring, 3) Incident response team activation.",
+    "context": {
+      "business_criticality": "HIGH",
+      "data_classification": "PCI_DSS",
+      "user_impact": "10,000_daily_users"
+    },
+    "difficulty": "intermediate",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0194",
+    "scenario_type": "vulnerability_analysis",
+    "input": "Analyze this vulnerability finding: Buffer Overflow detected on endpoint /api/login. CVSS Score: 5.1. What is the risk level and recommended immediate actions?",
+    "expected_output": "This is a HIGH risk Buffer Overflow vulnerability. Immediate actions: 1) Isolate affected endpoint, 2) Implement input validation, 3) Monitor for exploitation attempts, 4) Plan remediation within 4 days.",
+    "context": {
+      "endpoint": "/api/login",
+      "method": "POST",
+      "parameters": [
+        "username",
+        "password"
+      ],
+      "detection_method": "automated_scan"
+    },
+    "difficulty": "beginner",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0195",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "cloud_security"
+  },
+  {
+    "id": "agent-train-0196",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "beginner",
+    "domain": "network_security"
+  },
+  {
+    "id": "agent-train-0197",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "beginner",
+    "domain": "application_security"
+  },
+  {
+    "id": "agent-train-0198",
+    "scenario_type": "threat_hunting",
+    "input": "Investigate suspicious activity: Unusual outbound connections from web server to known C2 IP ranges. Connections started after recent phishing campaign. Server logs show encoded PowerShell commands.",
+    "expected_output": "High-confidence compromise indicators detected. Investigation steps: 1) Isolate affected server, 2) Collect memory forensics, 3) Analyze PowerShell execution logs, 4) Check for lateral movement, 5) Review phishing campaign correlation, 6) Implement containment measures.",
+    "context": {
+      "indicators": [
+        "C2_connections",
+        "encoded_powershell",
+        "phishing_correlation"
+      ],
+      "severity": "HIGH",
+      "timeline": "recent_phishing_campaign"
+    },
+    "difficulty": "advanced",
+    "domain": "web_security"
+  },
+  {
+    "id": "agent-train-0199",
+    "scenario_type": "exploit_validation",
+    "input": "Validate if this SQL injection is exploitable: Parameter 'id' in URL /user?id=1. Payload tested: ' OR 1=1 --. Response shows user data. Confirm exploitability and suggest next steps.",
+    "expected_output": "The SQL injection appears exploitable - the payload successfully bypassed authentication and returned unauthorized data. Next steps: 1) Extract database structure, 2) Attempt privilege escalation, 3) Assess data sensitivity, 4) Document findings for remediation.",
+    "context": {
+      "payload": "' OR 1=1 --",
+      "response_indicators": [
+        "user_data_returned",
+        "no_error_messages"
+      ],
+      "database_type": "MySQL"
+    },
+    "difficulty": "advanced",
+    "domain": "cloud_security"
+  }
+]

@@ -72,26 +72,104 @@ def load_synthetic_data(data_dir: str):
     default=5,
     help="Number of zero-day scenarios to generate"
 )
-def generate_advanced_synthetic(output_dir: str, chains: int, zero_days: int):
-    """Generate advanced synthetic data with chains and zero-days."""
+@click.option(
+    "--cve-entries",
+    default=50,
+    help="Number of CVE database entries to generate"
+)
+@click.option(
+    "--exploit-scenarios",
+    default=30,
+    help="Number of exploitability validation scenarios to generate"
+)
+@click.option(
+    "--scanning-scenarios",
+    default=20,
+    help="Number of scanning training scenarios to generate"
+)
+@click.option(
+    "--knowledge-nodes",
+    default=100,
+    help="Number of knowledge graph nodes to generate"
+)
+@click.option(
+    "--agent-training",
+    default=200,
+    help="Number of agent training examples to generate"
+)
+def generate_advanced_synthetic(
+    output_dir: str,
+    chains: int,
+    zero_days: int,
+    cve_entries: int,
+    exploit_scenarios: int,
+    scanning_scenarios: int,
+    knowledge_nodes: int,
+    agent_training: int
+):
+    """Generate comprehensive advanced synthetic data for AI training."""
     from ....scripts.generate_advanced_synthetic_data import AdvancedSyntheticDataGenerator
 
     generator = AdvancedSyntheticDataGenerator(output_dir)
-    # Override counts by modifying the generator
-    original_chains = generator.generate_vuln_chains
-    original_zero = generator.generate_zero_day_scenarios
 
-    def new_chains():
-        return original_chains(chains)
+    # Generate all data types with specified counts
+    vuln_chains = generator.generate_vuln_chains(chains)
+    zero_day_scenarios = generator.generate_zero_day_scenarios(zero_days)
+    cve_database = generator.generate_cve_database_entries(cve_entries)
+    exploitability_scenarios = generator.generate_exploitability_validation_scenarios(exploit_scenarios)
+    scanning_training = generator.generate_scanning_training_scenarios(scanning_scenarios)
+    knowledge_graph = generator.generate_knowledge_graph_data(knowledge_nodes)
+    agent_training_data = generator.generate_agent_training_data(agent_training)
 
-    def new_zero():
-        return original_zero(zero_days)
+    # Save all data
+    results = {
+        "vuln_chains": len(vuln_chains),
+        "zero_day_scenarios": len(zero_day_scenarios),
+        "cve_entries": len(cve_database),
+        "exploitability_scenarios": len(exploitability_scenarios),
+        "scanning_scenarios": len(scanning_training),
+        "knowledge_graph_nodes": len(knowledge_graph["nodes"]),
+        "knowledge_graph_relationships": len(knowledge_graph["relationships"]),
+        "agent_training_examples": len(agent_training_data)
+    }
 
-    generator.generate_vuln_chains = new_chains
-    generator.generate_zero_day_scenarios = new_zero
+    # Save files
+    import json
+    from pathlib import Path
 
-    results = generator.save_all()
-    console.print(f"[green]✓[/green] Generated advanced synthetic data: {results}")
+    output_path = Path(output_dir)
+
+    # Save each data type
+    (output_path / "advanced" / "vuln_chains.json").parent.mkdir(exist_ok=True, parents=True)
+    with open(output_path / "advanced" / "vuln_chains.json", "w") as f:
+        json.dump(vuln_chains, f, indent=2)
+
+    with open(output_path / "advanced" / "zero_days.json", "w") as f:
+        json.dump(zero_day_scenarios, f, indent=2)
+
+    with open(output_path / "advanced" / "cve_database.json", "w") as f:
+        json.dump(cve_database, f, indent=2)
+
+    with open(output_path / "advanced" / "exploitability_scenarios.json", "w") as f:
+        json.dump(exploitability_scenarios, f, indent=2)
+
+    with open(output_path / "advanced" / "scanning_scenarios.json", "w") as f:
+        json.dump(scanning_training, f, indent=2)
+
+    with open(output_path / "advanced" / "knowledge_graph.json", "w") as f:
+        json.dump(knowledge_graph, f, indent=2)
+
+    with open(output_path / "training" / "agent_training.json", "w") as f:
+        json.dump(agent_training_data, f, indent=2)
+
+    # Generate legacy prompts for backward compatibility
+    prompts = generator.generate_training_prompts(vuln_chains, zero_day_scenarios)
+    with open(output_path / "training" / "advanced_training.json", "w") as f:
+        json.dump(prompts, f, indent=2)
+
+    results["legacy_prompts"] = len(prompts)
+
+    console.print(f"[green]✓[/green] Generated comprehensive advanced synthetic data: {results}")
 
 
 @training.command()

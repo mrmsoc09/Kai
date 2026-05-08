@@ -1,0 +1,1413 @@
+[
+  {
+    "cve_id": "CVE-2025-23939",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 8.862624414630597,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:L/UI:R/S:C/C:H/I:L/A:N",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2022-11-27",
+    "last_modified": "2022-02-20",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-11388",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-35740"
+    ],
+    "tags": [
+      "sql-injection",
+      "xss",
+      "csrf"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-41103",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 6.193715374919221,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:N/I:H/A:N",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2022-03-05",
+    "last_modified": "2020-05-26",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-48294",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-88933"
+    ],
+    "tags": [
+      "buffer-overflow"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-52914",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 9.084287775897842,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:H",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2022-01-25",
+    "last_modified": "2021-05-06",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-57785",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-14643"
+    ],
+    "tags": [
+      "directory-traversal"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-88110",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 10.597737636394386,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:R/S:U/C:N/I:L/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2021-03-28",
+    "last_modified": "2022-10-23",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-82628",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-27796"
+    ],
+    "tags": [
+      "csrf",
+      "denial-of-service"
+    ]
+  },
+  {
+    "cve_id": "CVE-2025-60682",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 5.481687684420996,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:L/A:L",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2022-06-13",
+    "last_modified": "2023-06-19",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-43670",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-46660"
+    ],
+    "tags": [
+      "denial-of-service"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-96069",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.449467713947621,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:H/UI:R/S:U/C:L/I:L/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2021-08-11",
+    "last_modified": "2023-09-19",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-24754",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-38511"
+    ],
+    "tags": [
+      "denial-of-service"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-18351",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 7.9268670216700805,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:L/UI:N/S:C/C:N/I:H/A:N",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2020-02-11",
+    "last_modified": "2021-05-27",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-74974",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-28907"
+    ],
+    "tags": [
+      "privilege-escalation",
+      "data-leak",
+      "remote-code-execution"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-78449",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.457215269385586,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:H",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2023-07-24",
+    "last_modified": "2021-12-13",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-92009",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-68337"
+    ],
+    "tags": [
+      "sql-injection",
+      "privilege-escalation",
+      "remote-code-execution"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-44946",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.514432592154797,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2023-07-09",
+    "last_modified": "2023-07-24",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-12289",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-69379"
+    ],
+    "tags": [
+      "denial-of-service",
+      "authentication-bypass",
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-76199",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.089127605048276,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:N/A:H",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2023-12-04",
+    "last_modified": "2023-07-17",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-68862",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-64632"
+    ],
+    "tags": [
+      "directory-traversal",
+      "csrf",
+      "denial-of-service"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-50408",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.682890347041862,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:R/S:C/C:N/I:H/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2023-08-06",
+    "last_modified": "2020-06-09",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-41901",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-91647"
+    ],
+    "tags": [
+      "denial-of-service",
+      "sql-injection",
+      "directory-traversal"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-52578",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 10.045034442086985,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:N/UI:R/S:C/C:N/I:L/A:H",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2020-12-09",
+    "last_modified": "2020-04-12",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-53206",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-73742"
+    ],
+    "tags": [
+      "directory-traversal",
+      "privilege-escalation"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-27175",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 9.302441921990265,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:H/UI:R/S:C/C:L/I:H/A:H",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2021-08-07",
+    "last_modified": "2021-07-02",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-79389",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-20285"
+    ],
+    "tags": [
+      "csrf",
+      "remote-code-execution",
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2025-41296",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.999511380427327,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:H/UI:N/S:U/C:H/I:L/A:N",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2023-06-04",
+    "last_modified": "2020-12-24",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-43387",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-81529"
+    ],
+    "tags": [
+      "xss",
+      "authentication-bypass",
+      "denial-of-service"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-72769",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.919221233513062,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2023-11-16",
+    "last_modified": "2022-04-11",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-64122",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-15463"
+    ],
+    "tags": [
+      "xss",
+      "privilege-escalation",
+      "directory-traversal"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-66018",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 10.52422817505926,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:H/I:L/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2022-12-05",
+    "last_modified": "2022-07-06",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-73895",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-89552"
+    ],
+    "tags": [
+      "csrf",
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-66046",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 5.154555690406899,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:H/UI:R/S:C/C:L/I:L/A:N",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2020-12-16",
+    "last_modified": "2022-04-16",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-34925",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-80635"
+    ],
+    "tags": [
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-64452",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.439118080649866,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2022-09-04",
+    "last_modified": "2023-10-24",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-25178",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-96918"
+    ],
+    "tags": [
+      "xss",
+      "buffer-overflow",
+      "authentication-bypass"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-93651",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 8.60578260891699,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:L/UI:N/S:C/C:H/I:L/A:L",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2021-04-09",
+    "last_modified": "2020-08-22",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-64250",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-62256"
+    ],
+    "tags": [
+      "directory-traversal",
+      "buffer-overflow",
+      "denial-of-service"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-94637",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.76458807804413,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:H/UI:R/S:C/C:H/I:L/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2020-08-17",
+    "last_modified": "2020-09-14",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-17082",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-16020"
+    ],
+    "tags": [
+      "directory-traversal",
+      "denial-of-service",
+      "sql-injection"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-78487",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 6.7716303929372845,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:N/I:H/A:H",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2020-01-26",
+    "last_modified": "2022-10-08",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-32437",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-87036"
+    ],
+    "tags": [
+      "remote-code-execution",
+      "denial-of-service"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-79222",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 6.7379460404893425,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:H/UI:R/S:C/C:N/I:H/A:L",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2022-10-05",
+    "last_modified": "2021-04-26",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-69507",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-68229"
+    ],
+    "tags": [
+      "privilege-escalation",
+      "remote-code-execution"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-13960",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 6.715030637291768,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:N/UI:R/S:C/C:L/I:H/A:H",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2020-01-04",
+    "last_modified": "2022-05-11",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-15607",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-23480"
+    ],
+    "tags": [
+      "authentication-bypass",
+      "xss",
+      "denial-of-service"
+    ]
+  },
+  {
+    "cve_id": "CVE-2025-58422",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 8.088241849973265,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:H/UI:R/S:U/C:L/I:N/A:N",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2023-08-01",
+    "last_modified": "2023-05-06",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-36326",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-73353"
+    ],
+    "tags": [
+      "buffer-overflow",
+      "csrf",
+      "directory-traversal"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-22106",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 7.938159784952557,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:H/UI:R/S:U/C:N/I:L/A:N",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2020-06-21",
+    "last_modified": "2021-10-28",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-37182",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-21587"
+    ],
+    "tags": [
+      "denial-of-service",
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-66261",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 8.912683732760513,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:H/UI:R/S:C/C:L/I:L/A:H",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2022-05-03",
+    "last_modified": "2023-11-27",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-32056",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-90867"
+    ],
+    "tags": [
+      "directory-traversal"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-88806",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 7.671586987886738,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2020-09-16",
+    "last_modified": "2020-11-27",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-95427",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-96922"
+    ],
+    "tags": [
+      "sql-injection",
+      "authentication-bypass",
+      "directory-traversal"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-16576",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 10.327597548881789,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:C/C:L/I:H/A:H",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2021-05-03",
+    "last_modified": "2021-03-22",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-56863",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-83804"
+    ],
+    "tags": [
+      "csrf"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-60826",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 5.468722763117824,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:N",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2020-10-10",
+    "last_modified": "2021-03-10",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-62002",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-98156"
+    ],
+    "tags": [
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-18340",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 10.269705254075223,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:L/UI:R/S:U/C:N/I:H/A:N",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2022-01-20",
+    "last_modified": "2021-07-03",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-91412",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-40525"
+    ],
+    "tags": [
+      "remote-code-execution",
+      "xss",
+      "privilege-escalation"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-42446",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 8.885733207836077,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:L/UI:N/S:C/C:L/I:N/A:H",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2020-03-28",
+    "last_modified": "2022-12-25",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-38496",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-81518"
+    ],
+    "tags": [
+      "data-leak",
+      "buffer-overflow"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-16985",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 8.235448612482527,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:N/S:C/C:N/I:L/A:H",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2023-09-28",
+    "last_modified": "2020-02-18",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-56793",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-86698"
+    ],
+    "tags": [
+      "remote-code-execution",
+      "xss",
+      "sql-injection"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-18367",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 9.186280740855056,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:L",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2023-05-17",
+    "last_modified": "2021-09-15",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-15661",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-70814"
+    ],
+    "tags": [
+      "authentication-bypass",
+      "buffer-overflow",
+      "directory-traversal"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-92813",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 6.973336638097865,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:L",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2023-12-21",
+    "last_modified": "2020-05-17",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-68544",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-94636"
+    ],
+    "tags": [
+      "authentication-bypass",
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-85265",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 6.320422484559489,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:L/PR:H/UI:R/S:C/C:H/I:N/A:H",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2023-06-11",
+    "last_modified": "2020-01-17",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-99070",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-94501"
+    ],
+    "tags": [
+      "remote-code-execution",
+      "denial-of-service",
+      "sql-injection"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-48522",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 5.478500986356407,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:H/UI:N/S:U/C:H/I:L/A:N",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2020-01-14",
+    "last_modified": "2020-12-01",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-24298",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-69618"
+    ],
+    "tags": [
+      "privilege-escalation",
+      "csrf"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-37049",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.358638231943559,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:L/UI:R/S:U/C:L/I:H/A:N",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2021-09-16",
+    "last_modified": "2023-03-08",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-10442",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-15757"
+    ],
+    "tags": [
+      "data-leak"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-20487",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 8.807303650964158,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:H/UI:N/S:C/C:H/I:N/A:H",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2021-09-05",
+    "last_modified": "2023-09-25",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-73604",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-70040"
+    ],
+    "tags": [
+      "privilege-escalation"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-42269",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.103219190506735,
+    "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:H/I:H/A:H",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2022-02-07",
+    "last_modified": "2022-03-13",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-51629",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-88669"
+    ],
+    "tags": [
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2026-12059",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 10.680325037953615,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2020-09-28",
+    "last_modified": "2020-07-19",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-16063",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-15819"
+    ],
+    "tags": [
+      "remote-code-execution",
+      "data-leak",
+      "sql-injection"
+    ]
+  },
+  {
+    "cve_id": "CVE-2025-56922",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 6.990689574558231,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:H/PR:N/UI:R/S:U/C:L/I:N/A:H",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2020-12-28",
+    "last_modified": "2022-07-11",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-34025",
+      "https://nvd.nist.gov/vuln/detail/CVE-2026-47179"
+    ],
+    "tags": [
+      "privilege-escalation",
+      "csrf"
+    ]
+  },
+  {
+    "cve_id": "CVE-2025-23083",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.363063428164176,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:H/UI:N/S:U/C:L/I:L/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2021-11-11",
+    "last_modified": "2023-01-21",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2024-47280",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-79570"
+    ],
+    "tags": [
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-43812",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 6.855226942815216,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:L/PR:L/UI:N/S:U/C:H/I:N/A:L",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2023-05-27",
+    "last_modified": "2023-12-13",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-27223",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-60043"
+    ],
+    "tags": [
+      "privilege-escalation"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-70757",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 8.200015339320222,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:N/UI:R/S:C/C:N/I:L/A:N",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2022-12-03",
+    "last_modified": "2023-12-18",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-18803",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-72898"
+    ],
+    "tags": [
+      "directory-traversal",
+      "denial-of-service",
+      "csrf"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-28182",
+    "description": "XSS in user profile page",
+    "severity": "MEDIUM",
+    "cvss_score": 5.59651878989907,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:C/C:H/I:N/A:N",
+    "cwe": "CWE-79",
+    "affected_products": [
+      "CMS v2.0-3.1"
+    ],
+    "published_date": "2023-10-02",
+    "last_modified": "2023-10-20",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Inject script tags",
+      "Test attribute injection",
+      "Verify cookie theft possible"
+    ],
+    "remediation": "Output encoding, CSP headers",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-54904",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-25809"
+    ],
+    "tags": [
+      "sql-injection"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-98367",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 9.435717113406428,
+    "cvss_vector": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:N/I:N/A:N",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2023-04-14",
+    "last_modified": "2020-06-05",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-41628",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-94900"
+    ],
+    "tags": [
+      "denial-of-service",
+      "directory-traversal",
+      "buffer-overflow"
+    ]
+  },
+  {
+    "cve_id": "CVE-2025-57654",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 9.222584603763172,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:H/PR:H/UI:N/S:C/C:N/I:H/A:L",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2023-10-09",
+    "last_modified": "2020-03-10",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-15225",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-72586"
+    ],
+    "tags": [
+      "data-leak",
+      "buffer-overflow",
+      "sql-injection"
+    ]
+  },
+  {
+    "cve_id": "CVE-2025-35057",
+    "description": "SQL injection in login form",
+    "severity": "HIGH",
+    "cvss_score": 8.40921967205372,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+    "cwe": "CWE-89",
+    "affected_products": [
+      "WebApp v1.0-2.1"
+    ],
+    "published_date": "2023-05-15",
+    "last_modified": "2023-10-10",
+    "exploitability": "EASY",
+    "validation_patterns": [
+      "Test with SQL payloads",
+      "Check for error-based injection",
+      "Verify data extraction possible"
+    ],
+    "remediation": "Use prepared statements, input validation",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2023-84202",
+      "https://nvd.nist.gov/vuln/detail/CVE-2023-69667"
+    ],
+    "tags": [
+      "privilege-escalation",
+      "denial-of-service",
+      "authentication-bypass"
+    ]
+  },
+  {
+    "cve_id": "CVE-2023-47063",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 10.49194410388532,
+    "cvss_vector": "CVSS:3.1/AV:A/AC:H/PR:L/UI:R/S:C/C:N/I:L/A:L",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2020-12-14",
+    "last_modified": "2021-12-04",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2025-18357",
+      "https://nvd.nist.gov/vuln/detail/CVE-2024-11372"
+    ],
+    "tags": [
+      "denial-of-service",
+      "authentication-bypass",
+      "xss"
+    ]
+  },
+  {
+    "cve_id": "CVE-2024-65537",
+    "description": "Buffer overflow in network service",
+    "severity": "CRITICAL",
+    "cvss_score": 9.28117427425958,
+    "cvss_vector": "CVSS:3.1/AV:P/AC:L/PR:L/UI:R/S:U/C:N/I:N/A:N",
+    "cwe": "CWE-119",
+    "affected_products": [
+      "NetworkService v3.0"
+    ],
+    "published_date": "2020-11-08",
+    "last_modified": "2023-12-04",
+    "exploitability": "MODERATE",
+    "validation_patterns": [
+      "Send oversized packets",
+      "Monitor for crashes",
+      "Check memory corruption"
+    ],
+    "remediation": "Bounds checking, safe functions",
+    "references": [
+      "https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2026-44230",
+      "https://nvd.nist.gov/vuln/detail/CVE-2025-70629"
+    ],
+    "tags": [
+      "remote-code-execution",
+      "denial-of-service"
+    ]
+  }
+]

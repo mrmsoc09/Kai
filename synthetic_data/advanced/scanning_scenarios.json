@@ -1,0 +1,2666 @@
+[
+  {
+    "scenario_id": "scan-train-0000",
+    "scenario_name": "Web_Application_Full_Scan_1",
+    "description": "Complete web application vulnerability assessment",
+    "target_type": "web_application",
+    "target_scope": {
+      "urls": [
+        "https://app4.example.com",
+        "https://app1.example.com",
+        "https://app9.example.com",
+        "https://app7.example.com",
+        "https://app5.example.com"
+      ],
+      "subdomains": [],
+      "endpoints": [
+        "/api/v3/posts",
+        "/api/v2/users",
+        "/api/v3/posts",
+        "/api/v2/users",
+        "/api/v1/admin",
+        "/api/v1/users",
+        "/api/v1/posts",
+        "/api/v3/users"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "reconnaissance",
+        "tools": [
+          "subfinder",
+          "assetfinder",
+          "amass",
+          "gau"
+        ],
+        "expected_findings": [
+          "subdomains",
+          "endpoints",
+          "parameters"
+        ],
+        "success_metrics": [
+          "Coverage > 80%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "fingerprinting",
+        "tools": [
+          "whatweb",
+          "wappalyzer",
+          "nuclei"
+        ],
+        "expected_findings": [
+          "technologies",
+          "versions",
+          "frameworks"
+        ],
+        "success_metrics": [
+          "Accuracy > 90%",
+          "Detection rate > 85%"
+        ]
+      },
+      {
+        "phase": "vulnerability_scanning",
+        "tools": [
+          "nuclei",
+          "nikto",
+          "owasp_zap"
+        ],
+        "expected_findings": [
+          "sql_injection",
+          "xss",
+          "rce",
+          "auth_bypass"
+        ],
+        "success_metrics": [
+          "True positive > 80%",
+          "False positive < 10%"
+        ]
+      },
+      {
+        "phase": "exploitation",
+        "tools": [
+          "sqlmap",
+          "metasploit",
+          "burp_suite"
+        ],
+        "expected_findings": [
+          "confirmed_vulnerabilities",
+          "data_exfiltration",
+          "system_access"
+        ],
+        "success_metrics": [
+          "Exploit success > 70%",
+          "Data extraction confirmed"
+        ]
+      }
+    ],
+    "total_estimated_time": "7h",
+    "required_resources": {
+      "cpu_cores": 15,
+      "memory_gb": 11,
+      "network_bandwidth": "97Mbps"
+    },
+    "expected_findings_count": 11,
+    "success_metrics": [
+      "Coverage > 80%",
+      "False positive < 5%"
+    ],
+    "risk_assessment": "LOW",
+    "compliance_requirements": [
+      "NIST"
+    ],
+    "automated_tools": [
+      "subfinder",
+      "assetfinder",
+      "amass",
+      "gau",
+      "whatweb",
+      "wappalyzer",
+      "nuclei",
+      "nuclei",
+      "nikto",
+      "owasp_zap",
+      "sqlmap",
+      "metasploit",
+      "burp_suite"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Technical details included"
+  },
+  {
+    "scenario_id": "scan-train-0001",
+    "scenario_name": "API_Security_Scan_2",
+    "description": "Comprehensive API security assessment",
+    "target_type": "api",
+    "target_scope": {
+      "base_url": "https://api4.example.com",
+      "endpoints": [
+        "/v1/data",
+        "/v2/auth",
+        "/v3/admin",
+        "/v1/auth",
+        "/v1/admin",
+        "/v2/auth",
+        "/v3/auth",
+        "/v2/data",
+        "/v2/data",
+        "/v1/admin",
+        "/v3/auth",
+        "/v1/data",
+        "/v2/admin",
+        "/v1/data",
+        "/v1/auth",
+        "/v2/auth",
+        "/v1/auth"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "auth_types": [
+        "JWT",
+        "OAuth2",
+        "API Key",
+        "Basic Auth"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "discovery",
+        "tools": [
+          "postman",
+          "burp_discover",
+          "swagger_parser"
+        ],
+        "expected_findings": [
+          "endpoints",
+          "methods",
+          "parameters"
+        ],
+        "success_metrics": [
+          "API coverage > 90%",
+          "Documentation accuracy > 80%"
+        ]
+      },
+      {
+        "phase": "authentication_testing",
+        "tools": [
+          "jwt_tool",
+          "oauth_test",
+          "auth_bypass"
+        ],
+        "expected_findings": [
+          "weak_auth",
+          "token_manipulation",
+          "session_flaws"
+        ],
+        "success_metrics": [
+          "Auth bypass detection > 85%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "authorization_testing",
+        "tools": [
+          "horizontal_privesc",
+          "vertical_privesc",
+          "idor_test"
+        ],
+        "expected_findings": [
+          "access_control_flaws",
+          "privilege_escalation",
+          "data_leaks"
+        ],
+        "success_metrics": [
+          "AuthZ flaw detection > 80%",
+          "Impact assessment accurate"
+        ]
+      }
+    ],
+    "total_estimated_time": "6h",
+    "required_resources": {
+      "cpu_cores": 3,
+      "memory_gb": 15,
+      "network_bandwidth": "79Mbps"
+    },
+    "expected_findings_count": 44,
+    "success_metrics": [
+      "API coverage > 90%",
+      "Documentation accuracy > 80%"
+    ],
+    "risk_assessment": "LOW",
+    "compliance_requirements": [
+      "PCI-DSS",
+      "ISO27001",
+      "NIST"
+    ],
+    "automated_tools": [
+      "postman",
+      "burp_discover",
+      "swagger_parser",
+      "jwt_tool",
+      "oauth_test",
+      "auth_bypass",
+      "horizontal_privesc",
+      "vertical_privesc",
+      "idor_test"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Technical details included"
+  },
+  {
+    "scenario_id": "scan-train-0002",
+    "scenario_name": "Network_Infrastructure_Scan_3",
+    "description": "Network infrastructure vulnerability assessment",
+    "target_type": "network",
+    "target_scope": {
+      "ip_ranges": [
+        "192.168.3.0/24",
+        "192.168.10.0/24",
+        "192.168.4.0/24"
+      ],
+      "ports": [
+        649,
+        29781,
+        63656,
+        42300,
+        11597,
+        35809,
+        61776,
+        29470,
+        40866,
+        20914,
+        27629
+      ],
+      "services": [
+        "HTTP",
+        "HTTPS",
+        "SSH",
+        "FTP",
+        "SMTP",
+        "DNS"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "port_scanning",
+        "tools": [
+          "masscan",
+          "nmap",
+          "rustscan"
+        ],
+        "expected_findings": [
+          "open_ports",
+          "services",
+          "versions"
+        ],
+        "success_metrics": [
+          "Port discovery > 95%",
+          "Service detection > 85%"
+        ]
+      },
+      {
+        "phase": "service_enumeration",
+        "tools": [
+          "nmap_scripts",
+          "banner_grabbing",
+          "service_scanners"
+        ],
+        "expected_findings": [
+          "service_versions",
+          "configurations",
+          "vulnerabilities"
+        ],
+        "success_metrics": [
+          "Version accuracy > 90%",
+          "Config detection > 75%"
+        ]
+      },
+      {
+        "phase": "vulnerability_assessment",
+        "tools": [
+          "openvas",
+          "nessus",
+          "custom_scanners"
+        ],
+        "expected_findings": [
+          "service_vulns",
+          "misconfigurations",
+          "weak_protocols"
+        ],
+        "success_metrics": [
+          "Vuln detection > 80%",
+          "False positive < 15%"
+        ]
+      }
+    ],
+    "total_estimated_time": "6h",
+    "required_resources": {
+      "cpu_cores": 9,
+      "memory_gb": 15,
+      "network_bandwidth": "78Mbps"
+    },
+    "expected_findings_count": 9,
+    "success_metrics": [
+      "Port discovery > 95%",
+      "Service detection > 85%"
+    ],
+    "risk_assessment": "LOW",
+    "compliance_requirements": [
+      "HIPAA",
+      "SOX",
+      "NIST"
+    ],
+    "automated_tools": [
+      "masscan",
+      "nmap",
+      "rustscan",
+      "nmap_scripts",
+      "banner_grabbing",
+      "service_scanners",
+      "openvas",
+      "nessus",
+      "custom_scanners"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Full vulnerability report"
+  },
+  {
+    "scenario_id": "scan-train-0003",
+    "scenario_name": "Network_Infrastructure_Scan_4",
+    "description": "Network infrastructure vulnerability assessment",
+    "target_type": "network",
+    "target_scope": {
+      "ip_ranges": [
+        "192.168.6.0/24",
+        "192.168.8.0/24",
+        "192.168.9.0/24"
+      ],
+      "ports": [
+        17175,
+        40231,
+        48597,
+        57783,
+        37877,
+        27660,
+        63943,
+        4734,
+        49789,
+        13467,
+        41542,
+        47684,
+        26662,
+        17571,
+        23491,
+        39393,
+        55741,
+        24643,
+        31420,
+        21948,
+        48095,
+        61577,
+        54997,
+        29220,
+        27014
+      ],
+      "services": [
+        "HTTP",
+        "HTTPS",
+        "SSH",
+        "FTP",
+        "SMTP",
+        "DNS"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "port_scanning",
+        "tools": [
+          "masscan",
+          "nmap",
+          "rustscan"
+        ],
+        "expected_findings": [
+          "open_ports",
+          "services",
+          "versions"
+        ],
+        "success_metrics": [
+          "Port discovery > 95%",
+          "Service detection > 85%"
+        ]
+      },
+      {
+        "phase": "service_enumeration",
+        "tools": [
+          "nmap_scripts",
+          "banner_grabbing",
+          "service_scanners"
+        ],
+        "expected_findings": [
+          "service_versions",
+          "configurations",
+          "vulnerabilities"
+        ],
+        "success_metrics": [
+          "Version accuracy > 90%",
+          "Config detection > 75%"
+        ]
+      },
+      {
+        "phase": "vulnerability_assessment",
+        "tools": [
+          "openvas",
+          "nessus",
+          "custom_scanners"
+        ],
+        "expected_findings": [
+          "service_vulns",
+          "misconfigurations",
+          "weak_protocols"
+        ],
+        "success_metrics": [
+          "Vuln detection > 80%",
+          "False positive < 15%"
+        ]
+      }
+    ],
+    "total_estimated_time": "8h",
+    "required_resources": {
+      "cpu_cores": 10,
+      "memory_gb": 15,
+      "network_bandwidth": "74Mbps"
+    },
+    "expected_findings_count": 35,
+    "success_metrics": [
+      "Port discovery > 95%",
+      "Service detection > 85%"
+    ],
+    "risk_assessment": "MEDIUM",
+    "compliance_requirements": [
+      "PCI-DSS",
+      "NIST",
+      "SOX"
+    ],
+    "automated_tools": [
+      "masscan",
+      "nmap",
+      "rustscan",
+      "nmap_scripts",
+      "banner_grabbing",
+      "service_scanners",
+      "openvas",
+      "nessus",
+      "custom_scanners"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Executive summary only"
+  },
+  {
+    "scenario_id": "scan-train-0004",
+    "scenario_name": "API_Security_Scan_5",
+    "description": "Comprehensive API security assessment",
+    "target_type": "api",
+    "target_scope": {
+      "base_url": "https://api5.example.com",
+      "endpoints": [
+        "/v2/data",
+        "/v1/auth",
+        "/v3/admin",
+        "/v3/auth",
+        "/v3/auth",
+        "/v3/auth",
+        "/v2/data",
+        "/v3/auth",
+        "/v2/admin",
+        "/v2/admin",
+        "/v3/data",
+        "/v1/data",
+        "/v3/auth",
+        "/v2/data",
+        "/v1/auth"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "auth_types": [
+        "JWT",
+        "OAuth2",
+        "API Key",
+        "Basic Auth"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "discovery",
+        "tools": [
+          "postman",
+          "burp_discover",
+          "swagger_parser"
+        ],
+        "expected_findings": [
+          "endpoints",
+          "methods",
+          "parameters"
+        ],
+        "success_metrics": [
+          "API coverage > 90%",
+          "Documentation accuracy > 80%"
+        ]
+      },
+      {
+        "phase": "authentication_testing",
+        "tools": [
+          "jwt_tool",
+          "oauth_test",
+          "auth_bypass"
+        ],
+        "expected_findings": [
+          "weak_auth",
+          "token_manipulation",
+          "session_flaws"
+        ],
+        "success_metrics": [
+          "Auth bypass detection > 85%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "authorization_testing",
+        "tools": [
+          "horizontal_privesc",
+          "vertical_privesc",
+          "idor_test"
+        ],
+        "expected_findings": [
+          "access_control_flaws",
+          "privilege_escalation",
+          "data_leaks"
+        ],
+        "success_metrics": [
+          "AuthZ flaw detection > 80%",
+          "Impact assessment accurate"
+        ]
+      }
+    ],
+    "total_estimated_time": "5h",
+    "required_resources": {
+      "cpu_cores": 10,
+      "memory_gb": 17,
+      "network_bandwidth": "64Mbps"
+    },
+    "expected_findings_count": 32,
+    "success_metrics": [
+      "API coverage > 90%",
+      "Documentation accuracy > 80%"
+    ],
+    "risk_assessment": "MEDIUM",
+    "compliance_requirements": [
+      "HIPAA"
+    ],
+    "automated_tools": [
+      "postman",
+      "burp_discover",
+      "swagger_parser",
+      "jwt_tool",
+      "oauth_test",
+      "auth_bypass",
+      "horizontal_privesc",
+      "vertical_privesc",
+      "idor_test"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Full vulnerability report"
+  },
+  {
+    "scenario_id": "scan-train-0005",
+    "scenario_name": "Web_Application_Full_Scan_6",
+    "description": "Complete web application vulnerability assessment",
+    "target_type": "web_application",
+    "target_scope": {
+      "urls": [
+        "https://app4.example.com",
+        "https://app4.example.com"
+      ],
+      "subdomains": [
+        "api.app3.example.com"
+      ],
+      "endpoints": [
+        "/api/v1/admin",
+        "/api/v1/admin",
+        "/api/v3/users",
+        "/api/v1/users",
+        "/api/v2/users",
+        "/api/v3/users",
+        "/api/v1/users"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "reconnaissance",
+        "tools": [
+          "subfinder",
+          "assetfinder",
+          "amass",
+          "gau"
+        ],
+        "expected_findings": [
+          "subdomains",
+          "endpoints",
+          "parameters"
+        ],
+        "success_metrics": [
+          "Coverage > 80%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "fingerprinting",
+        "tools": [
+          "whatweb",
+          "wappalyzer",
+          "nuclei"
+        ],
+        "expected_findings": [
+          "technologies",
+          "versions",
+          "frameworks"
+        ],
+        "success_metrics": [
+          "Accuracy > 90%",
+          "Detection rate > 85%"
+        ]
+      },
+      {
+        "phase": "vulnerability_scanning",
+        "tools": [
+          "nuclei",
+          "nikto",
+          "owasp_zap"
+        ],
+        "expected_findings": [
+          "sql_injection",
+          "xss",
+          "rce",
+          "auth_bypass"
+        ],
+        "success_metrics": [
+          "True positive > 80%",
+          "False positive < 10%"
+        ]
+      },
+      {
+        "phase": "exploitation",
+        "tools": [
+          "sqlmap",
+          "metasploit",
+          "burp_suite"
+        ],
+        "expected_findings": [
+          "confirmed_vulnerabilities",
+          "data_exfiltration",
+          "system_access"
+        ],
+        "success_metrics": [
+          "Exploit success > 70%",
+          "Data extraction confirmed"
+        ]
+      }
+    ],
+    "total_estimated_time": "1h",
+    "required_resources": {
+      "cpu_cores": 9,
+      "memory_gb": 13,
+      "network_bandwidth": "67Mbps"
+    },
+    "expected_findings_count": 40,
+    "success_metrics": [
+      "Coverage > 80%",
+      "False positive < 5%"
+    ],
+    "risk_assessment": "LOW",
+    "compliance_requirements": [],
+    "automated_tools": [
+      "subfinder",
+      "assetfinder",
+      "amass",
+      "gau",
+      "whatweb",
+      "wappalyzer",
+      "nuclei",
+      "nuclei",
+      "nikto",
+      "owasp_zap",
+      "sqlmap",
+      "metasploit",
+      "burp_suite"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Full vulnerability report"
+  },
+  {
+    "scenario_id": "scan-train-0006",
+    "scenario_name": "Web_Application_Full_Scan_7",
+    "description": "Complete web application vulnerability assessment",
+    "target_type": "web_application",
+    "target_scope": {
+      "urls": [
+        "https://app10.example.com",
+        "https://app5.example.com",
+        "https://app5.example.com",
+        "https://app4.example.com"
+      ],
+      "subdomains": [
+        "api.app7.example.com",
+        "api.app8.example.com"
+      ],
+      "endpoints": [
+        "/api/v2/admin",
+        "/api/v2/posts",
+        "/api/v1/posts",
+        "/api/v2/posts",
+        "/api/v2/users",
+        "/api/v1/admin",
+        "/api/v3/users",
+        "/api/v2/posts",
+        "/api/v1/posts",
+        "/api/v1/admin",
+        "/api/v1/users",
+        "/api/v3/posts",
+        "/api/v3/posts",
+        "/api/v2/posts",
+        "/api/v2/admin",
+        "/api/v1/posts"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "reconnaissance",
+        "tools": [
+          "subfinder",
+          "assetfinder",
+          "amass",
+          "gau"
+        ],
+        "expected_findings": [
+          "subdomains",
+          "endpoints",
+          "parameters"
+        ],
+        "success_metrics": [
+          "Coverage > 80%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "fingerprinting",
+        "tools": [
+          "whatweb",
+          "wappalyzer",
+          "nuclei"
+        ],
+        "expected_findings": [
+          "technologies",
+          "versions",
+          "frameworks"
+        ],
+        "success_metrics": [
+          "Accuracy > 90%",
+          "Detection rate > 85%"
+        ]
+      },
+      {
+        "phase": "vulnerability_scanning",
+        "tools": [
+          "nuclei",
+          "nikto",
+          "owasp_zap"
+        ],
+        "expected_findings": [
+          "sql_injection",
+          "xss",
+          "rce",
+          "auth_bypass"
+        ],
+        "success_metrics": [
+          "True positive > 80%",
+          "False positive < 10%"
+        ]
+      },
+      {
+        "phase": "exploitation",
+        "tools": [
+          "sqlmap",
+          "metasploit",
+          "burp_suite"
+        ],
+        "expected_findings": [
+          "confirmed_vulnerabilities",
+          "data_exfiltration",
+          "system_access"
+        ],
+        "success_metrics": [
+          "Exploit success > 70%",
+          "Data extraction confirmed"
+        ]
+      }
+    ],
+    "total_estimated_time": "4h",
+    "required_resources": {
+      "cpu_cores": 4,
+      "memory_gb": 30,
+      "network_bandwidth": "76Mbps"
+    },
+    "expected_findings_count": 6,
+    "success_metrics": [
+      "Coverage > 80%",
+      "False positive < 5%"
+    ],
+    "risk_assessment": "MEDIUM",
+    "compliance_requirements": [
+      "ISO27001"
+    ],
+    "automated_tools": [
+      "subfinder",
+      "assetfinder",
+      "amass",
+      "gau",
+      "whatweb",
+      "wappalyzer",
+      "nuclei",
+      "nuclei",
+      "nikto",
+      "owasp_zap",
+      "sqlmap",
+      "metasploit",
+      "burp_suite"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Compliance-focused report"
+  },
+  {
+    "scenario_id": "scan-train-0007",
+    "scenario_name": "Web_Application_Full_Scan_8",
+    "description": "Complete web application vulnerability assessment",
+    "target_type": "web_application",
+    "target_scope": {
+      "urls": [
+        "https://app2.example.com"
+      ],
+      "subdomains": [
+        "api.app10.example.com",
+        "api.app7.example.com"
+      ],
+      "endpoints": [
+        "/api/v3/posts",
+        "/api/v1/admin",
+        "/api/v3/users",
+        "/api/v1/posts",
+        "/api/v2/posts",
+        "/api/v3/users",
+        "/api/v3/admin",
+        "/api/v2/users",
+        "/api/v1/admin",
+        "/api/v3/admin",
+        "/api/v1/admin",
+        "/api/v1/users",
+        "/api/v3/posts",
+        "/api/v1/users",
+        "/api/v2/users",
+        "/api/v1/users"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "reconnaissance",
+        "tools": [
+          "subfinder",
+          "assetfinder",
+          "amass",
+          "gau"
+        ],
+        "expected_findings": [
+          "subdomains",
+          "endpoints",
+          "parameters"
+        ],
+        "success_metrics": [
+          "Coverage > 80%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "fingerprinting",
+        "tools": [
+          "whatweb",
+          "wappalyzer",
+          "nuclei"
+        ],
+        "expected_findings": [
+          "technologies",
+          "versions",
+          "frameworks"
+        ],
+        "success_metrics": [
+          "Accuracy > 90%",
+          "Detection rate > 85%"
+        ]
+      },
+      {
+        "phase": "vulnerability_scanning",
+        "tools": [
+          "nuclei",
+          "nikto",
+          "owasp_zap"
+        ],
+        "expected_findings": [
+          "sql_injection",
+          "xss",
+          "rce",
+          "auth_bypass"
+        ],
+        "success_metrics": [
+          "True positive > 80%",
+          "False positive < 10%"
+        ]
+      },
+      {
+        "phase": "exploitation",
+        "tools": [
+          "sqlmap",
+          "metasploit",
+          "burp_suite"
+        ],
+        "expected_findings": [
+          "confirmed_vulnerabilities",
+          "data_exfiltration",
+          "system_access"
+        ],
+        "success_metrics": [
+          "Exploit success > 70%",
+          "Data extraction confirmed"
+        ]
+      }
+    ],
+    "total_estimated_time": "7h",
+    "required_resources": {
+      "cpu_cores": 2,
+      "memory_gb": 22,
+      "network_bandwidth": "30Mbps"
+    },
+    "expected_findings_count": 17,
+    "success_metrics": [
+      "Coverage > 80%",
+      "False positive < 5%"
+    ],
+    "risk_assessment": "CRITICAL",
+    "compliance_requirements": [
+      "SOX"
+    ],
+    "automated_tools": [
+      "subfinder",
+      "assetfinder",
+      "amass",
+      "gau",
+      "whatweb",
+      "wappalyzer",
+      "nuclei",
+      "nuclei",
+      "nikto",
+      "owasp_zap",
+      "sqlmap",
+      "metasploit",
+      "burp_suite"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Technical details included"
+  },
+  {
+    "scenario_id": "scan-train-0008",
+    "scenario_name": "Network_Infrastructure_Scan_9",
+    "description": "Network infrastructure vulnerability assessment",
+    "target_type": "network",
+    "target_scope": {
+      "ip_ranges": [
+        "192.168.4.0/24"
+      ],
+      "ports": [
+        29174,
+        23467,
+        20205,
+        49382,
+        24183,
+        51935,
+        29410,
+        26463,
+        41067,
+        12214,
+        55576,
+        40795,
+        30047,
+        52799,
+        31842,
+        41465,
+        34116,
+        35959,
+        12346,
+        2061,
+        35702,
+        40143,
+        4733,
+        50298,
+        21409,
+        46517,
+        29414,
+        1139,
+        42087,
+        26457,
+        58668,
+        45942,
+        30488,
+        58156,
+        57050,
+        21960,
+        28515
+      ],
+      "services": [
+        "HTTP",
+        "HTTPS",
+        "SSH",
+        "FTP",
+        "SMTP",
+        "DNS"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "port_scanning",
+        "tools": [
+          "masscan",
+          "nmap",
+          "rustscan"
+        ],
+        "expected_findings": [
+          "open_ports",
+          "services",
+          "versions"
+        ],
+        "success_metrics": [
+          "Port discovery > 95%",
+          "Service detection > 85%"
+        ]
+      },
+      {
+        "phase": "service_enumeration",
+        "tools": [
+          "nmap_scripts",
+          "banner_grabbing",
+          "service_scanners"
+        ],
+        "expected_findings": [
+          "service_versions",
+          "configurations",
+          "vulnerabilities"
+        ],
+        "success_metrics": [
+          "Version accuracy > 90%",
+          "Config detection > 75%"
+        ]
+      },
+      {
+        "phase": "vulnerability_assessment",
+        "tools": [
+          "openvas",
+          "nessus",
+          "custom_scanners"
+        ],
+        "expected_findings": [
+          "service_vulns",
+          "misconfigurations",
+          "weak_protocols"
+        ],
+        "success_metrics": [
+          "Vuln detection > 80%",
+          "False positive < 15%"
+        ]
+      }
+    ],
+    "total_estimated_time": "3h",
+    "required_resources": {
+      "cpu_cores": 10,
+      "memory_gb": 7,
+      "network_bandwidth": "72Mbps"
+    },
+    "expected_findings_count": 20,
+    "success_metrics": [
+      "Port discovery > 95%",
+      "Service detection > 85%"
+    ],
+    "risk_assessment": "MEDIUM",
+    "compliance_requirements": [
+      "GDPR",
+      "PCI-DSS"
+    ],
+    "automated_tools": [
+      "masscan",
+      "nmap",
+      "rustscan",
+      "nmap_scripts",
+      "banner_grabbing",
+      "service_scanners",
+      "openvas",
+      "nessus",
+      "custom_scanners"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Compliance-focused report"
+  },
+  {
+    "scenario_id": "scan-train-0009",
+    "scenario_name": "Web_Application_Full_Scan_10",
+    "description": "Complete web application vulnerability assessment",
+    "target_type": "web_application",
+    "target_scope": {
+      "urls": [
+        "https://app6.example.com",
+        "https://app7.example.com",
+        "https://app9.example.com"
+      ],
+      "subdomains": [
+        "api.app5.example.com",
+        "api.app9.example.com"
+      ],
+      "endpoints": [
+        "/api/v1/users",
+        "/api/v2/posts",
+        "/api/v2/admin",
+        "/api/v1/admin",
+        "/api/v1/admin",
+        "/api/v3/users",
+        "/api/v2/users",
+        "/api/v1/posts",
+        "/api/v1/admin",
+        "/api/v3/users",
+        "/api/v3/admin",
+        "/api/v3/users",
+        "/api/v3/admin",
+        "/api/v2/admin",
+        "/api/v3/posts",
+        "/api/v1/admin",
+        "/api/v3/admin",
+        "/api/v2/posts"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "reconnaissance",
+        "tools": [
+          "subfinder",
+          "assetfinder",
+          "amass",
+          "gau"
+        ],
+        "expected_findings": [
+          "subdomains",
+          "endpoints",
+          "parameters"
+        ],
+        "success_metrics": [
+          "Coverage > 80%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "fingerprinting",
+        "tools": [
+          "whatweb",
+          "wappalyzer",
+          "nuclei"
+        ],
+        "expected_findings": [
+          "technologies",
+          "versions",
+          "frameworks"
+        ],
+        "success_metrics": [
+          "Accuracy > 90%",
+          "Detection rate > 85%"
+        ]
+      },
+      {
+        "phase": "vulnerability_scanning",
+        "tools": [
+          "nuclei",
+          "nikto",
+          "owasp_zap"
+        ],
+        "expected_findings": [
+          "sql_injection",
+          "xss",
+          "rce",
+          "auth_bypass"
+        ],
+        "success_metrics": [
+          "True positive > 80%",
+          "False positive < 10%"
+        ]
+      },
+      {
+        "phase": "exploitation",
+        "tools": [
+          "sqlmap",
+          "metasploit",
+          "burp_suite"
+        ],
+        "expected_findings": [
+          "confirmed_vulnerabilities",
+          "data_exfiltration",
+          "system_access"
+        ],
+        "success_metrics": [
+          "Exploit success > 70%",
+          "Data extraction confirmed"
+        ]
+      }
+    ],
+    "total_estimated_time": "1h",
+    "required_resources": {
+      "cpu_cores": 12,
+      "memory_gb": 27,
+      "network_bandwidth": "21Mbps"
+    },
+    "expected_findings_count": 47,
+    "success_metrics": [
+      "Coverage > 80%",
+      "False positive < 5%"
+    ],
+    "risk_assessment": "MEDIUM",
+    "compliance_requirements": [
+      "GDPR",
+      "PCI-DSS"
+    ],
+    "automated_tools": [
+      "subfinder",
+      "assetfinder",
+      "amass",
+      "gau",
+      "whatweb",
+      "wappalyzer",
+      "nuclei",
+      "nuclei",
+      "nikto",
+      "owasp_zap",
+      "sqlmap",
+      "metasploit",
+      "burp_suite"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Compliance-focused report"
+  },
+  {
+    "scenario_id": "scan-train-0010",
+    "scenario_name": "API_Security_Scan_11",
+    "description": "Comprehensive API security assessment",
+    "target_type": "api",
+    "target_scope": {
+      "base_url": "https://api8.example.com",
+      "endpoints": [
+        "/v2/admin",
+        "/v3/auth",
+        "/v1/data",
+        "/v2/admin",
+        "/v1/auth",
+        "/v2/data",
+        "/v2/auth",
+        "/v1/admin",
+        "/v2/data",
+        "/v1/admin",
+        "/v2/auth",
+        "/v3/auth",
+        "/v2/admin",
+        "/v2/auth",
+        "/v1/data",
+        "/v3/data",
+        "/v3/admin",
+        "/v1/data",
+        "/v1/auth",
+        "/v1/auth",
+        "/v2/data",
+        "/v1/auth",
+        "/v1/auth",
+        "/v3/admin"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "auth_types": [
+        "JWT",
+        "OAuth2",
+        "API Key",
+        "Basic Auth"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "discovery",
+        "tools": [
+          "postman",
+          "burp_discover",
+          "swagger_parser"
+        ],
+        "expected_findings": [
+          "endpoints",
+          "methods",
+          "parameters"
+        ],
+        "success_metrics": [
+          "API coverage > 90%",
+          "Documentation accuracy > 80%"
+        ]
+      },
+      {
+        "phase": "authentication_testing",
+        "tools": [
+          "jwt_tool",
+          "oauth_test",
+          "auth_bypass"
+        ],
+        "expected_findings": [
+          "weak_auth",
+          "token_manipulation",
+          "session_flaws"
+        ],
+        "success_metrics": [
+          "Auth bypass detection > 85%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "authorization_testing",
+        "tools": [
+          "horizontal_privesc",
+          "vertical_privesc",
+          "idor_test"
+        ],
+        "expected_findings": [
+          "access_control_flaws",
+          "privilege_escalation",
+          "data_leaks"
+        ],
+        "success_metrics": [
+          "AuthZ flaw detection > 80%",
+          "Impact assessment accurate"
+        ]
+      }
+    ],
+    "total_estimated_time": "2h",
+    "required_resources": {
+      "cpu_cores": 10,
+      "memory_gb": 16,
+      "network_bandwidth": "60Mbps"
+    },
+    "expected_findings_count": 41,
+    "success_metrics": [
+      "API coverage > 90%",
+      "Documentation accuracy > 80%"
+    ],
+    "risk_assessment": "MEDIUM",
+    "compliance_requirements": [
+      "HIPAA"
+    ],
+    "automated_tools": [
+      "postman",
+      "burp_discover",
+      "swagger_parser",
+      "jwt_tool",
+      "oauth_test",
+      "auth_bypass",
+      "horizontal_privesc",
+      "vertical_privesc",
+      "idor_test"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Full vulnerability report"
+  },
+  {
+    "scenario_id": "scan-train-0011",
+    "scenario_name": "API_Security_Scan_12",
+    "description": "Comprehensive API security assessment",
+    "target_type": "api",
+    "target_scope": {
+      "base_url": "https://api2.example.com",
+      "endpoints": [
+        "/v3/data",
+        "/v3/data",
+        "/v3/auth",
+        "/v2/admin",
+        "/v3/auth",
+        "/v1/auth",
+        "/v2/admin",
+        "/v2/data",
+        "/v2/auth",
+        "/v2/data",
+        "/v2/admin",
+        "/v1/auth",
+        "/v3/data"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "auth_types": [
+        "JWT",
+        "OAuth2",
+        "API Key",
+        "Basic Auth"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "discovery",
+        "tools": [
+          "postman",
+          "burp_discover",
+          "swagger_parser"
+        ],
+        "expected_findings": [
+          "endpoints",
+          "methods",
+          "parameters"
+        ],
+        "success_metrics": [
+          "API coverage > 90%",
+          "Documentation accuracy > 80%"
+        ]
+      },
+      {
+        "phase": "authentication_testing",
+        "tools": [
+          "jwt_tool",
+          "oauth_test",
+          "auth_bypass"
+        ],
+        "expected_findings": [
+          "weak_auth",
+          "token_manipulation",
+          "session_flaws"
+        ],
+        "success_metrics": [
+          "Auth bypass detection > 85%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "authorization_testing",
+        "tools": [
+          "horizontal_privesc",
+          "vertical_privesc",
+          "idor_test"
+        ],
+        "expected_findings": [
+          "access_control_flaws",
+          "privilege_escalation",
+          "data_leaks"
+        ],
+        "success_metrics": [
+          "AuthZ flaw detection > 80%",
+          "Impact assessment accurate"
+        ]
+      }
+    ],
+    "total_estimated_time": "5h",
+    "required_resources": {
+      "cpu_cores": 8,
+      "memory_gb": 31,
+      "network_bandwidth": "36Mbps"
+    },
+    "expected_findings_count": 20,
+    "success_metrics": [
+      "API coverage > 90%",
+      "Documentation accuracy > 80%"
+    ],
+    "risk_assessment": "HIGH",
+    "compliance_requirements": [
+      "SOX"
+    ],
+    "automated_tools": [
+      "postman",
+      "burp_discover",
+      "swagger_parser",
+      "jwt_tool",
+      "oauth_test",
+      "auth_bypass",
+      "horizontal_privesc",
+      "vertical_privesc",
+      "idor_test"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Compliance-focused report"
+  },
+  {
+    "scenario_id": "scan-train-0012",
+    "scenario_name": "Web_Application_Full_Scan_13",
+    "description": "Complete web application vulnerability assessment",
+    "target_type": "web_application",
+    "target_scope": {
+      "urls": [
+        "https://app7.example.com",
+        "https://app9.example.com"
+      ],
+      "subdomains": [
+        "api.app10.example.com",
+        "api.app7.example.com"
+      ],
+      "endpoints": [
+        "/api/v1/admin",
+        "/api/v2/posts",
+        "/api/v2/posts",
+        "/api/v1/users",
+        "/api/v3/posts",
+        "/api/v2/posts",
+        "/api/v2/admin",
+        "/api/v3/admin",
+        "/api/v1/admin",
+        "/api/v3/admin",
+        "/api/v1/admin",
+        "/api/v1/posts",
+        "/api/v1/admin",
+        "/api/v2/admin",
+        "/api/v1/admin",
+        "/api/v3/users",
+        "/api/v2/posts",
+        "/api/v3/posts",
+        "/api/v2/users",
+        "/api/v2/admin"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "reconnaissance",
+        "tools": [
+          "subfinder",
+          "assetfinder",
+          "amass",
+          "gau"
+        ],
+        "expected_findings": [
+          "subdomains",
+          "endpoints",
+          "parameters"
+        ],
+        "success_metrics": [
+          "Coverage > 80%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "fingerprinting",
+        "tools": [
+          "whatweb",
+          "wappalyzer",
+          "nuclei"
+        ],
+        "expected_findings": [
+          "technologies",
+          "versions",
+          "frameworks"
+        ],
+        "success_metrics": [
+          "Accuracy > 90%",
+          "Detection rate > 85%"
+        ]
+      },
+      {
+        "phase": "vulnerability_scanning",
+        "tools": [
+          "nuclei",
+          "nikto",
+          "owasp_zap"
+        ],
+        "expected_findings": [
+          "sql_injection",
+          "xss",
+          "rce",
+          "auth_bypass"
+        ],
+        "success_metrics": [
+          "True positive > 80%",
+          "False positive < 10%"
+        ]
+      },
+      {
+        "phase": "exploitation",
+        "tools": [
+          "sqlmap",
+          "metasploit",
+          "burp_suite"
+        ],
+        "expected_findings": [
+          "confirmed_vulnerabilities",
+          "data_exfiltration",
+          "system_access"
+        ],
+        "success_metrics": [
+          "Exploit success > 70%",
+          "Data extraction confirmed"
+        ]
+      }
+    ],
+    "total_estimated_time": "8h",
+    "required_resources": {
+      "cpu_cores": 6,
+      "memory_gb": 17,
+      "network_bandwidth": "34Mbps"
+    },
+    "expected_findings_count": 13,
+    "success_metrics": [
+      "Coverage > 80%",
+      "False positive < 5%"
+    ],
+    "risk_assessment": "HIGH",
+    "compliance_requirements": [
+      "ISO27001",
+      "PCI-DSS",
+      "HIPAA"
+    ],
+    "automated_tools": [
+      "subfinder",
+      "assetfinder",
+      "amass",
+      "gau",
+      "whatweb",
+      "wappalyzer",
+      "nuclei",
+      "nuclei",
+      "nikto",
+      "owasp_zap",
+      "sqlmap",
+      "metasploit",
+      "burp_suite"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Executive summary only"
+  },
+  {
+    "scenario_id": "scan-train-0013",
+    "scenario_name": "API_Security_Scan_14",
+    "description": "Comprehensive API security assessment",
+    "target_type": "api",
+    "target_scope": {
+      "base_url": "https://api5.example.com",
+      "endpoints": [
+        "/v1/data",
+        "/v3/auth",
+        "/v2/data",
+        "/v1/data",
+        "/v2/data",
+        "/v2/admin",
+        "/v3/data",
+        "/v2/data",
+        "/v2/auth",
+        "/v1/data",
+        "/v3/auth",
+        "/v3/admin",
+        "/v3/admin",
+        "/v3/admin",
+        "/v1/data",
+        "/v3/auth",
+        "/v1/data",
+        "/v2/auth",
+        "/v2/admin",
+        "/v2/auth",
+        "/v1/admin",
+        "/v3/admin"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "auth_types": [
+        "JWT",
+        "OAuth2",
+        "API Key",
+        "Basic Auth"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "discovery",
+        "tools": [
+          "postman",
+          "burp_discover",
+          "swagger_parser"
+        ],
+        "expected_findings": [
+          "endpoints",
+          "methods",
+          "parameters"
+        ],
+        "success_metrics": [
+          "API coverage > 90%",
+          "Documentation accuracy > 80%"
+        ]
+      },
+      {
+        "phase": "authentication_testing",
+        "tools": [
+          "jwt_tool",
+          "oauth_test",
+          "auth_bypass"
+        ],
+        "expected_findings": [
+          "weak_auth",
+          "token_manipulation",
+          "session_flaws"
+        ],
+        "success_metrics": [
+          "Auth bypass detection > 85%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "authorization_testing",
+        "tools": [
+          "horizontal_privesc",
+          "vertical_privesc",
+          "idor_test"
+        ],
+        "expected_findings": [
+          "access_control_flaws",
+          "privilege_escalation",
+          "data_leaks"
+        ],
+        "success_metrics": [
+          "AuthZ flaw detection > 80%",
+          "Impact assessment accurate"
+        ]
+      }
+    ],
+    "total_estimated_time": "7h",
+    "required_resources": {
+      "cpu_cores": 15,
+      "memory_gb": 27,
+      "network_bandwidth": "40Mbps"
+    },
+    "expected_findings_count": 49,
+    "success_metrics": [
+      "API coverage > 90%",
+      "Documentation accuracy > 80%"
+    ],
+    "risk_assessment": "HIGH",
+    "compliance_requirements": [],
+    "automated_tools": [
+      "postman",
+      "burp_discover",
+      "swagger_parser",
+      "jwt_tool",
+      "oauth_test",
+      "auth_bypass",
+      "horizontal_privesc",
+      "vertical_privesc",
+      "idor_test"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Executive summary only"
+  },
+  {
+    "scenario_id": "scan-train-0014",
+    "scenario_name": "Network_Infrastructure_Scan_15",
+    "description": "Network infrastructure vulnerability assessment",
+    "target_type": "network",
+    "target_scope": {
+      "ip_ranges": [
+        "192.168.5.0/24",
+        "192.168.1.0/24",
+        "192.168.4.0/24"
+      ],
+      "ports": [
+        13918,
+        64607,
+        44522,
+        62622,
+        11357,
+        40183,
+        58624,
+        7060,
+        12437,
+        61440,
+        44654,
+        5029,
+        2799,
+        61630,
+        28172,
+        49231,
+        32604,
+        47589,
+        59638,
+        44750,
+        36099,
+        31890,
+        34083,
+        65370,
+        26306,
+        26233,
+        35728,
+        9131,
+        29551,
+        13504,
+        28641,
+        34929,
+        19766,
+        37289,
+        33814,
+        4005,
+        32422,
+        48353,
+        25940,
+        50487,
+        14710,
+        50917,
+        49822,
+        2679,
+        2920,
+        51970,
+        46441,
+        32016,
+        27242
+      ],
+      "services": [
+        "HTTP",
+        "HTTPS",
+        "SSH",
+        "FTP",
+        "SMTP",
+        "DNS"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "port_scanning",
+        "tools": [
+          "masscan",
+          "nmap",
+          "rustscan"
+        ],
+        "expected_findings": [
+          "open_ports",
+          "services",
+          "versions"
+        ],
+        "success_metrics": [
+          "Port discovery > 95%",
+          "Service detection > 85%"
+        ]
+      },
+      {
+        "phase": "service_enumeration",
+        "tools": [
+          "nmap_scripts",
+          "banner_grabbing",
+          "service_scanners"
+        ],
+        "expected_findings": [
+          "service_versions",
+          "configurations",
+          "vulnerabilities"
+        ],
+        "success_metrics": [
+          "Version accuracy > 90%",
+          "Config detection > 75%"
+        ]
+      },
+      {
+        "phase": "vulnerability_assessment",
+        "tools": [
+          "openvas",
+          "nessus",
+          "custom_scanners"
+        ],
+        "expected_findings": [
+          "service_vulns",
+          "misconfigurations",
+          "weak_protocols"
+        ],
+        "success_metrics": [
+          "Vuln detection > 80%",
+          "False positive < 15%"
+        ]
+      }
+    ],
+    "total_estimated_time": "7h",
+    "required_resources": {
+      "cpu_cores": 5,
+      "memory_gb": 18,
+      "network_bandwidth": "84Mbps"
+    },
+    "expected_findings_count": 36,
+    "success_metrics": [
+      "Port discovery > 95%",
+      "Service detection > 85%"
+    ],
+    "risk_assessment": "MEDIUM",
+    "compliance_requirements": [],
+    "automated_tools": [
+      "masscan",
+      "nmap",
+      "rustscan",
+      "nmap_scripts",
+      "banner_grabbing",
+      "service_scanners",
+      "openvas",
+      "nessus",
+      "custom_scanners"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Executive summary only"
+  },
+  {
+    "scenario_id": "scan-train-0015",
+    "scenario_name": "Network_Infrastructure_Scan_16",
+    "description": "Network infrastructure vulnerability assessment",
+    "target_type": "network",
+    "target_scope": {
+      "ip_ranges": [
+        "192.168.10.0/24",
+        "192.168.1.0/24",
+        "192.168.10.0/24"
+      ],
+      "ports": [
+        36147,
+        40269,
+        21704,
+        51976,
+        20407,
+        22462,
+        47513,
+        5685,
+        4119,
+        8898,
+        30634,
+        2794,
+        22889,
+        21196,
+        42944,
+        29192,
+        45717,
+        53087,
+        17448,
+        46220,
+        42607,
+        59348,
+        53528,
+        59559,
+        13554,
+        32770,
+        45193,
+        29087,
+        8287,
+        4033,
+        60616,
+        45348,
+        42288,
+        12326,
+        58352,
+        27188,
+        6250,
+        11913,
+        54900,
+        3605,
+        10544
+      ],
+      "services": [
+        "HTTP",
+        "HTTPS",
+        "SSH",
+        "FTP",
+        "SMTP",
+        "DNS"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "port_scanning",
+        "tools": [
+          "masscan",
+          "nmap",
+          "rustscan"
+        ],
+        "expected_findings": [
+          "open_ports",
+          "services",
+          "versions"
+        ],
+        "success_metrics": [
+          "Port discovery > 95%",
+          "Service detection > 85%"
+        ]
+      },
+      {
+        "phase": "service_enumeration",
+        "tools": [
+          "nmap_scripts",
+          "banner_grabbing",
+          "service_scanners"
+        ],
+        "expected_findings": [
+          "service_versions",
+          "configurations",
+          "vulnerabilities"
+        ],
+        "success_metrics": [
+          "Version accuracy > 90%",
+          "Config detection > 75%"
+        ]
+      },
+      {
+        "phase": "vulnerability_assessment",
+        "tools": [
+          "openvas",
+          "nessus",
+          "custom_scanners"
+        ],
+        "expected_findings": [
+          "service_vulns",
+          "misconfigurations",
+          "weak_protocols"
+        ],
+        "success_metrics": [
+          "Vuln detection > 80%",
+          "False positive < 15%"
+        ]
+      }
+    ],
+    "total_estimated_time": "4h",
+    "required_resources": {
+      "cpu_cores": 15,
+      "memory_gb": 15,
+      "network_bandwidth": "97Mbps"
+    },
+    "expected_findings_count": 50,
+    "success_metrics": [
+      "Port discovery > 95%",
+      "Service detection > 85%"
+    ],
+    "risk_assessment": "CRITICAL",
+    "compliance_requirements": [
+      "PCI-DSS",
+      "SOX"
+    ],
+    "automated_tools": [
+      "masscan",
+      "nmap",
+      "rustscan",
+      "nmap_scripts",
+      "banner_grabbing",
+      "service_scanners",
+      "openvas",
+      "nessus",
+      "custom_scanners"
+    ],
+    "manual_testing_required": true,
+    "reporting_requirements": "Compliance-focused report"
+  },
+  {
+    "scenario_id": "scan-train-0016",
+    "scenario_name": "Network_Infrastructure_Scan_17",
+    "description": "Network infrastructure vulnerability assessment",
+    "target_type": "network",
+    "target_scope": {
+      "ip_ranges": [
+        "192.168.8.0/24",
+        "192.168.3.0/24"
+      ],
+      "ports": [
+        23893,
+        42016,
+        41702,
+        13421,
+        26103,
+        43750,
+        43580,
+        30775,
+        34791,
+        54782,
+        51230,
+        56591,
+        27698,
+        6313,
+        18507,
+        43928,
+        52448,
+        40321,
+        6986,
+        47103,
+        22163,
+        4542,
+        40241,
+        39763,
+        36992,
+        33724,
+        19380,
+        61461,
+        52887,
+        40108,
+        23739,
+        33876,
+        27241,
+        27096,
+        688,
+        47406,
+        45229
+      ],
+      "services": [
+        "HTTP",
+        "HTTPS",
+        "SSH",
+        "FTP",
+        "SMTP",
+        "DNS"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "port_scanning",
+        "tools": [
+          "masscan",
+          "nmap",
+          "rustscan"
+        ],
+        "expected_findings": [
+          "open_ports",
+          "services",
+          "versions"
+        ],
+        "success_metrics": [
+          "Port discovery > 95%",
+          "Service detection > 85%"
+        ]
+      },
+      {
+        "phase": "service_enumeration",
+        "tools": [
+          "nmap_scripts",
+          "banner_grabbing",
+          "service_scanners"
+        ],
+        "expected_findings": [
+          "service_versions",
+          "configurations",
+          "vulnerabilities"
+        ],
+        "success_metrics": [
+          "Version accuracy > 90%",
+          "Config detection > 75%"
+        ]
+      },
+      {
+        "phase": "vulnerability_assessment",
+        "tools": [
+          "openvas",
+          "nessus",
+          "custom_scanners"
+        ],
+        "expected_findings": [
+          "service_vulns",
+          "misconfigurations",
+          "weak_protocols"
+        ],
+        "success_metrics": [
+          "Vuln detection > 80%",
+          "False positive < 15%"
+        ]
+      }
+    ],
+    "total_estimated_time": "1h",
+    "required_resources": {
+      "cpu_cores": 16,
+      "memory_gb": 4,
+      "network_bandwidth": "26Mbps"
+    },
+    "expected_findings_count": 45,
+    "success_metrics": [
+      "Port discovery > 95%",
+      "Service detection > 85%"
+    ],
+    "risk_assessment": "LOW",
+    "compliance_requirements": [
+      "PCI-DSS"
+    ],
+    "automated_tools": [
+      "masscan",
+      "nmap",
+      "rustscan",
+      "nmap_scripts",
+      "banner_grabbing",
+      "service_scanners",
+      "openvas",
+      "nessus",
+      "custom_scanners"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Technical details included"
+  },
+  {
+    "scenario_id": "scan-train-0017",
+    "scenario_name": "Network_Infrastructure_Scan_18",
+    "description": "Network infrastructure vulnerability assessment",
+    "target_type": "network",
+    "target_scope": {
+      "ip_ranges": [
+        "192.168.5.0/24",
+        "192.168.5.0/24",
+        "192.168.10.0/24"
+      ],
+      "ports": [
+        40237,
+        50306,
+        11063,
+        6548,
+        51976,
+        23967,
+        25620,
+        7644,
+        38346,
+        65490,
+        2810,
+        53638,
+        51469,
+        17492,
+        12375,
+        36774,
+        28055,
+        411,
+        37365,
+        9663,
+        54398,
+        30174,
+        23060,
+        12684,
+        58252,
+        24380,
+        29545,
+        42293,
+        1645,
+        16638,
+        43860,
+        15705,
+        13400,
+        9302,
+        54083,
+        34368,
+        50399,
+        25169,
+        10798,
+        31053,
+        6372,
+        1180,
+        63764,
+        50897,
+        63261,
+        8641,
+        6366,
+        7855,
+        32779,
+        65287
+      ],
+      "services": [
+        "HTTP",
+        "HTTPS",
+        "SSH",
+        "FTP",
+        "SMTP",
+        "DNS"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "port_scanning",
+        "tools": [
+          "masscan",
+          "nmap",
+          "rustscan"
+        ],
+        "expected_findings": [
+          "open_ports",
+          "services",
+          "versions"
+        ],
+        "success_metrics": [
+          "Port discovery > 95%",
+          "Service detection > 85%"
+        ]
+      },
+      {
+        "phase": "service_enumeration",
+        "tools": [
+          "nmap_scripts",
+          "banner_grabbing",
+          "service_scanners"
+        ],
+        "expected_findings": [
+          "service_versions",
+          "configurations",
+          "vulnerabilities"
+        ],
+        "success_metrics": [
+          "Version accuracy > 90%",
+          "Config detection > 75%"
+        ]
+      },
+      {
+        "phase": "vulnerability_assessment",
+        "tools": [
+          "openvas",
+          "nessus",
+          "custom_scanners"
+        ],
+        "expected_findings": [
+          "service_vulns",
+          "misconfigurations",
+          "weak_protocols"
+        ],
+        "success_metrics": [
+          "Vuln detection > 80%",
+          "False positive < 15%"
+        ]
+      }
+    ],
+    "total_estimated_time": "5h",
+    "required_resources": {
+      "cpu_cores": 9,
+      "memory_gb": 20,
+      "network_bandwidth": "70Mbps"
+    },
+    "expected_findings_count": 36,
+    "success_metrics": [
+      "Port discovery > 95%",
+      "Service detection > 85%"
+    ],
+    "risk_assessment": "CRITICAL",
+    "compliance_requirements": [
+      "GDPR",
+      "PCI-DSS"
+    ],
+    "automated_tools": [
+      "masscan",
+      "nmap",
+      "rustscan",
+      "nmap_scripts",
+      "banner_grabbing",
+      "service_scanners",
+      "openvas",
+      "nessus",
+      "custom_scanners"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Full vulnerability report"
+  },
+  {
+    "scenario_id": "scan-train-0018",
+    "scenario_name": "API_Security_Scan_19",
+    "description": "Comprehensive API security assessment",
+    "target_type": "api",
+    "target_scope": {
+      "base_url": "https://api2.example.com",
+      "endpoints": [
+        "/v3/auth",
+        "/v3/admin",
+        "/v1/data",
+        "/v3/admin",
+        "/v2/auth",
+        "/v1/admin",
+        "/v2/auth",
+        "/v2/admin",
+        "/v3/admin",
+        "/v2/data",
+        "/v2/admin",
+        "/v1/data",
+        "/v2/admin"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "auth_types": [
+        "JWT",
+        "OAuth2",
+        "API Key",
+        "Basic Auth"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "discovery",
+        "tools": [
+          "postman",
+          "burp_discover",
+          "swagger_parser"
+        ],
+        "expected_findings": [
+          "endpoints",
+          "methods",
+          "parameters"
+        ],
+        "success_metrics": [
+          "API coverage > 90%",
+          "Documentation accuracy > 80%"
+        ]
+      },
+      {
+        "phase": "authentication_testing",
+        "tools": [
+          "jwt_tool",
+          "oauth_test",
+          "auth_bypass"
+        ],
+        "expected_findings": [
+          "weak_auth",
+          "token_manipulation",
+          "session_flaws"
+        ],
+        "success_metrics": [
+          "Auth bypass detection > 85%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "authorization_testing",
+        "tools": [
+          "horizontal_privesc",
+          "vertical_privesc",
+          "idor_test"
+        ],
+        "expected_findings": [
+          "access_control_flaws",
+          "privilege_escalation",
+          "data_leaks"
+        ],
+        "success_metrics": [
+          "AuthZ flaw detection > 80%",
+          "Impact assessment accurate"
+        ]
+      }
+    ],
+    "total_estimated_time": "8h",
+    "required_resources": {
+      "cpu_cores": 7,
+      "memory_gb": 12,
+      "network_bandwidth": "59Mbps"
+    },
+    "expected_findings_count": 22,
+    "success_metrics": [
+      "API coverage > 90%",
+      "Documentation accuracy > 80%"
+    ],
+    "risk_assessment": "CRITICAL",
+    "compliance_requirements": [
+      "HIPAA",
+      "PCI-DSS"
+    ],
+    "automated_tools": [
+      "postman",
+      "burp_discover",
+      "swagger_parser",
+      "jwt_tool",
+      "oauth_test",
+      "auth_bypass",
+      "horizontal_privesc",
+      "vertical_privesc",
+      "idor_test"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Executive summary only"
+  },
+  {
+    "scenario_id": "scan-train-0019",
+    "scenario_name": "Web_Application_Full_Scan_20",
+    "description": "Complete web application vulnerability assessment",
+    "target_type": "web_application",
+    "target_scope": {
+      "urls": [
+        "https://app10.example.com",
+        "https://app4.example.com",
+        "https://app7.example.com",
+        "https://app9.example.com"
+      ],
+      "subdomains": [
+        "api.app5.example.com"
+      ],
+      "endpoints": [
+        "/api/v2/users",
+        "/api/v3/admin",
+        "/api/v2/posts",
+        "/api/v1/posts",
+        "/api/v2/posts",
+        "/api/v2/admin",
+        "/api/v1/users",
+        "/api/v2/users",
+        "/api/v2/posts",
+        "/api/v1/users",
+        "/api/v3/users",
+        "/api/v2/users",
+        "/api/v3/posts",
+        "/api/v2/users",
+        "/api/v3/users"
+      ]
+    },
+    "phases": [
+      {
+        "phase": "reconnaissance",
+        "tools": [
+          "subfinder",
+          "assetfinder",
+          "amass",
+          "gau"
+        ],
+        "expected_findings": [
+          "subdomains",
+          "endpoints",
+          "parameters"
+        ],
+        "success_metrics": [
+          "Coverage > 80%",
+          "False positive < 5%"
+        ]
+      },
+      {
+        "phase": "fingerprinting",
+        "tools": [
+          "whatweb",
+          "wappalyzer",
+          "nuclei"
+        ],
+        "expected_findings": [
+          "technologies",
+          "versions",
+          "frameworks"
+        ],
+        "success_metrics": [
+          "Accuracy > 90%",
+          "Detection rate > 85%"
+        ]
+      },
+      {
+        "phase": "vulnerability_scanning",
+        "tools": [
+          "nuclei",
+          "nikto",
+          "owasp_zap"
+        ],
+        "expected_findings": [
+          "sql_injection",
+          "xss",
+          "rce",
+          "auth_bypass"
+        ],
+        "success_metrics": [
+          "True positive > 80%",
+          "False positive < 10%"
+        ]
+      },
+      {
+        "phase": "exploitation",
+        "tools": [
+          "sqlmap",
+          "metasploit",
+          "burp_suite"
+        ],
+        "expected_findings": [
+          "confirmed_vulnerabilities",
+          "data_exfiltration",
+          "system_access"
+        ],
+        "success_metrics": [
+          "Exploit success > 70%",
+          "Data extraction confirmed"
+        ]
+      }
+    ],
+    "total_estimated_time": "3h",
+    "required_resources": {
+      "cpu_cores": 9,
+      "memory_gb": 6,
+      "network_bandwidth": "81Mbps"
+    },
+    "expected_findings_count": 6,
+    "success_metrics": [
+      "Coverage > 80%",
+      "False positive < 5%"
+    ],
+    "risk_assessment": "CRITICAL",
+    "compliance_requirements": [],
+    "automated_tools": [
+      "subfinder",
+      "assetfinder",
+      "amass",
+      "gau",
+      "whatweb",
+      "wappalyzer",
+      "nuclei",
+      "nuclei",
+      "nikto",
+      "owasp_zap",
+      "sqlmap",
+      "metasploit",
+      "burp_suite"
+    ],
+    "manual_testing_required": false,
+    "reporting_requirements": "Compliance-focused report"
+  }
+]

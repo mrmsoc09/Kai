@@ -1,8 +1,104 @@
 [
   {
     "chain_id": "chain-syn-000",
-    "name": "API Chain Instance 1",
+    "name": "Network Chain Instance 1",
+    "target": "target2.example.com",
+    "severity": "HIGH",
+    "steps": [
+      {
+        "type": "port_scan",
+        "desc": "Find open ports"
+      },
+      {
+        "type": "service_enum",
+        "desc": "Enumerate service versions"
+      },
+      {
+        "type": "exploit",
+        "desc": "Buffer overflow in service"
+      },
+      {
+        "type": "pivot",
+        "desc": "Use compromised host to attack internal network"
+      }
+    ],
+    "success_probability": 0.17914563435525804,
+    "prerequisites": [
+      "Step 1 completed",
+      "Step 2 completed",
+      "Step 3 completed"
+    ],
+    "impact": "Data exfiltration and system compromise",
+    "mitigation": "Apply security patches and input validation"
+  },
+  {
+    "chain_id": "chain-syn-001",
+    "name": "Network Chain Instance 2",
+    "target": "target4.example.com",
+    "severity": "CRITICAL",
+    "steps": [
+      {
+        "type": "port_scan",
+        "desc": "Find open ports"
+      },
+      {
+        "type": "service_enum",
+        "desc": "Enumerate service versions"
+      },
+      {
+        "type": "exploit",
+        "desc": "Buffer overflow in service"
+      },
+      {
+        "type": "pivot",
+        "desc": "Use compromised host to attack internal network"
+      }
+    ],
+    "success_probability": 0.7576336307752779,
+    "prerequisites": [
+      "Step 1 completed",
+      "Step 2 completed",
+      "Step 3 completed"
+    ],
+    "impact": "Data exfiltration and system compromise",
+    "mitigation": "Apply security patches and input validation"
+  },
+  {
+    "chain_id": "chain-syn-002",
+    "name": "API Chain Instance 3",
     "target": "target1.example.com",
+    "severity": "MEDIUM",
+    "steps": [
+      {
+        "type": "recon",
+        "desc": "Discover API endpoints"
+      },
+      {
+        "type": "auth_bypass",
+        "desc": "Broken authentication"
+      },
+      {
+        "type": "injection",
+        "desc": "Command injection in API parameter"
+      },
+      {
+        "type": "data_exfil",
+        "desc": "Extract sensitive data"
+      }
+    ],
+    "success_probability": 0.4494097554555002,
+    "prerequisites": [
+      "Step 1 completed",
+      "Step 2 completed",
+      "Step 3 completed"
+    ],
+    "impact": "Data exfiltration and system compromise",
+    "mitigation": "Apply security patches and input validation"
+  },
+  {
+    "chain_id": "chain-syn-003",
+    "name": "API Chain Instance 4",
+    "target": "target5.example.com",
     "severity": "HIGH",
     "steps": [
       {
@@ -22,103 +118,7 @@
         "desc": "Extract sensitive data"
       }
     ],
-    "success_probability": 0.7314050295136069,
-    "prerequisites": [
-      "Step 1 completed",
-      "Step 2 completed",
-      "Step 3 completed"
-    ],
-    "impact": "Data exfiltration and system compromise",
-    "mitigation": "Apply security patches and input validation"
-  },
-  {
-    "chain_id": "chain-syn-001",
-    "name": "Web App Chain Instance 2",
-    "target": "target4.example.com",
-    "severity": "MEDIUM",
-    "steps": [
-      {
-        "type": "discovery",
-        "desc": "Find exposed admin panel"
-      },
-      {
-        "type": "fingerprint",
-        "desc": "Detect outdated CMS version"
-      },
-      {
-        "type": "exploit",
-        "desc": "SQL injection in login form"
-      },
-      {
-        "type": "escalate",
-        "desc": "Privilege escalation via misconfigured permissions"
-      }
-    ],
-    "success_probability": 0.7310756134972219,
-    "prerequisites": [
-      "Step 1 completed",
-      "Step 2 completed",
-      "Step 3 completed"
-    ],
-    "impact": "Data exfiltration and system compromise",
-    "mitigation": "Apply security patches and input validation"
-  },
-  {
-    "chain_id": "chain-syn-002",
-    "name": "Network Chain Instance 3",
-    "target": "target3.example.com",
-    "severity": "MEDIUM",
-    "steps": [
-      {
-        "type": "port_scan",
-        "desc": "Find open ports"
-      },
-      {
-        "type": "service_enum",
-        "desc": "Enumerate service versions"
-      },
-      {
-        "type": "exploit",
-        "desc": "Buffer overflow in service"
-      },
-      {
-        "type": "pivot",
-        "desc": "Use compromised host to attack internal network"
-      }
-    ],
-    "success_probability": 0.5068649761916609,
-    "prerequisites": [
-      "Step 1 completed",
-      "Step 2 completed",
-      "Step 3 completed"
-    ],
-    "impact": "Data exfiltration and system compromise",
-    "mitigation": "Apply security patches and input validation"
-  },
-  {
-    "chain_id": "chain-syn-003",
-    "name": "Web App Chain Instance 4",
-    "target": "target1.example.com",
-    "severity": "HIGH",
-    "steps": [
-      {
-        "type": "discovery",
-        "desc": "Find exposed admin panel"
-      },
-      {
-        "type": "fingerprint",
-        "desc": "Detect outdated CMS version"
-      },
-      {
-        "type": "exploit",
-        "desc": "SQL injection in login form"
-      },
-      {
-        "type": "escalate",
-        "desc": "Privilege escalation via misconfigured permissions"
-      }
-    ],
-    "success_probability": 0.6229704664230622,
+    "success_probability": 0.18848663791524578,
     "prerequisites": [
       "Step 1 completed",
       "Step 2 completed",
@@ -130,71 +130,7 @@
   {
     "chain_id": "chain-syn-004",
     "name": "Web App Chain Instance 5",
-    "target": "target3.example.com",
-    "severity": "LOW",
-    "steps": [
-      {
-        "type": "discovery",
-        "desc": "Find exposed admin panel"
-      },
-      {
-        "type": "fingerprint",
-        "desc": "Detect outdated CMS version"
-      },
-      {
-        "type": "exploit",
-        "desc": "SQL injection in login form"
-      },
-      {
-        "type": "escalate",
-        "desc": "Privilege escalation via misconfigured permissions"
-      }
-    ],
-    "success_probability": 0.43040140551854056,
-    "prerequisites": [
-      "Step 1 completed",
-      "Step 2 completed",
-      "Step 3 completed"
-    ],
-    "impact": "Data exfiltration and system compromise",
-    "mitigation": "Apply security patches and input validation"
-  },
-  {
-    "chain_id": "chain-syn-005",
-    "name": "API Chain Instance 6",
-    "target": "target1.example.com",
-    "severity": "CRITICAL",
-    "steps": [
-      {
-        "type": "recon",
-        "desc": "Discover API endpoints"
-      },
-      {
-        "type": "auth_bypass",
-        "desc": "Broken authentication"
-      },
-      {
-        "type": "injection",
-        "desc": "Command injection in API parameter"
-      },
-      {
-        "type": "data_exfil",
-        "desc": "Extract sensitive data"
-      }
-    ],
-    "success_probability": 0.6242167107971655,
-    "prerequisites": [
-      "Step 1 completed",
-      "Step 2 completed",
-      "Step 3 completed"
-    ],
-    "impact": "Data exfiltration and system compromise",
-    "mitigation": "Apply security patches and input validation"
-  },
-  {
-    "chain_id": "chain-syn-006",
-    "name": "Web App Chain Instance 7",
-    "target": "target4.example.com",
+    "target": "target2.example.com",
     "severity": "HIGH",
     "steps": [
       {
@@ -214,7 +150,7 @@
         "desc": "Privilege escalation via misconfigured permissions"
       }
     ],
-    "success_probability": 0.8702815496470319,
+    "success_probability": 0.3961608351216376,
     "prerequisites": [
       "Step 1 completed",
       "Step 2 completed",
@@ -224,10 +160,42 @@
     "mitigation": "Apply security patches and input validation"
   },
   {
-    "chain_id": "chain-syn-007",
-    "name": "Network Chain Instance 8",
+    "chain_id": "chain-syn-005",
+    "name": "API Chain Instance 6",
+    "target": "target3.example.com",
+    "severity": "HIGH",
+    "steps": [
+      {
+        "type": "recon",
+        "desc": "Discover API endpoints"
+      },
+      {
+        "type": "auth_bypass",
+        "desc": "Broken authentication"
+      },
+      {
+        "type": "injection",
+        "desc": "Command injection in API parameter"
+      },
+      {
+        "type": "data_exfil",
+        "desc": "Extract sensitive data"
+      }
+    ],
+    "success_probability": 0.23208992002459228,
+    "prerequisites": [
+      "Step 1 completed",
+      "Step 2 completed",
+      "Step 3 completed"
+    ],
+    "impact": "Data exfiltration and system compromise",
+    "mitigation": "Apply security patches and input validation"
+  },
+  {
+    "chain_id": "chain-syn-006",
+    "name": "Network Chain Instance 7",
     "target": "target1.example.com",
-    "severity": "MEDIUM",
+    "severity": "LOW",
     "steps": [
       {
         "type": "port_scan",
@@ -246,7 +214,7 @@
         "desc": "Use compromised host to attack internal network"
       }
     ],
-    "success_probability": 0.4311817731471639,
+    "success_probability": 0.460488685361207,
     "prerequisites": [
       "Step 1 completed",
       "Step 2 completed",
@@ -256,9 +224,9 @@
     "mitigation": "Apply security patches and input validation"
   },
   {
-    "chain_id": "chain-syn-008",
-    "name": "Web App Chain Instance 9",
-    "target": "target1.example.com",
+    "chain_id": "chain-syn-007",
+    "name": "Web App Chain Instance 8",
+    "target": "target2.example.com",
     "severity": "MEDIUM",
     "steps": [
       {
@@ -278,7 +246,39 @@
         "desc": "Privilege escalation via misconfigured permissions"
       }
     ],
-    "success_probability": 0.27967418468084915,
+    "success_probability": 0.7472276835193833,
+    "prerequisites": [
+      "Step 1 completed",
+      "Step 2 completed",
+      "Step 3 completed"
+    ],
+    "impact": "Data exfiltration and system compromise",
+    "mitigation": "Apply security patches and input validation"
+  },
+  {
+    "chain_id": "chain-syn-008",
+    "name": "API Chain Instance 9",
+    "target": "target4.example.com",
+    "severity": "MEDIUM",
+    "steps": [
+      {
+        "type": "recon",
+        "desc": "Discover API endpoints"
+      },
+      {
+        "type": "auth_bypass",
+        "desc": "Broken authentication"
+      },
+      {
+        "type": "injection",
+        "desc": "Command injection in API parameter"
+      },
+      {
+        "type": "data_exfil",
+        "desc": "Extract sensitive data"
+      }
+    ],
+    "success_probability": 0.49753082138303983,
     "prerequisites": [
       "Step 1 completed",
       "Step 2 completed",
@@ -291,7 +291,7 @@
     "chain_id": "chain-syn-009",
     "name": "API Chain Instance 10",
     "target": "target5.example.com",
-    "severity": "LOW",
+    "severity": "HIGH",
     "steps": [
       {
         "type": "recon",
@@ -310,7 +310,7 @@
         "desc": "Extract sensitive data"
       }
     ],
-    "success_probability": 0.5377417412488915,
+    "success_probability": 0.25367458739918725,
     "prerequisites": [
       "Step 1 completed",
       "Step 2 completed",

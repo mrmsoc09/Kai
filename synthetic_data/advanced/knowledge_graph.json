@@ -1,0 +1,2798 @@
+{
+  "nodes": [
+    {
+      "id": "node-0000",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2026-97790",
+        "severity": "CRITICAL",
+        "cvss_score": 2.738830686436742
+      }
+    },
+    {
+      "id": "node-0001",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0002",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0003",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0004",
+      "type": "tool",
+      "properties": {
+        "name": "Nmap",
+        "category": "Analyzer",
+        "accuracy": 0.8884211025661428
+      }
+    },
+    {
+      "id": "node-0005",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0006",
+      "type": "tool",
+      "properties": {
+        "name": "SQLMap",
+        "category": "Monitor",
+        "accuracy": 0.842404288313771
+      }
+    },
+    {
+      "id": "node-0007",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2024-77540",
+        "severity": "CRITICAL",
+        "cvss_score": 2.0616015997173527
+      }
+    },
+    {
+      "id": "node-0008",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2023-41297",
+        "severity": "LOW",
+        "cvss_score": 9.753723365822527
+      }
+    },
+    {
+      "id": "node-0009",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Access control",
+        "effectiveness": 0.818172979489507,
+        "cost": "MEDIUM"
+      }
+    },
+    {
+      "id": "node-0010",
+      "type": "technique",
+      "properties": {
+        "name": "SQL Injection",
+        "category": "Memory",
+        "success_rate": 0.23998713953845147
+      }
+    },
+    {
+      "id": "node-0011",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2026-41869",
+        "severity": "MEDIUM",
+        "cvss_score": 1.458589310490771
+      }
+    },
+    {
+      "id": "node-0012",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0013",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Access control",
+        "effectiveness": 0.7105164399281306,
+        "cost": "LOW"
+      }
+    },
+    {
+      "id": "node-0014",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0015",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Monitoring",
+        "effectiveness": 0.7184201213634371,
+        "cost": "HIGH"
+      }
+    },
+    {
+      "id": "node-0016",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0017",
+      "type": "tool",
+      "properties": {
+        "name": "Burp Suite",
+        "category": "Monitor",
+        "accuracy": 0.7767451973881995
+      }
+    },
+    {
+      "id": "node-0018",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_8571",
+        "complexity": "MEDIUM",
+        "reliability": 0.8739386112745503
+      }
+    },
+    {
+      "id": "node-0019",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_5854",
+        "complexity": "HIGH",
+        "reliability": 0.5225867894543182
+      }
+    },
+    {
+      "id": "node-0020",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_9360",
+        "complexity": "LOW",
+        "reliability": 0.7566163490395104
+      }
+    },
+    {
+      "id": "node-0021",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Access control",
+        "effectiveness": 0.8730210725133781,
+        "cost": "LOW"
+      }
+    },
+    {
+      "id": "node-0022",
+      "type": "tool",
+      "properties": {
+        "name": "Nmap",
+        "category": "Exploiter",
+        "accuracy": 0.8819603191094025
+      }
+    },
+    {
+      "id": "node-0023",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0024",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2026-49238",
+        "severity": "LOW",
+        "cvss_score": 8.99532547338313
+      }
+    },
+    {
+      "id": "node-0025",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Monitoring",
+        "effectiveness": 0.6267356407696366,
+        "cost": "MEDIUM"
+      }
+    },
+    {
+      "id": "node-0026",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Monitoring",
+        "effectiveness": 0.7425414972409798,
+        "cost": "HIGH"
+      }
+    },
+    {
+      "id": "node-0027",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0028",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_8251",
+        "complexity": "LOW",
+        "reliability": 0.9692678305270809
+      }
+    },
+    {
+      "id": "node-0029",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Input validation",
+        "effectiveness": 0.8448153410211882,
+        "cost": "MEDIUM"
+      }
+    },
+    {
+      "id": "node-0030",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0031",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_3850",
+        "complexity": "MEDIUM",
+        "reliability": 0.7944878903564759
+      }
+    },
+    {
+      "id": "node-0032",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0033",
+      "type": "tool",
+      "properties": {
+        "name": "Metasploit",
+        "category": "Analyzer",
+        "accuracy": 0.9282430357829815
+      }
+    },
+    {
+      "id": "node-0034",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0035",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2026-71188",
+        "severity": "LOW",
+        "cvss_score": 5.966942499889672
+      }
+    },
+    {
+      "id": "node-0036",
+      "type": "tool",
+      "properties": {
+        "name": "Nuclei",
+        "category": "Monitor",
+        "accuracy": 0.8499421509637022
+      }
+    },
+    {
+      "id": "node-0037",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0038",
+      "type": "tool",
+      "properties": {
+        "name": "Nuclei",
+        "category": "Monitor",
+        "accuracy": 0.7219213666075102
+      }
+    },
+    {
+      "id": "node-0039",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0040",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_5474",
+        "complexity": "LOW",
+        "reliability": 0.7984931353006075
+      }
+    },
+    {
+      "id": "node-0041",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2024-95257",
+        "severity": "HIGH",
+        "cvss_score": 9.242378252843547
+      }
+    },
+    {
+      "id": "node-0042",
+      "type": "technique",
+      "properties": {
+        "name": "Buffer Overflow",
+        "category": "Injection",
+        "success_rate": 0.39734583254081046
+      }
+    },
+    {
+      "id": "node-0043",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0044",
+      "type": "tool",
+      "properties": {
+        "name": "Metasploit",
+        "category": "Exploiter",
+        "accuracy": 0.7576744002229825
+      }
+    },
+    {
+      "id": "node-0045",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2024-27500",
+        "severity": "LOW",
+        "cvss_score": 9.862885612483382
+      }
+    },
+    {
+      "id": "node-0046",
+      "type": "technique",
+      "properties": {
+        "name": "SQL Injection",
+        "category": "Logic",
+        "success_rate": 0.3152888238957341
+      }
+    },
+    {
+      "id": "node-0047",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0048",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_7822",
+        "complexity": "MEDIUM",
+        "reliability": 0.11982469108889929
+      }
+    },
+    {
+      "id": "node-0049",
+      "type": "tool",
+      "properties": {
+        "name": "Nmap",
+        "category": "Analyzer",
+        "accuracy": 0.8259385530492798
+      }
+    },
+    {
+      "id": "node-0050",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_3451",
+        "complexity": "HIGH",
+        "reliability": 0.6719664106688849
+      }
+    },
+    {
+      "id": "node-0051",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0052",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0053",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0054",
+      "type": "technique",
+      "properties": {
+        "name": "Auth Bypass",
+        "category": "Crypto",
+        "success_rate": 0.734994503880867
+      }
+    },
+    {
+      "id": "node-0055",
+      "type": "technique",
+      "properties": {
+        "name": "XSS",
+        "category": "Injection",
+        "success_rate": 0.7281902987805876
+      }
+    },
+    {
+      "id": "node-0056",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2025-71853",
+        "severity": "HIGH",
+        "cvss_score": 3.772332264049892
+      }
+    },
+    {
+      "id": "node-0057",
+      "type": "technique",
+      "properties": {
+        "name": "XSS",
+        "category": "Injection",
+        "success_rate": 0.1848129987512886
+      }
+    },
+    {
+      "id": "node-0058",
+      "type": "technique",
+      "properties": {
+        "name": "SQL Injection",
+        "category": "Memory",
+        "success_rate": 0.6779674887813414
+      }
+    },
+    {
+      "id": "node-0059",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2025-44750",
+        "severity": "HIGH",
+        "cvss_score": 8.647345131593568
+      }
+    },
+    {
+      "id": "node-0060",
+      "type": "tool",
+      "properties": {
+        "name": "Metasploit",
+        "category": "Analyzer",
+        "accuracy": 0.8070968363254736
+      }
+    },
+    {
+      "id": "node-0061",
+      "type": "technique",
+      "properties": {
+        "name": "XSS",
+        "category": "Logic",
+        "success_rate": 0.3127695802767442
+      }
+    },
+    {
+      "id": "node-0062",
+      "type": "technique",
+      "properties": {
+        "name": "Auth Bypass",
+        "category": "Logic",
+        "success_rate": 0.48212312657609147
+      }
+    },
+    {
+      "id": "node-0063",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Monitoring",
+        "effectiveness": 0.9539663838727954,
+        "cost": "MEDIUM"
+      }
+    },
+    {
+      "id": "node-0064",
+      "type": "technique",
+      "properties": {
+        "name": "SQL Injection",
+        "category": "Memory",
+        "success_rate": 0.20541481537892495
+      }
+    },
+    {
+      "id": "node-0065",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_5527",
+        "complexity": "MEDIUM",
+        "reliability": 0.9329044084705369
+      }
+    },
+    {
+      "id": "node-0066",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_4129",
+        "complexity": "LOW",
+        "reliability": 0.721533024504242
+      }
+    },
+    {
+      "id": "node-0067",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0068",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_8760",
+        "complexity": "HIGH",
+        "reliability": 0.37331088947118574
+      }
+    },
+    {
+      "id": "node-0069",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2023-19008",
+        "severity": "MEDIUM",
+        "cvss_score": 5.602855124962412
+      }
+    },
+    {
+      "id": "node-0070",
+      "type": "tool",
+      "properties": {
+        "name": "Nuclei",
+        "category": "Monitor",
+        "accuracy": 0.9321737406780929
+      }
+    },
+    {
+      "id": "node-0071",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0072",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Encryption",
+        "effectiveness": 0.5674427163457723,
+        "cost": "MEDIUM"
+      }
+    },
+    {
+      "id": "node-0073",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2023-13627",
+        "severity": "MEDIUM",
+        "cvss_score": 6.874477770864887
+      }
+    },
+    {
+      "id": "node-0074",
+      "type": "technique",
+      "properties": {
+        "name": "SQL Injection",
+        "category": "Crypto",
+        "success_rate": 0.8814407175067486
+      }
+    },
+    {
+      "id": "node-0075",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Encryption",
+        "effectiveness": 0.9438221151001079,
+        "cost": "HIGH"
+      }
+    },
+    {
+      "id": "node-0076",
+      "type": "technique",
+      "properties": {
+        "name": "Auth Bypass",
+        "category": "Injection",
+        "success_rate": 0.881521292274406
+      }
+    },
+    {
+      "id": "node-0077",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0078",
+      "type": "tool",
+      "properties": {
+        "name": "SQLMap",
+        "category": "Scanner",
+        "accuracy": 0.8392386761887481
+      }
+    },
+    {
+      "id": "node-0079",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_5259",
+        "complexity": "MEDIUM",
+        "reliability": 0.5358492586639033
+      }
+    },
+    {
+      "id": "node-0080",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0081",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0082",
+      "type": "indicator",
+      "properties": {}
+    },
+    {
+      "id": "node-0083",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2025-29589",
+        "severity": "LOW",
+        "cvss_score": 6.999639768840293
+      }
+    },
+    {
+      "id": "node-0084",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2026-20973",
+        "severity": "MEDIUM",
+        "cvss_score": 5.508292186238258
+      }
+    },
+    {
+      "id": "node-0085",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2025-91272",
+        "severity": "LOW",
+        "cvss_score": 8.127895059971411
+      }
+    },
+    {
+      "id": "node-0086",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Access control",
+        "effectiveness": 0.9531811281700676,
+        "cost": "LOW"
+      }
+    },
+    {
+      "id": "node-0087",
+      "type": "technique",
+      "properties": {
+        "name": "SQL Injection",
+        "category": "Memory",
+        "success_rate": 0.19279156609099488
+      }
+    },
+    {
+      "id": "node-0088",
+      "type": "tool",
+      "properties": {
+        "name": "Nmap",
+        "category": "Analyzer",
+        "accuracy": 0.7019622762752303
+      }
+    },
+    {
+      "id": "node-0089",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Monitoring",
+        "effectiveness": 0.8409032373080079,
+        "cost": "HIGH"
+      }
+    },
+    {
+      "id": "node-0090",
+      "type": "technique",
+      "properties": {
+        "name": "Auth Bypass",
+        "category": "Injection",
+        "success_rate": 0.3256407048957269
+      }
+    },
+    {
+      "id": "node-0091",
+      "type": "tool",
+      "properties": {
+        "name": "Burp Suite",
+        "category": "Exploiter",
+        "accuracy": 0.8604936426383913
+      }
+    },
+    {
+      "id": "node-0092",
+      "type": "tool",
+      "properties": {
+        "name": "Burp Suite",
+        "category": "Exploiter",
+        "accuracy": 0.9107253935315642
+      }
+    },
+    {
+      "id": "node-0093",
+      "type": "exploit",
+      "properties": {
+        "exploit_id": "exploit_9850",
+        "complexity": "MEDIUM",
+        "reliability": 0.19894830078323128
+      }
+    },
+    {
+      "id": "node-0094",
+      "type": "mitigation",
+      "properties": {
+        "technique": "Monitoring",
+        "effectiveness": 0.9186830468516538,
+        "cost": "LOW"
+      }
+    },
+    {
+      "id": "node-0095",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2023-43635",
+        "severity": "MEDIUM",
+        "cvss_score": 7.339921936027652
+      }
+    },
+    {
+      "id": "node-0096",
+      "type": "impact",
+      "properties": {}
+    },
+    {
+      "id": "node-0097",
+      "type": "technique",
+      "properties": {
+        "name": "Buffer Overflow",
+        "category": "Memory",
+        "success_rate": 0.8034170802515213
+      }
+    },
+    {
+      "id": "node-0098",
+      "type": "vulnerability",
+      "properties": {
+        "cve_id": "CVE-2026-55135",
+        "severity": "HIGH",
+        "cvss_score": 3.490295061545905
+      }
+    },
+    {
+      "id": "node-0099",
+      "type": "impact",
+      "properties": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel-0000",
+      "type": "INDICATES",
+      "from": "node-0092",
+      "to": "node-0091",
+      "properties": {
+        "confidence": 0.8837478540155331,
+        "last_updated": "2026-05-08T03:42:07.796782+00:00"
+      }
+    },
+    {
+      "id": "rel-0001",
+      "type": "MITIGATES",
+      "from": "node-0084",
+      "to": "node-0018",
+      "properties": {
+        "confidence": 0.8584529399803575,
+        "last_updated": "2026-05-08T03:42:07.796963+00:00"
+      }
+    },
+    {
+      "id": "rel-0002",
+      "type": "MITIGATES",
+      "from": "node-0058",
+      "to": "node-0080",
+      "properties": {
+        "confidence": 0.9537033175335865,
+        "last_updated": "2026-05-08T03:42:07.797064+00:00"
+      }
+    },
+    {
+      "id": "rel-0003",
+      "type": "DETECTS",
+      "from": "node-0020",
+      "to": "node-0053",
+      "properties": {
+        "confidence": 0.7300405781460251,
+        "last_updated": "2026-05-08T03:42:07.797153+00:00"
+      }
+    },
+    {
+      "id": "rel-0004",
+      "type": "INDICATES",
+      "from": "node-0085",
+      "to": "node-0047",
+      "properties": {
+        "confidence": 0.2383711632430602,
+        "last_updated": "2026-05-08T03:42:07.797240+00:00"
+      }
+    },
+    {
+      "id": "rel-0005",
+      "type": "USES",
+      "from": "node-0075",
+      "to": "node-0055",
+      "properties": {
+        "confidence": 0.9111947892233678,
+        "last_updated": "2026-05-08T03:42:07.797328+00:00"
+      }
+    },
+    {
+      "id": "rel-0006",
+      "type": "INDICATES",
+      "from": "node-0070",
+      "to": "node-0057",
+      "properties": {
+        "confidence": 0.6530483796313399,
+        "last_updated": "2026-05-08T03:42:07.797415+00:00"
+      }
+    },
+    {
+      "id": "rel-0007",
+      "type": "DETECTS",
+      "from": "node-0025",
+      "to": "node-0072",
+      "properties": {
+        "confidence": 0.6496595869147005,
+        "last_updated": "2026-05-08T03:42:07.797501+00:00"
+      }
+    },
+    {
+      "id": "rel-0008",
+      "type": "DETECTS",
+      "from": "node-0004",
+      "to": "node-0065",
+      "properties": {
+        "confidence": 0.6006418448578088,
+        "last_updated": "2026-05-08T03:42:07.797588+00:00"
+      }
+    },
+    {
+      "id": "rel-0009",
+      "type": "USES",
+      "from": "node-0026",
+      "to": "node-0006",
+      "properties": {
+        "confidence": 0.7495604509181195,
+        "last_updated": "2026-05-08T03:42:07.797671+00:00"
+      }
+    },
+    {
+      "id": "rel-0010",
+      "type": "DETECTS",
+      "from": "node-0090",
+      "to": "node-0071",
+      "properties": {
+        "confidence": 0.5450746720682889,
+        "last_updated": "2026-05-08T03:42:07.797792+00:00"
+      }
+    },
+    {
+      "id": "rel-0011",
+      "type": "DETECTS",
+      "from": "node-0068",
+      "to": "node-0053",
+      "properties": {
+        "confidence": 0.7157440373504688,
+        "last_updated": "2026-05-08T03:42:07.797903+00:00"
+      }
+    },
+    {
+      "id": "rel-0012",
+      "type": "USES",
+      "from": "node-0071",
+      "to": "node-0098",
+      "properties": {
+        "confidence": 0.195998563869261,
+        "last_updated": "2026-05-08T03:42:07.797991+00:00"
+      }
+    },
+    {
+      "id": "rel-0013",
+      "type": "EXPLOITS",
+      "from": "node-0085",
+      "to": "node-0046",
+      "properties": {
+        "confidence": 0.7452950918745913,
+        "last_updated": "2026-05-08T03:42:07.798098+00:00"
+      }
+    },
+    {
+      "id": "rel-0014",
+      "type": "EXPLOITS",
+      "from": "node-0090",
+      "to": "node-0005",
+      "properties": {
+        "confidence": 0.9331347787670189,
+        "last_updated": "2026-05-08T03:42:07.798186+00:00"
+      }
+    },
+    {
+      "id": "rel-0015",
+      "type": "DEPENDS_ON",
+      "from": "node-0001",
+      "to": "node-0033",
+      "properties": {
+        "confidence": 0.736663532803079,
+        "last_updated": "2026-05-08T03:42:07.798271+00:00"
+      }
+    },
+    {
+      "id": "rel-0016",
+      "type": "CAUSES",
+      "from": "node-0091",
+      "to": "node-0099",
+      "properties": {
+        "confidence": 0.1745891048190435,
+        "last_updated": "2026-05-08T03:42:07.798382+00:00"
+      }
+    },
+    {
+      "id": "rel-0017",
+      "type": "DEPENDS_ON",
+      "from": "node-0090",
+      "to": "node-0060",
+      "properties": {
+        "confidence": 0.35352957409496244,
+        "last_updated": "2026-05-08T03:42:07.798473+00:00"
+      }
+    },
+    {
+      "id": "rel-0018",
+      "type": "CAUSES",
+      "from": "node-0056",
+      "to": "node-0058",
+      "properties": {
+        "confidence": 0.8944336929433281,
+        "last_updated": "2026-05-08T03:42:07.798555+00:00"
+      }
+    },
+    {
+      "id": "rel-0019",
+      "type": "MITIGATES",
+      "from": "node-0059",
+      "to": "node-0040",
+      "properties": {
+        "confidence": 0.3308304767287557,
+        "last_updated": "2026-05-08T03:42:07.798640+00:00"
+      }
+    },
+    {
+      "id": "rel-0020",
+      "type": "DEPENDS_ON",
+      "from": "node-0063",
+      "to": "node-0038",
+      "properties": {
+        "confidence": 0.21663523715840782,
+        "last_updated": "2026-05-08T03:42:07.801129+00:00"
+      }
+    },
+    {
+      "id": "rel-0021",
+      "type": "DETECTS",
+      "from": "node-0011",
+      "to": "node-0033",
+      "properties": {
+        "confidence": 0.2237464485990937,
+        "last_updated": "2026-05-08T03:42:07.801286+00:00"
+      }
+    },
+    {
+      "id": "rel-0022",
+      "type": "CAUSES",
+      "from": "node-0075",
+      "to": "node-0083",
+      "properties": {
+        "confidence": 0.2786884500214213,
+        "last_updated": "2026-05-08T03:42:07.801369+00:00"
+      }
+    },
+    {
+      "id": "rel-0023",
+      "type": "CAUSES",
+      "from": "node-0096",
+      "to": "node-0034",
+      "properties": {
+        "confidence": 0.6699703577060265,
+        "last_updated": "2026-05-08T03:42:07.801447+00:00"
+      }
+    },
+    {
+      "id": "rel-0024",
+      "type": "EXPLOITS",
+      "from": "node-0085",
+      "to": "node-0062",
+      "properties": {
+        "confidence": 0.3171737939665993,
+        "last_updated": "2026-05-08T03:42:07.801526+00:00"
+      }
+    },
+    {
+      "id": "rel-0025",
+      "type": "DEPENDS_ON",
+      "from": "node-0089",
+      "to": "node-0049",
+      "properties": {
+        "confidence": 0.4063688744659738,
+        "last_updated": "2026-05-08T03:42:07.801607+00:00"
+      }
+    },
+    {
+      "id": "rel-0026",
+      "type": "DETECTS",
+      "from": "node-0085",
+      "to": "node-0034",
+      "properties": {
+        "confidence": 0.36337557538208964,
+        "last_updated": "2026-05-08T03:42:07.801743+00:00"
+      }
+    },
+    {
+      "id": "rel-0027",
+      "type": "CAUSES",
+      "from": "node-0018",
+      "to": "node-0019",
+      "properties": {
+        "confidence": 0.3156424542470687,
+        "last_updated": "2026-05-08T03:42:07.801828+00:00"
+      }
+    },
+    {
+      "id": "rel-0028",
+      "type": "DEPENDS_ON",
+      "from": "node-0099",
+      "to": "node-0046",
+      "properties": {
+        "confidence": 0.8395284600916927,
+        "last_updated": "2026-05-08T03:42:07.801938+00:00"
+      }
+    },
+    {
+      "id": "rel-0029",
+      "type": "DEPENDS_ON",
+      "from": "node-0063",
+      "to": "node-0058",
+      "properties": {
+        "confidence": 0.6986628903039649,
+        "last_updated": "2026-05-08T03:42:07.802022+00:00"
+      }
+    },
+    {
+      "id": "rel-0030",
+      "type": "INDICATES",
+      "from": "node-0090",
+      "to": "node-0080",
+      "properties": {
+        "confidence": 0.7874334422289867,
+        "last_updated": "2026-05-08T03:42:07.802111+00:00"
+      }
+    },
+    {
+      "id": "rel-0031",
+      "type": "MITIGATES",
+      "from": "node-0013",
+      "to": "node-0094",
+      "properties": {
+        "confidence": 0.5764282158070794,
+        "last_updated": "2026-05-08T03:42:07.802199+00:00"
+      }
+    },
+    {
+      "id": "rel-0032",
+      "type": "INDICATES",
+      "from": "node-0007",
+      "to": "node-0027",
+      "properties": {
+        "confidence": 0.9632077458842155,
+        "last_updated": "2026-05-08T03:42:07.802314+00:00"
+      }
+    },
+    {
+      "id": "rel-0033",
+      "type": "USES",
+      "from": "node-0092",
+      "to": "node-0082",
+      "properties": {
+        "confidence": 0.7946957882507429,
+        "last_updated": "2026-05-08T03:42:07.802412+00:00"
+      }
+    },
+    {
+      "id": "rel-0034",
+      "type": "INDICATES",
+      "from": "node-0092",
+      "to": "node-0059",
+      "properties": {
+        "confidence": 0.10241007670241373,
+        "last_updated": "2026-05-08T03:42:07.802514+00:00"
+      }
+    },
+    {
+      "id": "rel-0035",
+      "type": "INDICATES",
+      "from": "node-0002",
+      "to": "node-0098",
+      "properties": {
+        "confidence": 0.1926598314830874,
+        "last_updated": "2026-05-08T03:42:07.802606+00:00"
+      }
+    },
+    {
+      "id": "rel-0036",
+      "type": "DETECTS",
+      "from": "node-0037",
+      "to": "node-0035",
+      "properties": {
+        "confidence": 0.3245607047592335,
+        "last_updated": "2026-05-08T03:42:07.802701+00:00"
+      }
+    },
+    {
+      "id": "rel-0037",
+      "type": "DETECTS",
+      "from": "node-0088",
+      "to": "node-0014",
+      "properties": {
+        "confidence": 0.946921310237898,
+        "last_updated": "2026-05-08T03:42:07.802799+00:00"
+      }
+    },
+    {
+      "id": "rel-0038",
+      "type": "INDICATES",
+      "from": "node-0031",
+      "to": "node-0065",
+      "properties": {
+        "confidence": 0.147534156679162,
+        "last_updated": "2026-05-08T03:42:07.802934+00:00"
+      }
+    },
+    {
+      "id": "rel-0039",
+      "type": "USES",
+      "from": "node-0005",
+      "to": "node-0059",
+      "properties": {
+        "confidence": 0.11390786754583555,
+        "last_updated": "2026-05-08T03:42:07.803035+00:00"
+      }
+    },
+    {
+      "id": "rel-0040",
+      "type": "DEPENDS_ON",
+      "from": "node-0045",
+      "to": "node-0029",
+      "properties": {
+        "confidence": 0.23145724832598247,
+        "last_updated": "2026-05-08T03:42:07.803145+00:00"
+      }
+    },
+    {
+      "id": "rel-0041",
+      "type": "EXPLOITS",
+      "from": "node-0099",
+      "to": "node-0013",
+      "properties": {
+        "confidence": 0.6576775608641382,
+        "last_updated": "2026-05-08T03:42:07.803239+00:00"
+      }
+    },
+    {
+      "id": "rel-0042",
+      "type": "USES",
+      "from": "node-0081",
+      "to": "node-0090",
+      "properties": {
+        "confidence": 0.4099633291433812,
+        "last_updated": "2026-05-08T03:42:07.803361+00:00"
+      }
+    },
+    {
+      "id": "rel-0043",
+      "type": "CAUSES",
+      "from": "node-0068",
+      "to": "node-0085",
+      "properties": {
+        "confidence": 0.26231874469628946,
+        "last_updated": "2026-05-08T03:42:07.803455+00:00"
+      }
+    },
+    {
+      "id": "rel-0044",
+      "type": "INDICATES",
+      "from": "node-0013",
+      "to": "node-0038",
+      "properties": {
+        "confidence": 0.805828418052894,
+        "last_updated": "2026-05-08T03:42:07.803542+00:00"
+      }
+    },
+    {
+      "id": "rel-0045",
+      "type": "INDICATES",
+      "from": "node-0064",
+      "to": "node-0020",
+      "properties": {
+        "confidence": 0.6875580643038633,
+        "last_updated": "2026-05-08T03:42:07.803620+00:00"
+      }
+    },
+    {
+      "id": "rel-0046",
+      "type": "EXPLOITS",
+      "from": "node-0082",
+      "to": "node-0011",
+      "properties": {
+        "confidence": 0.5563290929092003,
+        "last_updated": "2026-05-08T03:42:07.803695+00:00"
+      }
+    },
+    {
+      "id": "rel-0047",
+      "type": "MITIGATES",
+      "from": "node-0034",
+      "to": "node-0094",
+      "properties": {
+        "confidence": 0.5205540313956025,
+        "last_updated": "2026-05-08T03:42:07.803769+00:00"
+      }
+    },
+    {
+      "id": "rel-0048",
+      "type": "INDICATES",
+      "from": "node-0061",
+      "to": "node-0025",
+      "properties": {
+        "confidence": 0.9035646787138144,
+        "last_updated": "2026-05-08T03:42:07.803854+00:00"
+      }
+    },
+    {
+      "id": "rel-0049",
+      "type": "EXPLOITS",
+      "from": "node-0096",
+      "to": "node-0040",
+      "properties": {
+        "confidence": 0.13413108154259887,
+        "last_updated": "2026-05-08T03:42:07.803941+00:00"
+      }
+    },
+    {
+      "id": "rel-0050",
+      "type": "CAUSES",
+      "from": "node-0072",
+      "to": "node-0075",
+      "properties": {
+        "confidence": 0.38932293249720695,
+        "last_updated": "2026-05-08T03:42:07.804010+00:00"
+      }
+    },
+    {
+      "id": "rel-0051",
+      "type": "EXPLOITS",
+      "from": "node-0005",
+      "to": "node-0015",
+      "properties": {
+        "confidence": 0.9301271551268903,
+        "last_updated": "2026-05-08T03:42:07.804082+00:00"
+      }
+    },
+    {
+      "id": "rel-0052",
+      "type": "EXPLOITS",
+      "from": "node-0075",
+      "to": "node-0095",
+      "properties": {
+        "confidence": 0.5985703489031647,
+        "last_updated": "2026-05-08T03:42:07.804144+00:00"
+      }
+    },
+    {
+      "id": "rel-0053",
+      "type": "USES",
+      "from": "node-0072",
+      "to": "node-0021",
+      "properties": {
+        "confidence": 0.8776489700717616,
+        "last_updated": "2026-05-08T03:42:07.804215+00:00"
+      }
+    },
+    {
+      "id": "rel-0054",
+      "type": "MITIGATES",
+      "from": "node-0014",
+      "to": "node-0006",
+      "properties": {
+        "confidence": 0.40703573218326483,
+        "last_updated": "2026-05-08T03:42:07.804282+00:00"
+      }
+    },
+    {
+      "id": "rel-0055",
+      "type": "MITIGATES",
+      "from": "node-0010",
+      "to": "node-0087",
+      "properties": {
+        "confidence": 0.8245905683875022,
+        "last_updated": "2026-05-08T03:42:07.804351+00:00"
+      }
+    },
+    {
+      "id": "rel-0056",
+      "type": "DETECTS",
+      "from": "node-0019",
+      "to": "node-0096",
+      "properties": {
+        "confidence": 0.4442917492819449,
+        "last_updated": "2026-05-08T03:42:07.804418+00:00"
+      }
+    },
+    {
+      "id": "rel-0057",
+      "type": "MITIGATES",
+      "from": "node-0086",
+      "to": "node-0045",
+      "properties": {
+        "confidence": 0.4299631478563115,
+        "last_updated": "2026-05-08T03:42:07.804485+00:00"
+      }
+    },
+    {
+      "id": "rel-0058",
+      "type": "DETECTS",
+      "from": "node-0073",
+      "to": "node-0082",
+      "properties": {
+        "confidence": 0.5716112295272416,
+        "last_updated": "2026-05-08T03:42:07.804567+00:00"
+      }
+    },
+    {
+      "id": "rel-0059",
+      "type": "CAUSES",
+      "from": "node-0008",
+      "to": "node-0051",
+      "properties": {
+        "confidence": 0.5015603370107716,
+        "last_updated": "2026-05-08T03:42:07.804640+00:00"
+      }
+    },
+    {
+      "id": "rel-0060",
+      "type": "USES",
+      "from": "node-0055",
+      "to": "node-0007",
+      "properties": {
+        "confidence": 0.3080727598412106,
+        "last_updated": "2026-05-08T03:42:07.804704+00:00"
+      }
+    },
+    {
+      "id": "rel-0061",
+      "type": "MITIGATES",
+      "from": "node-0016",
+      "to": "node-0045",
+      "properties": {
+        "confidence": 0.26532914056772006,
+        "last_updated": "2026-05-08T03:42:07.804769+00:00"
+      }
+    },
+    {
+      "id": "rel-0062",
+      "type": "EXPLOITS",
+      "from": "node-0093",
+      "to": "node-0086",
+      "properties": {
+        "confidence": 0.40819658079238763,
+        "last_updated": "2026-05-08T03:42:07.804832+00:00"
+      }
+    },
+    {
+      "id": "rel-0063",
+      "type": "CAUSES",
+      "from": "node-0052",
+      "to": "node-0084",
+      "properties": {
+        "confidence": 0.17167675059561432,
+        "last_updated": "2026-05-08T03:42:07.804934+00:00"
+      }
+    },
+    {
+      "id": "rel-0064",
+      "type": "INDICATES",
+      "from": "node-0047",
+      "to": "node-0005",
+      "properties": {
+        "confidence": 0.5357201165196828,
+        "last_updated": "2026-05-08T03:42:07.805029+00:00"
+      }
+    },
+    {
+      "id": "rel-0065",
+      "type": "CAUSES",
+      "from": "node-0034",
+      "to": "node-0051",
+      "properties": {
+        "confidence": 0.35658844877755835,
+        "last_updated": "2026-05-08T03:42:07.805097+00:00"
+      }
+    },
+    {
+      "id": "rel-0066",
+      "type": "EXPLOITS",
+      "from": "node-0081",
+      "to": "node-0010",
+      "properties": {
+        "confidence": 0.36914175601292665,
+        "last_updated": "2026-05-08T03:42:07.805163+00:00"
+      }
+    },
+    {
+      "id": "rel-0067",
+      "type": "EXPLOITS",
+      "from": "node-0064",
+      "to": "node-0018",
+      "properties": {
+        "confidence": 0.3276993076776614,
+        "last_updated": "2026-05-08T03:42:07.805234+00:00"
+      }
+    },
+    {
+      "id": "rel-0068",
+      "type": "USES",
+      "from": "node-0011",
+      "to": "node-0013",
+      "properties": {
+        "confidence": 0.33437349790880505,
+        "last_updated": "2026-05-08T03:42:07.805300+00:00"
+      }
+    },
+    {
+      "id": "rel-0069",
+      "type": "INDICATES",
+      "from": "node-0030",
+      "to": "node-0026",
+      "properties": {
+        "confidence": 0.39984779918284874,
+        "last_updated": "2026-05-08T03:42:07.805367+00:00"
+      }
+    },
+    {
+      "id": "rel-0070",
+      "type": "DEPENDS_ON",
+      "from": "node-0022",
+      "to": "node-0058",
+      "properties": {
+        "confidence": 0.5285779845982181,
+        "last_updated": "2026-05-08T03:42:07.805431+00:00"
+      }
+    },
+    {
+      "id": "rel-0071",
+      "type": "CAUSES",
+      "from": "node-0075",
+      "to": "node-0062",
+      "properties": {
+        "confidence": 0.8278271389452438,
+        "last_updated": "2026-05-08T03:42:07.805501+00:00"
+      }
+    },
+    {
+      "id": "rel-0072",
+      "type": "DEPENDS_ON",
+      "from": "node-0056",
+      "to": "node-0066",
+      "properties": {
+        "confidence": 0.7859271936199637,
+        "last_updated": "2026-05-08T03:42:07.805563+00:00"
+      }
+    },
+    {
+      "id": "rel-0073",
+      "type": "DETECTS",
+      "from": "node-0039",
+      "to": "node-0049",
+      "properties": {
+        "confidence": 0.3984621188440154,
+        "last_updated": "2026-05-08T03:42:07.805634+00:00"
+      }
+    },
+    {
+      "id": "rel-0074",
+      "type": "DEPENDS_ON",
+      "from": "node-0088",
+      "to": "node-0066",
+      "properties": {
+        "confidence": 0.5059656495799252,
+        "last_updated": "2026-05-08T03:42:07.805730+00:00"
+      }
+    },
+    {
+      "id": "rel-0075",
+      "type": "INDICATES",
+      "from": "node-0072",
+      "to": "node-0015",
+      "properties": {
+        "confidence": 0.21519306287111328,
+        "last_updated": "2026-05-08T03:42:07.805805+00:00"
+      }
+    },
+    {
+      "id": "rel-0076",
+      "type": "USES",
+      "from": "node-0099",
+      "to": "node-0000",
+      "properties": {
+        "confidence": 0.15099604346801784,
+        "last_updated": "2026-05-08T03:42:07.805898+00:00"
+      }
+    },
+    {
+      "id": "rel-0077",
+      "type": "INDICATES",
+      "from": "node-0062",
+      "to": "node-0052",
+      "properties": {
+        "confidence": 0.8110596520648429,
+        "last_updated": "2026-05-08T03:42:07.805976+00:00"
+      }
+    },
+    {
+      "id": "rel-0078",
+      "type": "DETECTS",
+      "from": "node-0003",
+      "to": "node-0015",
+      "properties": {
+        "confidence": 0.5135852833167059,
+        "last_updated": "2026-05-08T03:42:07.806045+00:00"
+      }
+    },
+    {
+      "id": "rel-0079",
+      "type": "CAUSES",
+      "from": "node-0062",
+      "to": "node-0000",
+      "properties": {
+        "confidence": 0.8779342110641704,
+        "last_updated": "2026-05-08T03:42:07.806112+00:00"
+      }
+    },
+    {
+      "id": "rel-0080",
+      "type": "INDICATES",
+      "from": "node-0056",
+      "to": "node-0072",
+      "properties": {
+        "confidence": 0.7376135283026286,
+        "last_updated": "2026-05-08T03:42:07.806200+00:00"
+      }
+    },
+    {
+      "id": "rel-0081",
+      "type": "CAUSES",
+      "from": "node-0027",
+      "to": "node-0076",
+      "properties": {
+        "confidence": 0.14301569514190268,
+        "last_updated": "2026-05-08T03:42:07.806271+00:00"
+      }
+    },
+    {
+      "id": "rel-0082",
+      "type": "EXPLOITS",
+      "from": "node-0090",
+      "to": "node-0046",
+      "properties": {
+        "confidence": 0.8892352270837255,
+        "last_updated": "2026-05-08T03:42:07.806336+00:00"
+      }
+    },
+    {
+      "id": "rel-0083",
+      "type": "MITIGATES",
+      "from": "node-0083",
+      "to": "node-0075",
+      "properties": {
+        "confidence": 0.6134160611579464,
+        "last_updated": "2026-05-08T03:42:07.806403+00:00"
+      }
+    },
+    {
+      "id": "rel-0084",
+      "type": "EXPLOITS",
+      "from": "node-0086",
+      "to": "node-0024",
+      "properties": {
+        "confidence": 0.9801237617684252,
+        "last_updated": "2026-05-08T03:42:07.806468+00:00"
+      }
+    },
+    {
+      "id": "rel-0085",
+      "type": "CAUSES",
+      "from": "node-0010",
+      "to": "node-0032",
+      "properties": {
+        "confidence": 0.595469225356807,
+        "last_updated": "2026-05-08T03:42:07.806535+00:00"
+      }
+    },
+    {
+      "id": "rel-0086",
+      "type": "MITIGATES",
+      "from": "node-0059",
+      "to": "node-0040",
+      "properties": {
+        "confidence": 0.6698366649562675,
+        "last_updated": "2026-05-08T03:42:07.806600+00:00"
+      }
+    },
+    {
+      "id": "rel-0087",
+      "type": "USES",
+      "from": "node-0021",
+      "to": "node-0017",
+      "properties": {
+        "confidence": 0.12822943710639517,
+        "last_updated": "2026-05-08T03:42:07.806666+00:00"
+      }
+    },
+    {
+      "id": "rel-0088",
+      "type": "MITIGATES",
+      "from": "node-0060",
+      "to": "node-0008",
+      "properties": {
+        "confidence": 0.5591399539959787,
+        "last_updated": "2026-05-08T03:42:07.806729+00:00"
+      }
+    },
+    {
+      "id": "rel-0089",
+      "type": "DETECTS",
+      "from": "node-0074",
+      "to": "node-0044",
+      "properties": {
+        "confidence": 0.6497004299866056,
+        "last_updated": "2026-05-08T03:42:07.806794+00:00"
+      }
+    },
+    {
+      "id": "rel-0090",
+      "type": "MITIGATES",
+      "from": "node-0055",
+      "to": "node-0024",
+      "properties": {
+        "confidence": 0.5175214104902979,
+        "last_updated": "2026-05-08T03:42:07.806860+00:00"
+      }
+    },
+    {
+      "id": "rel-0091",
+      "type": "CAUSES",
+      "from": "node-0033",
+      "to": "node-0022",
+      "properties": {
+        "confidence": 0.5491059390835247,
+        "last_updated": "2026-05-08T03:42:07.806973+00:00"
+      }
+    },
+    {
+      "id": "rel-0092",
+      "type": "USES",
+      "from": "node-0081",
+      "to": "node-0056",
+      "properties": {
+        "confidence": 0.7269275546593646,
+        "last_updated": "2026-05-08T03:42:07.807063+00:00"
+      }
+    },
+    {
+      "id": "rel-0093",
+      "type": "MITIGATES",
+      "from": "node-0064",
+      "to": "node-0016",
+      "properties": {
+        "confidence": 0.5557037375112285,
+        "last_updated": "2026-05-08T03:42:07.807135+00:00"
+      }
+    },
+    {
+      "id": "rel-0094",
+      "type": "MITIGATES",
+      "from": "node-0050",
+      "to": "node-0082",
+      "properties": {
+        "confidence": 0.33427953470959526,
+        "last_updated": "2026-05-08T03:42:07.807202+00:00"
+      }
+    },
+    {
+      "id": "rel-0095",
+      "type": "USES",
+      "from": "node-0037",
+      "to": "node-0012",
+      "properties": {
+        "confidence": 0.577247558811904,
+        "last_updated": "2026-05-08T03:42:07.807268+00:00"
+      }
+    },
+    {
+      "id": "rel-0096",
+      "type": "USES",
+      "from": "node-0053",
+      "to": "node-0012",
+      "properties": {
+        "confidence": 0.3014272222566633,
+        "last_updated": "2026-05-08T03:42:07.807346+00:00"
+      }
+    },
+    {
+      "id": "rel-0097",
+      "type": "INDICATES",
+      "from": "node-0055",
+      "to": "node-0063",
+      "properties": {
+        "confidence": 0.9328890115123809,
+        "last_updated": "2026-05-08T03:42:07.807404+00:00"
+      }
+    },
+    {
+      "id": "rel-0098",
+      "type": "DETECTS",
+      "from": "node-0037",
+      "to": "node-0074",
+      "properties": {
+        "confidence": 0.6552138095683615,
+        "last_updated": "2026-05-08T03:42:07.807462+00:00"
+      }
+    },
+    {
+      "id": "rel-0099",
+      "type": "CAUSES",
+      "from": "node-0011",
+      "to": "node-0010",
+      "properties": {
+        "confidence": 0.7097080745179686,
+        "last_updated": "2026-05-08T03:42:07.807520+00:00"
+      }
+    },
+    {
+      "id": "rel-0100",
+      "type": "CAUSES",
+      "from": "node-0069",
+      "to": "node-0047",
+      "properties": {
+        "confidence": 0.4696895833370943,
+        "last_updated": "2026-05-08T03:42:07.807580+00:00"
+      }
+    },
+    {
+      "id": "rel-0101",
+      "type": "DEPENDS_ON",
+      "from": "node-0085",
+      "to": "node-0094",
+      "properties": {
+        "confidence": 0.5895386175877912,
+        "last_updated": "2026-05-08T03:42:07.807639+00:00"
+      }
+    },
+    {
+      "id": "rel-0102",
+      "type": "EXPLOITS",
+      "from": "node-0022",
+      "to": "node-0046",
+      "properties": {
+        "confidence": 0.22078247262351924,
+        "last_updated": "2026-05-08T03:42:07.807696+00:00"
+      }
+    },
+    {
+      "id": "rel-0103",
+      "type": "CAUSES",
+      "from": "node-0000",
+      "to": "node-0032",
+      "properties": {
+        "confidence": 0.7185456650890731,
+        "last_updated": "2026-05-08T03:42:07.807754+00:00"
+      }
+    },
+    {
+      "id": "rel-0104",
+      "type": "INDICATES",
+      "from": "node-0034",
+      "to": "node-0029",
+      "properties": {
+        "confidence": 0.7494507428316773,
+        "last_updated": "2026-05-08T03:42:07.807811+00:00"
+      }
+    },
+    {
+      "id": "rel-0105",
+      "type": "CAUSES",
+      "from": "node-0002",
+      "to": "node-0072",
+      "properties": {
+        "confidence": 0.46585536557873675,
+        "last_updated": "2026-05-08T03:42:07.807889+00:00"
+      }
+    },
+    {
+      "id": "rel-0106",
+      "type": "DEPENDS_ON",
+      "from": "node-0049",
+      "to": "node-0044",
+      "properties": {
+        "confidence": 0.9667369132132121,
+        "last_updated": "2026-05-08T03:42:07.807971+00:00"
+      }
+    },
+    {
+      "id": "rel-0107",
+      "type": "CAUSES",
+      "from": "node-0044",
+      "to": "node-0003",
+      "properties": {
+        "confidence": 0.34514952746134164,
+        "last_updated": "2026-05-08T03:42:07.808029+00:00"
+      }
+    },
+    {
+      "id": "rel-0108",
+      "type": "MITIGATES",
+      "from": "node-0062",
+      "to": "node-0055",
+      "properties": {
+        "confidence": 0.11097960896470994,
+        "last_updated": "2026-05-08T03:42:07.808084+00:00"
+      }
+    },
+    {
+      "id": "rel-0109",
+      "type": "MITIGATES",
+      "from": "node-0006",
+      "to": "node-0031",
+      "properties": {
+        "confidence": 0.49290652402188817,
+        "last_updated": "2026-05-08T03:42:07.808141+00:00"
+      }
+    },
+    {
+      "id": "rel-0110",
+      "type": "MITIGATES",
+      "from": "node-0073",
+      "to": "node-0069",
+      "properties": {
+        "confidence": 0.6577187250932408,
+        "last_updated": "2026-05-08T03:42:07.808201+00:00"
+      }
+    },
+    {
+      "id": "rel-0111",
+      "type": "DEPENDS_ON",
+      "from": "node-0068",
+      "to": "node-0000",
+      "properties": {
+        "confidence": 0.28764955308732076,
+        "last_updated": "2026-05-08T03:42:07.808262+00:00"
+      }
+    },
+    {
+      "id": "rel-0112",
+      "type": "MITIGATES",
+      "from": "node-0043",
+      "to": "node-0025",
+      "properties": {
+        "confidence": 0.5876963560595001,
+        "last_updated": "2026-05-08T03:42:07.808337+00:00"
+      }
+    },
+    {
+      "id": "rel-0113",
+      "type": "INDICATES",
+      "from": "node-0094",
+      "to": "node-0055",
+      "properties": {
+        "confidence": 0.2554204343727076,
+        "last_updated": "2026-05-08T03:42:07.808397+00:00"
+      }
+    },
+    {
+      "id": "rel-0114",
+      "type": "MITIGATES",
+      "from": "node-0090",
+      "to": "node-0006",
+      "properties": {
+        "confidence": 0.4828201921956313,
+        "last_updated": "2026-05-08T03:42:07.808454+00:00"
+      }
+    },
+    {
+      "id": "rel-0115",
+      "type": "INDICATES",
+      "from": "node-0034",
+      "to": "node-0013",
+      "properties": {
+        "confidence": 0.9425383705586173,
+        "last_updated": "2026-05-08T03:42:07.808532+00:00"
+      }
+    },
+    {
+      "id": "rel-0116",
+      "type": "INDICATES",
+      "from": "node-0024",
+      "to": "node-0077",
+      "properties": {
+        "confidence": 0.6499432252843695,
+        "last_updated": "2026-05-08T03:42:07.808591+00:00"
+      }
+    },
+    {
+      "id": "rel-0117",
+      "type": "USES",
+      "from": "node-0077",
+      "to": "node-0080",
+      "properties": {
+        "confidence": 0.5884054271728619,
+        "last_updated": "2026-05-08T03:42:07.808650+00:00"
+      }
+    },
+    {
+      "id": "rel-0118",
+      "type": "USES",
+      "from": "node-0009",
+      "to": "node-0018",
+      "properties": {
+        "confidence": 0.3713757845728771,
+        "last_updated": "2026-05-08T03:42:07.808708+00:00"
+      }
+    },
+    {
+      "id": "rel-0119",
+      "type": "INDICATES",
+      "from": "node-0089",
+      "to": "node-0024",
+      "properties": {
+        "confidence": 0.4614909523051518,
+        "last_updated": "2026-05-08T03:42:07.808765+00:00"
+      }
+    },
+    {
+      "id": "rel-0120",
+      "type": "USES",
+      "from": "node-0021",
+      "to": "node-0024",
+      "properties": {
+        "confidence": 0.9823747286873444,
+        "last_updated": "2026-05-08T03:42:07.808822+00:00"
+      }
+    },
+    {
+      "id": "rel-0121",
+      "type": "USES",
+      "from": "node-0062",
+      "to": "node-0039",
+      "properties": {
+        "confidence": 0.530590790038049,
+        "last_updated": "2026-05-08T03:42:07.808900+00:00"
+      }
+    },
+    {
+      "id": "rel-0122",
+      "type": "DEPENDS_ON",
+      "from": "node-0011",
+      "to": "node-0084",
+      "properties": {
+        "confidence": 0.7687112303050431,
+        "last_updated": "2026-05-08T03:42:07.808976+00:00"
+      }
+    },
+    {
+      "id": "rel-0123",
+      "type": "CAUSES",
+      "from": "node-0035",
+      "to": "node-0039",
+      "properties": {
+        "confidence": 0.3926769923208735,
+        "last_updated": "2026-05-08T03:42:07.809075+00:00"
+      }
+    },
+    {
+      "id": "rel-0124",
+      "type": "DETECTS",
+      "from": "node-0031",
+      "to": "node-0099",
+      "properties": {
+        "confidence": 0.9114516306250269,
+        "last_updated": "2026-05-08T03:42:07.809142+00:00"
+      }
+    },
+    {
+      "id": "rel-0125",
+      "type": "CAUSES",
+      "from": "node-0091",
+      "to": "node-0006",
+      "properties": {
+        "confidence": 0.260994951704404,
+        "last_updated": "2026-05-08T03:42:07.809204+00:00"
+      }
+    },
+    {
+      "id": "rel-0126",
+      "type": "CAUSES",
+      "from": "node-0038",
+      "to": "node-0084",
+      "properties": {
+        "confidence": 0.4133904192366996,
+        "last_updated": "2026-05-08T03:42:07.809268+00:00"
+      }
+    },
+    {
+      "id": "rel-0127",
+      "type": "DETECTS",
+      "from": "node-0010",
+      "to": "node-0032",
+      "properties": {
+        "confidence": 0.8448528010744996,
+        "last_updated": "2026-05-08T03:42:07.809334+00:00"
+      }
+    },
+    {
+      "id": "rel-0128",
+      "type": "USES",
+      "from": "node-0052",
+      "to": "node-0017",
+      "properties": {
+        "confidence": 0.17784545477147887,
+        "last_updated": "2026-05-08T03:42:07.809407+00:00"
+      }
+    },
+    {
+      "id": "rel-0129",
+      "type": "EXPLOITS",
+      "from": "node-0087",
+      "to": "node-0041",
+      "properties": {
+        "confidence": 0.5066546867708113,
+        "last_updated": "2026-05-08T03:42:07.809471+00:00"
+      }
+    },
+    {
+      "id": "rel-0130",
+      "type": "EXPLOITS",
+      "from": "node-0063",
+      "to": "node-0005",
+      "properties": {
+        "confidence": 0.3796705678337119,
+        "last_updated": "2026-05-08T03:42:07.809533+00:00"
+      }
+    },
+    {
+      "id": "rel-0131",
+      "type": "INDICATES",
+      "from": "node-0036",
+      "to": "node-0093",
+      "properties": {
+        "confidence": 0.1903085930228714,
+        "last_updated": "2026-05-08T03:42:07.809600+00:00"
+      }
+    },
+    {
+      "id": "rel-0132",
+      "type": "INDICATES",
+      "from": "node-0069",
+      "to": "node-0080",
+      "properties": {
+        "confidence": 0.12285324510526892,
+        "last_updated": "2026-05-08T03:42:07.809666+00:00"
+      }
+    },
+    {
+      "id": "rel-0133",
+      "type": "MITIGATES",
+      "from": "node-0088",
+      "to": "node-0039",
+      "properties": {
+        "confidence": 0.27536733835824145,
+        "last_updated": "2026-05-08T03:42:07.809729+00:00"
+      }
+    },
+    {
+      "id": "rel-0134",
+      "type": "DEPENDS_ON",
+      "from": "node-0052",
+      "to": "node-0032",
+      "properties": {
+        "confidence": 0.1777370801478807,
+        "last_updated": "2026-05-08T03:42:07.809791+00:00"
+      }
+    },
+    {
+      "id": "rel-0135",
+      "type": "CAUSES",
+      "from": "node-0046",
+      "to": "node-0075",
+      "properties": {
+        "confidence": 0.47711785689526753,
+        "last_updated": "2026-05-08T03:42:07.809855+00:00"
+      }
+    },
+    {
+      "id": "rel-0136",
+      "type": "EXPLOITS",
+      "from": "node-0082",
+      "to": "node-0000",
+      "properties": {
+        "confidence": 0.1479291056501288,
+        "last_updated": "2026-05-08T03:42:07.809938+00:00"
+      }
+    },
+    {
+      "id": "rel-0137",
+      "type": "INDICATES",
+      "from": "node-0020",
+      "to": "node-0008",
+      "properties": {
+        "confidence": 0.46917100825940594,
+        "last_updated": "2026-05-08T03:42:07.810004+00:00"
+      }
+    },
+    {
+      "id": "rel-0138",
+      "type": "EXPLOITS",
+      "from": "node-0089",
+      "to": "node-0013",
+      "properties": {
+        "confidence": 0.4832726749077735,
+        "last_updated": "2026-05-08T03:42:07.810068+00:00"
+      }
+    },
+    {
+      "id": "rel-0139",
+      "type": "INDICATES",
+      "from": "node-0084",
+      "to": "node-0050",
+      "properties": {
+        "confidence": 0.48232859471205625,
+        "last_updated": "2026-05-08T03:42:07.810158+00:00"
+      }
+    },
+    {
+      "id": "rel-0140",
+      "type": "INDICATES",
+      "from": "node-0011",
+      "to": "node-0049",
+      "properties": {
+        "confidence": 0.4775095646546129,
+        "last_updated": "2026-05-08T03:42:07.810243+00:00"
+      }
+    },
+    {
+      "id": "rel-0141",
+      "type": "USES",
+      "from": "node-0051",
+      "to": "node-0012",
+      "properties": {
+        "confidence": 0.8924475422571864,
+        "last_updated": "2026-05-08T03:42:07.810316+00:00"
+      }
+    },
+    {
+      "id": "rel-0142",
+      "type": "CAUSES",
+      "from": "node-0076",
+      "to": "node-0004",
+      "properties": {
+        "confidence": 0.945900957747078,
+        "last_updated": "2026-05-08T03:42:07.810390+00:00"
+      }
+    },
+    {
+      "id": "rel-0143",
+      "type": "USES",
+      "from": "node-0018",
+      "to": "node-0049",
+      "properties": {
+        "confidence": 0.6692496362228024,
+        "last_updated": "2026-05-08T03:42:07.810466+00:00"
+      }
+    },
+    {
+      "id": "rel-0144",
+      "type": "USES",
+      "from": "node-0067",
+      "to": "node-0097",
+      "properties": {
+        "confidence": 0.21347088546806864,
+        "last_updated": "2026-05-08T03:42:07.810551+00:00"
+      }
+    },
+    {
+      "id": "rel-0145",
+      "type": "CAUSES",
+      "from": "node-0039",
+      "to": "node-0002",
+      "properties": {
+        "confidence": 0.5869581564977765,
+        "last_updated": "2026-05-08T03:42:07.810615+00:00"
+      }
+    },
+    {
+      "id": "rel-0146",
+      "type": "DETECTS",
+      "from": "node-0085",
+      "to": "node-0062",
+      "properties": {
+        "confidence": 0.10186770312102544,
+        "last_updated": "2026-05-08T03:42:07.810679+00:00"
+      }
+    },
+    {
+      "id": "rel-0147",
+      "type": "CAUSES",
+      "from": "node-0024",
+      "to": "node-0052",
+      "properties": {
+        "confidence": 0.7420426197469896,
+        "last_updated": "2026-05-08T03:42:07.810737+00:00"
+      }
+    },
+    {
+      "id": "rel-0148",
+      "type": "INDICATES",
+      "from": "node-0059",
+      "to": "node-0048",
+      "properties": {
+        "confidence": 0.34532879204943645,
+        "last_updated": "2026-05-08T03:42:07.810793+00:00"
+      }
+    },
+    {
+      "id": "rel-0149",
+      "type": "MITIGATES",
+      "from": "node-0023",
+      "to": "node-0093",
+      "properties": {
+        "confidence": 0.6560132558879086,
+        "last_updated": "2026-05-08T03:42:07.810857+00:00"
+      }
+    },
+    {
+      "id": "rel-0150",
+      "type": "EXPLOITS",
+      "from": "node-0021",
+      "to": "node-0051",
+      "properties": {
+        "confidence": 0.10557210028549954,
+        "last_updated": "2026-05-08T03:42:07.810955+00:00"
+      }
+    },
+    {
+      "id": "rel-0151",
+      "type": "INDICATES",
+      "from": "node-0082",
+      "to": "node-0062",
+      "properties": {
+        "confidence": 0.21594138230031507,
+        "last_updated": "2026-05-08T03:42:07.811028+00:00"
+      }
+    },
+    {
+      "id": "rel-0152",
+      "type": "DEPENDS_ON",
+      "from": "node-0046",
+      "to": "node-0034",
+      "properties": {
+        "confidence": 0.22317675742800272,
+        "last_updated": "2026-05-08T03:42:07.811100+00:00"
+      }
+    },
+    {
+      "id": "rel-0153",
+      "type": "DETECTS",
+      "from": "node-0073",
+      "to": "node-0031",
+      "properties": {
+        "confidence": 0.1929847583077881,
+        "last_updated": "2026-05-08T03:42:07.811173+00:00"
+      }
+    },
+    {
+      "id": "rel-0154",
+      "type": "MITIGATES",
+      "from": "node-0083",
+      "to": "node-0079",
+      "properties": {
+        "confidence": 0.12471806332915539,
+        "last_updated": "2026-05-08T03:42:07.811243+00:00"
+      }
+    },
+    {
+      "id": "rel-0155",
+      "type": "DEPENDS_ON",
+      "from": "node-0051",
+      "to": "node-0012",
+      "properties": {
+        "confidence": 0.7819766620689316,
+        "last_updated": "2026-05-08T03:42:07.811339+00:00"
+      }
+    },
+    {
+      "id": "rel-0156",
+      "type": "DETECTS",
+      "from": "node-0083",
+      "to": "node-0085",
+      "properties": {
+        "confidence": 0.2693731306242567,
+        "last_updated": "2026-05-08T03:42:07.811419+00:00"
+      }
+    },
+    {
+      "id": "rel-0157",
+      "type": "INDICATES",
+      "from": "node-0034",
+      "to": "node-0015",
+      "properties": {
+        "confidence": 0.868440180613679,
+        "last_updated": "2026-05-08T03:42:07.811498+00:00"
+      }
+    },
+    {
+      "id": "rel-0158",
+      "type": "INDICATES",
+      "from": "node-0009",
+      "to": "node-0091",
+      "properties": {
+        "confidence": 0.653419979717053,
+        "last_updated": "2026-05-08T03:42:07.811581+00:00"
+      }
+    },
+    {
+      "id": "rel-0159",
+      "type": "DEPENDS_ON",
+      "from": "node-0042",
+      "to": "node-0090",
+      "properties": {
+        "confidence": 0.19110001603017757,
+        "last_updated": "2026-05-08T03:42:07.811679+00:00"
+      }
+    },
+    {
+      "id": "rel-0160",
+      "type": "CAUSES",
+      "from": "node-0075",
+      "to": "node-0022",
+      "properties": {
+        "confidence": 0.625764537406303,
+        "last_updated": "2026-05-08T03:42:07.811759+00:00"
+      }
+    },
+    {
+      "id": "rel-0161",
+      "type": "DETECTS",
+      "from": "node-0037",
+      "to": "node-0049",
+      "properties": {
+        "confidence": 0.26992619563173237,
+        "last_updated": "2026-05-08T03:42:07.811837+00:00"
+      }
+    },
+    {
+      "id": "rel-0162",
+      "type": "CAUSES",
+      "from": "node-0098",
+      "to": "node-0024",
+      "properties": {
+        "confidence": 0.7413989479975539,
+        "last_updated": "2026-05-08T03:42:07.811923+00:00"
+      }
+    },
+    {
+      "id": "rel-0163",
+      "type": "EXPLOITS",
+      "from": "node-0084",
+      "to": "node-0051",
+      "properties": {
+        "confidence": 0.5595809729382422,
+        "last_updated": "2026-05-08T03:42:07.811988+00:00"
+      }
+    },
+    {
+      "id": "rel-0164",
+      "type": "DEPENDS_ON",
+      "from": "node-0045",
+      "to": "node-0031",
+      "properties": {
+        "confidence": 0.7441838330234537,
+        "last_updated": "2026-05-08T03:42:07.812061+00:00"
+      }
+    },
+    {
+      "id": "rel-0165",
+      "type": "EXPLOITS",
+      "from": "node-0089",
+      "to": "node-0008",
+      "properties": {
+        "confidence": 0.7097387303914665,
+        "last_updated": "2026-05-08T03:42:07.812115+00:00"
+      }
+    },
+    {
+      "id": "rel-0166",
+      "type": "EXPLOITS",
+      "from": "node-0011",
+      "to": "node-0019",
+      "properties": {
+        "confidence": 0.2896440551268499,
+        "last_updated": "2026-05-08T03:42:07.812174+00:00"
+      }
+    },
+    {
+      "id": "rel-0167",
+      "type": "DEPENDS_ON",
+      "from": "node-0064",
+      "to": "node-0066",
+      "properties": {
+        "confidence": 0.2019323175521467,
+        "last_updated": "2026-05-08T03:42:07.812261+00:00"
+      }
+    },
+    {
+      "id": "rel-0168",
+      "type": "DETECTS",
+      "from": "node-0018",
+      "to": "node-0054",
+      "properties": {
+        "confidence": 0.2615094506493307,
+        "last_updated": "2026-05-08T03:42:07.812331+00:00"
+      }
+    },
+    {
+      "id": "rel-0169",
+      "type": "DETECTS",
+      "from": "node-0090",
+      "to": "node-0035",
+      "properties": {
+        "confidence": 0.6666823263625299,
+        "last_updated": "2026-05-08T03:42:07.812400+00:00"
+      }
+    },
+    {
+      "id": "rel-0170",
+      "type": "USES",
+      "from": "node-0055",
+      "to": "node-0014",
+      "properties": {
+        "confidence": 0.9676536542898205,
+        "last_updated": "2026-05-08T03:42:07.812469+00:00"
+      }
+    },
+    {
+      "id": "rel-0171",
+      "type": "INDICATES",
+      "from": "node-0001",
+      "to": "node-0007",
+      "properties": {
+        "confidence": 0.16906321993740991,
+        "last_updated": "2026-05-08T03:42:07.812557+00:00"
+      }
+    },
+    {
+      "id": "rel-0172",
+      "type": "USES",
+      "from": "node-0046",
+      "to": "node-0085",
+      "properties": {
+        "confidence": 0.705686838739988,
+        "last_updated": "2026-05-08T03:42:07.812628+00:00"
+      }
+    },
+    {
+      "id": "rel-0173",
+      "type": "MITIGATES",
+      "from": "node-0086",
+      "to": "node-0038",
+      "properties": {
+        "confidence": 0.9535948370735163,
+        "last_updated": "2026-05-08T03:42:07.812704+00:00"
+      }
+    },
+    {
+      "id": "rel-0174",
+      "type": "DETECTS",
+      "from": "node-0042",
+      "to": "node-0024",
+      "properties": {
+        "confidence": 0.2878107796399486,
+        "last_updated": "2026-05-08T03:42:07.812774+00:00"
+      }
+    },
+    {
+      "id": "rel-0175",
+      "type": "CAUSES",
+      "from": "node-0092",
+      "to": "node-0013",
+      "properties": {
+        "confidence": 0.5170730745835919,
+        "last_updated": "2026-05-08T03:42:07.812859+00:00"
+      }
+    },
+    {
+      "id": "rel-0176",
+      "type": "USES",
+      "from": "node-0040",
+      "to": "node-0053",
+      "properties": {
+        "confidence": 0.1379863458349832,
+        "last_updated": "2026-05-08T03:42:07.812946+00:00"
+      }
+    },
+    {
+      "id": "rel-0177",
+      "type": "USES",
+      "from": "node-0086",
+      "to": "node-0057",
+      "properties": {
+        "confidence": 0.7177413930497474,
+        "last_updated": "2026-05-08T03:42:07.813024+00:00"
+      }
+    },
+    {
+      "id": "rel-0178",
+      "type": "USES",
+      "from": "node-0007",
+      "to": "node-0047",
+      "properties": {
+        "confidence": 0.4750396119136463,
+        "last_updated": "2026-05-08T03:42:07.813094+00:00"
+      }
+    },
+    {
+      "id": "rel-0179",
+      "type": "MITIGATES",
+      "from": "node-0043",
+      "to": "node-0033",
+      "properties": {
+        "confidence": 0.39738478357797236,
+        "last_updated": "2026-05-08T03:42:07.813168+00:00"
+      }
+    },
+    {
+      "id": "rel-0180",
+      "type": "DEPENDS_ON",
+      "from": "node-0080",
+      "to": "node-0090",
+      "properties": {
+        "confidence": 0.5534684760422223,
+        "last_updated": "2026-05-08T03:42:07.813239+00:00"
+      }
+    },
+    {
+      "id": "rel-0181",
+      "type": "EXPLOITS",
+      "from": "node-0040",
+      "to": "node-0069",
+      "properties": {
+        "confidence": 0.5626362718015494,
+        "last_updated": "2026-05-08T03:42:07.813307+00:00"
+      }
+    },
+    {
+      "id": "rel-0182",
+      "type": "USES",
+      "from": "node-0053",
+      "to": "node-0062",
+      "properties": {
+        "confidence": 0.6612206105156915,
+        "last_updated": "2026-05-08T03:42:07.813368+00:00"
+      }
+    },
+    {
+      "id": "rel-0183",
+      "type": "INDICATES",
+      "from": "node-0090",
+      "to": "node-0023",
+      "properties": {
+        "confidence": 0.5860151136872229,
+        "last_updated": "2026-05-08T03:42:07.813430+00:00"
+      }
+    },
+    {
+      "id": "rel-0184",
+      "type": "MITIGATES",
+      "from": "node-0049",
+      "to": "node-0024",
+      "properties": {
+        "confidence": 0.7589511633917435,
+        "last_updated": "2026-05-08T03:42:07.813492+00:00"
+      }
+    },
+    {
+      "id": "rel-0185",
+      "type": "USES",
+      "from": "node-0065",
+      "to": "node-0025",
+      "properties": {
+        "confidence": 0.5261470363803572,
+        "last_updated": "2026-05-08T03:42:07.813558+00:00"
+      }
+    },
+    {
+      "id": "rel-0186",
+      "type": "INDICATES",
+      "from": "node-0077",
+      "to": "node-0073",
+      "properties": {
+        "confidence": 0.8532683250792297,
+        "last_updated": "2026-05-08T03:42:07.813625+00:00"
+      }
+    },
+    {
+      "id": "rel-0187",
+      "type": "USES",
+      "from": "node-0043",
+      "to": "node-0015",
+      "properties": {
+        "confidence": 0.21800326867623276,
+        "last_updated": "2026-05-08T03:42:07.813720+00:00"
+      }
+    },
+    {
+      "id": "rel-0188",
+      "type": "USES",
+      "from": "node-0096",
+      "to": "node-0036",
+      "properties": {
+        "confidence": 0.5381163141333881,
+        "last_updated": "2026-05-08T03:42:07.813794+00:00"
+      }
+    },
+    {
+      "id": "rel-0189",
+      "type": "CAUSES",
+      "from": "node-0033",
+      "to": "node-0037",
+      "properties": {
+        "confidence": 0.7626195309227619,
+        "last_updated": "2026-05-08T03:42:07.813884+00:00"
+      }
+    },
+    {
+      "id": "rel-0190",
+      "type": "DETECTS",
+      "from": "node-0028",
+      "to": "node-0058",
+      "properties": {
+        "confidence": 0.9576872044433687,
+        "last_updated": "2026-05-08T03:42:07.813968+00:00"
+      }
+    },
+    {
+      "id": "rel-0191",
+      "type": "USES",
+      "from": "node-0000",
+      "to": "node-0078",
+      "properties": {
+        "confidence": 0.13412637976892297,
+        "last_updated": "2026-05-08T03:42:07.814051+00:00"
+      }
+    },
+    {
+      "id": "rel-0192",
+      "type": "USES",
+      "from": "node-0022",
+      "to": "node-0098",
+      "properties": {
+        "confidence": 0.1438816510564087,
+        "last_updated": "2026-05-08T03:42:07.814124+00:00"
+      }
+    },
+    {
+      "id": "rel-0193",
+      "type": "DETECTS",
+      "from": "node-0017",
+      "to": "node-0014",
+      "properties": {
+        "confidence": 0.7374372930428675,
+        "last_updated": "2026-05-08T03:42:07.814199+00:00"
+      }
+    },
+    {
+      "id": "rel-0194",
+      "type": "DEPENDS_ON",
+      "from": "node-0000",
+      "to": "node-0030",
+      "properties": {
+        "confidence": 0.5748645728671121,
+        "last_updated": "2026-05-08T03:42:07.814263+00:00"
+      }
+    },
+    {
+      "id": "rel-0195",
+      "type": "DEPENDS_ON",
+      "from": "node-0035",
+      "to": "node-0078",
+      "properties": {
+        "confidence": 0.7754802319511029,
+        "last_updated": "2026-05-08T03:42:07.814332+00:00"
+      }
+    },
+    {
+      "id": "rel-0196",
+      "type": "EXPLOITS",
+      "from": "node-0025",
+      "to": "node-0014",
+      "properties": {
+        "confidence": 0.56035499353642,
+        "last_updated": "2026-05-08T03:42:07.814405+00:00"
+      }
+    },
+    {
+      "id": "rel-0197",
+      "type": "DETECTS",
+      "from": "node-0072",
+      "to": "node-0006",
+      "properties": {
+        "confidence": 0.8725056768021103,
+        "last_updated": "2026-05-08T03:42:07.814483+00:00"
+      }
+    },
+    {
+      "id": "rel-0198",
+      "type": "DETECTS",
+      "from": "node-0012",
+      "to": "node-0091",
+      "properties": {
+        "confidence": 0.13319289373986753,
+        "last_updated": "2026-05-08T03:42:07.814552+00:00"
+      }
+    },
+    {
+      "id": "rel-0199",
+      "type": "MITIGATES",
+      "from": "node-0099",
+      "to": "node-0045",
+      "properties": {
+        "confidence": 0.17539504973480569,
+        "last_updated": "2026-05-08T03:42:07.814623+00:00"
+      }
+    }
+  ]
+}

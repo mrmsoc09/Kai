@@ -1,31 +1,52 @@
 # Synthetic Data for Kai Platform
 
-This directory contains synthetic (generated) data to support testing, training, and validation of the Kai bug bounty orchestration platform. All data is marked as synthetic and should not be used for real scans.
+This directory contains comprehensive synthetic (generated) data to support testing, training, and validation of the Kai bug bounty orchestration platform. All data is marked as synthetic and should not be used for real scans.
 
 ## Directory Structure
 
 - `targets/`: Mock target definitions (domains, IPs, etc.)
 - `artifacts/`: Simulated scan artifacts (DNS records, services, web apps, URLs)
 - `observations/`: Generated observations and findings
-- `training/`: AI training datasets (prompt-response pairs)
-- `advanced/`: Advanced synthetic data (vulnerability chains, zero-days)
+- `training/`: AI training datasets (prompt-response pairs, agent training data)
+- `advanced/`: Advanced synthetic data (vulnerability chains, zero-days, CVE database, exploitability scenarios, knowledge graphs)
+
+## Data Types
+
+### Core Synthetic Data
+- **Targets**: Mock domains, IPs, and network ranges
+- **Artifacts**: Simulated DNS records, services, web applications, and URLs
+- **Observations**: Generated security findings and scan results
+
+### Advanced Synthetic Data
+- **Vulnerability Chains**: Multi-step exploit chains with prerequisites and success probabilities
+- **Zero-Day Scenarios**: Simulated unknown vulnerabilities with detection indicators
+- **CVE Database**: Comprehensive vulnerability database entries with CVSS scores and remediation
+- **Exploitability Validation**: Scenarios for testing vulnerability exploitability with payloads and indicators
+- **Scanning Training**: Full scanning scenarios with phases, tools, and success metrics
+- **Knowledge Graphs**: Graph-structured data representing vulnerability relationships
+- **Agent Training Data**: Specialized training datasets for AI agents covering vulnerability analysis, exploit validation, risk assessment, remediation planning, threat hunting, and incident response
 
 ## Usage
 
 - Load these files in dry-run mode for workflow testing.
-- Use training data to fine-tune AI agents.
-- Extend generators to create more diverse data.
+- Use training data to fine-tune AI agents and improve initial scan success rates.
+- Extend generators to create more diverse data for specific use cases.
 
 ## Advanced Features
 
-- **Vulnerability Chains**: Pre-defined exploit chains (web app, API, network) with success probabilities.
-- **Zero-Day Scenarios**: Simulated unknown vulnerabilities with detection indicators.
-- **Customizable Generation**: Modify `scripts/generate_advanced_synthetic_data.py` for custom chains/scenarios.
+- **Vulnerability Chains**: Pre-defined exploit chains (web app, API, network, cloud, supply chain) with detailed metadata.
+- **Zero-Day Scenarios**: Simulated unknown vulnerabilities with comprehensive analysis and validation steps.
+- **CVE Database**: Realistic vulnerability entries with CVSS vectors, affected products, and remediation guidance.
+- **Exploitability Validation**: Pattern-based validation scenarios with test payloads and success criteria.
+- **Scanning Scenarios**: Complete scanning workflows with phases, tools, resource requirements, and compliance considerations.
+- **Knowledge Graphs**: Structured relationships between vulnerabilities, exploits, mitigations, tools, and techniques.
+- **Agent Training**: Domain-specific training data for security AI agents across multiple specialties.
 
 ## Integration
 
 - Use `SyntheticDataLoader` in `apps/backend/src/core/synthetic_data_loader.py` to load into database.
-- Run `scripts/generate_advanced_synthetic_data.py` to generate new advanced data.
+- Run `scripts/generate_advanced_synthetic_data.py` to generate new comprehensive data.
+- CLI command: `kai-cli training generate-advanced-synthetic` with customizable counts for each data type.
 
 ## Autonomous Operation
 
@@ -47,6 +68,14 @@ Run `scripts/setup_autonomous_training.sh` to configure autonomous operation.
 - Check `logs/daily_training_update.log` for update status
 - Monitor Celery tasks via Flower or CLI
 - API endpoints provide task status and results
+
+## Customization
+
+Modify `scripts/generate_advanced_synthetic_data.py` to:
+- Add new vulnerability patterns or chains
+- Customize data generation parameters
+- Extend knowledge graph relationships
+- Add domain-specific agent training scenarios
 
 ## Notes
 
