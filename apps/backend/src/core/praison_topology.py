@@ -300,8 +300,14 @@ class PraisonTopology:
 
         # Phase Group A (continued): sequential OSINT/dark-web/secrets chain after surface mapping
         _add_edge_if_present("SurfaceMapper", "OSINTIntelligenceAgent", EdgeCondition.ON_SUCCESS)
-        _add_edge_if_present("OSINTIntelligenceAgent", "DarkWebIntelAgent", EdgeCondition.ON_SUCCESS)
+        # DarkWebIntelAgent is opt-in: only fires when dark_web_scope_enabled=True OR
+        # OSINTIntelligenceAgent emits a high-signal finding (leaked creds / breach mention).
+        # The agent itself enforces the guard; the ON_HIGH_SIGNAL condition prevents it from
+        # being scheduled at all when no signal is present, keeping default scans fast.
+        _add_edge_if_present("OSINTIntelligenceAgent", "DarkWebIntelAgent", EdgeCondition.ON_HIGH_SIGNAL)
         _add_edge_if_present("DarkWebIntelAgent", "SecretScannerAgent", EdgeCondition.ON_SUCCESS)
+        # Direct path when dark web is skipped: OSINT feeds straight into SecretScannerAgent
+        _add_edge_if_present("OSINTIntelligenceAgent", "SecretScannerAgent", EdgeCondition.ON_SUCCESS)
 
         # Phase Group B (content discovery after full recon chain completes)
         if "ContentDiscoveryAgent" in graph.nodes:

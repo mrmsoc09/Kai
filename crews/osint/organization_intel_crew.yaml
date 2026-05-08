@@ -26,15 +26,19 @@ roles:
     goal: Identify any credential exposures related to the target organization in public sources
     backstory: >
       Dark web intelligence analyst turned bug bounty researcher. Monitors public credential
-      dumps and dark web forums for target organization mentions. Documents everything. Never
-      uses discovered credentials under any circumstances. All findings reported to the program
-      immediately.
+      dumps and clearnet breach indexes for target organization mentions. Documents everything.
+      Never uses discovered credentials under any circumstances. All findings reported to the
+      program immediately.
     tasks:
       monitor_credentials:
         description: >
-          Analyze spiderfoot, torbot, onionsearch, and ahmia-client outputs for credential
-          exposures related to the target organization. Flag any discovered credentials
+          Analyze spiderfoot outputs and breach index results (dehashed, haveibeenpwned) for
+          credential exposures related to the target organization. Flag any discovered credentials
           immediately for responsible disclosure. Document type, source, and potential impact only.
+          NOTE: Dark web tools (torbot, onionsearch, ahmia-client) are NOT run by default.
+          They are invoked automatically only when this phase detects leaked credentials or
+          breach signals, or when the analyst explicitly enables dark_web_scope_enabled=true.
         expected_output: >
           Credential exposure report: credential type (never actual values), discovery source,
           estimated exposure date, potential impact scope, immediate disclosure recommendation.
+          If dark web signals were detected, indicate whether dark web escalation was triggered.

@@ -7,9 +7,41 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+# OSINT finding signals that warrant automatic dark web escalation
+_DARK_WEB_SIGNAL_KEYWORDS = (
+    "credential",
+    "password",
+    "leaked",
+    "breach",
+    "dump",
+    "paste",
+    "darkweb",
+    "dark web",
+    "onion",
+    "ransomware",
+    "extortion",
+)
+
+
+def _osint_suggests_darkweb(prior_findings: dict) -> bool:
+    """Return True if prior OSINT findings contain dark web escalation signals."""
+    leaked_creds = prior_findings.get("leaked_credentials", [])
+    if leaked_creds:
+        return True
+    for key in ("raw_text", "summary", "notes", "mentions"):
+        text = str(prior_findings.get(key, "")).lower()
+        if any(kw in text for kw in _DARK_WEB_SIGNAL_KEYWORDS):
+            return True
+    return False
+
 
 class DarkWebIntelAgent:
-    """Coordinates Phase 5 dark web tool agents."""
+    """Coordinates dark web tool agents (opt-in only).
+
+    Runs only when:
+    - mission_context["dark_web_scope_enabled"] is True, OR
+    - prior OSINT findings signal dark web relevance (leaked creds, breach mentions)
+    """
 
     def __init__(self, config: dict | None = None):
         self.config = config or {}
@@ -19,7 +51,32 @@ class DarkWebIntelAgent:
         mission_context: dict,
         prior_findings: dict,
     ) -> dict:
-        """Execute dark web intelligence phase."""
+        """Execute dark web intelligence phase — skipped unless explicitly enabled or signalled."""
+        explicitly_enabled = bool(
+            mission_context.get("dark_web_scope_enabled", False)
+        )
+        signal_detected = _osint_suggests_darkweb(prior_findings)
+
+        if not explicitly_enabled and not signal_detected:
+            logger.info(
+                "DarkWebIntelAgent skipped: dark_web_scope_enabled=False "
+                "and no OSINT signals detected."
+            )
+            return {
+                "dark_web_complete": False,
+                "skipped": True,
+                "reason": "dark_web_scope_not_enabled",
+                "credential_mentions": [],
+                "org_mentions": [],
+                "onion_urls": [],
+            }
+
+        if signal_detected and not explicitly_enabled:
+            logger.info(
+                "DarkWebIntelAgent triggered by OSINT signal "
+                "(leaked credentials or breach mention detected)."
+            )
+
         try:
             tor_available = self.verify_tor_service()
             if not tor_available:

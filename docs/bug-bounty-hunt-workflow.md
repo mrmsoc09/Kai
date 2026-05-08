@@ -99,18 +99,22 @@ flowchart TD
     P2_OUT --> P4[⬡ PHASE 4: OSINT\nBand 0 — Passive External]:::phase
 
     P4 --> P4_CREW[CrewAI: organization_intel_crew]:::ai
-    subgraph P4_TOOLS [Phase 4 Tool Agents]
+    subgraph P4_TOOLS [Phase 4 Tool Agents — Default]
         direction LR
         T_gitleaks[gitleaks\ntrufflehog\ngitrob\ngithound]:::tool
         T_sherlock[sherlock\nsocialscan\nwhatsmyname]:::tool
         T_dehashed[dehashed\nfullhunt]:::tool
-        T_darkweb[torbot\nahmia-client\ndarksearch]:::tool
         T_spiderfoot[spiderfoot\nphoneinfoga]:::tool
     end
 
     P4_CREW --> P4_TOOLS
-    P4_TOOLS --> P4_MISP[MISP: Enrich discovered\nIOCs + leaked creds]:::intel
-    P4_TOOLS --> P4_OUT[(Leaked Creds\nGit Secrets\nSocial Profiles\nDark Web Mentions)]:::output
+    P4_TOOLS --> P4_SIGNAL{Leaked Creds\nor Breach\nSignal?}:::decision
+    P4_SIGNAL -->|dark_web_scope_enabled=true\nOR breach signal detected| P4_DW[🔒 DARK WEB PHASE\nOpt-In Only]:::gate
+    P4_DW --> T_darkweb[torbot\nahmia-client\ndarksearch]:::tool
+    P4_SIGNAL -->|No signal\nDefault path| P4_MISP
+    T_darkweb --> P4_MISP[MISP: Enrich discovered\nIOCs + leaked creds]:::intel
+    P4_TOOLS --> P4_MISP
+    P4_MISP --> P4_OUT[(Leaked Creds\nGit Secrets\nSocial Profiles\nDark Web Mentions ⚠️ opt-in)]:::output
 
     %% ═══════════════════════════════════════════════════════════════════
     %% PHASE 5 — VULNERABILITY SCANNING  (Band 1)
@@ -231,7 +235,8 @@ flowchart TD
 | 1 — Recon | 0 | Auto | subfinder, amass, dnsx, gau | MISP IOC pre-check |
 | 2 — Fingerprinting | 0→1 | Auto | nmap, whatweb, sslyze, eyewitness | — |
 | 3 — Content Discovery | 1 | Auto | ffuf, feroxbuster, kiterunner | SecLists + WordlistGenerator |
-| 4 — OSINT | 0 | Auto | gitleaks, sherlock, dehashed, torbot | MISP enrichment |
+| 4 — OSINT | 0 | Auto | gitleaks, sherlock, dehashed, spiderfoot | MISP enrichment |
+| 4b — Dark Web | 0 | **Opt-In** | torbot, ahmia-client, darksearch | Triggered by `dark_web_scope_enabled=true` or breach signal |
 | 5 — Vuln Scanning | 1 | Auto | nuclei, sqlmap, dalfox, gopherus | Cortex analyzers + Wazuh |
 | 6 — API Testing | 1 | Auto | clairvoyance, jwt-tool, swagger-inspector | — |
 | 7 — Exploit Validation | **2** | **Human Approved** | metasploit (check-only), Vision PoC | TheHive case + Shuffle escalation |

@@ -589,7 +589,8 @@ tools:
     timeout_seconds: 1800
     safety_classification: passive
     tier: 2
-    triggers_on: ["dark_web_scope_enabled"]
+    enabled_by_default: false
+    triggers_on: ["dark_web_scope_enabled", "osint_dark_web_signal"]
 
   - name: torbot
     agent_class: TorbotAgent
@@ -602,7 +603,8 @@ tools:
     timeout_seconds: 3600
     safety_classification: passive
     tier: 2
-    triggers_on: ["dark_web_scope_enabled"]
+    enabled_by_default: false
+    triggers_on: ["dark_web_scope_enabled", "osint_dark_web_signal"]
 
   - name: onionscan
     agent_class: OnionscanAgent
@@ -628,7 +630,8 @@ tools:
     timeout_seconds: 600
     safety_classification: passive
     tier: 2
-    triggers_on: ["dark_web_scope_enabled"]
+    enabled_by_default: false
+    triggers_on: ["dark_web_scope_enabled", "osint_dark_web_signal"]
     api_keys_required: ["DARKSEARCH_API_KEY"]
 
   # Vulnerability Scanning
