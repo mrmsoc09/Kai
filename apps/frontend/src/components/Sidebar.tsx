@@ -40,8 +40,9 @@ const NAV: NavItem[] = [
     label: 'INTELLIGENCE',
     sub: 'Recon & Threat Intel',
     children: [
-      { to: '/intel', label: 'Threat Intel' },
-      { to: '/recon', label: 'Reconnaissance' },
+      { to: '/intelligence', label: 'Platform Intel' },
+      { to: '/intel',        label: 'Findings Intel' },
+      { to: '/recon',        label: 'Reconnaissance' },
       { to: '/attack-graph', label: 'Attack Surface' },
     ],
   },

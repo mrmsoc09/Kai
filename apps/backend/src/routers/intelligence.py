@@ -308,3 +308,144 @@ async def get_intelligence_status():
     except Exception as e:
         logger.error(f"Error getting intelligence status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ---------------------------------------------------------------------------
+# Platform Intelligence — Wazuh / MISP / Cortex / TheHive / Shuffle
+# ---------------------------------------------------------------------------
+
+@router.get("/platforms/health")
+async def get_platform_health():
+    """
+    Health check for all five intelligence platforms.
+    Returns reachability status for each platform.
+    """
+    import asyncio
+    results: Dict[str, Any] = {}
+
+    async def _check(name: str, fn):
+        try:
+            healthy = await asyncio.get_event_loop().run_in_executor(None, fn)
+            results[name] = {"healthy": bool(healthy), "error": None}
+        except Exception as exc:
+            results[name] = {"healthy": False, "error": str(exc)}
+
+    try:
+        from ..core.wazuh_client import WazuhClient
+        from ..core.misp_client import MISPClient
+        from ..core.cortex_client import CortexClient
+        from ..core.hil_thehive_client import TheHiveClient
+        from ..core.shuffle_client import ShuffleClient
+
+        await asyncio.gather(
+            _check("wazuh",   WazuhClient().health_check),
+            _check("misp",    MISPClient().health_check),
+            _check("cortex",  CortexClient().health_check),
+            _check("thehive", TheHiveClient().health_check),
+            _check("shuffle", ShuffleClient().health_check),
+        )
+    except Exception as exc:
+        logger.error("Platform health check error: %s", exc)
+
+    healthy_count = sum(1 for v in results.values() if v.get("healthy"))
+    return {
+        "platforms": results,
+        "healthy_count": healthy_count,
+        "total": len(results),
+        "all_healthy": healthy_count == len(results),
+    }
+
+
+@router.get("/platforms/wazuh/alerts")
+async def get_wazuh_alerts(hours: int = Query(1, ge=1, le=24)):
+    """Recent Wazuh host alerts from the last N hours."""
+    import asyncio
+    try:
+        from ..core.wazuh_client import WazuhClient
+        client = WazuhClient()
+        loop = asyncio.get_event_loop()
+        alerts = await loop.run_in_executor(
+            None, lambda: client.get_recent_alerts(hours=hours, level_min=5)
+        )
+        anomaly = await loop.run_in_executor(None, client.check_host_anomalies)
+        return {"alerts": alerts[:50], "alert_count": len(alerts), "anomaly_summary": anomaly}
+    except Exception as exc:
+        logger.error("Wazuh alerts error: %s", exc)
+        return {"alerts": [], "alert_count": 0, "anomaly_summary": {}, "error": str(exc)}
+
+
+@router.post("/platforms/misp/enrich")
+async def misp_enrich_ioc(body: Dict[str, Any]):
+    """
+    Enrich an IOC against MISP.
+    Body: {"ioc_type": "ip|domain|url|hash", "value": "..."}
+    """
+    import asyncio
+    ioc_type = body.get("ioc_type", "domain")
+    value = body.get("value", "")
+    if not value:
+        raise HTTPException(status_code=400, detail="value is required")
+    try:
+        from ..core.misp_client import MISPClient
+        client = MISPClient()
+        result = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: client.enrich_ioc(ioc_type=ioc_type, ioc_value=value)
+        )
+        return result
+    except Exception as exc:
+        logger.error("MISP enrich error: %s", exc)
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
+@router.get("/platforms/misp/events")
+async def get_misp_recent_events(limit: int = Query(10, ge=1, le=50)):
+    """Fetch recent MISP threat events."""
+    import asyncio
+    try:
+        from ..core.misp_client import MISPClient
+        client = MISPClient()
+        events = await asyncio.get_event_loop().run_in_executor(
+            None, lambda: client.search_events(limit=limit)
+        )
+        return {"events": events, "count": len(events)}
+    except Exception as exc:
+        logger.error("MISP events error: %s", exc)
+        return {"events": [], "count": 0, "error": str(exc)}
+
+
+@router.get("/platforms/cortex/analyzers")
+async def get_cortex_analyzers():
+    """List available Cortex analyzers."""
+    import asyncio
+    try:
+        from ..core.cortex_client import CortexClient
+        client = CortexClient()
+        analyzers = await asyncio.get_event_loop().run_in_executor(
+            None, client.list_analyzers
+        )
+        return {"analyzers": analyzers, "count": len(analyzers)}
+    except Exception as exc:
+        logger.error("Cortex analyzers error: %s", exc)
+        return {"analyzers": [], "count": 0, "error": str(exc)}
+
+
+@router.get("/platforms/thehive/cases")
+async def get_thehive_cases(limit: int = Query(20, ge=1, le=100)):
+    """Fetch recent TheHive cases."""
+    import asyncio
+    try:
+        from ..core.hil_thehive_client import TheHiveClient
+        client = TheHiveClient()
+
+        def _fetch():
+            url = f"{client.base_url}/api/v1/case"
+            resp = client.session.get(url, params={"max": limit}, timeout=15)
+            if resp.status_code < 400:
+                return resp.json()
+            return []
+
+        cases = await asyncio.get_event_loop().run_in_executor(None, _fetch)
+        return {"cases": cases if isinstance(cases, list) else [], "count": len(cases) if isinstance(cases, list) else 0}
+    except Exception as exc:
+        logger.error("TheHive cases error: %s", exc)
+        return {"cases": [], "count": 0, "error": str(exc)}
