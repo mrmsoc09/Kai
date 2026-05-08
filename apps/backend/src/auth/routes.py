@@ -14,6 +14,7 @@ from apps.backend.src.auth.schemas import (
     UserRead, UserCreate, Token, TokenData,
     TenantRead, TenantCreate,
     APITokenCreate, APITokenRead, APITokenResponse,
+    DevCertLoginRequest, DevCertTokenResponse,
     InitialPasswordSetupRequest,
 )
 from apps.backend.src.auth.utils import (
@@ -21,6 +22,7 @@ from apps.backend.src.auth.utils import (
     generate_api_token, hash_api_token,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from apps.backend.src.core.auth import issue_dev_cert_access_token
 from apps.backend.src.auth.dependencies import (
     get_current_active_user, get_current_tenant,
     CurrentUser,
@@ -181,6 +183,41 @@ async def login_for_access_token(
         tenant_id=user.tenant_id,
         role=user.role,
         password_setup_required=user.must_change_password,
+    )
+
+
+@router.post("/token/dev-cert", response_model=DevCertTokenResponse)
+async def login_with_dev_cert(
+    payload: DevCertLoginRequest,
+    response: Response,
+):
+    """
+    Dev-only login using a certificate signed by the local development CA.
+    This route is intentionally non-production and requires K1_DEV_CERT_AUTH_ENABLED=true.
+    """
+    try:
+        access_token = issue_dev_cert_access_token(payload.client_certificate_pem)
+    except HTTPException as exc:
+        raise exc
+    except Exception as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    secure_cookie = os.getenv("ENVIRONMENT", "development").lower() == "production"
+    response.set_cookie(
+        key=AUTH_COOKIE_NAME,
+        value=access_token,
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        max_age=int(access_token_expires.total_seconds()),
+        path="/",
+    )
+    return DevCertTokenResponse(
+        access_token=access_token,
+        token_type="bearer",
+        expires_at=datetime.now(timezone.utc) + access_token_expires,
+        password_setup_required=False,
     )
 
 

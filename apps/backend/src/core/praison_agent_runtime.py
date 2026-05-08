@@ -67,6 +67,8 @@ from apps.backend.src.core.praison_artifacts import (
     get_artifact_store,
 )
 from apps.backend.src.core.praison_execution_events import (
+    EventType,
+    MissionEvent,
     emit,
     artifact_created_event,
     policy_decision_event,
@@ -770,6 +772,49 @@ class PraisonAgentRuntime:
             "ReconSpecialist": ["gau", "waybackurls", "katana", "nmap", "nuclei", "ffuf", "feroxbuster"],
         }
         preferred = preferred_sequences.get(identity.agent_id, list(identity.allowed_tools))
+
+        # Competitive bidding (K1_TOOL_BIDDING_ENABLED=true); fallback preserved.
+        _bidding_enabled = (
+            os.getenv("K1_TOOL_BIDDING_ENABLED", "false").strip().lower() == "true"
+        )
+        if _bidding_enabled:
+            try:
+                from apps.backend.src.core.tool_bidding import (
+                    BiddingOrchestrator,
+                    build_mission_context,
+                )
+                _orchestrator = BiddingOrchestrator()
+                _ctx = build_mission_context(state, agent_id=identity.agent_id)
+                _candidate_tools = list(identity.allowed_tools) or preferred
+                _bid_selected = _orchestrator.select_tools(
+                    _candidate_tools,
+                    _ctx,
+                    max_tools=max_tools,
+                )
+                emit(tool_bid_decision_event(
+                    mission_id=mission_id,
+                    workflow_id=workflow_id,
+                    program_id=program_id,
+                    agent_id=identity.agent_id,
+                    selected_tools=_bid_selected,
+                    available_tool_count=len(_candidate_tools),
+                    phase=_ctx.phase,
+                    bid_summary={"fallback_used": not _bid_selected},
+                ))
+                if _bid_selected:
+                    preferred = _bid_selected
+                else:
+                    logger.info(
+                        "bidding: all tools abstained for agent=%s; using preferred_sequences fallback",
+                        identity.agent_id,
+                    )
+            except Exception as _bid_exc:
+                logger.warning(
+                    "tool bidding failed for agent=%s: %s; falling back to preferred_sequences",
+                    identity.agent_id,
+                    _bid_exc,
+                )
+
         target_domain, target_url = self._infer_target(state, program_id)
         if not target_domain:
             return [], []

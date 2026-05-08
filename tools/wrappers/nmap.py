@@ -1,10 +1,21 @@
 """Nmap wrapper for KaisonOne - network scanning."""
+import os
 import subprocess
+import sys
 import json
 import xml.etree.ElementTree as ET
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
 import logging
+
+# Allow importing the shared validator framework from the backend source tree.
+_backend_src = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "apps", "backend", "src")
+)
+if _backend_src not in sys.path:
+    sys.path.insert(0, _backend_src)
+
+from core.tool_adapters.validators import validate_tool_options  # noqa: E402
 
 logger = logging.getLogger(__name__)
 
@@ -29,19 +40,32 @@ class NmapTool:
             return False
 
     @classmethod
-    async def scan(cls, target: str, ports: Optional[str] = None, 
+    async def scan(cls, target: str, ports: Optional[str] = None,
                    script: Optional[str] = None, timing: int = 3) -> NmapResult:
         if not cls.check_install():
             return NmapResult(
-                success=False, 
+                success=False,
                 errors=["nmap not installed. Install with: apt-get install nmap"]
             )
 
+        # Validate all caller-supplied arguments before constructing the command.
+        options: Dict = {}
+        if ports is not None:
+            options["ports"] = ports
+        if script is not None:
+            options["script"] = script
+        options["timing"] = timing
+        try:
+            options = validate_tool_options("nmap", options)
+        except ValueError as exc:
+            return NmapResult(success=False, errors=[f"Invalid argument: {exc}"])
+
+        timing = options["timing"]
         cmd = ['nmap', '-oX', '-', f'-T{timing}']
         if ports:
-            cmd.extend(['-p', ports])
+            cmd.extend(['-p', options["ports"]])
         if script:
-            cmd.extend(['--script', script])
+            cmd.extend(['--script', options["script"]])
         cmd.append(target)
 
         try:
@@ -57,7 +81,7 @@ class NmapTool:
             hosts, open_ports, services = [], {}, []
 
             for host in root.findall('host'):
-                addr = host.findaddress/[@addrtype="ipv4"]')
+                addr = host.find('address[@addrtype="ipv4"]')
                 addr = addr.get('addr') if addr is not None else 'unknown'
                 hosts.append({'address': addr, 'status': host.find('status').get('state') if host.find('status') is not None else 'unknown'})
 

@@ -14,6 +14,7 @@ from apps.backend.src.config.cors_config import get_cors_config, print_cors_conf
 from apps.backend.src.middleware.correlation import CorrelationIdMiddleware
 from apps.backend.src.middleware.rate_limit import RateLimitMiddleware
 from apps.backend.src.middleware.csrf import CSRFProtectionMiddleware
+from apps.backend.src.middleware.cookie_security import CookieSecurityMiddleware
 from apps.backend.src.middleware.security_headers import SecurityHeadersMiddleware
 from apps.backend.src.core.exception_handlers import register_exception_handlers
 from apps.backend.src.core.services import Services
@@ -275,16 +276,19 @@ register_exception_handlers(app)
 # 1. Security Headers (should be last, applied to all responses)
 app.add_middleware(SecurityHeadersMiddleware)
 
-# 2. Correlation ID — attach/echo X-Request-ID on every response
+# 2. Cookie hardening on all auth/session cookie writes.
+app.add_middleware(CookieSecurityMiddleware)
+
+# 3. Correlation ID — attach/echo X-Request-ID on every response
 app.add_middleware(CorrelationIdMiddleware)
 
-# 3. CSRF Protection (before rate limiting)
+# 4. CSRF Protection (before rate limiting)
 app.add_middleware(CSRFProtectionMiddleware)
 
-# 4. Rate Limiting (before CORS)
+# 5. Rate Limiting (before CORS)
 app.add_middleware(RateLimitMiddleware)
 
-# 5. CORS (outermost, handles preflight requests)
+# 6. CORS (outermost, handles preflight requests)
 cors_config = get_cors_config()
 app.add_middleware(CORSMiddleware, **cors_config)
 
@@ -976,5 +980,14 @@ async def shutdown_systems():
 
     except Exception as e:
         print(f"✗ A2A shutdown error: {str(e)}")
+
+    try:
+        from core.secrets_cache import reset_secrets_cache
+
+        reset_secrets_cache()
+        print("✓ Secrets cache wiped")
+
+    except Exception as e:
+        print(f"✗ Secrets cache shutdown error: {str(e)}")
 
     print("K1 shutdown complete\n")

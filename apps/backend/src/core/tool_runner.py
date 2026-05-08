@@ -12,6 +12,7 @@ from apps.backend.src.core.kai_security_guardrails import (
     ToolRiskTier,
 )
 from apps.backend.src.core.toolpacks import get_toolpack_manager, ToolpackValidationError
+from apps.backend.src.core.pre_flight_checks import resolve_effective_tier
 from apps.backend.src.core.authorization_gate import (
     enforce_authorization_gates,
     AuthorizationGateError,
@@ -81,6 +82,7 @@ class ToolRunner:
         tool = registry.get(tool_id)
         if not tool:
             raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
+        effective_tier = resolve_effective_tier(tool_id, tool.autonomy_tier)
         if not manager.is_adapter_enabled(tool_id):
             raise HTTPException(status_code=403, detail=f"Tool disabled by toolpack policy: {tool_id}")
         try:
@@ -109,8 +111,8 @@ class ToolRunner:
         # ToolAutonomyTier values are integers 0-3; take max of both signals.
         _risk_band = _RISK_TIER_TO_BAND.get(risk_tier.value, 0)
         _autonomy_band = (
-            tool.autonomy_tier.value
-            if hasattr(tool.autonomy_tier, "value") and isinstance(tool.autonomy_tier.value, int)
+            effective_tier.value
+            if hasattr(effective_tier, "value") and isinstance(effective_tier.value, int)
             else 0
         )
         effective_band = max(_risk_band, _autonomy_band)
@@ -140,7 +142,15 @@ class ToolRunner:
         params = dict(params)
         params.update(hook_ctx.get("params_patch") or {})
 
-        needs_approval = risk_tier == ToolRiskTier.TIER_2_INTRUSIVE or tool.autonomy_tier in {
+        if effective_tier == ToolAutonomyTier.TIER_3_HARD_STOP:
+            has_admin_override = bool(params.get("tier3_admin_override")) and bool(params.get("override_reason"))
+            if not has_admin_override:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Tier 3 hard stop: explicit admin override is required before requesting approval",
+                )
+
+        needs_approval = risk_tier == ToolRiskTier.TIER_2_INTRUSIVE or effective_tier in {
             ToolAutonomyTier.TIER_2_APPROVE,
             ToolAutonomyTier.TIER_3_HARD_STOP,
         }

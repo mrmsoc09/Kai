@@ -53,6 +53,17 @@ class Token(BaseModel):
     password_setup_required: bool = False
 
 
+class DevCertLoginRequest(BaseModel):
+    client_certificate_pem: str
+
+
+class DevCertTokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_at: datetime
+    password_setup_required: bool = False
+
+
 class InitialPasswordSetupRequest(BaseModel):
     new_password: str = Field(..., min_length=8, max_length=255)
 

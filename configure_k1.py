@@ -92,8 +92,10 @@ REDIS_URL=redis://redis:6379/0
 
 # --- Security & Secrets ---
 JWT_SECRET_KEY={jwt_secret}
-K1_DEV_TOKEN={existing_config.get('K1_DEV_TOKEN', 'k1-dev-token-docker')}
 K1_SECRET_BACKEND=vault
+K1_ENABLE_BOOTSTRAP_AUTH_BUILD=true
+K1_DEV_CERT_AUTH_ENABLED=true
+K1_DEV_AUTH_CA_PATH=dev-certs/ca.crt.pem
 
 # --- Proxy / Whonix Configuration ---
 HTTP_PROXY={http_proxy}

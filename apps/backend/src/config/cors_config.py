@@ -50,6 +50,8 @@ def get_cors_config() -> Dict[str, Any]:
             "Content-Type",
             "X-API-Key",
             "X-CSRF-Token",
+            "X-CSRF-Challenge",
+            "X-CSRF-Nonce",
             "X-Request-ID",
         ],
         "expose_headers": [

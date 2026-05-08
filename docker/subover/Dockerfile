@@ -1,0 +1,11 @@
+FROM golang:1.22-alpine AS builder
+RUN apk add --no-cache git ca-certificates
+ENV CGO_ENABLED=0 GOOS=linux
+RUN go install -v github.com/Ice3man543/SubOver@latest
+FROM alpine:latest
+RUN apk add --no-cache ca-certificates
+COPY --from=builder /root/go/bin/SubOver /usr/local/bin/SubOver
+RUN addgroup -S kaigroup && adduser -S -G kaigroup -H -D kaiuser
+USER kaiuser
+ENTRYPOINT ["SubOver"]
+CMD ["-h"]

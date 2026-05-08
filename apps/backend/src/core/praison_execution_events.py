@@ -64,6 +64,8 @@ class EventType(str, Enum):
     KNOWLEDGE_LESSON_CREATED  = "knowledge_lesson_created"
     KNOWLEDGE_LESSON_REJECTED = "knowledge_lesson_rejected"
     PROFILE_SCORE_UPDATED = "profile_score_updated"
+    # Tool bidding system (ISSUE #7)
+    TOOL_BID_DECISION    = "tool_bid_decision"
 
 
 # -- MissionEvent dataclass ----------------------------------------------------
@@ -262,6 +264,27 @@ def policy_decision_event(
         mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,
         node_id=node_id, agent_id=agent_id,
         detail={"decision": decision, "reason": reason},
+    )
+
+
+def tool_bid_decision_event(
+    mission_id: str, workflow_id: str, program_id: str,
+    agent_id: str,
+    selected_tools: list[str],
+    available_tool_count: int,
+    phase: str = "",
+    bid_summary: dict[str, Any] | None = None,
+) -> MissionEvent:
+    return _make_event(
+        EventType.TOOL_BID_DECISION,
+        mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,
+        agent_id=agent_id, phase=phase,
+        detail={
+            "selected_tools": selected_tools,
+            "selected_count": len(selected_tools),
+            "available_tool_count": available_tool_count,
+            "bid_summary": bid_summary or {},
+        },
     )
 
 

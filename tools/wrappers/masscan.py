@@ -1,6 +1,18 @@
-import subprocess, json
+import os
+import subprocess
+import sys
+import json
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
+
+# Allow importing the shared validator framework from the backend source tree.
+_backend_src = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "apps", "backend", "src")
+)
+if _backend_src not in sys.path:
+    sys.path.insert(0, _backend_src)
+
+from core.tool_adapters.validators import validate_tool_options  # noqa: E402
 
 @dataclass
 class MasscanResult:
@@ -20,11 +32,26 @@ class MasscanTool:
             return False
 
     @classmethod
-    async def scan(cls, target: str, ports: str = "0-65535", rate: int = 10000):
+    async def scan(cls, target: str, ports: str = "1-65535", rate: int = 10000,
+                   excludes: Optional[List[str]] = None):
         if not cls.check_install():
             return MasscanResult(success=False, errors=["masscan not installed"])
 
+        # Validate all caller-supplied arguments before constructing the command.
+        options: Dict = {"ports": ports, "rate": rate}
+        if excludes is not None:
+            options["excludes"] = excludes
+        try:
+            options = validate_tool_options("masscan", options)
+        except ValueError as exc:
+            return MasscanResult(success=False, errors=[f"Invalid argument: {exc}"])
+
+        ports = options["ports"]
+        rate = options["rate"]
+
         cmd = ['masscan', '-p', ports, '--rate', str(rate), '--wait', '0', target, '-oJ', '-']
+        for cidr in options.get("excludes", []):
+            cmd.extend(['--exclude', cidr])
         try:
             import time
             start = time.time()

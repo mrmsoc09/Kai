@@ -1,0 +1,456 @@
+# Tool Bidding Rules for KAISON AI (ISSUE #7)
+#
+# Each tool entry configures how YamlConfiguredToolAgent computes its bid.
+#
+# Fields:
+#   phase_affinity          List of K1GraphState phase strings where this tool
+#                           is most useful. Empty list = always eligible.
+#                           Mismatch incurs a 0.4 confidence penalty.
+#
+#   dependencies            List of FindingDataset field names that must be
+#                           non-empty. Tool abstains (confidence=0) if unmet.
+#
+#   estimated_cost_cents    Estimated monetary cost of one run (0 = free tool).
+#
+#   execution_time_estimate_ms  Rough wall-clock time for planning purposes.
+#
+#   output_schema           Map of output field name → type description.
+#
+#   priority_boost_if_goals List of goal strings that trigger a priority boost.
+#   priority_boost_value    Boost multiplier (default: 1.5).
+#
+# Phase names (from K1GraphState.phase):
+#   recon, enumeration, fingerprinting, discovery, osint,
+#   dark_web, secrets, vuln_scanning, api_testing, aggregation
+#
+# Bid score formula:  confidence × (100 / (1 + cost_cents)) × priority_boost
+
+# ---------------------------------------------------------------------------
+# Passive recon / subdomain discovery
+# ---------------------------------------------------------------------------
+
+subfinder:
+  phase_affinity: [recon, enumeration]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 30000
+  output_schema:
+    subdomains: "list[str]"
+  priority_boost_if_goals: [subdomain_enumeration, asset_discovery]
+  priority_boost_value: 1.5
+
+amass:
+  phase_affinity: [recon, enumeration]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 120000
+  output_schema:
+    subdomains: "list[str]"
+    asn_info: "list[dict]"
+  priority_boost_if_goals: [subdomain_enumeration, asset_discovery]
+  priority_boost_value: 1.4
+
+dnsx:
+  phase_affinity: [recon, enumeration]
+  dependencies: [subdomains]
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 20000
+  output_schema:
+    resolved_subdomains: "list[str]"
+    dns_records: "list[dict]"
+  priority_boost_if_goals: [dns_resolution, subdomain_enumeration]
+  priority_boost_value: 1.3
+
+assetfinder:
+  phase_affinity: [recon, enumeration]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 15000
+  output_schema:
+    subdomains: "list[str]"
+  priority_boost_if_goals: [subdomain_enumeration]
+  priority_boost_value: 1.3
+
+# ---------------------------------------------------------------------------
+# HTTP probing / fingerprinting
+# ---------------------------------------------------------------------------
+
+httpx:
+  phase_affinity: [enumeration, fingerprinting, discovery]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 45000
+  output_schema:
+    live_hosts: "list[str]"
+    status_codes: "dict[str, int]"
+    technologies: "list[str]"
+  priority_boost_if_goals: [http_probing, live_host_discovery, fingerprinting]
+  priority_boost_value: 1.4
+
+whatweb:
+  phase_affinity: [fingerprinting, discovery]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 30000
+  output_schema:
+    technologies: "list[str]"
+    cms: "str"
+    plugins: "list[str]"
+  priority_boost_if_goals: [fingerprinting, technology_detection]
+  priority_boost_value: 1.3
+
+tech_detect:
+  phase_affinity: [fingerprinting, discovery]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 20000
+  output_schema:
+    technologies: "list[str]"
+  priority_boost_if_goals: [fingerprinting, technology_detection]
+  priority_boost_value: 1.2
+
+wappalyzer:
+  phase_affinity: [fingerprinting]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 15000
+  output_schema:
+    technologies: "list[str]"
+    categories: "list[str]"
+  priority_boost_if_goals: [fingerprinting, technology_detection]
+  priority_boost_value: 1.2
+
+tlsx:
+  phase_affinity: [fingerprinting, enumeration]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 20000
+  output_schema:
+    tls_data: "list[dict]"
+    certificate_sans: "list[str]"
+  priority_boost_if_goals: [tls_analysis, certificate_scanning]
+  priority_boost_value: 1.2
+
+# ---------------------------------------------------------------------------
+# Port scanning
+# ---------------------------------------------------------------------------
+
+naabu:
+  phase_affinity: [recon, enumeration, fingerprinting]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 60000
+  output_schema:
+    open_ports: "list[int]"
+    host_port_pairs: "list[dict]"
+  priority_boost_if_goals: [port_scanning, service_discovery]
+  priority_boost_value: 1.4
+
+nmap:
+  phase_affinity: [enumeration, fingerprinting, discovery, vuln_scanning]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 90000
+  output_schema:
+    open_ports: "list[int]"
+    services: "list[dict]"
+    os_guesses: "list[str]"
+  priority_boost_if_goals: [port_scanning, service_enumeration, os_detection]
+  priority_boost_value: 1.4
+
+masscan:
+  phase_affinity: [recon, enumeration]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 30000
+  output_schema:
+    open_ports: "list[int]"
+  priority_boost_if_goals: [fast_port_scan, port_scanning]
+  priority_boost_value: 1.3
+
+# ---------------------------------------------------------------------------
+# URL / endpoint discovery
+# ---------------------------------------------------------------------------
+
+gau:
+  phase_affinity: [recon, discovery, osint]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 45000
+  output_schema:
+    urls_found: "list[str]"
+    parameterized_urls: "list[str]"
+  priority_boost_if_goals: [url_discovery, endpoint_enumeration]
+  priority_boost_value: 1.4
+
+waybackurls:
+  phase_affinity: [recon, osint, discovery]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 30000
+  output_schema:
+    urls_found: "list[str]"
+    parameterized_urls: "list[str]"
+  priority_boost_if_goals: [url_discovery, osint]
+  priority_boost_value: 1.3
+
+katana:
+  phase_affinity: [discovery, enumeration]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 60000
+  output_schema:
+    urls_found: "list[str]"
+    parameterized_urls: "list[str]"
+    forms: "list[dict]"
+  priority_boost_if_goals: [web_crawling, endpoint_enumeration, url_discovery]
+  priority_boost_value: 1.4
+
+# ---------------------------------------------------------------------------
+# Directory / path brute force
+# ---------------------------------------------------------------------------
+
+ffuf:
+  phase_affinity: [discovery, vuln_scanning]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 120000
+  output_schema:
+    discovered_paths: "list[str]"
+    status_codes: "dict[str, int]"
+  priority_boost_if_goals: [directory_bruteforce, path_discovery]
+  priority_boost_value: 1.4
+
+feroxbuster:
+  phase_affinity: [discovery, vuln_scanning]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 120000
+  output_schema:
+    discovered_paths: "list[str]"
+  priority_boost_if_goals: [directory_bruteforce, path_discovery]
+  priority_boost_value: 1.3
+
+gobuster:
+  phase_affinity: [discovery]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 90000
+  output_schema:
+    discovered_paths: "list[str]"
+    dns_subdomains: "list[str]"
+  priority_boost_if_goals: [directory_bruteforce, subdomain_enumeration]
+  priority_boost_value: 1.2
+
+dirsearch:
+  phase_affinity: [discovery]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 90000
+  output_schema:
+    discovered_paths: "list[str]"
+  priority_boost_if_goals: [directory_bruteforce]
+  priority_boost_value: 1.1
+
+# ---------------------------------------------------------------------------
+# Vulnerability scanning
+# ---------------------------------------------------------------------------
+
+nuclei:
+  phase_affinity: [vuln_scanning, discovery, api_testing]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 180000
+  output_schema:
+    vulnerabilities: "list[dict]"
+    severity_breakdown: "dict[str, int]"
+  priority_boost_if_goals: [vulnerability_scanning, cve_detection, dast]
+  priority_boost_value: 1.6
+
+wapiti:
+  phase_affinity: [vuln_scanning, api_testing]
+  dependencies: [urls_found]
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 300000
+  output_schema:
+    vulnerabilities: "list[dict]"
+  priority_boost_if_goals: [dast, web_vulnerability_scanning]
+  priority_boost_value: 1.4
+
+nikto:
+  phase_affinity: [vuln_scanning]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 120000
+  output_schema:
+    vulnerabilities: "list[dict]"
+    server_info: "dict"
+  priority_boost_if_goals: [web_server_scanning, misconfiguration_detection]
+  priority_boost_value: 1.3
+
+# ---------------------------------------------------------------------------
+# SQL injection
+# ---------------------------------------------------------------------------
+
+sqlmap:
+  phase_affinity: [vuln_scanning, api_testing]
+  dependencies: [parameterized_urls]
+  estimated_cost_cents: 5
+  execution_time_estimate_ms: 300000
+  output_schema:
+    injection_points: "list[dict]"
+    databases: "list[str]"
+  priority_boost_if_goals: [sql_injection, database_enumeration]
+  priority_boost_value: 1.6
+
+# ---------------------------------------------------------------------------
+# OSINT tools
+# ---------------------------------------------------------------------------
+
+shodan:
+  phase_affinity: [osint, recon]
+  dependencies: []
+  estimated_cost_cents: 10
+  execution_time_estimate_ms: 15000
+  output_schema:
+    open_ports: "list[int]"
+    banners: "list[dict]"
+    vulnerabilities: "list[dict]"
+  priority_boost_if_goals: [osint, passive_recon, internet_exposure]
+  priority_boost_value: 1.5
+
+censys:
+  phase_affinity: [osint, recon]
+  dependencies: []
+  estimated_cost_cents: 10
+  execution_time_estimate_ms: 15000
+  output_schema:
+    hosts: "list[dict]"
+    certificates: "list[dict]"
+  priority_boost_if_goals: [osint, certificate_transparency, asset_discovery]
+  priority_boost_value: 1.4
+
+theHarvester:
+  phase_affinity: [osint, recon]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 60000
+  output_schema:
+    emails: "list[str]"
+    subdomains: "list[str]"
+    ips: "list[str]"
+  priority_boost_if_goals: [osint, email_harvesting, subdomain_enumeration]
+  priority_boost_value: 1.3
+
+maltego:
+  phase_affinity: [osint]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 120000
+  output_schema:
+    entities: "list[dict]"
+    relationships: "list[dict]"
+  priority_boost_if_goals: [osint, relationship_mapping]
+  priority_boost_value: 1.2
+
+recon_ng:
+  phase_affinity: [osint, recon]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 90000
+  output_schema:
+    contacts: "list[dict]"
+    subdomains: "list[str]"
+  priority_boost_if_goals: [osint]
+  priority_boost_value: 1.2
+
+# ---------------------------------------------------------------------------
+# Secrets scanning
+# ---------------------------------------------------------------------------
+
+trufflehog:
+  phase_affinity: [secrets, osint]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 60000
+  output_schema:
+    secrets_found: "list[str]"
+    secret_types: "list[str]"
+  priority_boost_if_goals: [secrets_detection, credential_exposure]
+  priority_boost_value: 1.6
+
+gitleaks:
+  phase_affinity: [secrets, osint]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 45000
+  output_schema:
+    secrets_found: "list[str]"
+    commits: "list[str]"
+  priority_boost_if_goals: [secrets_detection, git_secrets]
+  priority_boost_value: 1.5
+
+secretfinder:
+  phase_affinity: [secrets, discovery]
+  dependencies: [urls_found]
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 30000
+  output_schema:
+    secrets_found: "list[str]"
+  priority_boost_if_goals: [secrets_detection, js_analysis]
+  priority_boost_value: 1.4
+
+# ---------------------------------------------------------------------------
+# API security testing
+# ---------------------------------------------------------------------------
+
+arjun:
+  phase_affinity: [api_testing, discovery]
+  dependencies: [urls_found]
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 60000
+  output_schema:
+    parameters: "list[str]"
+    parameterized_urls: "list[str]"
+  priority_boost_if_goals: [api_parameter_mining, endpoint_enumeration]
+  priority_boost_value: 1.5
+
+kiterunner:
+  phase_affinity: [api_testing, discovery]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 90000
+  output_schema:
+    api_endpoints: "list[str]"
+    status_codes: "dict[str, int]"
+  priority_boost_if_goals: [api_endpoint_discovery]
+  priority_boost_value: 1.4
+
+# ---------------------------------------------------------------------------
+# Dark web / threat intel
+# ---------------------------------------------------------------------------
+
+tor_probe:
+  phase_affinity: [dark_web, osint]
+  dependencies: []
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 60000
+  output_schema:
+    onion_services: "list[str]"
+    mentions: "list[dict]"
+  priority_boost_if_goals: [dark_web_monitoring, threat_intel]
+  priority_boost_value: 1.3
+
+# ---------------------------------------------------------------------------
+# Aggregation / reporting
+# ---------------------------------------------------------------------------
+
+nuclei_aggregator:
+  phase_affinity: [aggregation]
+  dependencies: [vulnerabilities]
+  estimated_cost_cents: 0
+  execution_time_estimate_ms: 10000
+  output_schema:
+    aggregated_report: "dict"
+  priority_boost_if_goals: [reporting, aggregation]
+  priority_boost_value: 1.2

@@ -24,7 +24,7 @@ This manual provides comprehensive guidance for administrators on setting up, co
     7.4. [Configuration](#configuration)
     7.5. [Start K1 Services](#start-k1-services)
     7.6. [Create First Authorization](#create-first-authorization)
-    7.7. [Final Verification](#final-verification)
+    7.7. [Final Verification](#final_verification)
     7.8. [Completion Check](#completion-check)
     7.9. [Quick Reference Commands](#quick-reference-commands)
     7.10. [Troubleshooting](#troubleshooting)
@@ -100,6 +100,26 @@ This manual provides comprehensive guidance for administrators on setting up, co
 14. [Frequently Asked Questions](#frequently-asked-questions)
 15. [License](#license)
 16. [What's Next (Roadmap)](#whats-next-roadmap)
+17. [Kaison Platform Architecture](#kaison-platform-architecture)
+    17.1. [Platform Overview (Architecture)](#platform-overview-architecture)
+    17.2. [Layered Architecture Diagram](#layered-architecture-diagram)
+    17.3. [Tool Policy Bands (Admin)](#tool-policy-bands-admin)
+    17.4. [Agent Class Hierarchy](#agent-class-hierarchy)
+    17.5. [Simulation Modes](#simulation-modes)
+    17.6. [Infrastructure Services](#infrastructure-services)
+    17.7. [Execution Model](#execution-model)
+    17.8. [Current Verified State](#current-verified-state)
+18. [Operator Guide: UI + API Flows](#operator-guide-ui--api-flows)
+    18.1. [Login and Access Model](#login-and-access-model)
+    18.2. [Revenue Dashboard Workflow](#revenue-dashboard-workflow)
+    18.3. [Mission Control Workflow](#mission-control-workflow)
+    18.4. [Governance Approvals](#governance-approvals)
+    18.5. [Artifact Workspace](#artifact-workspace)
+    18.6. [Simulation Control](#simulation-control)
+    18.7. [Intelligence Center](#intelligence-center)
+    18.8. [Opportunities Surface](#opportunities-surface)
+    18.9. [Cross-page Navigation](#cross-page-navigation)
+    18.10. [Reports Workspace (Monetization Surface)](#reports-workspace-monetization-surface)
 
 ---
 
@@ -366,7 +386,10 @@ nano ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
 
 # Verify SSH works
-ssh-keygen -l -f ~/.ssh/authorized_keys
+ssh -i ~/.ssh/k1_vm_key -p 22 k1admin@[VM_IP]
+
+# Should connect without password prompt (just passphrase for key)
+# Type: exit
 ```
 
 **Test from your host:**
@@ -1998,9 +2021,6 @@ This report details the successful implementation and validation of KaisonOne's 
 
 ### 13.1. Key Files
 - `PHASE_7_IMPLEMENTATION_STATUS.md` - Detailed implementation status
-- `configs/branding.yaml` - Brand configuration
-- `apps/backend/scripts/init_k1_system.py` - System initialization
-- `apps/frontend/src/theme/branding.ts` - Frontend branding
 
 ### 13.2. API Documentation
 - Tools API: `GET /api/v1/tools`
@@ -2068,3 +2088,503 @@ Kaison K1 - Unified Bug Bounty Intelligence Platform
 
 **Version**: 7.0 - AI-Active Multi-Agent System
 
+---
+
+## 17. Kaison Platform Architecture
+
+This section provides an overview of the KaisonOne platform's architecture from an administrator's perspective, focusing on operational responsibilities, governance, and infrastructure.
+
+### 17.1. Platform Overview (Architecture)
+
+Kai is a multi-layer AI orchestration platform that coordinates autonomous security research missions under strict governance, scope enforcement, and human-in-the-loop (HIL) approval policies. The platform is organized into six integrated layers, each with a distinct responsibility boundary:
+
+| Layer | Product | Responsibility |
+|-------|---------|----------------|
+| **Control Plane** | PraisonAI | Authority, governance, agent lifecycle, policy enforcement |
+| **Execution Runtime** | LangGraph | Mission graph compilation, state management, checkpointing |
+| **Model / Tools / Middleware** | LangChain | LLM abstraction, tool wrapping, structured output, middleware |
+| **Deep Work Runtime** | DeepAgents | Specialist deep analysis, sandboxed execution, subagent delegation |
+| **Observability** | LangSmith | Traces, spans, experiments, datasets, evaluations |
+| **Safe Execution Overlay** | Simulation | Cross-cutting execution mode control (graph_only, tool_mock, replay) |
+
+#### Design Doctrine
+
+-   **Governance-first**: Every tool invocation, agent spawn, memory write, external call, and phase handoff passes through the PraisonAI governance layer before execution.
+-   **Separation of authority and execution**: PraisonAI owns policy; LangGraph owns execution. Neither can operate alone.
+-   **Simulation as overlay, not runtime**: Simulation mode operates within the existing stack by substituting execution behaviors, not by providing a second runtime.
+-   **Observability is non-authoritative**: LangSmith receives telemetry but never controls execution. The internal EventBus and LangSmith operate as independent parallel planes.
+-   **Fail-secure by default**: Unknown tool classifications default to band_2 (approval required). Unknown memory scopes are denied. Unsigned certificates are rejected. Test-mode auth bypass requires explicit opt-in.
+
+### 17.2. Layered Architecture Diagram
+
+```mermaid
+graph TB
+    subgraph "Layer 1: PraisonAI Control Plane"
+        GOV[PraisonGovernor<br/>Sync fast-path + Async LLM review]
+        REG[PraisonAgentRegistry<br/>Agent identity source of truth]
+        AID[AgentIdentity<br/>Frozen dataclass]
+        CON[DelegationContract<br/>Immutable state machine]
+        POL[PraisonRuntimePolicy<br/>Deterministic policy arbiter]
+        ADP[Adaptive Strategy<br/>Bounded autonomy + scoring]
+        EVT[EventBus<br/>MissionEvent telemetry]
+    end
+
+    subgraph "Layer 2: LangGraph Execution Runtime"
+        STA[K1GraphState<br/>TypedDict ~35 fields]
+        MRT[MissionRuntime<br/>Mission lifecycle manager]
+        BLD[PraisonLangGraphBuilder<br/>StateGraph compiler]
+        TOP[PraisonTopology<br/>DAG structure definition]
+        NOD[Node Executors<br/>Callable builders]
+        CLU[ClusterRuntime<br/>Phase subgraph execution]
+    end
+
+    subgraph "Layer 3: LangChain Model / Tools / Middleware"
+        CMF[K1ChatModel<br/>BaseChatModel adapter]
+        CTR[K1GovernedTool<br/>Governed BaseTool wrapper]
+        MID[K1MiddlewareStack<br/>Callbacks + context injection]
+        SCH[Structured Output Schemas<br/>Pydantic v2 models]
+        RSN[K1ReasoningEngine<br/>Node-local reasoning]
+    end
+
+    subgraph "Layer 4: DeepAgents Specialist Runtime"
+        BRG[DeepAgentsBridge<br/>Identity + context mapping]
+        BAK[DeepAgentsBackends<br/>Policy + sandbox restrictions]
+        SBX[SandboxManager<br/>Isolated execution]
+        ART[AgentRuntime<br/>Namespace-aware streaming]
+    end
+
+    subgraph "Layer 5: LangSmith Observability"
+        LSB[LangSmithBridge<br/>Trace correlation + runs]
+        RED[Redaction Layer<br/>Secrets / PII stripping]
+        EXP[Evaluations<br/>Datasets + experiments]
+    end
+
+    subgraph "Layer 6: Simulation Overlay"
+        SIM[SimulationController<br/>Mode routing + safety barriers]
+        CFG[SimulationConfig<br/>Mode + fixture + event policy]
+        FIX[FixtureRegistry<br/>Deterministic test data]
+        REP[ReplayEngine<br/>Historical timeline reconstruction]
+    end
+
+    GOV -->|validates| MRT
+    REG -->|provides identities| BLD
+    AID -->|frozen personas| REG
+    CON -->|enforces delegation| BRG
+    POL -->|policy checks| GOV
+
+    MRT -->|compiles graph| BLD
+    BLD -->|topology from| TOP
+    MRT -->|executes nodes| NOD
+    NOD -->|invokes| CMF
+    NOD -->|invokes| CTR
+    NOD -->|delegates to| BRG
+
+    CMF -->|routes through| CMF
+    CTR -->|scope checks| CTR
+    MID -->|wraps| CMF
+
+    BRG -->|creates| CON
+    BRG -->|executes| SBX
+
+    EVT -->|parallel export| LSB
+    LSB -->|redacts via| RED
+    LSB -->|feeds| EXP
+
+    SIM -->|overlays| NOD
+    SIM -->|uses| FIX
+    SIM -->|replays from| REP
+    SIM -->|tags traces| LSB
+```
+
+### 17.3. Tool Policy Bands (Admin)
+
+Tool classification drives governance enforcement at every layer:
+
+| Band | Classification | Governance | Autonomy |
+|------|---------------|------------|----------|
+| **Band 0** | `passive` / `safe` | Always autonomous | Passive collection, benign analysis. No scope risk. |
+| **Band 1** | `active` | Autonomous within scope | Low-risk active checks. Scope validation enforced. |
+| **Band 2** | `intrusive` | Approval required | State-modifying, alert-tripping actions. LLM risk assessment via `PraisonGovernor.review_band2_action()`. HIL approval gate before execution. Campaign context (workflow_id + program_id) required. |
+| **Band 3** | `manual_only` | Never autonomous | Exploit-like, legally ambiguous. Hard-blocked at PraisonGovernor sync path. Hard-blocked at LangChain tool registry. Requires direct operator invocation with explicit override. |
+
+Enforcement points (in execution order):
+
+1.  **PraisonGovernor** `validate_tool_request()` -- sync fast-path, sub-millisecond. Band 3 hard block. Band 2 context requirement.
+2.  **K1GovernedTool** `_enforce_governance()` -- LangChain layer. Band 3 unconditionally denied. Scope validation via `scope_validator()`.
+3.  **Celery Worker** `run_tool_task` -- queue routing: Band 0-1 -> `tools` queue, Band 2+ -> `intrusive` queue. Vault credential fetch. Authorization gate enforcement.
+
+Unknown tool classifications default to `band_2` (approval required), following the deny-unknown security principle.
+
+### 17.4. Agent Class Hierarchy
+
+```mermaid
+graph TD
+    G[Governor<br/>governance authority]
+    D[Director<br/>mission-level coordination]
+    C[Coordinator<br/>phase-level coordination]
+    S[Specialist<br/>deep work execution]
+
+    G -->|delegates to| D
+    G -->|delegates to| C
+    G -->|delegates to| S
+    D -->|delegates to| C
+    D -->|delegates to| S
+    C -->|delegates to| S
+
+    style G fill:#e74c3c,color:#fff
+    style D fill:#3498db,color:#fff
+    style C fill:#9b59b6,color:#fff
+    style S fill:#2ecc71,color:#fff
+```
+
+| Class | Delegation Scope | Memory Scope | Typical Roles |
+|-------|-----------------|--------------|---------------|
+| `governor` | `phase` / `global` | `mission` / `persistent` | `GovernanceDirector`, `SecurityGovernorAgent` |
+| `director` | `phase` / `global` | `workflow` / `mission` | `MissionDirector` |
+| `coordinator` | `local` / `phase` | `phase` / `workflow` | `PhaseCoordinator`, `ScanningCoordinator` |
+| `specialist` | `none` (cannot delegate) | `session` / `phase` | `SurfaceMapper`, `ReconSpecialist`, `EvidenceAnalyst`, `TriageAnalyst`, `ReportSynthesisAgent`, `HandoffLiaison` |
+
+### 17.5. Simulation Modes
+
+```mermaid
+graph LR
+    subgraph "Simulation Modes"
+        LIVE[LIVE<br/>Full execution]
+        GO[GRAPH_ONLY<br/>Zero external calls]
+        TM[TOOL_MOCK<br/>Mock tools, optional LLM]
+        RP[REPLAY<br/>Historical playback]
+    end
+
+    subgraph "Capabilities"
+        LT[Live Tools]
+        LM[Live Models]
+        FX[Fixtures]
+        RS[Replay Source]
+    end
+
+    LIVE --> LT
+    LIVE --> LM
+
+    TM --> FX
+    TM -.->|optional| LM
+
+    GO --> FX
+
+    RP --> RS
+
+    style LIVE fill:#27ae60,color:#fff
+    style GO fill:#e67e22,color:##fff
+    style TM fill:#3498db,color:#fff
+    style RP fill:#8e44ad,color:#fff
+```
+
+| Mode | Live Tools | Live Models | Fixtures | Replay | Use Case |
+|------|-----------|-------------|----------|--------|----------|
+| `live` | Yes | Yes | No | No | Production mission execution |
+| `graph_only` | **No** | **No** | Yes | No | Topology validation, CI tests, cost-free dry runs |
+| `tool_mock` | **No** | Optional | Yes | No | Agent reasoning validation with mock tool outputs |
+| `replay` | **No** | **No** | Fallback | Yes | Post-mortem analysis, regression testing |
+
+Safety invariants enforced by `assert_simulation_safe()`:
+
+- `graph_only` must not allow live tools OR live models.
+- `tool_mock` must not allow live tools.
+- `replay` must not allow live tools.
+- No simulation mode can accidentally escalate to live tool execution.
+- All simulation artifacts carry `_simulation=True` provenance markers.
+
+### 17.6. Infrastructure Services
+
+This section details the various infrastructure services that compose the KaisonOne platform, along with their purpose and underlying technologies from an administrator's perspective.
+
+#### Service Overview
+
+| Service | Port | Purpose | Technology |
+|---------|------|---------|------------|
+| `backend` | 8080 | FastAPI API server | Python 3.11, Uvicorn |
+| `frontend` | 5173 | Vite React dev server (proxies to backend) | React 18, TypeScript, MUI 7 |
+| `worker` | -- | Celery worker (Go + Python tools installed) | Celery, Redis broker |
+| `postgres` | 5432 | Primary database (user: k1) | PostgreSQL 16, SQLAlchemy async (asyncpg) |
+| `redis` | 6379 | Cache + Celery message broker | Redis |
+| `vault` | 8200 | Secret management (dev mode) | HashiCorp Vault |
+| `mailhog` | 8025 | Email testing UI | MailHog |
+
+#### Middleware Stack (order matters)
+
+```
+CORS -> RateLimit -> CSRF -> CorrelationId -> SecurityHeaders
+```
+
+#### Database
+
+-   PostgreSQL 16 via SQLAlchemy async with asyncpg driver, pool_size=20.
+-   Migrations managed by Alembic.
+-   `get_db()` async dependency provides request-scoped sessions.
+
+#### Multi-Provider AI
+
+-   Providers: Anthropic Claude, OpenAI, Gemini, Ollama, Gemma, Qwen, OpenRouter.
+-   Configuration: `config/providers/*.yaml`, `config/registry/routing_matrix.yaml`.
+-   Primary provider from `K1_PRIMARY_LLM_PROVIDER` env. Fallback chain from `K1_FALLBACK_LLM_PROVIDERS`.
+
+#### Tool Execution Pipeline
+
+```
+API -> tool_runner.enqueue() -> scope/cert validation
+    -> Celery task queued to Redis (queue by autonomy tier)
+    -> Worker: Vault creds -> auth gate -> pre_run hook -> tool.execute() -> post_run hook
+    -> Artifact persist to artifacts/telemetry/tool_runs.jsonl
+    -> Result returned async via task ID
+```
+
+### 17.7. Execution Model
+
+This section outlines the execution model of the KaisonOne platform from an administrator's perspective, covering job states, workflow states, and mission states for operational monitoring.
+
+#### Job States
+
+```
+CREATED -> QUEUED -> RUNNING -> WAITING_APPROVAL -> COMPLETED
+                                      |
+                            BLOCKED | FAILED | SKIPPED | CANCELED
+```
+
+One campaign = DAG of phase-jobs with pause/resume semantics. Approval blocks ONLY the dependent branch. Sibling branches continue execution.
+
+#### Workflow States (Hunt)
+
+```
+SELECTED -> SCOPING -> CREDENTIAL_SETUP -> RECON -> SCANNING -> TRIAGE -> HIL_REVIEW -> SUBMITTED -> CLOSED
+```
+
+#### Mission States
+
+```
+created -> running -> completed
+                  |-> paused (stop_mission)
+                  |-> failed
+                  |-> cancelled (cancel_mission, terminal)
+```
+
+#### Intention Contract
+
+Every major action captures: initiator, declared intention, intended goal, risk posture change, scope/policy compatibility result, and human approval requirement flag.
+
+### 17.8. Current Verified State
+
+-   **604 passed, 1 skipped, 0 failures** across the full test suite.
+-   All 6 layers implemented and tested.
+-   Self-contained tests (no external services required) cover scope guardrails, tool registry catalog, workflow engine, tool adapters, submission export adapters, PraisonAI governance, agent registry, contracts, topology, LangGraph builder, mission runtime, LangChain model factory, tool registry, middleware, schemas, reasoning, LangSmith integration, redaction, evaluations, simulation, fixtures, replay, and the full E2E integration chain.
+
+---
+
+## 18. Operator Guide: UI + API Flows
+
+This guide covers how operators use the current Kai UI against real backend services.
+
+### 18.1. Login and Access Model
+
+1.  Open the UI login page.
+2.  On first local bring-up, sign in as `k1-admin` with a blank password.
+3.  You will be forced to set an initial password (persisted to PostgreSQL).
+4.  Subsequent logins use username/password via backend `POST /auth/token`.
+5.  UI loads current identity (`GET /auth/users/me`) and applies role-aware controls.
+
+Role behavior in UI:
+
+-   Viewer/operator: read surfaces
+-   Analyst/admin: mission control actions, governance decisions, simulation execution
+-   Admin: system metrics panel
+
+Backend authorization is always enforced server-side.
+
+### 18.2. Revenue Dashboard Workflow
+
+Dashboard is the landing page for fast triage and monetization:
+
+-   validated findings produced from executed opportunities
+-   active opportunities and approved opportunities awaiting execution
+-   recent reports and highest-confidence reports
+-   opportunity-to-report conversion indicator
+-   direct links into Mission Control, Opportunities workbench, and Reports export surface
+
+### 18.3. Mission Control Workflow
+
+Mission Control now uses real routes:
+
+-   `GET /missions/`
+-   `GET /missions/{id}/graph`
+-   `GET /events/mission/{id}/timeline`
+-   `GET /realtime/missions/{id}/recent`
+-   `POST /missions/{id}/start|stop|replay`
+
+Operator flow:
+
+1.  Select mission from list.
+2.  Inspect graph node states (`pending/running/completed/failed/blocked`).
+3.  Review timeline grouped by date and categorized (governance/lifecycle/artifact/error/operation).
+4.  Run start/stop/replay if role permits.
+5.  Use runtime decision summary panel to inspect chosen action and rationale (with optional rejected alternatives when present).
+
+Live behavior:
+
+-   Mission updates stream over websocket (`/ws?token=...`) with mission subscriptions.
+-   Graph node status and active node update as events arrive.
+-   Timeline appends in realtime using normalized event payloads.
+-   Mission polling remains enabled as fallback when websocket is degraded.
+
+### 18.4. Governance Approvals
+
+Governance console is connected to:
+
+-   `GET /approvals/?status=...`
+-   `POST /approvals/{id}/approve|reject|cancel` (optional `notes`)
+
+Recommended operator decision checks:
+
+-   mission linkage (`campaign_id`)
+-   gate reason and policy basis
+-   risk class
+-   request actor and timing
+-   realtime updates: new/changed approvals are refreshed when governance events arrive
+-   fallback polling is used when websocket unavailable
+
+### 18.5. Artifact Workspace
+
+Artifacts page is connected to:
+
+-   `GET /artifacts/mission/{mission_id}`
+-   `GET /artifacts/{artifact_id}/content`
+
+Use the flow:
+
+1.  Select mission.
+2.  Open artifact metadata and preview (JSON/text/URI response).
+3.  Use “Open Mission Context” to pivot back to Mission Control.
+4.  Watch for live artifact notices from realtime artifact events (mission-scoped subscription).
+
+### 18.6. Simulation Control
+
+Simulation page is connected to:
+
+-   `GET /simulation/scenarios`
+-   `POST /simulation/run`
+-   `POST /simulation/compare`
+
+Simulation UI explicitly labels non-live behavior and displays returned mission ID/state.
+
+### 18.7. Intelligence Center
+
+Intelligence page is connected to:
+
+-   `GET /intel/memory`
+-   `GET /intel/memory/{id}`
+-   `GET /intel/memory/{id}/relationships`
+-   `GET /intel/memory/stats`
+
+Operator can filter/search memory records and inspect relationship context for selected memory objects.
+
+Filter controls:
+-   Free-text search across memory content and domain
+-   Memory type dropdown (populated from loaded result set)
+-   Validation status dropdown: `confirmed` / `partial` / `unvalidated` / `rejected`
+-   Scope dropdown (populated from loaded result set)
+-   Minimum confidence slider
+
+Memory table shows color-coded validation status badges:
+-   `confirmed` → emerald
+-   `partial` → amber
+-   `rejected` → rose
+-   `unvalidated` → slate
+
+Cross-page links on selected memory row:
+-   **related opportunities** — jumps to Opportunities filtered by vuln_type (or domain when no vuln_type tag)
+-   **related reports** — jumps to Reports filtered by target domain
+
+### 18.8. Opportunities Surface
+
+Opportunities page is connected to:
+
+-   `GET /opportunities`
+-   `GET /opportunities/{id}`
+-   `GET /opportunities/actions/capabilities`
+-   `GET /opportunities/scan-queue/settings`
+-   `PUT /opportunities/scan-queue/settings`
+-   `POST /opportunities/{id}/expand`
+-   `POST /opportunities/{id}/approve`
+-   `POST /opportunities/{id}/reject`
+-   `POST /opportunities/{id}/execute`
+
+Opportunity lifecycle:
+
+1.  `proposed` (default state from catalog + tenant action state)
+2.  `expanded` (validated source signal converted into ranked target candidates + batches)
+3.  `approved` or `rejected` (analyst/admin action with optional target-level review)
+4.  `executing` (execution launched after approval)
+5.  `completed` or `failed` (derived from mission outcomes)
+
+Expansion behavior:
+
+-   Expansion uses validated findings/patterns for the selected vulnerability type and discovers in-scope concrete targets from memory + scope domains.
+-   Candidate targets are ranked by similarity, corroborating memory signal, duplicate risk penalty, and expected report quality.
+-   Targets are grouped into bounded risk-aware batches for operator review before execute.
+-   Approval can carry reviewed target subsets; execute uses approved targets first and falls back to candidate targets when no subset is set.
+
+Execution behavior:
+
+-   Execution revalidates targets against scope policy and excludes invalid targets.
+-   Execution creates one or more mission runs (target-capped) with opportunity lineage metadata.
+-   Mission progress is reflected back into `execution_metadata` (`missions_launched`, `missions_completed`, `missions_failed`, findings/yield proxy).
+-   Linked mission/report counts are surfaced directly in the workbench for quick path compression.
+-   Chain context and decision summary are surfaced in the detail panel when expansion source metadata is available.
+-   Scan queue min/max concurrency limits are persisted server-side per authenticated user + tenant (team context), not only browser-local state.
+
+Auditability:
+
+-   Every approve/reject/execute action is appended to audit log records with actor, reason, target selection, and mission linkage.
+-   Expansion actions emit realtime events (`opportunity_expansion_created`, `opportunity_expansion_ranked`, `opportunity_batch_ready`, `opportunity_expansion_approved`).
+-   Execution actions emit realtime events (`opportunity_approved`, `opportunity_rejected`, `opportunity_execution_started`, `opportunity_execution_completed`, `opportunity_execution_failed`).
+
+### 18.9. Cross-page Navigation (Phase 5)
+
+The UI now supports direct pivot paths between pages:
+
+-   **Mission Control → Reports**: "Reports for this mission" link appears in the status panel when a mission is selected. Navigates to `/reports?mission_id=<id>`.
+-   **Mission Control → Artifacts**: "Artifacts" link appears alongside the reports link. Navigates to `/artifacts?mission=<id>`.
+-   **Intelligence Center → Opportunities**: "related opportunities" link on selected memory row.
+-   **Intelligence Center → Reports**: "related reports" link on selected memory row.
+-   **Dashboard → Reports**: Top-confidence report cards are now clickable links that open the specific report in the Reports workspace.
+
+### 18.10. Reports Workspace (Monetization Surface)
+
+Reports page is connected to:
+
+-   `GET /reports`
+-   `GET /reports/{id}`
+-   `GET /reports/mission/{mission_id}`
+-   `GET /reports?opportunity_id=...`
+-   `POST /reports/generate`
+
+Operator flow:
+
+1.  Filter reports by severity, confidence, target, mission, or opportunity context.
+2.  When mission or opportunity filter is active, a context banner confirms the active filter and report count.
+3.  Open a report and review summary, reproduction steps, exploit-chain context, impact, and remediation.
+4.  Use **Copy Report** for submission-ready markdown.
+5.  Use **Export MD** or **Export JSON** for direct download from backend export contract.
+6.  Pivot from opportunity execution metadata (`report_ids`) back to generated reports.
+
+Layout: report list occupies 2/5 of the grid (xl:col-span-2), report viewer occupies 3/5 (xl:col-span-3) for maximal reading space.
+
+Live vs simulation distinctions:
+
+-   Mission cards and mission detail panels label execution mode (`live` vs simulation modes).
+-   Operators should prioritize `live` results for monetization flow and keep simulation outputs for rehearsal/comparison.
+
+Backend behavior:
+
+-   Report generation is deterministic (template + structured evidence), not freeform LLM output.
+-   Export endpoint supports `GET /reports/{id}/export?format=markdown|json` with attachment headers.
+-   Deduplication is enforced with a signature hash (endpoint + vuln type + payload signature).
+-   Quality scoring (`0.0–1.0`) reflects completeness, validation strength, chain context, and duplicate risk.
+-   Opportunity execution completion now auto-generates reports from validated findings and stores mission/opportunity lineage.

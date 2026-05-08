@@ -3,6 +3,8 @@ Security Headers Middleware
 Adds important security headers to all responses.
 """
 
+import os
+
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 
@@ -18,6 +20,24 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     - Strict-Transport-Security: Enforce HTTPS
     - Content-Security-Policy: Restrict resource loading
     """
+
+    def __init__(self, app):
+        super().__init__(app)
+        self._csp_policy = os.getenv(
+            "CONTENT_SECURITY_POLICY",
+            (
+                "default-src 'self'; "
+                "script-src 'self'; "
+                "style-src 'self' 'unsafe-inline'; "
+                "img-src 'self' data: https:; "
+                "font-src 'self'; "
+                "connect-src 'self' https:; "
+                "object-src 'none'; "
+                "frame-ancestors 'none'; "
+                "base-uri 'self'; "
+                "form-action 'self'"
+            ),
+        )
 
     async def dispatch(self, request: Request, call_next):
         """
@@ -54,17 +74,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
         # Content Security Policy
         # Restrict what resources can be loaded
-        response.headers["Content-Security-Policy"] = (
-            "default-src 'self'; "
-            "script-src 'self'; "
-            "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data: https:; "
-            "font-src 'self'; "
-            "connect-src 'self' https:; "
-            "frame-ancestors 'none'; "
-            "base-uri 'self'; "
-            "form-action 'self'"
-        )
+        response.headers["Content-Security-Policy"] = self._csp_policy
 
         # Referrer Policy
         # strict-no-referrer: Never send referrer information

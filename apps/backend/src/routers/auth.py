@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from uuid import uuid4
 
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel
 
 from ..core.auth import (
@@ -14,7 +14,7 @@ from ..core.auth import (
     get_current_user,
     issue_dev_access_token,
 )
-from ..core.csrf import csrf_manager
+from ..core.csrf import csrf_challenge_manager, csrf_manager, csrf_nonce_manager
 from ..core.token_blocklist import revoke_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -74,6 +74,54 @@ def get_csrf_token(request: Request, response: Response):
         path="/",
     )
     return {"csrf_token": csrf_token}
+
+
+@router.get("/csrf-challenge")
+def get_csrf_challenge(
+    request: Request,
+    path: str = Query(..., description="Endpoint path the challenge is bound to"),
+    method: str = Query(..., description="HTTP method the challenge is bound to"),
+):
+    session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    if not session_id:
+        raise HTTPException(status_code=400, detail="missing_session_cookie")
+    normalized_method = method.upper()
+    if normalized_method not in {"POST", "PUT", "PATCH", "DELETE"}:
+        raise HTTPException(status_code=400, detail="unsupported_method")
+    challenge = csrf_challenge_manager.issue_challenge(
+        session_id=session_id,
+        method=normalized_method,
+        path=path,
+    )
+    return {
+        "csrf_challenge": challenge,
+        "path": path,
+        "method": normalized_method,
+    }
+
+
+@router.get("/csrf-nonce")
+def get_csrf_nonce(
+    request: Request,
+    path: str = Query(..., description="Endpoint path the nonce is bound to"),
+    method: str = Query(..., description="HTTP method the nonce is bound to"),
+):
+    session_id = request.cookies.get(SESSION_COOKIE_NAME)
+    if not session_id:
+        raise HTTPException(status_code=400, detail="missing_session_cookie")
+    normalized_method = method.upper()
+    if normalized_method not in {"POST", "PUT", "PATCH", "DELETE"}:
+        raise HTTPException(status_code=400, detail="unsupported_method")
+    nonce = csrf_nonce_manager.issue_nonce(
+        session_id=session_id,
+        method=normalized_method,
+        path=path,
+    )
+    return {
+        "csrf_nonce": nonce,
+        "path": path,
+        "method": normalized_method,
+    }
 
 
 @router.post("/logout")

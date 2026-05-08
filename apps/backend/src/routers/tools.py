@@ -10,8 +10,12 @@ from datetime import datetime, timezone
 import anyio.to_thread
 from functools import partial
 from urllib.parse import urlparse
+from uuid import uuid4
 
 from ..core.auth import ROLE_ADMIN, ROLE_ANALYST, ROLE_OPERATOR, User, require_roles
+from ..core.approval_request import ApprovalDecisionAction, ApprovalRequestStatus, ApprovalScope
+from ..core.autonomy_tier_enforcement import require_autonomy_approval
+from ..core.hil_approval_gateway import get_hil_approval_gateway, run_approval_timeout_sweep
 from ..core.tools import (
     get_registry,
     ToolCategory,
@@ -31,6 +35,7 @@ from ..core.authorization_gate import (
     enforce_authorization_gates_async,
     AuthorizationGateError,
 )
+from ..core.hook_registry import get_hook_registry
 from ..core.kai_security_guardrails import get_guardrail_engine
 from ..core.tools_validators import FindingValidatorTool, QuickClassifierTool
 from ..core.tool_execution_store import get_tool_execution_store
@@ -48,6 +53,38 @@ router = APIRouter(prefix="/api/v1/tools", tags=["Tools"])
 
 # Tool registry (initialize on startup)
 _registry = None
+
+
+@require_autonomy_approval(ToolAutonomyTier.TIER_0_AUTO)
+async def _evaluate_autonomy_gate(
+    *,
+    execution_context: dict[str, Any],
+    _autonomy_enforcement=None,
+):
+    return _autonomy_enforcement
+
+
+def _approval_request_to_dict(request) -> dict[str, Any]:
+    return {
+        "approval_id": request.approval_id,
+        "execution_id": request.execution_id,
+        "tool_id": request.tool_id,
+        "target": request.target,
+        "autonomy_tier": request.autonomy_tier,
+        "requested_by": request.requested_by,
+        "scope": request.scope.value,
+        "estimated_impact": request.estimated_impact,
+        "created_at": request.created_at.isoformat(),
+        "expires_at": request.expires_at.isoformat(),
+        "status": request.status.value,
+        "decided_by": request.decided_by,
+        "decided_at": request.decided_at.isoformat() if request.decided_at else None,
+        "decision_reason": request.decision_reason,
+        "mission_id": request.mission_id,
+        "phase_name": request.phase_name,
+        "mission_goal": request.mission_goal,
+        "metadata": request.metadata,
+    }
 
 
 def _safe_register_optional_tool(factory: Callable[[], Any], *, tool_name: str) -> None:
@@ -411,46 +448,115 @@ async def execute_tool(
         raise HTTPException(status_code=403, detail=f"Authorization gate blocked execution: {exc}") from exc
 
     try:
-        # Create execution context
+        await run_approval_timeout_sweep()
+
+        execution_id = str(uuid4())
+        governance_params = dict(params)
+        governance_params["_execution_id"] = execution_id
+
+        override_flag = bool(governance_params.pop("tier3_override", False))
+        override_reason = str(governance_params.pop("override_reason", "") or "").strip()
+        approval_scope_raw = str(governance_params.pop("approval_scope", "tool") or "tool").strip().lower()
+        approval_scope = ApprovalScope.PHASE if approval_scope_raw == "phase" else ApprovalScope.TOOL
+
+        phase_name = str(governance_params.get("phase_name") or "")
+        mission_goal = str(governance_params.get("mission_goal") or "")
+
+        autonomy_result = await _evaluate_autonomy_gate(
+            execution_context={
+                "tool_id": tool_id,
+                "params": governance_params,
+                "user": current_user,
+                "registered_tier": tool.autonomy_tier,
+                "method": method,
+                "mission_id": run_id,
+                "phase_name": phase_name or None,
+                "mission_goal": mission_goal or None,
+                "allow_tier3_override": bool(override_flag and override_reason and ROLE_ADMIN in current_user.roles),
+                "approval_scope": approval_scope,
+            }
+        )
+
         context = ToolExecutionContext(
             tool_id=tool_id,
+            execution_id=execution_id,
             run_id=run_id,
             user_id=current_user.id,
             autonomy_tier=tool.autonomy_tier,
-            requires_approval=tool.autonomy_tier != ToolAutonomyTier.TIER_0_AUTO,
+            requires_approval=bool(getattr(autonomy_result, "requires_approval", False)),
         )
 
-        # Check if approval is needed
-        if context.requires_approval:
+        if autonomy_result.status == "blocked":
+            raise HTTPException(
+                status_code=403,
+                detail={
+                    "reason": autonomy_result.message,
+                    "execution_id": execution_id,
+                    "autonomy": autonomy_result.details,
+                },
+            )
+
+        if autonomy_result.requires_approval:
             await get_tool_execution_store().create_pending(
-                execution_id=context.execution_id,
+                execution_id=execution_id,
                 tool_id=tool_id,
-                params=params,
+                params=governance_params,
                 run_id=run_id,
                 user_id=current_user.id,
+            )
+            # Ensure request metadata is persisted and linked to execution row.
+            await get_hil_approval_gateway().create_approval_request(
+                execution_id=execution_id,
+                tool_id=tool_id,
+                requested_by=current_user.id,
+                target=_extract_target(governance_params),
+                autonomy_tier=str(autonomy_result.details.get("effective_tier", tool.autonomy_tier.name)),
+                estimated_impact="high" if "TIER_3" in str(autonomy_result.details.get("effective_tier", "")) else "medium",
+                mission_id=run_id,
+                phase_name=phase_name or None,
+                mission_goal=mission_goal or None,
+                scope=approval_scope,
+                metadata={"override_reason": override_reason or None},
             )
             return Response(
                 success=True,
                 data={
-                    "execution_id": context.execution_id,
+                    "execution_id": execution_id,
                     "status": "pending_approval",
-                    "message": "Tool execution requires approval",
+                    "message": "Tool execution requires operator approval",
+                    "autonomy": autonomy_result.details,
                     "context": context.to_dict(),
                 },
                 status_code=202,
             )
 
-        # Execute tool immediately (TIER_0_AUTO)
-        result = tool.execute(**params)
+        effective_tier_name = str(autonomy_result.details.get("effective_tier", tool.autonomy_tier.name))
+        if effective_tier_name == ToolAutonomyTier.TIER_1_NOTIFY.name:
+            get_hook_registry().run(
+                "approval_gate",
+                {
+                    "hook_type": "approval_gate",
+                    "tool_id": tool_id,
+                    "run_id": run_id or execution_id,
+                    "status": "notified",
+                    "user_id": current_user.id,
+                },
+            )
+
+        # TIER_0_AUTO and TIER_1_NOTIFY are executed immediately.
+        result = tool.execute(**governance_params)
 
         return Response(
             success=result.status == ToolStatus.COMPLETED,
             data={
                 "execution_id": context.execution_id,
                 "result": result.to_dict(),
+                "autonomy": autonomy_result.details,
             },
         )
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error executing tool {tool_id}: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -497,20 +603,106 @@ async def execute_tool_async(
     except AuthorizationGateError as exc:
         raise HTTPException(status_code=403, detail=f"Authorization gate blocked execution: {exc}") from exc
 
+    await run_approval_timeout_sweep()
+
+    execution_id = str(uuid4())
+    governance_params = dict(params)
+    governance_params["_execution_id"] = execution_id
+    override_flag = bool(governance_params.pop("tier3_override", False))
+    override_reason = str(governance_params.pop("override_reason", "") or "").strip()
+    approval_scope_raw = str(governance_params.pop("approval_scope", "tool") or "tool").strip().lower()
+    approval_scope = ApprovalScope.PHASE if approval_scope_raw == "phase" else ApprovalScope.TOOL
+    phase_name = str(governance_params.get("phase_name") or "")
+    mission_goal = str(governance_params.get("mission_goal") or "")
+
+    autonomy_result = await _evaluate_autonomy_gate(
+        execution_context={
+            "tool_id": tool_id,
+            "params": governance_params,
+            "user": current_user,
+            "registered_tier": tool.autonomy_tier,
+            "method": method,
+            "mission_id": run_id,
+            "phase_name": phase_name or None,
+            "mission_goal": mission_goal or None,
+            "allow_tier3_override": bool(override_flag and override_reason and ROLE_ADMIN in current_user.roles),
+            "approval_scope": approval_scope,
+        }
+    )
+
+    if autonomy_result.status == "blocked":
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "reason": autonomy_result.message,
+                "execution_id": execution_id,
+                "autonomy": autonomy_result.details,
+            },
+        )
+
     context = ToolExecutionContext(
         tool_id=tool_id,
+        execution_id=execution_id,
         run_id=run_id,
         user_id=current_user.id,
+        autonomy_tier=tool.autonomy_tier,
+        requires_approval=bool(getattr(autonomy_result, "requires_approval", False)),
     )
+
+    if autonomy_result.requires_approval:
+        await get_tool_execution_store().create_pending(
+            execution_id=execution_id,
+            tool_id=tool_id,
+            params=governance_params,
+            run_id=run_id,
+            user_id=current_user.id,
+        )
+        await get_hil_approval_gateway().create_approval_request(
+            execution_id=execution_id,
+            tool_id=tool_id,
+            requested_by=current_user.id,
+            target=_extract_target(governance_params),
+            autonomy_tier=str(autonomy_result.details.get("effective_tier", tool.autonomy_tier.name)),
+            estimated_impact="high" if "TIER_3" in str(autonomy_result.details.get("effective_tier", "")) else "medium",
+            mission_id=run_id,
+            phase_name=phase_name or None,
+            mission_goal=mission_goal or None,
+            scope=approval_scope,
+            metadata={"override_reason": override_reason or None},
+        )
+        return Response(
+            success=True,
+            data={
+                "execution_id": execution_id,
+                "status": "pending_approval",
+                "message": "Tool execution requires operator approval",
+                "autonomy": autonomy_result.details,
+                "context": context.to_dict(),
+            },
+            status_code=202,
+        )
+
+    effective_tier_name = str(autonomy_result.details.get("effective_tier", tool.autonomy_tier.name))
+    if effective_tier_name == ToolAutonomyTier.TIER_1_NOTIFY.name:
+        get_hook_registry().run(
+            "approval_gate",
+            {
+                "hook_type": "approval_gate",
+                "tool_id": tool_id,
+                "run_id": run_id or execution_id,
+                "status": "notified",
+                "user_id": current_user.id,
+            },
+        )
 
     async def run_async():
         try:
-            result = tool.execute(**params)
+            result = tool.execute(**governance_params)
             logger.info(f"Async execution completed: {tool_id} - {context.execution_id}")
             await get_tool_execution_store().create_pending(
                 execution_id=context.execution_id,
                 tool_id=tool_id,
-                params=params,
+                params=governance_params,
                 run_id=run_id,
                 user_id=current_user.id,
             )
@@ -526,6 +718,7 @@ async def execute_tool_async(
             "execution_id": context.execution_id,
             "status": "queued",
             "message": "Tool queued for async execution",
+            "autonomy": autonomy_result.details,
         },
         status_code=202,
     )
@@ -535,6 +728,7 @@ async def execute_tool_async(
 async def approve_tool_execution(
     tool_id: str,
     execution_id: str = Query(...),
+    notes: Optional[str] = Query(None),
     current_user: User = Depends(require_roles(ROLE_ANALYST, ROLE_ADMIN)),
 ):
     """Approve a pending tool execution"""
@@ -545,12 +739,24 @@ async def approve_tool_execution(
         raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
 
     try:
+        await run_approval_timeout_sweep()
         store = get_tool_execution_store()
         execution = await store.get(execution_id)
         if not execution or execution.tool_id != tool_id:
             raise HTTPException(status_code=404, detail="Execution request not found")
         if execution.status != "pending_approval":
             raise HTTPException(status_code=409, detail=f"Execution is not pending: {execution.status}")
+
+        approval = await get_hil_approval_gateway().resolve_request(
+            execution_id=execution_id,
+            decision=ApprovalDecisionAction.APPROVE,
+            decided_by=current_user.id,
+            reason=notes or "approved_by_operator",
+        )
+        if approval.autonomy_tier == ToolAutonomyTier.TIER_3_HARD_STOP.name and ROLE_ADMIN not in current_user.roles:
+            raise HTTPException(status_code=403, detail="tier3_approvals_require_admin")
+        if approval.status != ApprovalRequestStatus.APPROVED:
+            raise HTTPException(status_code=409, detail=f"approval_status={approval.status.value}")
 
         result = tool.execute(**execution.params)
         await store.mark_completed(execution_id, result.to_dict())
@@ -568,6 +774,8 @@ async def approve_tool_execution(
 
     except HTTPException:
         raise
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error approving execution: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -588,12 +796,20 @@ async def reject_tool_execution(
         raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
 
     try:
+        await run_approval_timeout_sweep()
         store = get_tool_execution_store()
         execution = await store.get(execution_id)
         if not execution or execution.tool_id != tool_id:
             raise HTTPException(status_code=404, detail="Execution request not found")
         if execution.status != "pending_approval":
             raise HTTPException(status_code=409, detail=f"Execution is not pending: {execution.status}")
+
+        await get_hil_approval_gateway().resolve_request(
+            execution_id=execution_id,
+            decision=ApprovalDecisionAction.REJECT,
+            decided_by=current_user.id,
+            reason=reason or "rejected_by_operator",
+        )
         await store.mark_rejected(execution_id, reason)
 
         return Response(
@@ -609,9 +825,97 @@ async def reject_tool_execution(
 
     except HTTPException:
         raise
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
     except Exception as e:
         logger.error(f"Error rejecting execution: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/{tool_id}/defer", response_model=Response)
+async def defer_tool_execution(
+    tool_id: str,
+    execution_id: str = Query(...),
+    reason: Optional[str] = Query(None),
+    current_user: User = Depends(require_roles(ROLE_ANALYST, ROLE_ADMIN)),
+):
+    """Defer a pending tool execution without resolving approval."""
+    registry = get_tool_registry()
+    tool = registry.get(tool_id)
+    if not tool:
+        raise HTTPException(status_code=404, detail=f"Tool not found: {tool_id}")
+
+    await run_approval_timeout_sweep()
+    store = get_tool_execution_store()
+    execution = await store.get(execution_id)
+    if not execution or execution.tool_id != tool_id:
+        raise HTTPException(status_code=404, detail="Execution request not found")
+    if execution.status != "pending_approval":
+        raise HTTPException(status_code=409, detail=f"Execution is not pending: {execution.status}")
+
+    try:
+        approval = await get_hil_approval_gateway().resolve_request(
+            execution_id=execution_id,
+            decision=ApprovalDecisionAction.DEFER,
+            decided_by=current_user.id,
+            reason=reason or "deferred_by_operator",
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+
+    return Response(
+        success=True,
+        data={
+            "execution_id": execution_id,
+            "status": "deferred",
+            "deferred_by": current_user.id,
+            "reason": reason,
+            "deferred_at": datetime.now(timezone.utc).isoformat(),
+            "approval": {
+                "approval_id": approval.approval_id,
+                "autonomy_tier": approval.autonomy_tier,
+                "expires_at": approval.expires_at.isoformat(),
+            },
+        },
+    )
+
+
+@router.get("/autonomy/approvals/pending", response_model=Response)
+async def list_pending_autonomy_approvals(
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    await run_approval_timeout_sweep()
+    pending = get_hil_approval_gateway().pending_requests()
+    return Response(
+        success=True,
+        data={
+            "count": len(pending),
+            "approvals": [_approval_request_to_dict(item) for item in pending],
+        },
+    )
+
+
+@router.get("/autonomy/approvals/history", response_model=Response)
+async def list_autonomy_approval_history(
+    limit: int = Query(default=200, ge=1, le=2000),
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    history = get_hil_approval_gateway().approval_history()[-limit:]
+    return Response(
+        success=True,
+        data={
+            "count": len(history),
+            "approvals": [_approval_request_to_dict(item) for item in history],
+        },
+    )
+
+
+@router.get("/autonomy/metrics", response_model=Response)
+async def get_autonomy_approval_metrics(
+    _: User = Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN)),
+):
+    metrics = get_hil_approval_gateway().metrics_snapshot()
+    return Response(success=True, data=metrics)
 
 
 # ============================================================================

@@ -6,7 +6,6 @@ Fast and customizable vulnerability scanner
 import asyncio
 import json
 import os
-import re
 import shutil
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Any
@@ -20,36 +19,30 @@ from .base_adapter import (
     ToolExecutionResult,
     ToolCapability
 )
-
-# Base directory for nuclei templates. Override via NUCLEI_TEMPLATES_BASE env var.
-_NUCLEI_TEMPLATES_BASE: str = os.environ.get(
-    "NUCLEI_TEMPLATES_BASE",
-    str(Path.home() / "nuclei-templates"),
-)
+from .validators import validate_tool_options, NucleiValidator
 
 
 def _validate_nuclei_tags(tags: str) -> str:
-    """Validate nuclei tags string contains only safe characters.
+    """Validate nuclei tags string — shim for backwards compatibility.
 
-    Raises ValueError if the tags contain characters outside a-zA-Z0-9,_-
-    which prevents shell-metacharacter injection into CLI arguments.
+    Delegates to NucleiValidator. Raises ValueError on invalid input.
     """
-    if not re.match(r'^[a-zA-Z0-9,_-]+$', tags):
-        raise ValueError(f"Invalid nuclei tags format: {tags!r}")
+    NucleiValidator()._require_pattern(
+        tags, "tags",
+        r"[a-zA-Z0-9,_\-]+",
+        "only alphanumeric, comma, underscore, and dash allowed",
+    )
     return tags
 
 
 def _validate_nuclei_template_path(template: str) -> str:
-    """Validate and resolve a nuclei template path to prevent path traversal.
+    """Validate and resolve a nuclei template path — shim for backwards compatibility.
 
-    Returns the absolute resolved path as a string.
-    Raises ValueError if the resolved path escapes the templates base directory.
+    Delegates to NucleiValidator. Raises ValueError on path traversal.
     """
-    base = os.path.realpath(_NUCLEI_TEMPLATES_BASE)
-    resolved = os.path.realpath(os.path.join(base, template))
-    if not resolved.startswith(base + os.sep) and resolved != base:
-        raise ValueError(f"Template path traversal detected: {template!r}")
-    return resolved
+    return NucleiValidator()._require_safe_path(
+        template, "templates", NucleiValidator._TEMPLATES_BASE
+    )
 
 
 class NucleiAdapter(BaseToolAdapter):
@@ -164,6 +157,21 @@ class NucleiAdapter(BaseToolAdapter):
         started_at = datetime.now(timezone.utc)
         options = options or {}
 
+        # Validate and coerce all options before touching the command list.
+        # Raises ValueError for any invalid argument; caught below and returned
+        # as a failed ToolExecutionResult so the caller never sees a raw exception.
+        try:
+            options = validate_tool_options("nuclei", options)
+        except ValueError as exc:
+            return ToolExecutionResult(
+                tool_name=self.tool_name,
+                success=False,
+                started_at=started_at,
+                completed_at=datetime.now(timezone.utc),
+                duration_seconds=0,
+                error_message=f"Invalid option: {exc}",
+            )
+
         # Validate target
         if not await self.validate_target(target):
             return ToolExecutionResult(
@@ -181,32 +189,29 @@ class NucleiAdapter(BaseToolAdapter):
         # JSON output
         cmd.extend(["-json", "-silent"])
 
-        # Severity filter
+        # Severity filter (already validated; each token is in the allowed enum)
         if options.get("severity"):
             cmd.extend(["-severity", options["severity"]])
         else:
-            # Default: critical and high only for performance
             cmd.extend(["-severity", "critical,high"])
 
-        # Tags filter — validate before appending to prevent argument injection.
+        # Tags filter (already validated; safe to append directly)
         if options.get("tags"):
-            safe_tags = _validate_nuclei_tags(options["tags"])
-            cmd.extend(["-tags", safe_tags])
+            cmd.extend(["-tags", options["tags"]])
 
-        # Custom templates — validate path to prevent directory traversal.
+        # Custom templates (already resolved to an absolute path within the base dir)
         if options.get("templates"):
-            safe_template_path = _validate_nuclei_template_path(options["templates"])
-            cmd.extend(["-t", safe_template_path])
+            cmd.extend(["-t", options["templates"]])
 
-        # Rate limiting
+        # Rate limiting (already coerced to int in [1, 1000])
         rate_limit = options.get("rate_limit", 150)
         cmd.extend(["-rate-limit", str(rate_limit)])
 
-        # Timeout
+        # Timeout (already coerced to int in [1, 300])
         timeout = options.get("timeout", 5)
         cmd.extend(["-timeout", str(timeout)])
 
-        # Retries
+        # Retries (already coerced to int in [0, 10])
         retries = options.get("retries", 1)
         cmd.extend(["-retries", str(retries)])
 

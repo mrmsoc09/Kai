@@ -2,10 +2,21 @@
 SQLMap Wrapper
 Primary SQL injection detection and exploitation tool.
 """
+import os
 import subprocess
+import sys
 import json
 from typing import Dict, List, Any, Optional
 from datetime import datetime
+
+# Allow importing the shared validator framework from the backend source tree.
+_backend_src = os.path.realpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "apps", "backend", "src")
+)
+if _backend_src not in sys.path:
+    sys.path.insert(0, _backend_src)
+
+from core.tool_adapters.validators import validate_tool_options  # noqa: E402
 
 class SQLMapAgent:
     """Agent for SQL injection testing using SQLMap."""
@@ -17,23 +28,35 @@ class SQLMapAgent:
 
     def scan(self, target: str, options: Optional[Dict] = None) -> Dict[str, Any]:
         """Execute SQLMap scan against target."""
-        options = options or {}
+        options = dict(options or {})
+
+        # Validate all caller-supplied arguments (including the target URL) before
+        # constructing the command. Raises ValueError on any invalid input.
+        options["target"] = target
+        try:
+            options = validate_tool_options("sqlmap", options)
+        except ValueError as exc:
+            return {
+                "target": target, "tool": self.name, "error": str(exc),
+                "findings": [], "timestamp": datetime.now().isoformat(), "success": False,
+            }
+        target = options.pop("target")
 
         cmd = ['sqlmap', '-u', target, '--batch', '--flush-session']
 
-        # Level (1-5, higher = more thorough)
+        # Level (1-5, higher = more thorough; already validated)
         cmd.extend(['--level', str(options.get('level', 3))])
 
-        # Risk (1-3, higher = more dangerous tests)
+        # Risk (1-3, higher = more dangerous tests; already validated)
         cmd.extend(['--risk', str(options.get('risk', 1))])
 
-        # Threads
+        # Threads (already validated)
         cmd.extend(['--threads', str(options.get('threads', 10))])
 
         # Output format
         cmd.extend(['--json-output', '/tmp/sqlmap_out.json'])
 
-        # Cookie
+        # Cookie (already validated; safe to append directly)
         if options.get('cookie'):
             cmd.extend(['--cookie', options['cookie']])
 

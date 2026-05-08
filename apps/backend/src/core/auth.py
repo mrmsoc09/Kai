@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import os
+import subprocess
+import tempfile
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import List, Optional
 from uuid import uuid4
 
@@ -44,10 +47,21 @@ JWT_SECRET_ENV = "JWT_SECRET_KEY"
 JWT_FALLBACK_SECRET_ENV = "K1_JWT_SECRET"
 JWT_ALGORITHM_ENV = "JWT_ALGORITHM"
 JWT_ACCESS_EXP_MIN_ENV = "K1_ACCESS_TOKEN_EXPIRY_MINUTES"
+BOOTSTRAP_AUTH_BUILD_ENV = "K1_ENABLE_BOOTSTRAP_AUTH_BUILD"
+DEV_CERT_AUTH_ENABLED_ENV = "K1_DEV_CERT_AUTH_ENABLED"
+DEV_AUTH_CA_PATH_ENV = "K1_DEV_AUTH_CA_PATH"
+DEFAULT_DEV_AUTH_CA_PATH = "dev-certs/ca.crt.pem"
 
 
 class AuthConfigError(RuntimeError):
     pass
+
+
+def _env_truthy(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _require_jose() -> None:
@@ -59,12 +73,26 @@ def _is_non_production() -> bool:
     return os.getenv("ENVIRONMENT", "development").lower() != "production"
 
 
+def _build_bootstrap_enabled() -> bool:
+    return _env_truthy(BOOTSTRAP_AUTH_BUILD_ENV, False)
+
+
+def _dev_cert_auth_enabled() -> bool:
+    return _env_truthy(DEV_CERT_AUTH_ENABLED_ENV, False)
+
+
+def _get_dev_auth_ca_path() -> str:
+    return os.getenv(DEV_AUTH_CA_PATH_ENV, DEFAULT_DEV_AUTH_CA_PATH)
+
+
 def _expected_token() -> Optional[str]:
     return os.getenv(DEV_TOKEN_ENV)
 
 
 def _bootstrap_auth_enabled() -> bool:
-    return os.getenv("K1_ENABLE_BOOTSTRAP_AUTH", "false").strip().lower() in {"1", "true", "yes", "on"}
+    if not _build_bootstrap_enabled():
+        return False
+    return _env_truthy("K1_ENABLE_BOOTSTRAP_AUTH", False)
 
 
 def _bootstrap_user_from_token(token: str) -> Optional[User]:
@@ -78,6 +106,70 @@ def _bootstrap_user_from_token(token: str) -> Optional[User]:
         roles=[ROLE_ADMIN, ROLE_ANALYST, ROLE_OPERATOR, ROLE_VIEWER],
         tenant_id=os.getenv("K1_BOOTSTRAP_TENANT_ID") or None,
     )
+
+
+def _validate_dev_client_certificate(client_certificate_pem: str) -> str:
+    if not _dev_cert_auth_enabled():
+        raise AuthConfigError("dev_cert_auth_disabled")
+    if not _is_non_production():
+        raise AuthConfigError("dev_cert_auth_disabled_in_production")
+
+    ca_path = _get_dev_auth_ca_path()
+    if not ca_path:
+        raise AuthConfigError("dev_auth_ca_path_not_configured")
+    if not Path(ca_path).is_file():
+        raise AuthConfigError("dev_auth_ca_missing")
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        client_cert_file = Path(tmpdir) / "client_cert.pem"
+        client_cert_file.write_text(client_certificate_pem)
+
+        verify_proc = subprocess.run(
+            [
+                "openssl",
+                "verify",
+                "-CAfile",
+                ca_path,
+                str(client_cert_file),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        if verify_proc.returncode != 0:
+            raise AuthConfigError("invalid_dev_client_certificate")
+
+        fingerprint_proc = subprocess.run(
+            [
+                "openssl",
+                "x509",
+                "-in",
+                str(client_cert_file),
+                "-noout",
+                "-fingerprint",
+                "-sha256",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        fingerprint = fingerprint_proc.stdout.strip().split("=", 1)[-1].strip()
+        if not fingerprint:
+            raise AuthConfigError("dev_client_certificate_fingerprint_missing")
+        return fingerprint
+
+
+def issue_dev_cert_access_token(client_certificate_pem: str) -> str:
+    if not _build_bootstrap_enabled():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="not_found")
+
+    fingerprint = _validate_dev_client_certificate(client_certificate_pem)
+    try:
+        return create_access_token(
+            subject=f"dev-cert-{fingerprint}",
+            roles=[ROLE_ADMIN, ROLE_ANALYST, ROLE_OPERATOR, ROLE_VIEWER],
+        )
+    except AuthConfigError:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="auth_not_configured")
 
 
 def assert_bootstrap_auth_safe() -> None:

@@ -8,6 +8,7 @@ from sqlalchemy import select
 
 from apps.backend.src.auth.models import Tenant, User, UserRole
 from apps.backend.src.auth.utils import hash_password
+from apps.backend.src.core.auth import BOOTSTRAP_AUTH_BUILD_ENV, _env_truthy
 from apps.backend.src.core.hil_db import get_async_session_maker
 
 logger = logging.getLogger(__name__)
@@ -21,9 +22,12 @@ def _env_truthy(name: str, default: bool) -> bool:
 
 
 def _bootstrap_enabled() -> bool:
+    if not _env_truthy(BOOTSTRAP_AUTH_BUILD_ENV, False):
+        return False
+
     # Requires explicit opt-in via K1_BOOTSTRAP_ADMIN_ENABLED=true in every
-    # environment.  Defaulting to True in non-production created a persistent
-    # empty-password admin account on every staging/CI instance.
+    # non-production environment. Defaulting to False ensures bootstrap user
+    # creation cannot be activated in production builds.
     return _env_truthy("K1_BOOTSTRAP_ADMIN_ENABLED", False)
 
 

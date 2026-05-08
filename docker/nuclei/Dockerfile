@@ -20,7 +20,7 @@ RUN apk add --no-cache ca-certificates
 COPY --from=builder /usr/local/bin/nuclei /usr/local/bin/nuclei
 
 # Create a non-root user
-RUN adduser --system --group kaiuser
+RUN addgroup -S kaigroup && adduser -S -G kaigroup -H -D kaiuser
 USER kaiuser
 
 # Set entrypoint to nuclei

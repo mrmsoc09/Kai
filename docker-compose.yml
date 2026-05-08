@@ -11,7 +11,6 @@ services:
   orchestrator:
     build:
       context: .
-      dockerfile: Dockerfile.backend # Assuming a Dockerfile.backend exists or will be created for the main orchestrator
     image: kai-orchestrator
     container_name: kai_orchestrator
     environment:
@@ -67,7 +66,6 @@ services:
   admin_gui:
     build:
       context: .
-      dockerfile: Dockerfile.admin
     image: kai-admin-gui
     container_name: kai_admin_gui
     ports:
@@ -90,7 +88,6 @@ services:
     # For now, it directly defines and builds the Nmap tool.
     build:
       context: ./docker/nmap # Build context is specific to nmap Dockerfile
-      dockerfile: Dockerfile
     image: kai-nmap
     container_name: kai_nmap
     networks:

@@ -114,16 +114,8 @@ main() {
     # Check and install docker-compose
     check_docker_compose_installed
 
-    # ── Install SecLists wordlists ────────────────────────────────────────
-    log "Installing SecLists wordlists (this may take a few minutes)..."
-    chmod +x "${SCRIPT_DIR}/scripts/install_seclists.sh"
-    if bash "${SCRIPT_DIR}/scripts/install_seclists.sh"; then
-        success "SecLists installed."
-    else
-        warn "SecLists install failed (non-fatal). Run manually: bash scripts/install_seclists.sh"
-    fi
-
     log "Building Docker images for Kai services and tools..."
+    # Navigate to the project root where docker-compose.yml is located
     (cd "$SCRIPT_DIR" && docker-compose build) || error "Failed to build Docker images. Check logs."
     success "Docker images built."
 

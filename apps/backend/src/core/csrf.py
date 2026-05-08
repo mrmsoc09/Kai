@@ -201,8 +201,103 @@ def _build_csrf_manager() -> CSRFTokenManager | RedisCSRFManager:
     return CSRFTokenManager()
 
 
+def _env_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
 # Global instance — auto-selects Redis when REDIS_URL is present
 csrf_manager: CSRFTokenManager | RedisCSRFManager = _build_csrf_manager()
+
+
+class _ExpiringOneTimeTokenStore:
+    """
+    In-memory one-time token store scoped by (session_id, method, path).
+    Used for CSRF challenge-response and high-risk nonce validation.
+    """
+
+    def __init__(self, ttl_seconds: int = 300):
+        self._entries: Dict[tuple[str, str, str], tuple[str, datetime]] = {}
+        self._ttl = ttl_seconds
+
+    def _key(self, session_id: str, method: str, path: str) -> tuple[str, str, str]:
+        return (session_id, method.upper(), path)
+
+    def issue(self, session_id: str, method: str, path: str) -> str:
+        token = secrets.token_urlsafe(32)
+        expiry = datetime.now() + timedelta(seconds=self._ttl)
+        self._entries[self._key(session_id, method, path)] = (token, expiry)
+        return token
+
+    def validate(self, session_id: str, method: str, path: str, token: str) -> bool:
+        key = self._key(session_id, method, path)
+        entry = self._entries.get(key)
+        if not entry:
+            return False
+        stored_token, expiry = entry
+        if datetime.now() > expiry:
+            self._entries.pop(key, None)
+            return False
+        try:
+            valid = secrets.compare_digest(stored_token, token)
+        except (TypeError, AttributeError):
+            return False
+        if valid:
+            # One-time token: consume on success.
+            self._entries.pop(key, None)
+        return valid
+
+    def cleanup_expired(self) -> int:
+        now = datetime.now()
+        expired = [k for k, (_, expiry) in self._entries.items() if expiry < now]
+        for key in expired:
+            self._entries.pop(key, None)
+        return len(expired)
+
+
+class CSRFChallengeManager:
+    """Issues and validates one-time CSRF challenge tokens."""
+
+    def __init__(self, ttl_seconds: int = 300):
+        self._store = _ExpiringOneTimeTokenStore(ttl_seconds=ttl_seconds)
+
+    def issue_challenge(self, session_id: str, method: str, path: str) -> str:
+        return self._store.issue(session_id, method, path)
+
+    def validate_challenge(self, session_id: str, method: str, path: str, token: str) -> bool:
+        return self._store.validate(session_id, method, path, token)
+
+    def cleanup_expired(self) -> int:
+        return self._store.cleanup_expired()
+
+
+class CSRFNonceManager:
+    """Issues and validates one-time endpoint nonce values for high-risk operations."""
+
+    def __init__(self, ttl_seconds: int = 300):
+        self._store = _ExpiringOneTimeTokenStore(ttl_seconds=ttl_seconds)
+
+    def issue_nonce(self, session_id: str, method: str, path: str) -> str:
+        return self._store.issue(session_id, method, path)
+
+    def validate_nonce(self, session_id: str, method: str, path: str, nonce: str) -> bool:
+        return self._store.validate(session_id, method, path, nonce)
+
+    def cleanup_expired(self) -> int:
+        return self._store.cleanup_expired()
+
+
+csrf_challenge_manager = CSRFChallengeManager(
+    ttl_seconds=max(60, _env_int("CSRF_CHALLENGE_TTL_SECONDS", 300))
+)
+csrf_nonce_manager = CSRFNonceManager(
+    ttl_seconds=max(60, _env_int("CSRF_NONCE_TTL_SECONDS", 300))
+)
 
 # List of endpoints that should skip CSRF validation
 # Note: Adding /detection/nuclei/scan allows headless agents/CLI to trigger scans
@@ -217,6 +312,8 @@ CSRF_EXEMPT_ENDPOINTS = [
     "/auth/users/set-initial-password",
     "/auth/logout",
     "/auth/refresh",
+    "/auth/csrf-challenge",
+    "/auth/csrf-nonce",
 ]
 
 # HTTP methods that don't need CSRF protection (idempotent)
