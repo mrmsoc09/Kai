@@ -240,8 +240,18 @@ class CatalogBackedCLITool(BaseTool):
         return shutil.which("docker") is not None
 
     @staticmethod
-    def _find_wordlist() -> str:
+    def _find_wordlist(prefer_speed: bool = False) -> str:
+        # Prefer SecLists via WordlistManager
+        try:
+            from .wordlist_manager import get_wordlist_manager
+            p = get_wordlist_manager().best_content_list(prefer_speed=prefer_speed)
+            if p:
+                return str(p)
+        except Exception:
+            pass
+        # Legacy system paths (Kali/Parrot)
         candidates = [
+            "/usr/share/seclists/Discovery/Web-Content/common.txt",
             "/usr/share/wordlists/dirb/common.txt",
             "/usr/share/dirb/wordlists/common.txt",
             "/usr/share/wordlists/dirbuster/directory-list-2.3-small.txt",
@@ -249,7 +259,7 @@ class CatalogBackedCLITool(BaseTool):
         for path in candidates:
             if Path(path).is_file():
                 return path
-        return candidates[0]  # binary-missing check happens in execute()
+        return candidates[1]  # binary-missing check happens in execute()
 
     def _build_command(self, target: str, extra_args: list[str]) -> tuple[list[str], str | None]:
         name = self.catalog_name

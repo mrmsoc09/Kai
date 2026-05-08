@@ -21,13 +21,32 @@ from ..content_discovery_schemas import CrawlRegistry, WebDiscoveryRegistry
 _APPROVED_SCOPE_LABEL = "Approved Research Scope"
 _ALLOWED_SNL_INTERFACES = {"tun0", "wg0", "vpn0", "snl0"}
 _MAX_RPS_CAP = 50
-_DEFAULT_WORDLISTS = {
-    "top1k": "wordlists/content/top-1k-discovery.txt",
-    "php": "wordlists/content/php-files.txt",
-    "js": "wordlists/content/js-files.txt",
-    "api": "wordlists/content/api-routes.txt",
-    "default": "wordlists/content/top-1k-discovery.txt",
-}
+def _resolve_wordlist(key: str) -> str:
+    """Resolve a wordlist key via WordlistManager (SecLists) with legacy fallback."""
+    try:
+        from apps.backend.src.core.wordlist_manager import get_wordlist_manager
+        wm = get_wordlist_manager()
+        seclists_map = {
+            "top1k":   "content/quickhits",
+            "php":     "content/common",
+            "js":      "content/common",
+            "api":     "api/endpoints",
+            "default": "content/dir-medium",
+        }
+        p = wm.get(seclists_map.get(key, "content/dir-medium"))
+        if p:
+            return str(p)
+    except Exception:
+        pass
+    # Bundled relative paths as last resort
+    _legacy = {
+        "top1k": "wordlists/content/top-1k-discovery.txt",
+        "php": "wordlists/content/php-files.txt",
+        "js": "wordlists/content/js-files.txt",
+        "api": "wordlists/content/api-routes.txt",
+        "default": "wordlists/content/top-1k-discovery.txt",
+    }
+    return _legacy.get(key, _legacy["default"])
 
 
 class FfufAgent(BaseToolAgent):

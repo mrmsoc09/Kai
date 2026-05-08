@@ -104,6 +104,7 @@ from apps.backend.src.routers import attack_paths as attack_paths_router
 from apps.backend.src.routers import signal_scores as signal_scores_router
 from apps.backend.src.routers import evidence_validations as evidence_validations_router
 from apps.backend.src.routers import approval_evidence as approval_evidence_router
+from apps.backend.src.routers import wordlists as wordlists_router
 
 
 services = Services()
@@ -434,6 +435,7 @@ app.include_router(planner.router)
 app.include_router(chains.router)
 app.include_router(embeddings.router)
 app.include_router(intel.router)
+app.include_router(wordlists_router.router)
 app.include_router(mcp.router)
 app.include_router(realtime.router)
 app.include_router(terminal_chat.router)  # /terminal/providers, /terminal/execute, /terminal/logs
