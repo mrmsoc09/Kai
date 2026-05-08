@@ -11,8 +11,16 @@ import os
 from typing import Any, Dict, Optional
 
 from celery import Celery
+from celery.schedules import crontab
 from celery.signals import task_failure, task_success, task_prerun
 from celery.exceptions import MaxRetriesExceededError
+
+# Import beat configuration
+try:
+    from .celery_beat_config import beat_schedule, timezone as beat_timezone
+except ImportError:
+    beat_schedule = {}
+    beat_timezone = "UTC"
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -40,6 +48,7 @@ celery_app = Celery(
         "apps.backend.src.core.notification_tasks",
         "apps.backend.src.worker.campaign_tasks",
         "apps.backend.src.worker.scan_pool_tasks",
+        "apps.backend.src.core.training_tasks",
     ],
 )
 
@@ -103,6 +112,16 @@ celery_app.conf.update(
         "health-check-workers": {
             "task": "apps.backend.src.core.monitoring_tasks.worker_health_check",
             "schedule": 60.0,  # Every minute
+        },
+        "update-training-data-daily": {
+            "task": "training.update_real_training_data",
+            "schedule": crontab(hour=6, minute=0),  # Daily at 6 AM
+            "args": ("/home/k1-admin/Kai/real_scan_data",),
+        },
+        "generate-synthetic-data-weekly": {
+            "task": "training.generate_synthetic_data",
+            "schedule": crontab(day_of_week=0, hour=6, minute=0),  # Weekly on Sunday at 6 AM
+            "args": ("/home/k1-admin/Kai/synthetic_data", 10, 5),
         },
     },
     

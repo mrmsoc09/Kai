@@ -1,0 +1,47 @@
+[
+  {
+    "id": "syn-obs-001",
+    "campaign_id": "syn-camp-001",
+    "category": "DISCOVERY",
+    "title": "Discovered subdomain api.example-target.com",
+    "summary": "Passive recon found new subdomain",
+    "observation_type": "DISCOVERY",
+    "payload_json": {"target": "api.example-target.com"}
+  },
+  {
+    "id": "syn-obs-002",
+    "campaign_id": "syn-camp-001",
+    "category": "VALIDATION",
+    "title": "Validated HTTP service on port 80",
+    "summary": "Active scan confirmed live HTTP service",
+    "observation_type": "VALIDATION",
+    "payload_json": {"host": "192.168.1.1", "port": 80}
+  },
+  {
+    "id": "syn-obs-003",
+    "campaign_id": "syn-camp-001",
+    "category": "FINGERPRINTING",
+    "title": "Detected Apache web server",
+    "summary": "Tech fingerprinting identified Apache",
+    "observation_type": "FINGERPRINTING",
+    "payload_json": {"technology": "Apache", "host": "example-target.com"}
+  },
+  {
+    "id": "syn-obs-004",
+    "campaign_id": "syn-camp-001",
+    "category": "DISCOVERY",
+    "title": "Found URL endpoint /api/v1/users",
+    "summary": "Crawling discovered API endpoint",
+    "observation_type": "DISCOVERY",
+    "payload_json": {"url": "https://api.example-target.com/v1/users"}
+  },
+  {
+    "id": "syn-obs-005",
+    "campaign_id": "syn-camp-001",
+    "category": "VALIDATION",
+    "title": "Confirmed DNS A record",
+    "summary": "DNS resolution validated",
+    "observation_type": "VALIDATION",
+    "payload_json": {"host": "example-target.com", "record": "A", "value": "192.168.1.1"}
+  }
+]

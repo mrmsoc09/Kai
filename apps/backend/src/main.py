@@ -82,6 +82,7 @@ from apps.backend.src.routers import (
     submissions,
     system,
     tools,
+    training,
     tasks,
     vault,
     workflows,
@@ -426,6 +427,7 @@ app.include_router(persona_garden.router)
 
 # Core operations (Tools and orchestration)
 app.include_router(tools)
+app.include_router(training.router)
 app.include_router(tasks)
 app.include_router(orchestrator.router)
 app.include_router(planner.router)

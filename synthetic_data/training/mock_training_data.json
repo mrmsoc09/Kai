@@ -1,0 +1,22 @@
+[
+  {
+    "prompt": "Tool subfinder failed on target example-target.com due to timeout. Suggest next action.",
+    "response": "Retry with increased timeout or switch to amass for passive recon."
+  },
+  {
+    "prompt": "Discovered new subdomain api.example-target.com. Should I proceed to active scanning?",
+    "response": "Check scope rules first. If in scope, proceed to live host validation."
+  },
+  {
+    "prompt": "Nuclei scan found potential SQL injection on https://example-target.com/login. Confidence: 0.8",
+    "response": "Validate manually and correlate with other findings before reporting."
+  },
+  {
+    "prompt": "Tech fingerprinting detected WordPress on staging.example-target.com. Known vulnerabilities?",
+    "response": "Check CVE database for WordPress version-specific issues."
+  },
+  {
+    "prompt": "Crawling found 500 URLs on api.example-target.com. Prioritize for scanning?",
+    "response": "Filter by parameters and endpoints likely to have vulnerabilities (e.g., login, admin)."
+  }
+]

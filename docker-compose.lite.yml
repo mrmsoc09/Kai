@@ -1,0 +1,67 @@
+version: '3.8'
+
+networks:
+  kai_internal:
+    driver: bridge
+  kai_admin:
+    driver: bridge
+
+services:
+  orchestrator:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: kai-orchestrator
+    container_name: kai_orchestrator
+    environment:
+      - DATABASE_URL=postgresql://user:password@postgres:5432/kai_db
+      - REDIS_URL=redis://redis:6379/0
+      - QDRANT_URL=http://qdrant:6333
+      # Add other necessary environment variables (e.g., VAULT_ADDR, VAULT_TOKEN)
+    networks:
+      - kai_internal
+      - kai_admin # For admin panel to communicate with orchestrator
+    depends_on:
+      - postgres
+      - redis
+      - qdrant
+    read_only: true
+
+  postgres:
+    image: postgres:16
+    container_name: kai_postgres
+    environment:
+      - POSTGRES_DB=kai_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    command: ["postgres", "-c", "hba_file=/etc/postgresql/pg_hba.conf"]
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./config/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - kai_internal
+
+  redis:
+    image: redis:6-alpine
+    container_name: kai_redis
+    networks:
+      - kai_internal
+    read_only: true
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: kai_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - kai_internal
+
+volumes:
+  postgres_data:
+  qdrant_data:

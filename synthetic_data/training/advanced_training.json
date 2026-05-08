@@ -1,0 +1,62 @@
+[
+  {
+    "input": "Analyze this vulnerability chain: API Chain Instance 1 on target1.example.com. Steps: ['Discover API endpoints', 'Broken authentication', 'Command injection in API parameter', 'Extract sensitive data']. What is the next best action?",
+    "output": "Given the chain severity HIGH and success probability 0.73, recommend immediate exploitation."
+  },
+  {
+    "input": "Analyze this vulnerability chain: Web App Chain Instance 2 on target4.example.com. Steps: ['Find exposed admin panel', 'Detect outdated CMS version', 'SQL injection in login form', 'Privilege escalation via misconfigured permissions']. What is the next best action?",
+    "output": "Given the chain severity MEDIUM and success probability 0.73, recommend further reconnaissance."
+  },
+  {
+    "input": "Analyze this vulnerability chain: Network Chain Instance 3 on target3.example.com. Steps: ['Find open ports', 'Enumerate service versions', 'Buffer overflow in service', 'Use compromised host to attack internal network']. What is the next best action?",
+    "output": "Given the chain severity MEDIUM and success probability 0.51, recommend further reconnaissance."
+  },
+  {
+    "input": "Analyze this vulnerability chain: Web App Chain Instance 4 on target1.example.com. Steps: ['Find exposed admin panel', 'Detect outdated CMS version', 'SQL injection in login form', 'Privilege escalation via misconfigured permissions']. What is the next best action?",
+    "output": "Given the chain severity HIGH and success probability 0.62, recommend further reconnaissance."
+  },
+  {
+    "input": "Analyze this vulnerability chain: Web App Chain Instance 5 on target3.example.com. Steps: ['Find exposed admin panel', 'Detect outdated CMS version', 'SQL injection in login form', 'Privilege escalation via misconfigured permissions']. What is the next best action?",
+    "output": "Given the chain severity LOW and success probability 0.43, recommend immediate exploitation."
+  },
+  {
+    "input": "Analyze this vulnerability chain: API Chain Instance 6 on target1.example.com. Steps: ['Discover API endpoints', 'Broken authentication', 'Command injection in API parameter', 'Extract sensitive data']. What is the next best action?",
+    "output": "Given the chain severity CRITICAL and success probability 0.62, recommend further reconnaissance."
+  },
+  {
+    "input": "Analyze this vulnerability chain: Web App Chain Instance 7 on target4.example.com. Steps: ['Find exposed admin panel', 'Detect outdated CMS version', 'SQL injection in login form', 'Privilege escalation via misconfigured permissions']. What is the next best action?",
+    "output": "Given the chain severity HIGH and success probability 0.87, recommend further reconnaissance."
+  },
+  {
+    "input": "Analyze this vulnerability chain: Network Chain Instance 8 on target1.example.com. Steps: ['Find open ports', 'Enumerate service versions', 'Buffer overflow in service', 'Use compromised host to attack internal network']. What is the next best action?",
+    "output": "Given the chain severity MEDIUM and success probability 0.43, recommend immediate exploitation."
+  },
+  {
+    "input": "Analyze this vulnerability chain: Web App Chain Instance 9 on target1.example.com. Steps: ['Find exposed admin panel', 'Detect outdated CMS version', 'SQL injection in login form', 'Privilege escalation via misconfigured permissions']. What is the next best action?",
+    "output": "Given the chain severity MEDIUM and success probability 0.28, recommend immediate exploitation."
+  },
+  {
+    "input": "Analyze this vulnerability chain: API Chain Instance 10 on target5.example.com. Steps: ['Discover API endpoints', 'Broken authentication', 'Command injection in API parameter', 'Extract sensitive data']. What is the next best action?",
+    "output": "Given the chain severity LOW and success probability 0.54, recommend immediate exploitation."
+  },
+  {
+    "input": "Detected potential zero-day: Zero-Day Memory Corruption with indicators ['device crashes', 'unusual network traffic', 'custom_indicator_5']. Severity: CRITICAL. How to proceed?",
+    "output": "For this LOW complexity zero-day, isolate and analyze."
+  },
+  {
+    "input": "Detected potential zero-day: Zero-Day RCE in Custom Framework with indicators ['unusual HTTP headers', 'custom error messages', 'custom_indicator_4']. Severity: CRITICAL. How to proceed?",
+    "output": "For this HIGH complexity zero-day, engage incident response."
+  },
+  {
+    "input": "Detected potential zero-day: Zero-Day Memory Corruption with indicators ['device crashes', 'unusual network traffic', 'custom_indicator_2']. Severity: CRITICAL. How to proceed?",
+    "output": "For this LOW complexity zero-day, engage incident response."
+  },
+  {
+    "input": "Detected potential zero-day: Zero-Day Memory Corruption with indicators ['device crashes', 'unusual network traffic', 'custom_indicator_2']. Severity: CRITICAL. How to proceed?",
+    "output": "For this MEDIUM complexity zero-day, isolate and analyze."
+  },
+  {
+    "input": "Detected potential zero-day: Zero-Day Memory Corruption with indicators ['device crashes', 'unusual network traffic', 'custom_indicator_1']. Severity: CRITICAL. How to proceed?",
+    "output": "For this MEDIUM complexity zero-day, engage incident response."
+  }
+]

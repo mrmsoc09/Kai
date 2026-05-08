@@ -36,6 +36,7 @@ from .commands import (
     orchestrator,
     tools,
     bug_bounty,
+    training,
 )
 
 
@@ -65,6 +66,7 @@ def cli(ctx: click.Context, api_url: str, verbose: bool, quiet: bool):
       orchestrator Orchestrator management
       tools        Tool catalog and readiness checks
       bug-bounty   Continuous bug bounty program scheduling and triage
+      training     Training data management
 
     \b
     Examples:
@@ -72,6 +74,7 @@ def cli(ctx: click.Context, api_url: str, verbose: bool, quiet: bool):
       kai-cli scan run example.com --tool nuclei
       kai-cli agent list
       kai-cli findings export --format json -o findings.json
+      kai-cli training update-real-training-data
 
     \b
     Environment Variables:
@@ -97,6 +100,7 @@ cli.add_command(findings)
 cli.add_command(orchestrator)
 cli.add_command(tools)
 cli.add_command(bug_bounty)
+cli.add_command(training)
 
 
 @cli.command()

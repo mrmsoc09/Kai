@@ -1,0 +1,32 @@
+tools:
+  - name: theharvester
+    base_image: python:3.12-slim-bookworm
+    build_deps: "git build-essential"
+    runtime_deps: ""
+    install_method: pip_clone_install
+    repo_url: https://github.com/laramies/theHarvester.git
+    entrypoint: ["python3", "-m", "theharvester.theharvester"]
+    cmd: ["-h"]
+    capabilities: []
+    template: python_tool.tmpl
+
+  - name: nmap
+    base_image: debian:bookworm-slim
+    build_deps: "nmap iputils-ping net-tools"
+    runtime_deps: ""
+    install_method: apt_install
+    entrypoint: ["nmap"]
+    cmd: ["--help"]
+    capabilities: ["NET_RAW", "NET_ADMIN"]
+    template: apt_tool.tmpl
+
+  - name: nuclei
+    base_image: golang:1.22-alpine # This version has a known issue with Nuclei's go.mod, user must resolve
+    build_deps: "git ca-certificates"
+    runtime_deps: "ca-certificates"
+    install_method: go_clone_build
+    repo_url: https://github.com/projectdiscovery/nuclei.git
+    entrypoint: ["nuclei"]
+    cmd: ["-h"]
+    capabilities: []
+    template: go_tool.tmpl

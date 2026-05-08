@@ -2,6 +2,12 @@ from __future__ import annotations
 from typing import Dict, Any, List, Tuple, Optional
 import os
 import re
+import logging
+
+from apps.backend.src.core.qdrant_vector import QdrantVectorStore # type: ignore
+from apps.backend.src.core.embeddings_client import EmbeddingClient # type: ignore
+
+logger = logging.getLogger(__name__)
 
 _GLOBAL_MEM: dict[str, dict] = {}
 
@@ -9,18 +15,38 @@ class VectorStore:
     def __init__(self):
         self._mem = _GLOBAL_MEM  # shared in-process store
         self._pg = None
-        dsn = os.environ.get('PGVECTOR_DSN')
-        if dsn:
+        self._qdrant = None
+        self._embedding_client = None
+
+        qdrant_url = os.environ.get('QDRANT_URL')
+        if qdrant_url:
+            qdrant_api_key = os.environ.get('QDRANT_API_KEY')
+            qdrant_collection = os.environ.get('QDRANT_COLLECTION_NAME', 'k1_collection')
             try:
+                self._qdrant = QdrantVectorStore(url=qdrant_url, api_key=qdrant_api_key, collection_name=qdrant_collection)
+                if not getattr(self._qdrant, 'available', False):
+                    self._qdrant = None # If not available, don't use it
+            except Exception as e:
+                logger.error(f"Failed to initialize Qdrant client: {e}")
+                self._qdrant = None
+
+        if self._qdrant is None: # Only try PG if Qdrant is not configured or failed to initialize
+            dsn = os.environ.get('PGVECTOR_DSN')
+            if dsn:
                 try:
-                    from apps.backend.src.core.vector_pg import PGVectorStore  # type: ignore
-                except Exception:  # pragma: no cover - compatibility fallback
-                    from core.vector_pg import PGVectorStore  # type: ignore
-                pg = PGVectorStore(dsn)
-                if getattr(pg, 'available', False):
-                    self._pg = pg
-            except Exception:
-                self._pg = None
+                    try:
+                        from apps.backend.src.core.vector_pg import PGVectorStore  # type: ignore
+                    except Exception:  # pragma: no cover - compatibility fallback
+                        from core.vector_pg import PGVectorStore  # type: ignore
+                    pg = PGVectorStore(dsn)
+                    if getattr(pg, 'available', False):
+                        self._pg = pg
+                except Exception as e:
+                    logger.error(f"Failed to initialize PGVectorStore: {e}")
+                    self._pg = None
+
+        if self._qdrant is not None or self._pg is not None: # Initialize EmbeddingClient if any external vector store is active
+            self._embedding_client = EmbeddingClient()
 
     @staticmethod
     def _tokens(text: str) -> List[str]:
@@ -67,33 +93,60 @@ class VectorStore:
         return inter / union
 
     def upsert(self, items: List[Dict[str, Any]]) -> int:
-        # Try PG first (best effort)
+        # Prefer Qdrant first (best effort)
+        if self._qdrant is not None:
+            try:
+                self._qdrant.upsert(items)
+            except Exception:
+                pass
+        # Then try PG (best effort)
         if self._pg is not None:
             try:
                 self._pg.upsert(items)
             except Exception:
                 pass
-        # Always maintain memory copy
+        # Always maintain memory copy as a fallback/cache
         for item in items:
             _id = str(item.get('id'))
             text = item.get('text') or ''
             meta = item.get('meta') or {}
+            # Store vector for Qdrant/PGVector later if it exists
+            vector = item.get('vector')
             self._mem[_id] = {
                 'text': text,
                 'meta': meta,
                 'tokens': self._tokens(text),
+                'vector': vector # Store vector in memory for consistent behavior
             }
         return len(items)
 
     def search(self, query: str, top_k: int = 5, min_score: float = 0.2) -> List[Dict[str, Any]]:
-        # Prefer PG if available
-        if self._pg is not None:
+        query_vector: Optional[List[float]] = None
+        if self._embedding_client is not None:
             try:
-                res = self._pg.search(query, top_k=top_k, min_score=min_score)
+                query_vector = self._embedding_client.embed(query)
+            except Exception as e:
+                logger.warning(f"Failed to embed query for vector search: {e}")
+
+        # Prefer Qdrant if available and we have a query vector
+        if self._qdrant is not None and query_vector is not None:
+            try:
+                res = self._qdrant.search(query_vector=query_vector, top_k=top_k, min_score=min_score)
                 if res:
                     return res
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"Qdrant search failed: {e}")
+
+        # Then try PG if available and we have a query vector
+        if self._pg is not None and query_vector is not None:
+            try:
+                res = self._pg.search(query_vector=query_vector, top_k=top_k, min_score=min_score)
+                if res:
+                    return res
+            except Exception as e:
+                logger.error(f"PostgreSQL vector search failed: {e}")
+
+        # Fallback to in-memory Jaccard similarity search
         qtok = self._tokens(query or '')
         scored: List[Tuple[str, float]] = []
         for _id, rec in self._mem.items():
@@ -116,7 +169,11 @@ class VectorStore:
         return out
 
     def info(self) -> Dict[str, Any]:
+        if self._qdrant is not None:
+            return self._qdrant.info()
+        if self._pg is not None:
+            return self._pg.info()
         return {
-            'backend': ('pgvector' if self._pg is not None else 'memory'),
+            'backend': 'memory',
             'mem_count': len(self._mem),
         }

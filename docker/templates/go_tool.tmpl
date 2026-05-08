@@ -1,0 +1,30 @@
+# {{ .ToolName }} Dockerfile
+FROM {{ .BaseImage }} as builder
+
+# Install git and other build dependencies
+RUN apk add --no-cache git
+
+WORKDIR /src
+# Clone tool repository
+RUN git clone {{ .RepoUrl }} .
+
+# Go module download and build
+RUN go mod download
+RUN go build -o /usr/local/bin/{{ .ToolName }} ./cmd/{{ .ToolName }}
+
+# --- Final image ---
+FROM alpine:latest
+
+# Install ca-certificates for HTTPS (common for Go tools)
+RUN apk add --no-cache ca-certificates
+
+# Copy the compiled binary from the builder stage
+COPY --from=builder /usr/local/bin/{{ .ToolName }} /usr/local/bin/{{ .ToolName }}
+
+# Create a non-root user
+RUN adduser --system --group kaiuser
+USER kaiuser
+
+# Set entrypoint and default command
+ENTRYPOINT {{ .Entrypoint }}
+CMD {{ .Cmd }}

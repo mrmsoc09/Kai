@@ -1,61 +1,156 @@
 version: '3.8'
 
+networks:
+  kai_internal:
+    driver: bridge
+  kai_admin:
+    driver: bridge
+
 services:
+  # Core Kai Services (Placeholders for now)
   orchestrator:
     build:
       context: .
-      dockerfile: Dockerfile.sovereign
-    container_name: k1-orchestrator
-    volumes:
-      - .:/app
-      - .k1:/app/.k1
-      - logs:/app/logs
+      dockerfile: Dockerfile.backend # Assuming a Dockerfile.backend exists or will be created for the main orchestrator
+    image: kai-orchestrator
+    container_name: kai_orchestrator
     environment:
-      - K1_OPERATOR_ABSENT=true
-      - K1_CHECKPOINT_ROOT_ID=checkpoints
-      - TRILIUM_URL=${TRILIUM_URL}
-      - TRILIUM_TOKEN=${TRILIUM_TOKEN}
+      - DATABASE_URL=postgresql://user:password@postgres:5432/kai_db
+      - REDIS_URL=redis://redis:6379/0
+      - QDRANT_URL=http://qdrant:6333
+      # Add other necessary environment variables (e.g., VAULT_ADDR, VAULT_TOKEN)
     networks:
-      - k1-net
-    dns:
-      - 1.1.1.1
-      - 8.8.8.8
-    cap_add:
-      - NET_ADMIN # Required for advanced networking/proxychains
-    restart: always
+      - kai_internal
+      - kai_admin # For admin panel to communicate with orchestrator
+    depends_on:
+      - postgres
+      - redis
+      - qdrant
+    # Ensuring no elevated privileges for the orchestrator itself
+    read_only: true
 
-  # --- Data Layer ---
   postgres:
-    image: ${K1_POSTGRES_IMAGE:-postgres:16-alpine}
-    container_name: k1-db
+    image: postgres:13-alpine
+    container_name: kai_postgres
     environment:
-      - POSTGRES_USER=k1
-      - POSTGRES_PASSWORD=k1_pass_secure
-      - POSTGRES_DB=k1
-    ports:
-      - "${K1_POSTGRES_HOST_BIND:-127.0.0.1}:${K1_POSTGRES_HOST_PORT:-5432}:5432"
-    networks:
-      - k1-net
+      - POSTGRES_DB=kai_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kai_internal
+    read_only: true
 
   redis:
-    image: redis:7-alpine
-    container_name: k1-cache
-    ports:
-      - "${K1_REDIS_HOST_BIND:-127.0.0.1}:${K1_REDIS_HOST_PORT:-6379}:6379"
+    image: redis:6-alpine
+    container_name: kai_redis
     networks:
-      - k1-net
+      - kai_internal
+    read_only: true
 
-networks:
-  k1-net:
-    driver: bridge
-    driver_opts:
-      com.docker.network.bridge.name: k1br0
-    ipam:
-      config:
-        - subnet: 172.20.0.0/16
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: kai_qdrant
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - kai_internal
+
+  # Admin GUI (Placeholder for now)
+  admin_gui:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin # Assuming a Dockerfile.admin exists or will be created for the admin GUI
+    image: kai-admin-gui
+    container_name: kai_admin_gui
+    ports:
+      - "8080:80" # Example port, can be adjusted
+    networks:
+      - kai_admin
+    depends_on:
+      - orchestrator # Admin GUI interacts with the orchestrator API
+    read_only: true
+
+  # Dedicated service for network-privileged tools
+  network-tools-runner:
+    # This service will be responsible for executing tools that require NET_RAW/NET_ADMIN
+    # The orchestrator will trigger execution via a dedicated mechanism (e.g., internal API call or message queue)
+    # For now, it directly defines and builds the Nmap tool.
+    build:
+      context: ./docker/nmap # Build context is specific to nmap Dockerfile
+      dockerfile: Dockerfile
+    image: kai-nmap
+    container_name: kai_nmap
+    networks:
+      - kai_internal
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    command: ["--help"]
+    read_only: true # Requires writable volume for output
+
+  # Tool Containers (Representative Subset)
+  theharvester:
+    build: ./docker/theharvester
+    image: kai-theharvester
+    container_name: kai_theharvester
+    networks:
+      - kai_internal
+    command: ["-h"]
+    read_only: true # Requires writable volume for output
+    # NOTE: kai-amass (another Go tool) build is currently blocked due to Go version incompatibility.
+
+  nuclei:
+    build: ./docker/nuclei
+    image: kai-nuclei
+    container_name: kai_nuclei
+    networks:
+      - kai_internal
+    command: ["-h"] # Default command to show help
+    read_only: true # Requires writable volume for output
+    # NOTE: kai-nuclei build is currently blocked due to Go version incompatibility.
+
+  # Garak
+  garak:
+    build: ./docker/garak
+    image: kai-garak
+    container_name: kai_garak
+    networks:
+      - kai_internal
+    command: ["--help"]
+    read_only: true # Requires writable volume for output
+  # PromptMap
+  promptmap:
+    build: ./docker/promptmap
+    image: kai-promptmap
+    container_name: kai_promptmap
+    networks:
+      - kai_internal
+    command: ["--help"]
+    read_only: true # Requires writable volume for output
+  # LLM Guard
+  llmguard:
+    build: ./docker/llmguard
+    image: kai-llmguard
+    container_name: kai_llmguard
+    networks:
+      - kai_internal
+    command: ["--help"]
+    read_only: true # Requires writable volume for output
+  # PyRIT
+  pyrit:
+    build: ./docker/pyrit
+    image: kai-pyrit
+    container_name: kai_pyrit
+    networks:
+      - kai_internal
+    command: ["--help"]
+    read_only: true # Requires writable volume for output
 
 volumes:
   postgres_data:
-  logs:
+  qdrant_data:

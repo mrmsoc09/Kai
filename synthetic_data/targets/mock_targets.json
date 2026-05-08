@@ -1,0 +1,32 @@
+[
+  {
+    "target_id": "syn-001",
+    "value": "example-target.com",
+    "target_type": "domain",
+    "created_at": "2026-05-06T00:00:00Z"
+  },
+  {
+    "target_id": "syn-002",
+    "value": "api.example-target.com",
+    "target_type": "subdomain",
+    "created_at": "2026-05-06T00:00:00Z"
+  },
+  {
+    "target_id": "syn-003",
+    "value": "192.168.1.0/24",
+    "target_type": "cidr",
+    "created_at": "2026-05-06T00:00:00Z"
+  },
+  {
+    "target_id": "syn-004",
+    "value": "staging.example-target.com",
+    "target_type": "subdomain",
+    "created_at": "2026-05-06T00:00:00Z"
+  },
+  {
+    "target_id": "syn-005",
+    "value": "test-api.example-target.com",
+    "target_type": "subdomain",
+    "created_at": "2026-05-06T00:00:00Z"
+  }
+]

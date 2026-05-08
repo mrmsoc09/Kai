@@ -1,60 +1,14 @@
-# K1 Backend Dockerfile
-# Multi-stage build for production-ready FastAPI application
-
-# --- STAGE 1: Builder ---
-FROM python:3.11-slim-bookworm AS builder
-
-WORKDIR /build
-
-# Install build dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir --user -r requirements.txt
-
-# --- STAGE 2: Runtime ---
-FROM python:3.11-slim-bookworm
-
-# Create non-root user
-RUN groupadd -r k1 && useradd -r -g k1 k1
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpq5 \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# /home/k1-admin/Kai/Dockerfile.backend
+FROM python:3.12-slim-bookworm
 
 WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy Python packages from builder
-COPY --from=builder /root/.local /home/k1/.local
-ENV PATH=/home/k1/.local/bin:$PATH
+COPY . .
 
-# Copy application code
-COPY --chown=k1:k1 apps/backend/src ./apps/backend/src
-COPY --chown=k1:k1 main.py .
-COPY --chown=k1:k1 pyproject.toml .
-COPY --chown=k1:k1 alembic.ini .
-COPY --chown=k1:k1 alembic ./alembic
-COPY --chown=k1:k1 tools ./tools
-COPY --chown=k1:k1 config ./config
+# Create a non-root user
+RUN adduser --system --group kaiuser
+USER kaiuser
 
-# Create necessary directories
-RUN mkdir -p artifacts logs && chown -R k1:k1 /app
-
-# Switch to non-root user
-USER k1
-
-# Expose port
-EXPOSE 8080
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8080/health || exit 1
-
-# Default command
-CMD ["uvicorn", "apps.backend.src.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["python3", "kai_master.py"] # Assuming kai_master.py is the main orchestrator script

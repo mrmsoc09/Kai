@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kai Admin Console</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="login-container">
+        <h2>Login to Kai Admin Console</h2>
+        <form id="loginForm">
+            <label for="username">Username:</label>
+            <input type="text" id="username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" required>
+            <button type="submit">Login</button>
+            <p id="loginError" style="color: red; display: none;">Invalid username or password.</p>
+        </form>
+    </div>
+
+    <div class="container" style="display:none;">
+        <header>
+            <h1>Kai Admin Console</h1>
+        </header>
+
+        <nav>
+            <ul>
+                <li><a href="#manage-scans">Manage Scans</a></li>
+                <li><a href="#manage-users">Manage Users</a></li>
+                <li><a href="#platform-settings">Platform Settings</a></li>
+            </ul>
+        </nav>
+
+        <main>
+            <section id="manage-scans">
+                <h2>Manage Scans</h2>
+                <form id="startScanForm">
+                    <label for="targetDomain">Target Domain:</label>
+                    <input type="text" id="targetDomain" placeholder="e.g., example.com" required>
+                    <button type="submit">Start New Scan</button>
+                </form>
+                <div id="scanStatus"></div>
+            </section>
+
+            <section id="manage-users" style="display:none;">
+                <h2>Manage Users</h2>
+                <p>User management features will appear here.</p>
+            </section>
+
+            <section id="platform-settings" style="display:none;">
+                <h2>Platform Settings</h2>
+                <p>Platform configuration settings will appear here.</p>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 Kai Platform</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

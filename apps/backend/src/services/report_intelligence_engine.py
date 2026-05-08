@@ -610,3 +610,80 @@ RECOMMENDATIONS
         await self.db.commit()
 
         self.logger.info(f"Report stored: {spec.report_title} ({report_record.id})")
+
+    async def chunk_real_scan_data_for_training(self, data_dir: str = "/home/k1-admin/Kai/real_scan_data") -> dict[str, Any]:
+        """Parse and chunk real scan data for AI training.
+
+        Extracts patterns from completed workflows and chunks them into training samples.
+        """
+        import json
+        from pathlib import Path
+
+        data_path = Path(data_dir)
+        training_chunks = []
+
+        # Parse observations
+        obs_file = data_path / "observations" / "real_observations.json"
+        if obs_file.exists():
+            with open(obs_file, "r") as f:
+                observations = json.load(f)
+
+            for obs in observations:
+                chunk = {
+                    "type": "observation",
+                    "category": obs.get("category"),
+                    "title": obs.get("title"),
+                    "summary": obs.get("summary"),
+                    "payload": obs.get("payload_json", {}),
+                    "training_label": self._classify_observation(obs)
+                }
+                training_chunks.append(chunk)
+
+        # Parse artifacts
+        artifacts_dir = data_path / "artifacts"
+        if artifacts_dir.exists():
+            for artifact_file in artifacts_dir.glob("*.json"):
+                with open(artifact_file, "r") as f:
+                    artifacts = json.load(f)
+
+                for artifact in artifacts:
+                    chunk = {
+                        "type": "artifact",
+                        "artifact_type": artifact_file.stem.replace("real_", "").replace("_records", ""),
+                        "data": artifact,
+                        "training_label": self._classify_artifact(artifact)
+                    }
+                    training_chunks.append(chunk)
+
+        # Save training chunks
+        training_file = data_path / "training" / "real_training_chunks.json"
+        training_file.parent.mkdir(exist_ok=True)
+        with open(training_file, "w") as f:
+            json.dump(training_chunks, f, indent=2)
+
+        return {"chunks_created": len(training_chunks), "file": str(training_file)}
+
+    def _classify_observation(self, obs: dict) -> str:
+        """Classify observation for training."""
+        category = obs.get("category", "")
+        if "DISCOVERY" in category:
+            return "discovery_pattern"
+        elif "VALIDATION" in category:
+            return "validation_success"
+        elif "FINGERPRINTING" in category:
+            return "tech_detection"
+        else:
+            return "general_observation"
+
+    def _classify_artifact(self, artifact: dict) -> str:
+        """Classify artifact for training."""
+        if "host" in artifact and "port" in artifact:
+            return "service_discovery"
+        elif "record_type" in artifact:
+            return "dns_resolution"
+        elif "base_url" in artifact:
+            return "web_fingerprint"
+        elif "url" in artifact:
+            return "endpoint_discovery"
+        else:
+            return "general_artifact"

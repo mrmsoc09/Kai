@@ -63,12 +63,26 @@ compose_up_with_retry() {
     local compose_bin="$1"
     shift
     local services=("$@")
+    info "Debug: compose_up_with_retry received services: ${services[@]}"
     local output=""
-    if output="$(${compose_bin} -f docker-compose.yml up -d "${services[@]}" 2>&1)"; then
+    local compose_exit_code=0
+    local output_file="${REPO_ROOT}/runtime/logs/compose_up_temp.log"
+
+    # Run the command and capture output and exit code
+    if ! ${compose_bin} -f docker-compose.yml up -d "${services[@]}" >"${output_file}" 2>&1; then
+        compose_exit_code=$?
+    fi
+
+    # Read the output from the temporary file
+    output=$(cat "${output_file}")
+    rm -f "${output_file}"
+
+    if [[ "${compose_exit_code}" -eq 0 ]]; then
         [[ -n "${output}" ]] && echo "${output}"
         return 0
     fi
 
+    # If we reached here, compose_up failed (compose_exit_code is non-zero)
     if [[ "${output}" == *"ContainerConfig"* ]]; then
         warn "Detected docker-compose recreate bug (ContainerConfig). Cleaning stale containers and retrying once."
         for service in "${services[@]}"; do
@@ -662,6 +676,27 @@ fi
 
 mkdir -p runtime/logs runtime/pids
 
+parse_args() {
+    while [[ $# -gt 0 ]]; do
+        key="$1"
+        case $key in
+            --lite)
+            export K1_ALLOW_INSECURE_LOCAL_START=true
+            export K1_OLLAMA_MANAGED_EXTERNALLY=true
+            warn "Lite mode enabled: Sovereign network checks bypassed, Ollama container management skipped."
+            shift
+            ;;
+            *)
+            # unknown option
+            error "Unknown option: $1"
+            exit 1
+            ;;
+        esac
+    done
+}
+
+parse_args "$@"
+
 verify_sovereign_network || exit 1
 
 BACKEND_HOST="$(read_env_value BACKEND_HOST 0.0.0.0)"
@@ -692,23 +727,29 @@ if [[ -n "${COMPOSE_BIN}" ]]; then
     SECRET_BACKEND="${SECRET_BACKEND_EFFECTIVE}"
     PROVIDER_CHAIN="$(printf "%s,%s" "$(read_env_value K1_PRIMARY_LLM_PROVIDER anthropic)" "$(read_env_value K1_FALLBACK_LLM_PROVIDERS openai,gemini,ollama)" | tr '[:upper:]' '[:lower:]')"
     INFRA_SERVICES=(postgres redis)
+    if env_truthy "$(read_env_value K1_OLLAMA_MANAGED_EXTERNALLY false)"; then
+        info "K1_OLLAMA_MANAGED_EXTERNALLY=true; skipping Ollama service management."
+        OLLAMA_REQUIRED=false
+    else
+        if [[ "${PROVIDER_CHAIN}" == *"ollama"* ]]; then
+            OLLAMA_REQUIRED=true
+            if should_manage_ollama_container; then
+                if compose_service_defined "${COMPOSE_BIN}" "ollama"; then
+                    INFRA_SERVICES+=(ollama)
+                    START_OLLAMA=true
+                else
+                    warn "Ollama is required but compose service 'ollama' is not defined; expecting external Ollama."
+                fi
+            fi
+        fi
+    fi
+
     if [[ "${SECRET_BACKEND}" == "vault" ]]; then
         if compose_service_defined "${COMPOSE_BIN}" "vault"; then
             INFRA_SERVICES+=(vault)
             START_VAULT=true
         else
             warn "K1_SECRET_BACKEND=vault but compose service 'vault' is not defined; expecting external Vault/fallback."
-        fi
-    fi
-    if [[ "${PROVIDER_CHAIN}" == *"ollama"* ]]; then
-        OLLAMA_REQUIRED=true
-        if should_manage_ollama_container; then
-            if compose_service_defined "${COMPOSE_BIN}" "ollama"; then
-                INFRA_SERVICES+=(ollama)
-                START_OLLAMA=true
-            else
-                warn "Ollama is required but compose service 'ollama' is not defined; expecting external Ollama."
-            fi
         fi
     fi
 
@@ -762,6 +803,8 @@ else
 fi
 
 info "Applying database migrations (idempotent)..."
+info "Debug: DATABASE_URL for alembic: $(read_env_value DATABASE_URL "")"
+export DATABASE_URL=$(read_env_value DATABASE_URL "")
 alembic upgrade heads
 
 start_service "Backend API" "${BACKEND_PID_FILE}" "${BACKEND_LOG}" \

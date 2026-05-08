@@ -1,0 +1,13 @@
+# {{ .ToolName }} Dockerfile
+FROM {{ .BaseImage }}
+
+# Install tool and dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends {{ .BuildDeps }} && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user
+RUN adduser --system --group kaiuser
+USER kaiuser
+
+# Set entrypoint and default command
+ENTRYPOINT {{ .Entrypoint }}
+CMD {{ .Cmd }}

@@ -1,0 +1,92 @@
+[
+  {
+    "scenario_id": "zero-syn-000",
+    "name": "Zero-Day Memory Corruption",
+    "description": "Heap overflow in embedded device firmware",
+    "target_type": "network_device",
+    "discovery_date": "2026-05-06T18:11:10.273600+00:00",
+    "severity": "CRITICAL",
+    "cve_candidate": "CVE-2026-ZZZZ",
+    "indicators": [
+      "device crashes",
+      "unusual network traffic",
+      "custom_indicator_5"
+    ],
+    "exploit_complexity": "LOW",
+    "detection_difficulty": "MODERATE",
+    "potential_impact": "Complete system compromise",
+    "recommended_response": "Isolate affected systems, monitor for IOCs"
+  },
+  {
+    "scenario_id": "zero-syn-001",
+    "name": "Zero-Day RCE in Custom Framework",
+    "description": "Remote code execution in proprietary web framework",
+    "target_type": "api",
+    "discovery_date": "2026-05-06T18:11:10.273950+00:00",
+    "severity": "CRITICAL",
+    "cve_candidate": "CVE-2026-8471",
+    "indicators": [
+      "unusual HTTP headers",
+      "custom error messages",
+      "custom_indicator_4"
+    ],
+    "exploit_complexity": "HIGH",
+    "detection_difficulty": "HARD",
+    "potential_impact": "Complete system compromise",
+    "recommended_response": "Isolate affected systems, monitor for IOCs"
+  },
+  {
+    "scenario_id": "zero-syn-002",
+    "name": "Zero-Day Memory Corruption",
+    "description": "Heap overflow in embedded device firmware",
+    "target_type": "api",
+    "discovery_date": "2026-05-06T18:11:10.274018+00:00",
+    "severity": "CRITICAL",
+    "cve_candidate": "CVE-2026-ZZZZ",
+    "indicators": [
+      "device crashes",
+      "unusual network traffic",
+      "custom_indicator_2"
+    ],
+    "exploit_complexity": "LOW",
+    "detection_difficulty": "MODERATE",
+    "potential_impact": "Complete system compromise",
+    "recommended_response": "Isolate affected systems, monitor for IOCs"
+  },
+  {
+    "scenario_id": "zero-syn-003",
+    "name": "Zero-Day Memory Corruption",
+    "description": "Heap overflow in embedded device firmware",
+    "target_type": "network_device",
+    "discovery_date": "2026-05-06T18:11:10.274065+00:00",
+    "severity": "CRITICAL",
+    "cve_candidate": "CVE-2026-ZZZZ",
+    "indicators": [
+      "device crashes",
+      "unusual network traffic",
+      "custom_indicator_2"
+    ],
+    "exploit_complexity": "MEDIUM",
+    "detection_difficulty": "MODERATE",
+    "potential_impact": "Complete system compromise",
+    "recommended_response": "Isolate affected systems, monitor for IOCs"
+  },
+  {
+    "scenario_id": "zero-syn-004",
+    "name": "Zero-Day Memory Corruption",
+    "description": "Heap overflow in embedded device firmware",
+    "target_type": "api",
+    "discovery_date": "2026-05-06T18:11:10.274129+00:00",
+    "severity": "CRITICAL",
+    "cve_candidate": "CVE-2026-ZZZZ",
+    "indicators": [
+      "device crashes",
+      "unusual network traffic",
+      "custom_indicator_1"
+    ],
+    "exploit_complexity": "MEDIUM",
+    "detection_difficulty": "MODERATE",
+    "potential_impact": "Complete system compromise",
+    "recommended_response": "Isolate affected systems, monitor for IOCs"
+  }
+]

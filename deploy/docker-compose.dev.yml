@@ -97,9 +97,11 @@ services:
       THEHIVE_URL: http://thehive:9000
       THEHIVE_API_KEY: changeme
       VAULT_ADDR: http://vault:8200
+      QDRANT_URL: http://qdrant:6333
     depends_on:
       - postgres
       - thehive
+      - qdrant
     ports:
       - "8080:8080"
     healthcheck:

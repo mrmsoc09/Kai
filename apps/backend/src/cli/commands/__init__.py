@@ -15,6 +15,7 @@ __all__ = [
     "orchestrator",
     "tools",
     "bug_bounty",
+    "training",
 ]
 
 
