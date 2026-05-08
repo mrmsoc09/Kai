@@ -85,6 +85,36 @@ from apps.backend.src.core.praison_state import (
 from apps.backend.src.core.praison_adapter_contract import BasicPraisonAdapterContract
 from apps.backend.src.core.praison_topology import MissionGraphSpec, PraisonTopology
 
+# LangSmith — optional tracing bridge
+try:
+    from apps.backend.src.core.langsmith_integration import (
+        get_langsmith_bridge as _get_ls_bridge,
+        mission_run_name as _ls_mission_run_name,
+    )
+    _LS_RUNTIME_AVAILABLE = True
+except Exception:
+    _LS_RUNTIME_AVAILABLE = False
+
+# DeepAgents — detect package availability so substrate resolution is accurate
+try:
+    from apps.backend.src.core.praison_adapters.deepagents_adapter import (
+        _DEEPAGENTS_AVAILABLE as _DEEP_PKG_AVAILABLE,
+        create_deep_agent as _create_deep_agent,
+        DeepAgentConfig,
+    )
+except Exception:
+    _DEEP_PKG_AVAILABLE = False
+    _create_deep_agent = None  # type: ignore[assignment]
+    DeepAgentConfig = None  # type: ignore[assignment]
+
+# Intelligence Platform Service — optional; degrades gracefully if unavailable
+try:
+    from apps.backend.src.core.intelligence_platform_service import get_intelligence_service as _get_intel_svc
+    _INTEL_SVC_AVAILABLE = True
+except Exception:
+    _INTEL_SVC_AVAILABLE = False
+    _get_intel_svc = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 
@@ -550,9 +580,13 @@ class MissionRuntime:
         """
         normalized_requested = str(requested_substrate or "")
         normalized_fallback = str(fallback_substrate or ExecutionSubstrate.LANGGRAPH_PRIMARY.value)
+        # DeepAgents substrate is available when either:
+        # (a) the real deepagents PyPI package is installed, OR
+        # (b) the caller has set deepagents_backend_profile in state (explicit opt-in)
+        deepagents_available = _DEEP_PKG_AVAILABLE or bool(state.get("deepagents_backend_profile"))
         if (
             normalized_requested == ExecutionSubstrate.DEEPAGENTS_SPECIALIST.value
-            and not state.get("deepagents_backend_profile")
+            and not deepagents_available
         ):
             divergence = {
                 "type": "execution_substrate_divergence",
@@ -920,6 +954,39 @@ class MissionRuntime:
             },
         ))
 
+        # LangSmith: start mission-level trace and store correlation in state
+        if _LS_RUNTIME_AVAILABLE:
+            try:
+                ls = _get_ls_bridge()
+                if ls.is_operational():
+                    ls_corr = ls.start_mission_trace(
+                        mission_id=mission_id,
+                        workflow_id=handle.workflow_id,
+                        program_id=handle.program_id,
+                        execution_mode=handle.execution_mode,
+                        mission_name=handle.initial_state.get("mission_name", ""),
+                    )
+                    if ls_corr is not None:
+                        current_state["_ls_correlation"] = ls_corr
+                        self._states[mission_id] = current_state
+            except Exception as _ls_exc:
+                logger.debug("LangSmith mission trace start failed: %s", _ls_exc)
+
+        # Intelligence Platform Service: notify on mission start (non-blocking)
+        if _INTEL_SVC_AVAILABLE and handle.execution_mode == "live":
+            try:
+                import asyncio as _asyncio
+                targets = list(current_state.get("targets", []) or [handle.program_id])
+                _asyncio.ensure_future(
+                    _get_intel_svc().on_mission_start(
+                        mission_id=mission_id,
+                        program_name=handle.program_id,
+                        targets=targets,
+                    )
+                )
+            except Exception as _intel_exc:
+                logger.debug("IntelligencePlatformService on_mission_start failed: %s", _intel_exc)
+
         try:
             requested_substrate = str(selector_artifact.get("selected_substrate") or "")
             selected_substrate, divergence = self._resolve_effective_substrate(
@@ -1016,6 +1083,42 @@ class MissionRuntime:
                 final_report_id=final_state.get("final_report_id", ""),
                 metrics=self._runtime_metrics_summary(final_state),
             ))
+
+            # LangSmith: close mission trace
+            if _LS_RUNTIME_AVAILABLE:
+                try:
+                    ls_corr = final_state.get("_ls_correlation")
+                    if ls_corr is not None:
+                        ls = _get_ls_bridge()
+                        if ls.is_operational():
+                            ls.end_mission_trace(
+                                correlation=ls_corr,
+                                success=success,
+                                error=str(final_state.get("error") or ""),
+                                summary=self._runtime_metrics_summary(final_state),
+                            )
+                except Exception as _ls_exc:
+                    logger.debug("LangSmith mission trace end failed: %s", _ls_exc)
+
+            # Intelligence Platform Service: notify on mission complete (non-blocking)
+            if _INTEL_SVC_AVAILABLE and handle.execution_mode == "live":
+                try:
+                    import asyncio as _asyncio
+                    scan_context = {
+                        "scan_id": mission_id,
+                        "mission_id": mission_id,
+                        "program_name": handle.program_id,
+                    }
+                    stats = self._runtime_metrics_summary(final_state)
+                    _asyncio.ensure_future(
+                        _get_intel_svc().on_mission_complete(
+                            mission_id=mission_id,
+                            scan_context=scan_context,
+                            statistics=stats,
+                        )
+                    )
+                except Exception as _intel_exc:
+                    logger.debug("IntelligencePlatformService on_mission_complete failed: %s", _intel_exc)
 
             benchmark_record = mission_benchmark_record_from_state(
                 mission_id=mission_id,

@@ -72,6 +72,39 @@ from apps.backend.src.utils.profiler import execution_timer
 
 logger = logging.getLogger(__name__)
 
+# -- LangChain tool registry (lazy import — degrades if langchain_core absent) --
+try:
+    from apps.backend.src.core.langchain_tool_registry import (
+        K1LangChainToolRegistry,
+        K1ToolContext,
+    )
+    _LC_REGISTRY = K1LangChainToolRegistry()
+    _LC_AVAILABLE = True
+except Exception:  # ImportError or langchain_core missing
+    _LC_REGISTRY = None  # type: ignore[assignment]
+    _LC_AVAILABLE = False
+
+# -- LangSmith tracing bridge (lazy import — degrades when disabled/absent) -----
+try:
+    from apps.backend.src.core.langsmith_integration import (
+        get_langsmith_bridge,
+        node_run_name,
+        phase_run_name,
+        TraceCorrelation,
+    )
+    _LS_AVAILABLE = True
+except Exception:
+    _LS_AVAILABLE = False
+
+
+def _ls_bridge() -> Any:
+    if not _LS_AVAILABLE:
+        return None
+    try:
+        return get_langsmith_bridge()
+    except Exception:
+        return None
+
 
 # -- Accumulative state fields (canonical definition lives in praison_state) ----
 # Re-exported here for backward compatibility with existing importers.
@@ -422,6 +455,23 @@ def make_node_executor(
                 "events": [{"event_type": "node_completed", "node_id": node_id, "mode": execution_mode}],
             }
 
+        # -- LangSmith: open node span ----------------------------------------
+        ls = _ls_bridge()
+        ls_parent = state.get("_ls_correlation")
+        ls_run_id: str | None = None
+        if ls and ls.is_operational():
+            try:
+                from apps.backend.src.core.langsmith_integration import TraceCorrelation
+                parent_corr = ls_parent if isinstance(ls_parent, TraceCorrelation) else None
+                ls_run_id = ls.create_run(
+                    name=node_run_name(node_id),
+                    run_type="chain",
+                    correlation=parent_corr,
+                    inputs={"node_id": node_id, "phase": phase, "mission_id": mission_id},
+                )
+            except Exception as _ls_exc:
+                logger.debug("LangSmith node span open failed: %s", _ls_exc)
+
         # Real execution
         try:
             result = agent_callable(state)
@@ -453,11 +503,18 @@ def make_node_executor(
                 mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,
                 node_id=node_id, phase=phase, artifact_ids=artifact_ids,
             ))
-            
+
+            # -- LangSmith: close node span -----------------------------------
+            if ls and ls_run_id:
+                try:
+                    ls.end_run(ls_run_id, outputs={"status": "completed", "artifact_count": len(artifact_ids)})
+                except Exception as _ls_exc:
+                    logger.debug("LangSmith node span close failed: %s", _ls_exc)
+
             # Optimization: Cache successful updates for deterministic nodes
             if node_type in CACHEABLE_NODES:
                 _NODE_RESULT_CACHE[cache_key] = update
-                
+
             return update
 
         except Exception as exc:
@@ -469,6 +526,14 @@ def make_node_executor(
                 mission_id=mission_id, workflow_id=workflow_id, program_id=program_id,
                 node_id=node_id, error=str(exc), phase=phase,
             ))
+
+            # -- LangSmith: close node span with error ------------------------
+            if ls and ls_run_id:
+                try:
+                    ls.end_run(ls_run_id, outputs={}, error=str(exc))
+                except Exception as _ls_exc:
+                    logger.debug("LangSmith node span error close failed: %s", _ls_exc)
+
             return {
                 "active_node": node_id,
                 "last_agent": node_id,
@@ -545,6 +610,47 @@ def make_phase_coordinator_executor(
         program_id = state.get("program_id", "")
         old_phase = state.get("phase", "")
 
+        # Inject phase-scoped LangChain tools into state for downstream agents.
+        # Tools are keyed under "lc_tools" so any agent callable can consume them.
+        if _LC_AVAILABLE and _LC_REGISTRY is not None:
+            try:
+                lc_ctx = K1ToolContext(
+                    mission_id=mission_id,
+                    workflow_id=workflow_id,
+                    program_id=program_id,
+                    agent_id=node_id,
+                    phase=phase_name,
+                    execution_mode=state.get("execution_mode", "live"),
+                    allowed_tool_ids=frozenset(state.get("allowed_tool_ids", [])),
+                    node_id=node_id,
+                )
+                lc_tools = _LC_REGISTRY.get_tools_for_phase(lc_ctx, phase_name)
+                state = {**state, "lc_tools": lc_tools, "lc_tool_count": len(lc_tools)}
+                logger.debug(
+                    "Phase %s: injected %d LangChain tools into state",
+                    phase_name,
+                    len(lc_tools),
+                )
+            except Exception as lc_exc:
+                logger.debug("LangChain tool injection failed for phase %s: %s", phase_name, lc_exc)
+
+        # LangSmith: open phase span
+        ls = _ls_bridge()
+        ls_parent = state.get("_ls_correlation")
+        ls_phase_run_id: str | None = None
+        if ls and ls.is_operational():
+            try:
+                from apps.backend.src.core.langsmith_integration import TraceCorrelation
+                parent_corr = ls_parent if isinstance(ls_parent, TraceCorrelation) else None
+                ls_phase_run_id = ls.create_run(
+                    name=phase_run_name(phase_name),
+                    run_type="chain",
+                    correlation=parent_corr,
+                    inputs={"phase": phase_name, "mission_id": mission_id},
+                )
+            except Exception as _ls_exc:
+                logger.debug("LangSmith phase span open failed: %s", _ls_exc)
+
         result = base(state)
         result["phase"] = phase_name
 
@@ -554,6 +660,13 @@ def make_phase_coordinator_executor(
                 from_phase=old_phase, to_phase=phase_name,
             ))
 
+        # LangSmith: close phase span
+        if ls and ls_phase_run_id:
+            try:
+                ls.end_run(ls_phase_run_id, outputs={"phase": phase_name, "success": not result.get("error")})
+            except Exception as _ls_exc:
+                logger.debug("LangSmith phase span close failed: %s", _ls_exc)
+
         return result
 
     executor.__name__ = node_id
@@ -561,6 +674,73 @@ def make_phase_coordinator_executor(
 
 
 # -- Specialist cluster node ---------------------------------------------------
+
+def _try_deepagents_specialist(
+    cluster_name: str,
+    state: dict[str, Any],
+) -> dict[str, Any] | None:
+    """
+    Attempt to run the specialist cluster via DeepAgents when the package is
+    available AND the selected substrate is deepagents_specialist.
+
+    Returns a result dict on success, or None if DeepAgents is unavailable /
+    substrate is not deepagents_specialist.
+    """
+    selected_substrate = str(state.get("selected_substrate") or state.get("_substrate") or "")
+    if selected_substrate != "deepagents_specialist":
+        return None
+
+    try:
+        from apps.backend.src.core.praison_adapters.deepagents_adapter import (
+            _DEEPAGENTS_AVAILABLE,
+            create_deep_agent,
+        )
+    except ImportError:
+        return None
+
+    if not _DEEPAGENTS_AVAILABLE:
+        return None
+
+    try:
+        from apps.backend.src.core.praison_agent import AgentIdentity
+
+        identity = AgentIdentity(
+            agent_id=f"specialist_{cluster_name}",
+            persona_name=cluster_name,
+            persona_role=f"Specialist cluster: {cluster_name}",
+            permissions=frozenset({"band_0", "band_1"}),
+        )
+        agent = create_deep_agent(
+            identity,
+            specialist_type=cluster_name,
+            phase=str(state.get("phase", "")),
+            execution_mode=str(state.get("execution_mode", "live")),
+            mission_id=str(state.get("mission_id", "")),
+            workflow_id=str(state.get("workflow_id", "")),
+            program_id=str(state.get("program_id", "")),
+        )
+
+        import asyncio
+        loop = asyncio.get_event_loop()
+        task_prompt = (
+            f"Execute {cluster_name} specialist work for "
+            f"target: {state.get('program_id', 'unknown')}. "
+            f"Phase: {state.get('phase', 'unknown')}."
+        )
+        result = loop.run_until_complete(agent.execute(task_prompt, context=state))
+        return {
+            "deepagents_result": result.output if hasattr(result, "output") else str(result),
+            "deepagents_cluster": cluster_name,
+            "deepagents_iterations": getattr(result, "iterations", 0),
+        }
+    except Exception as exc:
+        logger.warning(
+            "DeepAgents specialist execution failed for %s: %s — falling back to base",
+            cluster_name,
+            exc,
+        )
+        return None
+
 
 def make_specialist_cluster_executor(
     cluster_name: str,
@@ -571,6 +751,10 @@ def make_specialist_cluster_executor(
     Bounded specialist execution. Cluster node that delegates to specialists
     under DelegationContracts with TTL enforcement.
 
+    When the deepagents package is installed and the selected substrate is
+    "deepagents_specialist", delegates to a DeepAgent instance for deep
+    specialist reasoning before falling back to the standard base executor.
+
     simulation_artifact_type: artifact type to set in graph_only/tool_mock mode
       so that ON_ARTIFACT conditional edges can fire during topology validation.
     """
@@ -578,7 +762,23 @@ def make_specialist_cluster_executor(
     base = make_node_executor(node_id, agent_callable, node_type="cluster")
 
     def executor(state: dict[str, Any]) -> dict[str, Any]:
-        result = base(state)
+        # Attempt DeepAgents specialist execution when substrate requests it
+        deep_result = _try_deepagents_specialist(cluster_name, state)
+        if deep_result is not None:
+            result = {
+                "active_node": node_id,
+                "last_agent": node_id,
+                "node_history": [
+                    _history_entry(
+                        node_id, "completed",
+                        datetime.now(timezone.utc).isoformat(),
+                    )
+                ],
+                **deep_result,
+            }
+        else:
+            result = base(state)
+
         # Propagate cluster status
         cluster_status = dict(state.get("cluster_status", {}))
         cluster_status[cluster_name] = {
