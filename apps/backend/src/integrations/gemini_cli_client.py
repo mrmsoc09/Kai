@@ -1,6 +1,13 @@
 """
 Google Gemini CLI Client
 Integration for long-context analysis tasks leveraging 1M+ token context window
+
+Backend modes (K1_GEMINI_BACKEND_MODE env var):
+  auto        — Try CLI binary first, fall back to direct API (default)
+  cli         — Require gemini CLI binary (error if missing)
+  api         — Use Google Generative AI SDK directly (developer API key)
+  local_gemma — Run local Gemma model via Ollama (K1_LOCAL_GEMMA_MODEL)
+  duet_ai     — Vertex AI / Duet AI paid subscription via ADC or service account
 """
 
 import asyncio
@@ -26,6 +33,15 @@ class GeminiTaskType(str, Enum):
     DOCUMENT_SYNTHESIS = "document_synthesis"
     MULTI_FILE_REVIEW = "multi_file_review"
     PATTERN_DETECTION = "pattern_detection"
+
+
+class GeminiBackendMode(str, Enum):
+    """Backend execution mode for GeminiCLIClient."""
+    AUTO = "auto"             # CLI → API fallback (default)
+    CLI = "cli"               # Require gemini CLI binary
+    API = "api"               # Google Generative AI SDK (developer key)
+    LOCAL_GEMMA = "local_gemma"  # Local Gemma via Ollama
+    DUET_AI = "duet_ai"       # Vertex AI / Duet AI paid subscription
 
 
 @dataclass
@@ -62,7 +78,8 @@ class GeminiCLIClient:
         cli_path: str = "gemini",
         api_key: Optional[str] = None,
         default_context_window: int = 1_000_000,
-        timeout_seconds: int = 600
+        timeout_seconds: int = 600,
+        backend_mode: Optional[str] = None,
     ):
         """Initialize Gemini CLI client"""
         self.cli_path = cli_path
@@ -77,13 +94,42 @@ class GeminiCLIClient:
         self.timeout_seconds = timeout_seconds
         self.available = False
 
-        if not self.api_key:
+        # Backend mode: env var overrides constructor arg, then default AUTO
+        raw_mode = (
+            backend_mode
+            or os.getenv("K1_GEMINI_BACKEND_MODE", GeminiBackendMode.AUTO)
+        ).lower().replace("-", "_")
+        try:
+            self.backend_mode = GeminiBackendMode(raw_mode)
+        except ValueError:
+            logger.warning("Unknown K1_GEMINI_BACKEND_MODE=%r — using 'auto'", raw_mode)
+            self.backend_mode = GeminiBackendMode.AUTO
+
+        # Local Gemma model tag (used in LOCAL_GEMMA mode)
+        # Default: gemma:7b (currently pulled in Ollama).
+        # Set K1_LOCAL_GEMMA_MODEL=gemma4:8b once that tag is available.
+        self.local_gemma_model = os.getenv("K1_LOCAL_GEMMA_MODEL", "gemma:7b")
+        self.ollama_url = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+
+        if not self.api_key and self.backend_mode not in (
+            GeminiBackendMode.LOCAL_GEMMA,
+        ):
             logger.warning("Google API key not found via secret manager.")
         else:
             self.available = True
 
-        # Check if Gemini CLI is installed
-        self._verify_installation()
+        # Check if Gemini CLI is installed (only needed for CLI modes)
+        if self.backend_mode in (GeminiBackendMode.AUTO, GeminiBackendMode.CLI):
+            self._verify_installation()
+        elif self.backend_mode == GeminiBackendMode.LOCAL_GEMMA:
+            self._verify_ollama()
+            self.available = True
+        elif self.backend_mode == GeminiBackendMode.DUET_AI:
+            self._verify_vertex()
+        else:
+            # API mode — needs api_key
+            if self.api_key:
+                self.available = True
 
     def _verify_installation(self) -> bool:
         """Verify Gemini CLI is installed and accessible"""
@@ -120,6 +166,216 @@ class GeminiCLIClient:
             logger.error(f"Error verifying Gemini CLI: {str(e)}")
             return False
 
+    def _verify_ollama(self) -> bool:
+        """Verify Ollama is running and the configured local model is available."""
+        try:
+            import requests as _req
+            resp = _req.get(f"{self.ollama_url}/api/tags", timeout=5)
+            if resp.status_code == 200:
+                models = [m["name"] for m in resp.json().get("models", [])]
+                if any(self.local_gemma_model in m for m in models):
+                    logger.info(
+                        "GeminiCLIClient: local model %r available via Ollama",
+                        self.local_gemma_model,
+                    )
+                    return True
+                logger.warning(
+                    "GeminiCLIClient: model %r not found in Ollama (available: %s). "
+                    "Pull with: ollama pull %s",
+                    self.local_gemma_model,
+                    ", ".join(models[:6]),
+                    self.local_gemma_model,
+                )
+                return False
+            return False
+        except Exception as exc:
+            logger.warning("GeminiCLIClient: Ollama check failed: %s", exc)
+            return False
+
+    def _verify_vertex(self) -> bool:
+        """Verify Vertex AI / Duet AI credentials are available."""
+        try:
+            from google.cloud import aiplatform  # type: ignore
+            project = os.getenv("GCP_PROJECT_ID")
+            if not project:
+                logger.warning(
+                    "GeminiCLIClient: GCP_PROJECT_ID not set — Duet AI unavailable"
+                )
+                return False
+            self.available = True
+            logger.info(
+                "GeminiCLIClient: Vertex AI / Duet AI wired (project=%s)", project
+            )
+            return True
+        except ImportError:
+            logger.warning(
+                "GeminiCLIClient: google-cloud-aiplatform not installed — "
+                "install with: pip install google-cloud-aiplatform"
+            )
+            return False
+        except Exception as exc:
+            logger.warning("GeminiCLIClient: Vertex AI check failed: %s", exc)
+            return False
+
+    async def _execute_via_local_ollama(
+        self,
+        documents: List[str],
+        query: str,
+        context_window: int,
+        file_paths: bool,
+    ) -> GeminiResult:
+        """Execute via local Gemma model running in Ollama."""
+        try:
+            import requests as _req
+
+            # Load document content
+            doc_contents: List[Dict[str, str]] = []
+            if file_paths:
+                for path in documents:
+                    try:
+                        with open(path, "r", errors="replace") as f:
+                            doc_contents.append({"path": path, "content": f.read()})
+                    except OSError:
+                        pass
+            else:
+                for i, content in enumerate(documents):
+                    doc_contents.append({"path": f"document_{i}", "content": content})
+
+            prompt = self._build_long_context_prompt(doc_contents, query)
+
+            # Truncate to rough token budget (4 chars ≈ 1 token, 8192 token default)
+            max_chars = context_window * 4
+            if len(prompt) > max_chars:
+                prompt = prompt[:max_chars] + "\n\n[...truncated for context window...]"
+
+            payload = {
+                "model": self.local_gemma_model,
+                "prompt": prompt,
+                "stream": False,
+                "options": {"num_ctx": min(context_window, 8192)},
+            }
+
+            logger.info(
+                "GeminiCLIClient: sending %d chars to Ollama model %s",
+                len(prompt),
+                self.local_gemma_model,
+            )
+
+            resp = await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: _req.post(
+                    f"{self.ollama_url}/api/generate",
+                    json=payload,
+                    timeout=self.timeout_seconds,
+                ),
+            )
+
+            if resp.status_code != 200:
+                return GeminiResult(
+                    task_type=GeminiTaskType.LONG_CONTEXT_ANALYSIS,
+                    success=False,
+                    analysis="",
+                    model_used=self.local_gemma_model,
+                    error=f"Ollama returned HTTP {resp.status_code}",
+                )
+
+            data = resp.json()
+            text = data.get("response", "")
+            return GeminiResult(
+                task_type=GeminiTaskType.LONG_CONTEXT_ANALYSIS,
+                success=True,
+                analysis=text,
+                model_used=self.local_gemma_model,
+                context_size_tokens=data.get("eval_count", 0),
+                cost_cents=0.0,
+            )
+
+        except Exception as exc:
+            logger.error("GeminiCLIClient: Ollama execution error: %s", exc)
+            return GeminiResult(
+                task_type=GeminiTaskType.LONG_CONTEXT_ANALYSIS,
+                success=False,
+                analysis="",
+                model_used=self.local_gemma_model,
+                error=str(exc),
+            )
+
+    async def _execute_via_duet_ai(
+        self,
+        documents: List[str],
+        query: str,
+        context_window: int,
+        file_paths: bool,
+    ) -> GeminiResult:
+        """Execute via Vertex AI (Duet AI paid subscription)."""
+        try:
+            from google.cloud import aiplatform  # type: ignore
+            from vertexai.generative_models import GenerativeModel  # type: ignore
+            import vertexai  # type: ignore
+
+            project = os.getenv("GCP_PROJECT_ID")
+            location = os.getenv("GCP_LOCATION", "us-central1")
+            vertex_model = os.getenv("K1_VERTEX_MODEL", "gemini-2.5-pro")
+
+            vertexai.init(project=project, location=location)
+            model = GenerativeModel(vertex_model)
+
+            # Load documents
+            doc_contents: List[Dict[str, str]] = []
+            if file_paths:
+                for path in documents:
+                    try:
+                        with open(path, "r", errors="replace") as f:
+                            doc_contents.append({"path": path, "content": f.read()})
+                    except OSError:
+                        pass
+            else:
+                for i, content in enumerate(documents):
+                    doc_contents.append({"path": f"document_{i}", "content": content})
+
+            prompt = self._build_long_context_prompt(doc_contents, query)
+
+            logger.info(
+                "GeminiCLIClient: sending %d chars to Vertex AI %s (project=%s)",
+                len(prompt),
+                vertex_model,
+                project,
+            )
+
+            response = await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: model.generate_content(prompt),
+            )
+
+            text = response.text if hasattr(response, "text") else str(response)
+            estimated_tokens = len(prompt) // 4
+            cost_cents = (estimated_tokens / 1_000_000) * 7.5  # ~$0.075/1M input tokens
+
+            return GeminiResult(
+                task_type=GeminiTaskType.LONG_CONTEXT_ANALYSIS,
+                success=True,
+                analysis=text,
+                model_used=vertex_model,
+                context_size_tokens=estimated_tokens,
+                cost_cents=cost_cents,
+            )
+
+        except ImportError as exc:
+            return GeminiResult(
+                task_type=GeminiTaskType.LONG_CONTEXT_ANALYSIS,
+                success=False,
+                analysis="",
+                error=f"Vertex AI dependencies not installed: {exc}",
+            )
+        except Exception as exc:
+            logger.error("GeminiCLIClient: Vertex AI execution error: %s", exc)
+            return GeminiResult(
+                task_type=GeminiTaskType.LONG_CONTEXT_ANALYSIS,
+                success=False,
+                analysis="",
+                error=str(exc),
+            )
+
     async def analyze_with_long_context(
         self,
         documents: List[str],
@@ -151,11 +407,33 @@ class GeminiCLIClient:
         context_window = context_window or self.default_context_window
 
         try:
-            # Determine execution method
-            if hasattr(self, 'use_api_fallback') and self.use_api_fallback:
-                result = await self._execute_via_api(documents, query, context_window, file_paths)
+            # Route based on backend_mode
+            if self.backend_mode == GeminiBackendMode.LOCAL_GEMMA:
+                result = await self._execute_via_local_ollama(
+                    documents, query, context_window, file_paths
+                )
+            elif self.backend_mode == GeminiBackendMode.DUET_AI:
+                result = await self._execute_via_duet_ai(
+                    documents, query, context_window, file_paths
+                )
+            elif self.backend_mode == GeminiBackendMode.API:
+                result = await self._execute_via_api(
+                    documents, query, context_window, file_paths
+                )
+            elif self.backend_mode == GeminiBackendMode.CLI:
+                result = await self._execute_via_cli(
+                    documents, query, context_window, file_paths
+                )
             else:
-                result = await self._execute_via_cli(documents, query, context_window, file_paths)
+                # AUTO: CLI first, then API fallback
+                if hasattr(self, "use_api_fallback") and self.use_api_fallback:
+                    result = await self._execute_via_api(
+                        documents, query, context_window, file_paths
+                    )
+                else:
+                    result = await self._execute_via_cli(
+                        documents, query, context_window, file_paths
+                    )
 
             execution_time = (datetime.now(timezone.utc) - start_time).total_seconds() * 1000
 

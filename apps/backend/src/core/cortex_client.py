@@ -251,6 +251,7 @@ class CortexClient:
         value: str,
         preferred_analyzers: list[str] | None = None,
         wait: bool = True,
+        _use_cache: bool = True,
     ) -> list[dict[str, Any]]:
         """
         High-level method: runs appropriate analyzers
@@ -266,6 +267,16 @@ class CortexClient:
         Returns:
             List of result dicts from all analyzers
         """
+        cache_key = f"{observable_type}:{value}:{preferred_analyzers}"
+        if _use_cache and wait:
+            try:
+                from .scan_cache import get_scan_cache
+                hit = get_scan_cache().get("cortex", cache_key)
+                if hit is not None:
+                    return hit
+            except Exception:
+                pass
+
         results = []
 
         # Auto-select analyzers by type
@@ -306,6 +317,12 @@ class CortexClient:
                     "status": "Submitted",
                 })
 
+        if _use_cache and wait and results:
+            try:
+                from .scan_cache import get_scan_cache
+                get_scan_cache().set("cortex", cache_key, results)
+            except Exception:
+                pass
         return results
 
     def _get_default_analyzers(

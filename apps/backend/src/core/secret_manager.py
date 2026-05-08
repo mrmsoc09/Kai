@@ -136,9 +136,23 @@ class SecretManager:
         return self.env_name in {"dev", "development", "test"}
 
     def get_optional(self, name: str) -> Optional[str]:
+        # Check scan cache before hitting Vault
+        try:
+            from .scan_cache import get_scan_cache
+            cached = get_scan_cache().get("vault", name)
+            if cached is not None:
+                return cached
+        except Exception:
+            pass
+
         if self._vault_provider:
             value = self._vault_provider.get_secret(name)
             if value:
+                try:
+                    from .scan_cache import get_scan_cache
+                    get_scan_cache().set("vault", name, value)
+                except Exception:
+                    pass
                 return value
         if self._allow_env_fallback():
             return self._env_provider.get_secret(name)
@@ -164,17 +178,28 @@ class SecretManager:
             get_hierarchical("ai", "openai") → secret/k1/ai/openai
             get_hierarchical("osint", "shodan") → secret/k1/osint/shodan
         """
+        cache_key = f"hier:{category}/{service}"
+        try:
+            from .scan_cache import get_scan_cache
+            cached = get_scan_cache().get("vault", cache_key)
+            if cached is not None:
+                return cached
+        except Exception:
+            pass
+
+        value: Optional[str] = None
         if self._vault_provider:
-            value = self._vault_provider.get_secret_hierarchical(
-                category, service
-            )
-            if value:
-                return value
-        # Fallback: try flat environment variable format
-        if self._allow_env_fallback():
-            env_name = f"{service.upper()}_API_KEY"
-            return self._env_provider.get_secret(env_name)
-        return None
+            value = self._vault_provider.get_secret_hierarchical(category, service)
+        if not value and self._allow_env_fallback():
+            value = self._env_provider.get_secret(f"{service.upper()}_API_KEY")
+
+        if value:
+            try:
+                from .scan_cache import get_scan_cache
+                get_scan_cache().set("vault", cache_key, value)
+            except Exception:
+                pass
+        return value
 
     def get_hierarchical_required(
         self, category: str, service: str

@@ -11,10 +11,11 @@ FIVE-TIER MODEL ARCHITECTURE
   TIER 3  COMPLEX         gemini-2.5-pro           5 RPM / 100 RPD (hard cap 80)
            Report generation, CVE triage, complex multi-hop chains, final validation
            Dispatched ONLY for explicit COMPLEXITY_HIGH classification
-  TIER 4  LOCAL_ROUTING   gemma3:8b via Ollama     ~5-15 t/s on CPU
+  TIER 4  LOCAL_ROUTING   gemma:7b / gemma4:8b via Ollama   ~5-15 t/s on CPU
            Routing and task classification decisions ONLY.
            NEVER dispatches tool calls.  NEVER executes agentic tasks.
-           Uses Gemini CLI native local model routing.
+           Backend: K1_GEMMA_BACKEND=ollama (default), K1_LOCAL_GEMMA_MODEL=gemma:7b
+           Upgrade: set K1_LOCAL_GEMMA_MODEL=gemma4:8b after: ollama pull gemma4:8b
   TIER 5  LOCAL_EMERGENCY qwen2.5:7b Q4_K_M        ~5-15 t/s on CPU
            Full offline fallback only — all API tiers exhausted or network down.
            Tool-call capable via Ollama.  NOT suitable for sustained pipeline use.

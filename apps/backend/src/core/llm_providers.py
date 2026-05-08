@@ -95,7 +95,10 @@ class LLMModel(str, Enum):
     # Gemma (Google open-source, served via Ollama)
     GEMMA_2_9B = "gemma:2b"
     GEMMA_7B = "gemma:7b"
-    GEMMA3_8B = "gemma3:8b"  # routing-tier model
+    GEMMA3_8B = "gemma3:8b"
+    # Gemma 4 — pull with: ollama pull gemma4:8b / ollama pull gemma4:7b
+    GEMMA4_8B = "gemma4:8b"  # Tier 4 routing target (when available)
+    GEMMA4_7B = "gemma4:7b"
 
     # Qwen (local emergency fallback)
     QWEN2_5_7B = "qwen2.5:7b"
@@ -956,18 +959,40 @@ class OllamaProvider(BaseLLMProvider):
 
 
 class GemmaProvider(BaseLLMProvider):
-    """Gemma provider (Google open-source)"""
+    """
+    Gemma provider — Google open-source Gemma models.
+
+    Backends (K1_GEMMA_BACKEND env var):
+      ollama  — Local inference via Ollama (default when ollama pkg available)
+                Model: K1_LOCAL_GEMMA_MODEL (default gemma:7b;
+                       set to gemma4:8b once pulled)
+      genai   — Google Generative AI cloud API (requires GOOGLE_API_KEY)
+    """
 
     def _initialize_client(self):
-        if not genai:
-            raise ImportError("google-generativeai package not installed")
+        backend = os.getenv("K1_GEMMA_BACKEND", "ollama" if ollama else "genai").lower()
+        self._backend = backend
 
-        api_key = _resolve_api_key(self.config.api_key, "GOOGLE_API_KEY")
-
-        genai.configure(api_key=api_key)
-        # Note: Gemma is served via Google's API
-        self.model = os.getenv("K1_GEMMA_MODEL", "gemma-2b-it")
-        self.client = genai.GenerativeModel(self.model)
+        if backend == "ollama":
+            if not ollama:
+                raise ImportError(
+                    "ollama package not installed. "
+                    "Install with: pip install ollama"
+                )
+            self.model = os.getenv("K1_LOCAL_GEMMA_MODEL", LLMModel.GEMMA_7B.value)
+            self._ollama_url = os.getenv("OLLAMA_API_URL", "http://localhost:11434")
+            self.client = None  # uses ollama library directly
+            logger.info(
+                "GemmaProvider: using Ollama backend, model=%s", self.model
+            )
+        else:
+            # genai / Google API backend
+            if not genai:
+                raise ImportError("google-generativeai package not installed")
+            api_key = _resolve_api_key(self.config.api_key, "GOOGLE_API_KEY")
+            genai.configure(api_key=api_key)
+            self.model = os.getenv("K1_GEMMA_MODEL", "gemma-2b-it")
+            self.client = genai.GenerativeModel(self.model)
 
     async def complete(
         self,
@@ -976,33 +1001,36 @@ class GemmaProvider(BaseLLMProvider):
         tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs
     ) -> LLMResponse:
-        """Gemma API call"""
+        """Gemma completion — routes to Ollama or Google genai based on backend."""
+        if getattr(self, "_backend", "genai") == "ollama":
+            return await self._complete_ollama(messages, system, **kwargs)
+        return await self._complete_genai(messages, system, **kwargs)
+
+    async def _complete_ollama(
+        self,
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
+        **kwargs,
+    ) -> LLMResponse:
+        """Run local Gemma via Ollama."""
         import time
 
         start_time = time.time()
+        prompt = ""
+        if system:
+            prompt += f"System: {system}\n\n"
+        for msg in messages:
+            prompt += f"{msg['role'].upper()}: {msg['content']}\n"
+        prompt += "ASSISTANT:"
 
         try:
-            gemini_messages = []
-            for msg in messages:
-                gemini_messages.append({
-                    "role": msg["role"],
-                    "parts": [{"text": msg["content"]}]
-                })
-
-            response = self.client.generate_content(
-                contents=gemini_messages,
-                generation_config={
-                    "temperature": kwargs.get("temperature", self.config.temperature),
-                    "max_output_tokens": kwargs.get("max_tokens", self.config.max_tokens)
-                }
+            response = ollama.generate(
+                model=self.model,
+                prompt=prompt,
+                stream=False,
             )
-
             latency_ms = (time.time() - start_time) * 1000
-            text = response.text if hasattr(response, "text") else ""
-
-            input_tokens = len(" ".join([msg["content"] for msg in messages]).split())
-            output_tokens = len(text.split()) if text else 0
-
+            text = response.get("response", "") if isinstance(response, dict) else str(response)
             return LLMResponse(
                 provider=LLMProvider.GEMMA,
                 model=self.model,
@@ -1010,15 +1038,54 @@ class GemmaProvider(BaseLLMProvider):
                 tool_uses=[],
                 stop_reason="stop",
                 usage={
-                    "input_tokens": input_tokens,
-                    "output_tokens": output_tokens
+                    "input_tokens": len(prompt.split()),
+                    "output_tokens": len(text.split()) if text else 0,
                 },
                 latency_ms=latency_ms,
-                cost_usd=0.0
+                cost_usd=0.0,
             )
+        except Exception as exc:
+            raise Exception(f"Gemma/Ollama error: {exc}") from exc
 
-        except Exception as e:
-            raise Exception(f"Gemma API error: {str(e)}")
+    async def _complete_genai(
+        self,
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
+        **kwargs,
+    ) -> LLMResponse:
+        """Run Gemma via Google Generative AI cloud API."""
+        import time
+
+        start_time = time.time()
+
+        try:
+            gemini_messages = [
+                {"role": msg["role"], "parts": [{"text": msg["content"]}]}
+                for msg in messages
+            ]
+            response = self.client.generate_content(
+                contents=gemini_messages,
+                generation_config={
+                    "temperature": kwargs.get("temperature", self.config.temperature),
+                    "max_output_tokens": kwargs.get("max_tokens", self.config.max_tokens),
+                },
+            )
+            latency_ms = (time.time() - start_time) * 1000
+            text = response.text if hasattr(response, "text") else ""
+            input_tokens = len(" ".join(m["content"] for m in messages).split())
+            output_tokens = len(text.split()) if text else 0
+            return LLMResponse(
+                provider=LLMProvider.GEMMA,
+                model=self.model,
+                text=text,
+                tool_uses=[],
+                stop_reason="stop",
+                usage={"input_tokens": input_tokens, "output_tokens": output_tokens},
+                latency_ms=latency_ms,
+                cost_usd=0.0,
+            )
+        except Exception as exc:
+            raise Exception(f"Gemma API error: {exc}") from exc
 
     async def stream_complete(
         self,
@@ -1027,23 +1094,32 @@ class GemmaProvider(BaseLLMProvider):
         tools: Optional[List[Dict[str, Any]]] = None,
         **kwargs
     ) -> AsyncIterator[str]:
-        """Stream Gemma responses"""
-        gemini_messages = []
-        for msg in messages:
-            gemini_messages.append({
-                "role": msg["role"],
-                "parts": [{"text": msg["content"]}]
-            })
+        """Stream Gemma responses — routes to Ollama or genai stream."""
+        if getattr(self, "_backend", "genai") == "ollama":
+            prompt = ""
+            if system:
+                prompt += f"System: {system}\n\n"
+            for msg in messages:
+                prompt += f"{msg['role'].upper()}: {msg['content']}\n"
+            prompt += "ASSISTANT:"
+            for chunk in ollama.generate(model=self.model, prompt=prompt, stream=True):
+                if isinstance(chunk, dict) and "response" in chunk:
+                    yield chunk["response"]
+            return
 
+        # genai streaming
+        gemini_messages = [
+            {"role": msg["role"], "parts": [{"text": msg["content"]}]}
+            for msg in messages
+        ]
         response = self.client.generate_content(
             contents=gemini_messages,
             generation_config={
                 "temperature": kwargs.get("temperature", self.config.temperature),
-                "max_output_tokens": kwargs.get("max_tokens", self.config.max_tokens)
+                "max_output_tokens": kwargs.get("max_tokens", self.config.max_tokens),
             },
-            stream=True
+            stream=True,
         )
-
         for chunk in response:
             if chunk.text:
                 yield chunk.text

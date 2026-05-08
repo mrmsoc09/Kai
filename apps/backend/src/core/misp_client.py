@@ -107,6 +107,7 @@ class MISPClient:
         tags: list[str] | None = None,
         threat_level: int | None = None,
         limit: int = 10,
+        _use_cache: bool = True,
     ) -> list[dict[str, Any]]:
         """
         Search MISP events (threat reports).
@@ -120,6 +121,16 @@ class MISPClient:
         Returns:
             List of MISP event dicts
         """
+        cache_key = f"events:{value}:{tags}:{threat_level}:{limit}"
+        if _use_cache:
+            try:
+                from .scan_cache import get_scan_cache
+                hit = get_scan_cache().get("misp", cache_key)
+                if hit is not None:
+                    return hit
+            except Exception:
+                pass
+
         payload: dict[str, Any] = {
             "returnFormat": "json",
             "limit": limit,
@@ -139,7 +150,14 @@ class MISPClient:
             )
             if resp.status_code < 400:
                 data = resp.json()
-                return data.get("response", [])
+                result = data.get("response", [])
+                if _use_cache:
+                    try:
+                        from .scan_cache import get_scan_cache
+                        get_scan_cache().set("misp", cache_key, result)
+                    except Exception:
+                        pass
+                return result
             logger.warning("MISP event search failed: %s", resp.status_code)
             return []
         except Exception as exc:
@@ -150,6 +168,7 @@ class MISPClient:
         self,
         ioc_type: str,
         ioc_value: str,
+        _use_cache: bool = True,
     ) -> dict[str, Any]:
         """
         High-level IOC enrichment: queries both attributes and events,
@@ -163,6 +182,16 @@ class MISPClient:
             Dict with keys: ioc_type, ioc_value, attribute_hits,
             event_count, threat_level, tags, first_seen, last_seen
         """
+        cache_key = f"enrich:{ioc_type}:{ioc_value}"
+        if _use_cache:
+            try:
+                from .scan_cache import get_scan_cache
+                hit = get_scan_cache().get("misp", cache_key)
+                if hit is not None:
+                    return hit
+            except Exception:
+                pass
+
         type_map = {
             "ip": "ip-dst",
             "domain": "domain",
@@ -203,7 +232,7 @@ class MISPClient:
 
         max_threat = min(threat_levels) if threat_levels else None  # lower = higher threat in MISP
 
-        return {
+        result = {
             "ioc_type": ioc_type,
             "ioc_value": ioc_value,
             "attribute_hits": len(attributes),
@@ -214,6 +243,13 @@ class MISPClient:
             "last_seen": last_seen,
             "known_malicious": len(attributes) > 0,
         }
+        if _use_cache:
+            try:
+                from .scan_cache import get_scan_cache
+                get_scan_cache().set("misp", cache_key, result)
+            except Exception:
+                pass
+        return result
 
     def add_finding_as_event(
         self,
