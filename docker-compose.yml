@@ -159,6 +159,717 @@ services:
     command: ["--help"]
     read_only: true # Requires writable volume for output
 
+
+  # ── Phase 1: Recon ──────────────────────────────────────────────────────────
+  amass:
+    build: ./docker/amass
+    image: kai-amass
+    container_name: kai_amass
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  subfinder:
+    build: ./docker/subfinder
+    image: kai-subfinder
+    container_name: kai_subfinder
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  assetfinder:
+    build: ./docker/assetfinder
+    image: kai-assetfinder
+    container_name: kai_assetfinder
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  gau:
+    build: ./docker/gau
+    image: kai-gau
+    container_name: kai_gau
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  waybackurls:
+    build: ./docker/waybackurls
+    image: kai-waybackurls
+    container_name: kai_waybackurls
+    networks:
+      - kai_internal
+
+  httpx:
+    build: ./docker/httpx
+    image: kai-httpx
+    container_name: kai_httpx
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  dnsx:
+    build: ./docker/dnsx
+    image: kai-dnsx
+    container_name: kai_dnsx
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  hakrawler:
+    build: ./docker/hakrawler
+    image: kai-hakrawler
+    container_name: kai_hakrawler
+    networks:
+      - kai_internal
+
+  naabu:
+    build: ./docker/naabu
+    image: kai-naabu
+    container_name: kai_naabu
+    networks:
+      - kai_internal
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    command: ["-h"]
+
+  katana:
+    build: ./docker/katana
+    image: kai-katana
+    container_name: kai_katana
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  dnsvalidator:
+    build: ./docker/dnsvalidator
+    image: kai-dnsvalidator
+    container_name: kai_dnsvalidator
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  dnsreaper:
+    build: ./docker/dnsreaper
+    image: kai-dnsreaper
+    container_name: kai_dnsreaper
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  subover:
+    build: ./docker/subover
+    image: kai-subover
+    container_name: kai_subover
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  # ── Phase 2: Fingerprinting ─────────────────────────────────────────────────
+  whatweb:
+    build: ./docker/whatweb
+    image: kai-whatweb
+    container_name: kai_whatweb
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  webanalyze:
+    build: ./docker/webanalyze
+    image: kai-webanalyze
+    container_name: kai_webanalyze
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  sslyze:
+    build: ./docker/sslyze
+    image: kai-sslyze
+    container_name: kai_sslyze
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  testssl:
+    build: ./docker/testssl
+    image: kai-testssl
+    container_name: kai_testssl
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  masscan:
+    build: ./docker/masscan
+    image: kai-masscan
+    container_name: kai_masscan
+    networks:
+      - kai_internal
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    command: ["--help"]
+
+  onesixtyone:
+    build: ./docker/onesixtyone
+    image: kai-onesixtyone
+    container_name: kai_onesixtyone
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  # ── Phase 3: Content Discovery ──────────────────────────────────────────────
+  ffuf:
+    build: ./docker/ffuf
+    image: kai-ffuf
+    container_name: kai_ffuf
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  feroxbuster:
+    build: ./docker/feroxbuster
+    image: kai-feroxbuster
+    container_name: kai_feroxbuster
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  kiterunner:
+    build: ./docker/kiterunner
+    image: kai-kiterunner
+    container_name: kai_kiterunner
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  arjun:
+    build: ./docker/arjun
+    image: kai-arjun
+    container_name: kai_arjun
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  # ── Phase 4: OSINT & Secrets ────────────────────────────────────────────────
+  gitleaks:
+    build: ./docker/gitleaks
+    image: kai-gitleaks
+    container_name: kai_gitleaks
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  trufflehog:
+    build: ./docker/trufflehog
+    image: kai-trufflehog
+    container_name: kai_trufflehog
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  gitrob:
+    build: ./docker/gitrob
+    image: kai-gitrob
+    container_name: kai_gitrob
+    networks:
+      - kai_internal
+
+  githound:
+    build: ./docker/githound
+    image: kai-githound
+    container_name: kai_githound
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  sherlock:
+    build: ./docker/sherlock
+    image: kai-sherlock
+    container_name: kai_sherlock
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  socialscan:
+    build: ./docker/socialscan
+    image: kai-socialscan
+    container_name: kai_socialscan
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  maigret:
+    build: ./docker/maigret
+    image: kai-maigret
+    container_name: kai_maigret
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  whatsmyname:
+    build: ./docker/whatsmyname
+    image: kai-whatsmyname
+    container_name: kai_whatsmyname
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  spiderfoot:
+    build: ./docker/spiderfoot
+    image: kai-spiderfoot
+    container_name: kai_spiderfoot
+    networks:
+      - kai_internal
+    ports:
+      - "5001:5001"
+
+  bloodhound:
+    build: ./docker/bloodhound
+    image: kai-bloodhound
+    container_name: kai_bloodhound
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  # ── Phase 4b: Dark Web (opt-in only) ────────────────────────────────────────
+  torbot:
+    build: ./docker/torbot
+    image: kai-torbot
+    container_name: kai_torbot
+    networks:
+      - kai_internal
+    command: ["--help"]
+    profiles:
+      - darkweb
+
+  onionsearch:
+    build: ./docker/onionsearch
+    image: kai-onionsearch
+    container_name: kai_onionsearch
+    networks:
+      - kai_internal
+    command: ["--help"]
+    profiles:
+      - darkweb
+
+  darksearch:
+    build: ./docker/darksearch
+    image: kai-darksearch
+    container_name: kai_darksearch
+    networks:
+      - kai_internal
+    command: ["--help"]
+    profiles:
+      - darkweb
+
+  # ── Phase 5: Vulnerability Scanning ────────────────────────────────────────
+  sqlmap:
+    build: ./docker/sqlmap
+    image: kai-sqlmap
+    container_name: kai_sqlmap
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  dalfox:
+    build: ./docker/dalfox
+    image: kai-dalfox
+    container_name: kai_dalfox
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  xsstrike:
+    build: ./docker/xsstrike
+    image: kai-xsstrike
+    container_name: kai_xsstrike
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  crlfuzz:
+    build: ./docker/crlfuzz
+    image: kai-crlfuzz
+    container_name: kai_crlfuzz
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  ssrfmap:
+    build: ./docker/ssrfmap
+    image: kai-ssrfmap
+    container_name: kai_ssrfmap
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  commix:
+    build: ./docker/commix
+    image: kai-commix
+    container_name: kai_commix
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  tplmap:
+    build: ./docker/tplmap
+    image: kai-tplmap
+    container_name: kai_tplmap
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  nosqlmap:
+    build: ./docker/nosqlmap
+    image: kai-nosqlmap
+    container_name: kai_nosqlmap
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  ghauri:
+    build: ./docker/ghauri
+    image: kai-ghauri
+    container_name: kai_ghauri
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  fuxploider:
+    build: ./docker/fuxploider
+    image: kai-fuxploider
+    container_name: kai_fuxploider
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  nikto:
+    build: ./docker/nikto
+    image: kai-nikto
+    container_name: kai_nikto
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  # ── Phase 6: API Testing ────────────────────────────────────────────────────
+  grpcurl:
+    build: ./docker/grpcurl
+    image: kai-grpcurl
+    container_name: kai_grpcurl
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  graphql-cop:
+    build: ./docker/graphql-cop
+    image: kai-graphql-cop
+    container_name: kai_graphql_cop
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  graphqlmap:
+    build: ./docker/graphqlmap
+    image: kai-graphqlmap
+    container_name: kai_graphqlmap
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  corsy:
+    build: ./docker/corsy
+    image: kai-corsy
+    container_name: kai_corsy
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  jwt-tool:
+    build: ./docker/jwt-tool
+    image: kai-jwt-tool
+    container_name: kai_jwt_tool
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  inql:
+    build: ./docker/inql
+    image: kai-inql
+    container_name: kai_inql
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  wscat:
+    build: ./docker/wscat
+    image: kai-wscat
+    container_name: kai_wscat
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  # ── Phase 7: Exploitation — Band 2 (Human Approved Only) ───────────────────
+  metasploit:
+    image: metasploitframework/metasploit-framework:latest
+    container_name: kai_metasploit
+    networks:
+      - kai_internal
+    stdin_open: true
+    tty: true
+    profiles:
+      - band2
+
+  # ── Brute Force & Auth Testing ──────────────────────────────────────────────
+  hydra:
+    build: ./docker/hydra
+    image: kai-hydra
+    container_name: kai_hydra
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  medusa:
+    build: ./docker/medusa
+    image: kai-medusa
+    container_name: kai_medusa
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  ncrack:
+    build: ./docker/ncrack
+    image: kai-ncrack
+    container_name: kai_ncrack
+    networks:
+      - kai_internal
+    cap_add:
+      - NET_RAW
+    command: ["-h"]
+
+  hashcat:
+    build: ./docker/hashcat
+    image: kai-hashcat
+    container_name: kai_hashcat
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  john:
+    build: ./docker/john
+    image: kai-john
+    container_name: kai_john
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  patator:
+    build: ./docker/patator
+    image: kai-patator
+    container_name: kai_patator
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  spray:
+    build: ./docker/spray
+    image: kai-spray
+    container_name: kai_spray
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  crackmapexec:
+    build: ./docker/crackmapexec
+    image: kai-crackmapexec
+    container_name: kai_crackmapexec
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  crowbar:
+    build: ./docker/crowbar
+    image: kai-crowbar
+    container_name: kai_crowbar
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  o365spray:
+    build: ./docker/o365spray
+    image: kai-o365spray
+    container_name: kai_o365spray
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  enum4linux-ng:
+    build: ./docker/enum4linux-ng
+    image: kai-enum4linux-ng
+    container_name: kai_enum4linux_ng
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  ldaptester:
+    build: ./docker/ldaptester
+    image: kai-ldaptester
+    container_name: kai_ldaptester
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  responder:
+    build: ./docker/responder
+    image: kai-responder
+    container_name: kai_responder
+    networks:
+      - kai_internal
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    command: ["-h"]
+
+  nsbrute:
+    build: ./docker/nsbrute
+    image: kai-nsbrute
+    container_name: kai_nsbrute
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  # ── Cloud & Container Security ──────────────────────────────────────────────
+  trivy:
+    image: aquasec/trivy:latest
+    container_name: kai_trivy
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  grype:
+    image: anchore/grype:latest
+    container_name: kai_grype
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  dockle:
+    image: goodwithtech/dockle:latest
+    container_name: kai_dockle
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  kube-bench:
+    image: aquasec/kube-bench:latest
+    container_name: kai_kube_bench
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  kube-hunter:
+    build: ./docker/kube-hunter
+    image: kai-kube-hunter
+    container_name: kai_kube_hunter
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  tfsec:
+    build: ./docker/tfsec
+    image: kai-tfsec
+    container_name: kai_tfsec
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  checkov:
+    build: ./docker/checkov
+    image: kai-checkov
+    container_name: kai_checkov
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  prowler:
+    build: ./docker/prowler
+    image: kai-prowler
+    container_name: kai_prowler
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  scoutsuite:
+    build: ./docker/scoutsuite
+    image: kai-scoutsuite
+    container_name: kai_scoutsuite
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  cloudmapper:
+    build: ./docker/cloudmapper
+    image: kai-cloudmapper
+    container_name: kai_cloudmapper
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  cloudsploit:
+    build: ./docker/cloudsploit
+    image: kai-cloudsploit
+    container_name: kai_cloudsploit
+    networks:
+      - kai_internal
+    command: ["--help"]
+
+  s3scanner:
+    build: ./docker/s3scanner
+    image: kai-s3scanner
+    container_name: kai_s3scanner
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  # ── Mobile & Application Security ───────────────────────────────────────────
+  mobsf:
+    image: opensecurity/mobile-security-framework-mobsf:latest
+    container_name: kai_mobsf
+    networks:
+      - kai_internal
+    ports:
+      - "8008:8000"
+    profiles:
+      - mobile
+
+  apkleaks:
+    build: ./docker/apkleaks
+    image: kai-apkleaks
+    container_name: kai_apkleaks
+    networks:
+      - kai_internal
+    command: ["-h"]
+
+  # ── Network & Special ───────────────────────────────────────────────────────
+  ipv6toolkit:
+    build: ./docker/ipv6toolkit
+    image: kai-ipv6toolkit
+    container_name: kai_ipv6toolkit
+    networks:
+      - kai_internal
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    command: ["-h"]
+
+  spring4shell-scanner:
+    build: ./docker/spring4shell-scanner
+    image: kai-spring4shell-scanner
+    container_name: kai_spring4shell_scanner
+    networks:
+      - kai_internal
+    command: ["-h"]
+
 volumes:
   postgres_data:
   qdrant_data:
