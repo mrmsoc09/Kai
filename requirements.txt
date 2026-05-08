@@ -9,3 +9,5 @@ respx
 pytest-mock
 hvac
 qdrant-client
+aiohttp>=3.13.4
+python-multipart>=0.0.27

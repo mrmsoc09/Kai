@@ -4,5 +4,5 @@ sqlalchemy==2.0.23
 pydantic==2.5.0
 click==8.1.7
 psutil==5.9.6
-aiohttp==3.9.1
+aiohttp>=3.13.4
 croniter==2.0.1
