@@ -4,6 +4,8 @@ Primary vulnerability scanner - CVE and misconfiguration detection.
 """
 import subprocess
 import json
+import os
+import time
 from typing import Dict, List, Any, Optional
 from datetime import datetime
 
@@ -19,7 +21,14 @@ class NucleiAgent:
         """Execute Nuclei scan against target."""
         options = options or {}
 
-        cmd = ['nuclei', '-u', target, '-json', '-o', '/tmp/nuclei_out.json']
+        output_dir = os.environ.get(
+            'NUCLEI_OUTPUT_DIR',
+            os.environ.get('K1_NUCLEI_OUTPUT_DIR', '/tmp/nuclei-output')
+        )
+        os.makedirs(output_dir, exist_ok=True)
+        output_file = os.path.join(output_dir, f"nuclei_{int(time.time())}.jsonl")
+
+        cmd = ['nuclei', '-u', target, '-json', '-o', output_file]
 
         # Severity filter
         severity = options.get('severity', 'critical,high,medium')
@@ -37,11 +46,12 @@ class NucleiAgent:
 
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-            findings = self._parse_json_output('/tmp/nuclei_out.json')
+            findings = self._parse_json_output(output_file)
 
             return {
                 'target': target, 'tool': self.name,
                 'command': ' '.join(cmd), 'return_code': result.returncode,
+                'output_file': output_file,
                 'findings': findings, 'timestamp': datetime.now().isoformat(),
                 'success': len(findings) > 0
             }

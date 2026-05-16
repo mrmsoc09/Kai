@@ -3,6 +3,7 @@ import os
 import subprocess
 import sys
 import json
+import time
 import xml.etree.ElementTree as ET
 from typing import Dict, List, Optional
 from dataclasses import dataclass, field
@@ -61,7 +62,14 @@ class NmapTool:
             return NmapResult(success=False, errors=[f"Invalid argument: {exc}"])
 
         timing = options["timing"]
-        cmd = ['nmap', '-oX', '-', f'-T{timing}']
+        output_dir = os.environ.get(
+            "NMAP_OUTPUT_DIR",
+            os.environ.get("K1_NMAP_OUTPUT_DIR", "/tmp/nmap-output")
+        )
+        os.makedirs(output_dir, exist_ok=True)
+        output_file = os.path.join(output_dir, f"nmap_{int(time.time())}.xml")
+
+        cmd = ['nmap', '-oX', output_file, f'-T{timing}']
         if ports:
             cmd.extend(['-p', options["ports"]])
         if script:
@@ -70,7 +78,14 @@ class NmapTool:
 
         try:
             result = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-            return cls._parse_xml(result.stdout)
+            if result.returncode != 0:
+                return NmapResult(
+                    success=False,
+                    errors=[f"nmap exited with code {result.returncode}", result.stderr.strip()],
+                    raw_output=result.stdout[:5000]
+                )
+            with open(output_file, encoding="utf-8") as handle:
+                return cls._parse_xml(handle.read())
         except Exception as e:
             return NmapResult(success=False, errors=[str(e)])
 

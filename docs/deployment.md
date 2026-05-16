@@ -265,6 +265,7 @@ Logs are written to:
 To ship logs to an external system:
 - Mount artifact volumes to a log shipper (Filebeat, Vector)
 - Or configure the container driver to send to syslog/fluentd
+- For read-only tool container output mounts and retention policy automation, see `docs/artifact-storage.md`.
 
 ---
 

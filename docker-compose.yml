@@ -1,5 +1,40 @@
 version: '3.8'
 
+x-kai-artifacts-env: &kai_artifacts_env
+  K1_ARTIFACTS_ROOT: ${K1_ARTIFACTS_CONTAINER_ROOT:-/tmp/kai-artifacts}
+  K1_NMAP_OUTPUT_DIR: ${K1_ARTIFACTS_CONTAINER_ROOT:-/tmp/kai-artifacts}/nmap-output
+  K1_NUCLEI_OUTPUT_DIR: ${K1_ARTIFACTS_CONTAINER_ROOT:-/tmp/kai-artifacts}/nuclei-output
+  K1_GITLEAKS_OUTPUT_DIR: ${K1_ARTIFACTS_CONTAINER_ROOT:-/tmp/kai-artifacts}/gitleaks-output
+  K1_BURP_CACHE_DIR: ${K1_ARTIFACTS_CONTAINER_ROOT:-/tmp/kai-artifacts}/burp-cache
+  K1_CACHE_DIR: /home/kai/.cache
+  XDG_CACHE_HOME: /home/kai/.cache
+
+x-kai-artifacts-volumes: &kai_artifacts_volumes
+  - type: bind
+    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}
+    target: ${K1_ARTIFACTS_CONTAINER_ROOT:-/tmp/kai-artifacts}
+    read_only: false
+  - type: bind
+    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/nmap-output
+    target: /tmp/nmap-output
+    read_only: false
+  - type: bind
+    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/nuclei-output
+    target: /tmp/nuclei-output
+    read_only: false
+  - type: bind
+    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/gitleaks-output
+    target: /tmp/gitleaks-output
+    read_only: false
+  - type: bind
+    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/burp-cache
+    target: /tmp/burp-cache
+    read_only: false
+  - type: bind
+    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/cache
+    target: /home/kai/.cache
+    read_only: false
+
 networks:
   kai_internal:
     driver: bridge
@@ -14,10 +49,13 @@ services:
     image: kai-orchestrator
     container_name: kai_orchestrator
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/kai_db
+      # Compose constructs the internal URL using the postgres hostname (not localhost).
+      # The DATABASE_URL in .env uses localhost for host-side tooling; do not pass it here directly.
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-k1}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/${POSTGRES_DB:-k1}
       - REDIS_URL=redis://redis:6379/0
       - QDRANT_URL=http://qdrant:6333
-      # Add other necessary environment variables (e.g., VAULT_ADDR, VAULT_TOKEN)
+      - VAULT_ADDR=${VAULT_ADDR:-http://vault:8200}
+      - VAULT_TOKEN=${VAULT_TOKEN:?VAULT_TOKEN must be set in .env}
     networks:
       - kai_internal
       - kai_admin # For admin panel to communicate with orchestrator
@@ -35,9 +73,9 @@ services:
     image: postgres:13-alpine
     container_name: kai_postgres
     environment:
-      - POSTGRES_DB=kai_db
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=${POSTGRES_DB:-k1}
+      - POSTGRES_USER=${POSTGRES_USER:-k1}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -97,6 +135,10 @@ services:
       - NET_ADMIN
     command: ["--help"]
     read_only: true # Requires writable volume for output
+    environment:
+      <<: *kai_artifacts_env
+      NMAP_OUTPUT_DIR: /tmp/nmap-output
+    volumes: *kai_artifacts_volumes
 
   # Tool Containers (Representative Subset)
   theharvester:
@@ -117,6 +159,10 @@ services:
       - kai_internal
     command: ["-h"] # Default command to show help
     read_only: true # Requires writable volume for output
+    environment:
+      <<: *kai_artifacts_env
+      NUCLEI_OUTPUT_DIR: /tmp/nuclei-output
+    volumes: *kai_artifacts_volumes
     # NOTE: kai-nuclei build is currently blocked due to Go version incompatibility.
 
   # Garak
@@ -356,6 +402,11 @@ services:
     networks:
       - kai_internal
     command: ["--help"]
+    read_only: true
+    environment:
+      <<: *kai_artifacts_env
+      GITLEAKS_OUTPUT_DIR: /tmp/gitleaks-output
+    volumes: *kai_artifacts_volumes
 
   trufflehog:
     build: ./docker/trufflehog

@@ -13,6 +13,16 @@ repos:
             .*\.lock$
           )$
 
+  - repo: https://github.com/trufflesecurity/trufflehog
+    rev: v3.82.6
+    hooks:
+      - id: trufflehog
+        name: TruffleHog (local commit scan)
+        entry: trufflehog git file://. --since-commit HEAD --only-verified --fail
+        language: system
+        pass_filenames: false
+        stages: [pre-push]
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.6.0
     hooks:

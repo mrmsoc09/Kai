@@ -1,0 +1,7 @@
+# Paths excluded from TruffleHog scanning.
+# Add paths that contain test fixtures, known-safe examples, or generated baselines.
+.secrets.baseline
+.env.example
+.env.mvp.example
+output/logs/
+artifacts/

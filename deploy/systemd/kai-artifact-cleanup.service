@@ -1,0 +1,11 @@
+[Unit]
+Description=Kai Artifact Cleanup and Quota Enforcement
+After=local-fs.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/default/kai-artifact-cleanup
+ExecStart=/home/k1-admin/Kai/scripts/cleanup_kai_artifacts.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

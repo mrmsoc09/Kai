@@ -41,6 +41,10 @@ class BurpSuiteTool:
 
     BURP_JAR_PATH = os.environ.get('BURP_JAR_PATH', '/opt/burp/burpsuite_community.jar')
     BURP_LICENSE_KEY = os.environ.get('BURP_PRO_LICENSE', None)
+    BURP_CACHE_DIR = os.environ.get(
+        'BURP_CACHE_DIR',
+        os.environ.get('K1_BURP_CACHE_DIR', '/tmp/burp-cache')
+    )
     IS_PRO = False  # Will be set True if license detected
 
     @classmethod
@@ -86,6 +90,7 @@ class BurpSuiteTool:
         # Actual implementation requires Burp Enterprise or Professional license
 
         try:
+            os.makedirs(cls.BURP_CACHE_DIR, exist_ok=True)
             # Burp REST API Enterprise endpoint
             api_base = os.environ.get('BURP_API_URL', 'http://localhost:8070')
             api_key = os.environ.get('BURP_API_KEY')
@@ -105,6 +110,7 @@ class BurpSuiteTool:
                 scan_info={
                     'edition': 'professional',
                     'target': target,
+                    'cache_dir': cls.BURP_CACHE_DIR,
                     'status': 'scan_initiated',
                     'note': 'Pro API integration ready - activate with license'
                 }
@@ -131,6 +137,7 @@ class BurpSuiteTool:
             scan_info={
                 'edition': 'community',
                 'target': target,
+                'cache_dir': cls.BURP_CACHE_DIR,
                 'proxy_config': {
                     'host': '127.0.0.1',
                     'port': proxy_port,
@@ -155,7 +162,11 @@ class BurpSuiteTool:
 
         return {
             'name': 'burp_suite',
-            'description': f'Burp Suite {' + '**PRO READY**' if edition == 'professional' else '(Community) - Web application security testing' + '}',
+            'description': (
+                'Burp Suite **PRO READY**'
+                if edition == 'professional'
+                else 'Burp Suite (Community) - Web application security testing'
+            ),
             'category': 'scanners',
             'execution_mode': 'native' if edition != 'not_found' else 'fixture_stub',
             'requires_approval': True,

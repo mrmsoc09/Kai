@@ -1,4 +1,6 @@
 """Gitleaks wrapper - detect secrets in git repos."""
+import os
+import time
 import subprocess, json
 from typing import Dict, List
 from dataclasses import dataclass, field
@@ -20,10 +22,24 @@ class GitleaksTool:
     async def scan(cls, repo_path: str) -> GitleaksResult:
         if not cls.check():
             return GitleaksResult(success=False, errors=["gitleaks not installed"])
-        cmd = ['gitleaks', 'detect', '-s', repo_path, '-f', 'json', '-r', '/dev/stdout']
+
+        output_dir = os.environ.get(
+            "GITLEAKS_OUTPUT_DIR",
+            os.environ.get("K1_GITLEAKS_OUTPUT_DIR", "/tmp/gitleaks-output")
+        )
+        os.makedirs(output_dir, exist_ok=True)
+        output_file = os.path.join(output_dir, f"gitleaks_{int(time.time())}.json")
+
+        cmd = ['gitleaks', 'detect', '-s', repo_path, '-f', 'json', '-r', output_file]
         try:
             r = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
-            leaks = json.loads(r.stdout) if r.stdout.strip() else []
+            if r.returncode not in (0, 1):
+                return GitleaksResult(
+                    success=False,
+                    errors=[f"gitleaks exited with code {r.returncode}", r.stderr.strip()]
+                )
+            with open(output_file, encoding="utf-8") as handle:
+                leaks = json.load(handle)
             return GitleaksResult(success=True, leaks=leaks, total=len(leaks))
         except Exception as e:
             return GitleaksResult(success=False, errors=[str(e)])
