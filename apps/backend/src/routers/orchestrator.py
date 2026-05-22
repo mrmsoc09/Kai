@@ -5,7 +5,7 @@ Exposes endpoints for executing tools through the compliance middleware
 
 from datetime import datetime, timezone
 from pathlib import Path
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, Any, Optional
 from pydantic import BaseModel, Field
 import logging
@@ -19,10 +19,15 @@ from ..core.crew_yaml_runner import (
     run_crew_yaml,
 )
 from ..core.tool_registry_catalog import list_catalog_entries
+from ..core.auth import require_roles, ROLE_OPERATOR, ROLE_ADMIN
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/orchestrator", tags=["orchestrator"])
+router = APIRouter(
+    prefix="/orchestrator",
+    tags=["orchestrator"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ADMIN))],
+)
 
 
 # ============================================================================

@@ -5,11 +5,14 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+
+from ..core.auth import require_roles, ROLE_ANALYST
 
 router = APIRouter(
     prefix="/personas",
     tags=["personas"],
+    dependencies=[Depends(require_roles(ROLE_ANALYST))],
 )
 
 REGISTRY_PATH = Path(

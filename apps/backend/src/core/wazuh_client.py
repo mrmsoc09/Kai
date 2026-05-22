@@ -10,6 +10,8 @@ Credentials: WAZUH_URL, WAZUH_USERNAME, WAZUH_PASSWORD via Vault.
 from __future__ import annotations
 
 import logging
+import os
+import urllib3
 from typing import Any
 
 import requests
@@ -56,10 +58,18 @@ class WazuhClient:
         )
         self._token = None
         self.session = requests.Session()
-        # Disable SSL warnings for dev (Wazuh uses self-signed certs)
-        self.session.verify = False
-        import urllib3
-        urllib3.disable_warnings()
+        
+        # Environment-aware SSL verification
+        cert_path = os.getenv("WAZUH_CA_CERT_PATH")
+        if cert_path and os.path.exists(cert_path):
+            self._verify_ssl = cert_path
+        else:
+            if os.getenv("ENVIRONMENT") == "production":
+                raise ValueError("WAZUH_CA_CERT_PATH required in production")
+            self._verify_ssl = False
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            
+        self.session.verify = self._verify_ssl
 
     def authenticate(self) -> bool:
         """
@@ -78,7 +88,7 @@ class WazuhClient:
                 url,
                 auth=(self.username, self.password),
                 timeout=10,
-                verify=False,
+                verify=self._verify_ssl,
             )
 
             if response.status_code == 200:
@@ -118,7 +128,7 @@ class WazuhClient:
             response = requests.get(
                 url,
                 timeout=10,
-                verify=False,
+                verify=self._verify_ssl,
             )
             return response.status_code < 400
         except Exception as e:

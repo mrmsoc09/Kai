@@ -3,12 +3,18 @@ Router for K1 Autonomous Multi-Agent Systems
 Exposes endpoints for autonomous agent management, reasoning, and swarm coordination
 """
 
-from fastapi import APIRouter, HTTPException, WebSocket
+from fastapi import APIRouter, Depends, HTTPException, WebSocket
 from typing import Dict, List, Any, Optional
 import asyncio
 import json
 
-router = APIRouter(prefix="/api/autonomous", tags=["autonomous"])
+from ..core.auth import require_roles, ROLE_OPERATOR, ROLE_ADMIN
+
+router = APIRouter(
+    prefix="/api/autonomous",
+    tags=["autonomous"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ADMIN))],
+)
 
 # Global references to autonomous systems (set during startup)
 autonomous_system = None

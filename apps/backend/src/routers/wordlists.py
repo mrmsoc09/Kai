@@ -14,13 +14,19 @@ import logging
 from pathlib import Path
 from typing import Any, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
 
+from ..core.auth import require_roles, ROLE_OPERATOR
+
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/wordlists", tags=["wordlists"])
+router = APIRouter(
+    prefix="/api/v1/wordlists",
+    tags=["wordlists"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR))],
+)
 
 
 # ── Pydantic schemas ─────────────────────────────────────────────────────────

@@ -15,13 +15,17 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
 
-from ..core.auth import AUTH_COOKIE_NAME, decode_access_token
+from ..core.auth import AUTH_COOKIE_NAME, decode_access_token, require_roles, ROLE_OPERATOR
 from ..core.gemini_orchestrator import get_gemini_orchestrator
 
-router = APIRouter(prefix="/api/v1/orchestration", tags=["orchestration_v1"])
+router = APIRouter(
+    prefix="/api/v1/orchestration",
+    tags=["orchestration_v1"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR))],
+)
 
 
 def _resolve_ws_token(websocket: WebSocket) -> str | None:

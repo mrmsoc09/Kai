@@ -92,11 +92,13 @@ celery_app.conf.update(
     },
     redis_max_connections=20,
     
-    # Task annotations
+    # Task annotations — per-queue rate limits; no global limit to avoid
+    # throttling bursty tool-execution phases during active missions
     task_annotations={
-        "*": {
-            "rate_limit": "10/m",
-        }
+        "apps.backend.src.core.tool_tasks.*": {"rate_limit": "120/m"},
+        "apps.backend.src.worker.scan_pool_tasks.*": {"rate_limit": "120/m"},
+        "apps.backend.src.core.notification_tasks.*": {"rate_limit": "30/m"},
+        "apps.backend.src.core.training_tasks.*": {"rate_limit": "5/m"},
     },
     
     # Beat schedule (periodic tasks)

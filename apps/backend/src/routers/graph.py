@@ -3,16 +3,21 @@ Kaison K1 - Graph Database API Router
 Attack surface visualization and relationship analysis
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any
 import logging
 
 from ..integrations.neo4j_client import get_neo4j_client
+from ..core.auth import require_roles, ROLE_OPERATOR, ROLE_ANALYST
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/v1/graph", tags=["graph"])
+router = APIRouter(
+    prefix="/api/v1/graph",
+    tags=["graph"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST))],
+)
 
 
 # Pydantic Models

@@ -15,6 +15,7 @@ from .evidence_qualification_engine import qualify_evidence
 from .impact_validation_engine import resolve_submission_candidate_decision, validate_impact
 from .novelty_dedupe_engine import evaluate_novelty_dedupe
 from .vulnerability_intelligence_engine import enrich_finding_with_intelligence
+from .pdf_generator import markdown_to_html, generate_pdf_from_markdown
 
 
 def _utcnow_iso() -> str:
@@ -714,10 +715,27 @@ class ReportEngine:
 
     def _persist_report_artifacts(self, report: Report) -> str:
         self._artifact_dir.mkdir(parents=True, exist_ok=True)
+        
+        markdown_content = report.rendered_markdown or self._render_markdown(report)
+        
         json_path = self._artifact_dir / f"{report.report_id}.json"
         markdown_path = self._artifact_dir / f"{report.report_id}.md"
+        html_path = self._artifact_dir / f"{report.report_id}.html"
+        pdf_path = self._artifact_dir / f"{report.report_id}.pdf"
+        
         json_path.write_text(json.dumps(report.to_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
-        markdown_path.write_text(report.rendered_markdown or self._render_markdown(report), encoding="utf-8")
+        markdown_path.write_text(markdown_content, encoding="utf-8")
+        
+        try:
+            html_content = markdown_to_html(markdown_content)
+            html_path.write_text(html_content, encoding="utf-8")
+            
+            pdf_bytes = generate_pdf_from_markdown(markdown_content)
+            pdf_path.write_bytes(pdf_bytes)
+        except Exception as e:
+            # Non-fatal if HTML/PDF generation fails (e.g. if weasyprint dependencies are missing locally)
+            pass
+            
         return str(json_path)
 
     def generate_and_store_report(

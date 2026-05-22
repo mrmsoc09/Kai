@@ -5,8 +5,8 @@ version: '3.8'
 #   docker-compose -f docker-compose.prod.yml --env-file .env.prod up -d
 #
 # Required .env.prod variables:
-#   POSTGRES_PASSWORD, JWT_SECRET_KEY, K1_DEV_TOKEN,
-#   ANTHROPIC_API_KEY, REDIS_URL (optional override)
+#   POSTGRES_PASSWORD, JWT_SECRET_KEY, ANTHROPIC_API_KEY
+#   REDIS_URL (optional override)
 
 x-logging: &default-logging
   driver: "json-file"
@@ -14,11 +14,16 @@ x-logging: &default-logging
     max-size: "50m"
     max-file: "5"
 
+x-security: &default-security
+  security_opt:
+    - no-new-privileges:true
+
 services:
   postgres:
     image: postgres:16-alpine
     user: "70:70"          # postgres uid inside alpine image
     container_name: k1_postgres_prod
+    <<: *default-security
     environment:
       POSTGRES_USER: k1
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -47,6 +52,7 @@ services:
     image: redis:7-alpine
     user: "999:999"        # redis uid inside alpine image
     container_name: k1_redis_prod
+    <<: *default-security
     command: >
       redis-server
       --appendonly yes
@@ -77,12 +83,13 @@ services:
       dockerfile: Dockerfile.prod
     user: "1000:1000"
     container_name: k1_backend_prod
+    <<: *default-security
     environment:
       ENVIRONMENT: production
       DATABASE_URL: postgresql://k1:${POSTGRES_PASSWORD}@postgres:5432/k1
       REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      K1_DEV_TOKEN: ${K1_DEV_TOKEN}
+      # K1_DEV_TOKEN intentionally omitted — dev auth bypass must not exist in production
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       OLLAMA_HOST: ${OLLAMA_HOST:-http://localhost:11434}
       CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS}
@@ -90,6 +97,7 @@ services:
       COOKIE_SECURE: "true"
       K1_REQUIRED_SERVICES: postgres,redis
       LOG_LEVEL: INFO
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-5}
     expose:
       - "8080"
     depends_on:
@@ -113,7 +121,7 @@ services:
           cpus: "2.0"
           memory: 2g
     logging: *default-logging
-    read_only: false
+    read_only: false   # audit logs, artifact writes, scope-decisions JSONL require writable /app
     tmpfs:
       - /tmp
 
@@ -123,6 +131,7 @@ services:
       dockerfile: Dockerfile.worker
     user: "1000:1000"
     container_name: k1_worker_prod
+    <<: *default-security
     environment:
       REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
       DATABASE_URL: postgresql://k1:${POSTGRES_PASSWORD}@postgres:5432/k1
@@ -148,6 +157,7 @@ services:
       dockerfile: apps/frontend/Dockerfile
     user: "101:101"        # nginx uid inside alpine image
     container_name: k1_frontend_prod
+    <<: *default-security
     expose:
       - "8081"
     depends_on:

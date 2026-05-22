@@ -100,6 +100,7 @@ def get_async_engine() -> AsyncEngine:
                     {
                         "poolclass": AsyncAdaptedQueuePool,
                         "pool_pre_ping": True,
+                        "pool_recycle": int(os.getenv("DATABASE_POOL_RECYCLE", "1800")),
                         "pool_size": int(os.getenv("DATABASE_POOL_SIZE", "20")),
                         "max_overflow": int(os.getenv("DATABASE_MAX_OVERFLOW", "10")),
                         "pool_timeout": int(os.getenv("DATABASE_POOL_TIMEOUT", "30")),

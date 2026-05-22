@@ -3,7 +3,7 @@ Budget Management API Router
 Provides endpoints for budget monitoring, analytics, and emergency controls
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -11,8 +11,13 @@ from datetime import datetime, timezone
 from ..core.budget_tracker import get_budget_tracker, BudgetStatus
 from ..core.cost_controller import get_cost_controller
 from ..core.hybrid_model_router import get_hybrid_router
+from ..core.auth import require_roles, ROLE_ADMIN
 
-router = APIRouter(prefix="/api/v1/budget", tags=["budget"])
+router = APIRouter(
+    prefix="/api/v1/budget",
+    tags=["budget"],
+    dependencies=[Depends(require_roles(ROLE_ADMIN))],
+)
 
 
 # ============================================================================

@@ -14,7 +14,7 @@ from ..schemas.hil import ScopeUpsert
 router = APIRouter(prefix="/scopes", tags=["hil-scopes"])
 
 
-@router.get("/{program}")
+@router.get("/{program}", dependencies=[Depends(RBAC(Permission.VIEW_FINDINGS))])
 async def get_scope(program: str, db: AsyncSession = Depends(get_db)):
     program = program.strip()
     result = await db.execute(

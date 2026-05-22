@@ -250,20 +250,13 @@ class YamlConfiguredToolAgent(IToolAgent):
         cfg = self._cfg
         deps: list[str] = cfg.get("dependencies", [])
 
+        # We no longer hard-fail on dependencies here, as BiddingOrchestrator
+        # will resolve the DAG to see if other selected tools will provide them.
         deps_met, deps_reason = self._check_dependencies(
             deps, context.findings_so_far
         )
-        if not deps_met:
-            return ToolBid(
-                tool_id=self.tool_id,
-                confidence=0.0,
-                estimated_cost_cents=0.0,
-                execution_time_estimate_ms=0.0,
-                output_schema=cfg.get("output_schema", {}),
-                dependencies=deps,
-                priority_boost=1.0,
-                reasoning=f"abstain: {deps_reason}",
-            )
+        # We record the reason but do not zero out the confidence yet.
+        base_reason = "deps=met" if deps_met else f"deps_missing={deps_reason}"
 
         phase_affinity: list[str] = cfg.get("phase_affinity", [])
         confidence = self._compute_base_confidence(phase_affinity, context.phase)
@@ -286,7 +279,7 @@ class YamlConfiguredToolAgent(IToolAgent):
 
         parts = [
             "phase=" + ("match" if not phase_affinity or context.phase in phase_affinity else "mismatch"),
-            "deps=met",
+            base_reason,
         ]
         if boost > 1.0:
             parts.append(f"goal_boost={boost:.1f}")
@@ -372,6 +365,42 @@ class BiddingOrchestrator:
             bids.append(bid)
         return bids
 
+    def resolve_dag_dependencies(
+        self,
+        bids: list[ToolBid],
+        findings: FindingDataset
+    ) -> list[ToolBid]:
+        """
+        Resolve topological execution order and filter out unsatisfiable tools.
+        """
+        available_data = set()
+        # Pre-populate with existing finding types
+        for k in dir(findings):
+            if not k.startswith("_") and findings.has(k):
+                available_data.add(k)
+                
+        satisfiable_bids = []
+        pending_bids = [b for b in bids if b.confidence > 0.0]
+        
+        progress = True
+        while progress:
+            progress = False
+            for bid in list(pending_bids):
+                # check if all dependencies are in available_data
+                if all(dep in available_data for dep in bid.dependencies):
+                    satisfiable_bids.append(bid)
+                    pending_bids.remove(bid)
+                    # add outputs to available_data
+                    for output_key in bid.output_schema.keys():
+                        available_data.add(output_key)
+                    progress = True
+                    
+        # Update reasoning for rejected bids (optional, but good for logs)
+        for rejected in pending_bids:
+            logger.debug(f"Tool {rejected.tool_id} rejected due to unsatisfiable dependencies: {rejected.dependencies}")
+            
+        return satisfiable_bids
+
     def select_tools(
         self,
         tool_ids: list[str],
@@ -387,9 +416,12 @@ class BiddingOrchestrator:
         in that case.
         """
         bids = self.collect_bids(tool_ids, context)
+        
+        # Filter through DAG dependency resolver
+        satisfiable_bids = self.resolve_dag_dependencies(bids, context.findings_so_far)
 
         eligible = [
-            b for b in bids
+            b for b in satisfiable_bids
             if b.confidence >= min_confidence
             and b.within_budget(context.budget_remaining_cents)
         ]

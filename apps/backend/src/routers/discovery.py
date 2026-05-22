@@ -4,13 +4,18 @@ Discovery Optimizer Router
 Provides endpoints for optimized vulnerability discovery.
 """
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel
 
 from apps.backend.src.core.discovery_optimizer import get_discovery_optimizer
+from apps.backend.src.core.auth import require_roles, ROLE_OPERATOR
 
-router = APIRouter(prefix="/api/v1/discovery", tags=["discovery"])
+router = APIRouter(
+    prefix="/api/v1/discovery",
+    tags=["discovery"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR))],
+)
 
 
 class OptimizedHuntRequest(BaseModel):

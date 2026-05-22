@@ -1,7 +1,7 @@
 """Task submission endpoints for Celery-backed tool runs."""
 from __future__ import annotations
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -15,6 +15,7 @@ from ..core.hil_db import get_db
 from ..core.approval_gate_service import ApprovalGateService
 from ..models.enums import ApprovalGateStatusEnum
 from ..models.campaign import ApprovalGate
+from ..core.auth import require_roles, ROLE_OPERATOR
 
 
 class TaskRequest(BaseModel):
@@ -22,7 +23,11 @@ class TaskRequest(BaseModel):
     params: dict = Field(default_factory=dict, description="Tool parameters")
 
 
-router = APIRouter(prefix="/api/v1/tasks", tags=["Tasks"])
+router = APIRouter(
+    prefix="/api/v1/tasks",
+    tags=["Tasks"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR))],
+)
 
 
 @router.post("/enqueue")

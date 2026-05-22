@@ -3,7 +3,7 @@ Router for K1 Finding Validation Workflow
 Routes findings to HiL validation or exploit chaining based on severity/duplicates
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict, List, Any, Optional
 import json
 
@@ -14,8 +14,13 @@ from apps.backend.src.core.impact_validation_engine import (
 )
 from apps.backend.src.core.novelty_dedupe_engine import evaluate_novelty_dedupe
 from apps.backend.src.core.vulnerability_intelligence_engine import enrich_finding_with_intelligence
+from apps.backend.src.core.auth import require_roles, ROLE_OPERATOR, ROLE_ANALYST
 
-router = APIRouter(prefix="/api/findings", tags=["findings"])
+router = APIRouter(
+    prefix="/api/findings",
+    tags=["findings"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST))],
+)
 
 
 def get_systems():

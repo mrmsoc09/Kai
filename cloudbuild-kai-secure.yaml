@@ -51,20 +51,26 @@ steps:
 
         echo "✅ Certificates decrypted securely"
 
-  # Step 2: Static security analysis on code
-  - name: 'gcr.io/cloud-builders/gke-deploy'
+  # Step 2: Secret detection using detect-secrets (baseline already in repo)
+  - name: 'python:3.11-slim'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        echo "🔍 Running security static analysis..."
+        echo "🔍 Running secret detection scan..."
+        pip install -q detect-secrets
 
-        # Check for hardcoded credentials
-        if grep -r "api_key\|password\|secret" apps/backend/src --include="*.py" | grep -v "os.getenv" | grep -v "#"; then
-          echo "⚠️  WARNING: Possible hardcoded secrets found. Review needed."
+        # Scan all tracked files against the committed baseline.
+        # detect-secrets-hook exits non-zero when it finds secrets not in the baseline.
+        git ls-files '*.py' '*.yaml' '*.yml' '*.env.example' '*.json' \
+          | xargs detect-secrets-hook --baseline .secrets.baseline
+        RESULT=$?
+        if [ $RESULT -ne 0 ]; then
+          echo "❌ BLOCKED: New secrets detected by detect-secrets. Review output above."
+          exit 1
         fi
 
-        echo "✅ Security analysis complete"
+        echo "✅ No new secrets found"
 
   # Step 3: Build Kai container with security context
   - name: 'gcr.io/cloud-builders/docker'
@@ -80,19 +86,35 @@ steps:
     env:
       - 'CLOUDBUILD_BUILD_ID=$BUILD_ID'
 
-  # Step 4: Security scanning of container image
+  # Step 4: Security scanning of container image — blocks on CRITICAL CVEs
   - name: 'gcr.io/cloud-builders/gke-deploy'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
+        IMAGE="us-central1-docker.pkg.dev/$PROJECT_ID/kai-repo/kai-security-engine:$COMMIT_SHA"
         echo "🛡️  Scanning container for vulnerabilities..."
 
-        # Use GCP Container Analysis
-        gcloud container images scan us-central1-docker.pkg.dev/$PROJECT_ID/kai-repo/kai-security-engine:$COMMIT_SHA \
-          --remote || true
+        # Scan and capture results; do NOT use || true — failures must block the pipeline
+        gcloud artifacts docker images scan "$IMAGE" \
+          --remote \
+          --format='json' > /workspace/scan_results.json
 
-        echo "✅ Container scan complete"
+        # Fail build if any CRITICAL severity CVEs are present
+        CRITICAL_COUNT=$(python3 -c "
+import json, sys
+data = json.load(open('/workspace/scan_results.json'))
+vulns = data.get('response', {}).get('vulnerabilities', [])
+critical = [v for v in vulns if v.get('severity') == 'CRITICAL']
+print(len(critical))
+")
+        if [ "$CRITICAL_COUNT" -gt 0 ]; then
+          echo "❌ BLOCKED: $CRITICAL_COUNT critical CVEs found. Deployment halted."
+          cat /workspace/scan_results.json
+          exit 1
+        fi
+
+        echo "✅ Container scan complete — no critical CVEs"
 
   # Step 5: Push to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'

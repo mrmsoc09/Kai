@@ -28,10 +28,10 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
             (
                 "default-src 'self'; "
                 "script-src 'self'; "
-                "style-src 'self' 'unsafe-inline'; "
+                "style-src 'self'; "
                 "img-src 'self' data: https:; "
-                "font-src 'self'; "
-                "connect-src 'self' https:; "
+                "font-src 'self' data:; "
+                "connect-src 'self' wss: https:; "
                 "object-src 'none'; "
                 "frame-ancestors 'none'; "
                 "base-uri 'self'; "

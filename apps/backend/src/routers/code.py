@@ -3,7 +3,7 @@ Code Tasks API Router
 Endpoints for code analysis, repair, PoC generation using CLI tools
 """
 
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from datetime import datetime, timezone
@@ -15,8 +15,13 @@ from ..integrations.claude_code_client import (
 )
 from ..integrations.codex_client import get_codex_client
 from ..integrations.gemini_cli_client import get_gemini_client
+from ..core.auth import require_roles, ROLE_OPERATOR, ROLE_ANALYST
 
-router = APIRouter(prefix="/api/v1/code", tags=["code"])
+router = APIRouter(
+    prefix="/api/v1/code",
+    tags=["code"],
+    dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST))],
+)
 
 
 # ============================================================================
