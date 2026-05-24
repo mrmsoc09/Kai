@@ -15,9 +15,11 @@ if ! vault status -format=json | grep -q '"initialized": true'; then
   echo "Initializing Vault..."
   vault operator init -key-shares=1 -key-threshold=1 -format=json > /vault/file/init.json
   
-  # Extract token and keys
-  cat /vault/file/init.json | jq -r '.root_token' > /vault/file/root_token
-  cat /vault/file/init.json | jq -r '.unseal_keys_b64[0]' > /vault/file/unseal_key
+  # Extract token and keys (using grep/sed — jq is not present in vault:1.13.3 image)
+  grep -o '"root_token":"[^"]*"' /vault/file/init.json \
+    | sed 's/"root_token":"//;s/"//' > /vault/file/root_token
+  grep -o '"unseal_keys_b64":\["[^"]*"' /vault/file/init.json \
+    | sed 's/"unseal_keys_b64":\["//;s/"//' > /vault/file/unseal_key
   
   # Also write to a path accessible by host if needed, but here we stay in container
   # The task says "writes it to a gitignored file". 

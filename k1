@@ -34,8 +34,8 @@ function check_dependencies() {
         echo -e "${RED}Error: docker is not installed.${NC}"
         exit 1
     fi
-    if ! command -v docker-compose &> /dev/null; then
-        echo -e "${RED}Error: docker-compose is not installed.${NC}"
+    if ! docker compose version &> /dev/null; then
+        echo -e "${RED}Error: Docker Compose v2 plugin is not installed. Run: sudo apt-get install docker-compose-plugin${NC}"
         exit 1
     fi
     if ! command -v python3 &> /dev/null; then
@@ -62,7 +62,7 @@ function start() {
     # Ensure correct permissions for data dirs
     mkdir -p artifacts
     
-    sudo docker-compose -f docker-compose.dev.yml up --build -d
+    docker compose -f docker-compose.dev.yml up --build -d
     
     echo -e "\n${GREEN}✓ Platform Started Successfully!${NC}"
     echo -e "------------------------------------------------"
@@ -78,7 +78,7 @@ function start() {
 
 function stop() {
     echo -e "${BLUE}Stopping Kaison K1 Platform...${NC}"
-    sudo docker-compose -f docker-compose.dev.yml down
+    docker compose -f docker-compose.dev.yml down
     echo -e "${GREEN}✓ Systems stopped.${NC}"
 }
 
@@ -88,7 +88,7 @@ function restart() {
 }
 
 function logs() {
-    sudo docker-compose -f docker-compose.dev.yml logs -f
+    docker compose -f docker-compose.dev.yml logs -f
 }
 
 # Main Logic

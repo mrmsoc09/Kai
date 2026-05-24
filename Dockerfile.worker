@@ -1,5 +1,5 @@
 # Stage 1: Build/Install Go tools
-FROM golang:1.24-bookworm AS go-builder
+FROM golang:1.25-bookworm AS go-builder
 
 # Install build dependencies
 # libpcap-dev is required for naabu
@@ -18,10 +18,17 @@ RUN go install github.com/projectdiscovery/tlsx/cmd/tlsx@v1.2.0
 RUN go install github.com/ffuf/ffuf/v2@v2.1.0
 
 # TruffleHog installation
-RUN go install github.com/trufflesecurity/trufflehog@v3.95.2
+# TruffleHog cannot be installed via `go install` because its go.mod contains
+# replace directives, which Go prohibits in versioned installs.
+# Build from source instead so replace directives are honoured as main module.
+RUN git clone --depth 1 --branch v3.95.2 \
+        https://github.com/trufflesecurity/trufflehog.git /tmp/trufflehog \
+    && cd /tmp/trufflehog \
+    && go build -o /go/bin/trufflehog . \
+    && rm -rf /tmp/trufflehog
 
-# Amass v5
-RUN go install github.com/owasp-amass/amass/v5/...@v5.0.0
+# Amass v4 — v5 requires libpostal (C library, not in any standard package repo)
+RUN go install github.com/owasp-amass/amass/v4/...@v4.2.0
 
 # Stage 2: Final Worker Image
 FROM python:3.12-slim
@@ -43,7 +50,7 @@ COPY --from=go-builder /go/bin/* /usr/local/bin/
 
 # Install theHarvester from Source
 # theHarvester uses pyproject.toml (no requirements.txt since v4.x)
-RUN git clone https://github.com/laramies/theHarvester.git --branch v4.10.1 --depth 1 /opt/theHarvester && \
+RUN git clone https://github.com/laramies/theHarvester.git --branch 4.10.1 --depth 1 /opt/theHarvester && \
     cd /opt/theHarvester && \
     pip install . --break-system-packages
 
