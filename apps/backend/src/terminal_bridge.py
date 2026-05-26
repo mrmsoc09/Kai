@@ -3,16 +3,12 @@ from __future__ import annotations
 import os
 import pty
 import select
-import struct
-import fcntl
-import termios
 import asyncio
 import logging
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI()
 
 class TerminalBridge:
     """
@@ -57,4 +53,8 @@ class TerminalBridge:
 
         await asyncio.gather(read_from_pty(), write_to_pty())
 
-# Note: Integration into main.py is required for production.
+
+async def terminal_websocket(websocket: WebSocket) -> None:
+    """Standalone entrypoint imported by main.py for the /ws/terminal route."""
+    bridge = TerminalBridge()
+    await bridge.connect(websocket)
