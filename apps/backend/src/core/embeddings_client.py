@@ -316,3 +316,6 @@ class VectorStore:
             return 0.0
 
         return dot_product / (norm1 * norm2)
+
+# Backwards-compat alias used by vector_store.py
+EmbeddingClient = HybridEmbeddingClient

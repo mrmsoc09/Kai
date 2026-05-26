@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 
-from ..celery_app import celery_app
+from ..worker.celery_app import celery_app
 from ..services.report_intelligence_engine import ReportIntelligenceEngine
 from ..core.persistence import get_db
 

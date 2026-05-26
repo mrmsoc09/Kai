@@ -4,6 +4,10 @@ from typing import Dict, Any
 import json
 from datetime import datetime, timezone
 
+# Re-export get_db so legacy imports (training.py, synthetic_data_loader.py, etc.)
+# continue to work without modification.
+from apps.backend.src.core.hil_db import get_db as get_db  # noqa: F401
+
 ROOT = Path(__file__).resolve().parents[4]
 REPORTS = ROOT / 'artifacts' / 'reports'
 REPORTS.mkdir(parents=True, exist_ok=True)
