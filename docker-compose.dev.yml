@@ -62,6 +62,8 @@ services:
       VAULT_URL: http://host.docker.internal:8200
       OLLAMA_HOST: http://host.docker.internal:11434
       REDIS_URL: "redis://:K1_SecR3tP4ssw0rd!_2026@redis:6379/0"
+      # Tool binaries mounted from host /opt/k1-tools/bin
+      PATH: "/opt/k1-tools/bin:/opt/k1-tools/go/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:
@@ -70,6 +72,7 @@ services:
       - ./artifacts:/app/artifacts:rw
       - ./apps:/app/apps:ro
       - ./config:/app/config:ro
+      - /opt/k1-tools:/opt/k1-tools:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -96,7 +99,7 @@ services:
       OLLAMA_HOST: http://host.docker.internal:11434
       REDIS_URL: "redis://:K1_SecR3tP4ssw0rd!_2026@redis:6379/0"
       # Align PATH for Go-installed binaries inside the worker
-      PATH: "/root/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/go/bin"
+      PATH: "/opt/k1-tools/bin:/opt/k1-tools/go/bin:/root/go/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/go/bin"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -106,6 +109,7 @@ services:
       - ./artifacts:/app/artifacts:rw
       - ./apps:/app/apps:ro
       - ./config:/app/config:ro
+      - /opt/k1-tools:/opt/k1-tools:ro
     networks:
       - k1_network
     restart: unless-stopped
