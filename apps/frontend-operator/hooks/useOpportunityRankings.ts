@@ -35,11 +35,15 @@ export function useOpportunityRankings(programId?: string) {
     queryKey: queryKeys.bugBounty.phase7.predictions(programId),
     queryFn: ({ signal }) => bugBountyApi.listPhase7Predictions({ programId, limit: 500, signal })
   });
+  const programsQuery = useQuery({
+    queryKey: queryKeys.bugBounty.programs(),
+    queryFn: ({ signal }) => bugBountyApi.listBountyPrograms(signal)
+  });
 
   const rows = useMemo<OpportunityRankingRow[]>(() => {
     const recommendations = recommendationsQuery.data ?? [];
     const predictions = predictionsQuery.data ?? [];
-    return (rankingsQuery.data ?? [])
+    const rankedRows = (rankingsQuery.data ?? [])
       .map((ranking) => {
         const linkedRecommendation =
           recommendations.find((item) => item.selection_record_id === ranking.id) ??
@@ -83,12 +87,43 @@ export function useOpportunityRankings(programId?: string) {
         }
         return b.selectionScore - a.selectionScore;
       });
-  }, [predictionsQuery.data, rankingsQuery.data, recommendationsQuery.data]);
+    if (rankedRows.length > 0) {
+      return rankedRows;
+    }
+
+    return (programsQuery.data ?? [])
+      .filter((program) => {
+        if (!programId) {
+          return true;
+        }
+        return program.id === programId || program.program_key === programId;
+      })
+      .map((program) => {
+        const platform = (program.platform ?? "unknown").toUpperCase();
+        const handle = program.handle ?? program.program_key ?? program.id;
+        return {
+          id: `program-${program.id}`,
+          programId: program.id,
+          scopeTargetId: null,
+          subjectType: "PROGRAM",
+          subjectKey: handle,
+          selectionScore: 0,
+          priorityRank: null,
+          confidenceScore: null,
+          duplicateRiskScore: null,
+          evidenceCompletenessScore: null,
+          recommendedWorkflow: "phase7_prediction",
+          recommendedAction: "run_prediction_cycle",
+          reasoningSummary: `Program available (${platform}). Phase 7 ranking not generated yet.`
+        };
+      });
+  }, [predictionsQuery.data, rankingsQuery.data, recommendationsQuery.data, programsQuery.data, programId]);
 
   return {
     rows,
     rankingsQuery,
     recommendationsQuery,
-    predictionsQuery
+    predictionsQuery,
+    programsQuery
   };
 }

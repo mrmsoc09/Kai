@@ -29,6 +29,7 @@ from .scope_guardrails import ScopePolicy, evaluate_target_scope
 from .tool_health_service import build_dashboard
 from .tool_registry_catalog import get_catalog_entry
 from .workflow_executor import WorkflowExecutor
+from .opportunity_catalog import list_filtered
 from ..models.bug_bounty import (
     AnalystQueueItem,
     HuntReadinessRecord,
@@ -103,7 +104,151 @@ class BugBountyHuntingService:
 
     async def list_programs(self) -> list[Program]:
         result = await self.db.execute(select(Program).order_by(Program.created_at.desc()))
+        programs = list(result.scalars().all())
+        existing_platforms = {
+            str(program.platform or "").strip().lower()
+            for program in programs
+            if str(program.platform or "").strip()
+        }
+        required_platforms = {"hackerone", "intigriti"}
+        missing_platforms = required_platforms - existing_platforms
+
+        seeded = 0
+        if missing_platforms:
+            seeded = await self._seed_programs_from_catalog(platforms=missing_platforms)
+        if seeded <= 0:
+            return programs
+
+        await self.db.commit()
+        result = await self.db.execute(select(Program).order_by(Program.created_at.desc()))
         return list(result.scalars().all())
+
+    @staticmethod
+    def _target_type_from_catalog_scope(target: str) -> str:
+        value = str(target or "").strip()
+        if not value:
+            return "domain"
+        if value.startswith("*."):
+            return "wildcard"
+        if "://" in value:
+            return "url"
+        if "/" in value and "." not in value:
+            return "other"
+        return "domain"
+
+    async def _seed_programs_from_catalog(self, *, platforms: set[str] | None = None) -> int:
+        seeded_count = 0
+        now = _utcnow().isoformat()
+        existing_result = await self.db.execute(
+            select(Program.program_key, Program.platform, Program.name)
+        )
+        existing_keys: set[str] = set()
+        existing_platform_name_pairs: set[tuple[str, str]] = set()
+        for program_key, platform, name in existing_result.fetchall():
+            key = str(program_key or "").strip()
+            if key:
+                existing_keys.add(key)
+            platform_norm = str(platform or "").strip().lower()
+            name_norm = str(name or "").strip().lower()
+            if platform_norm and name_norm:
+                existing_platform_name_pairs.add((platform_norm, name_norm))
+
+        public_bbp = list_filtered(access_type="public_bbp")
+        for opportunity in public_bbp:
+            platform = str(opportunity.platform or "").strip().lower() or None
+            if platforms and str(platform or "") not in platforms:
+                continue
+            if opportunity.id in existing_keys:
+                continue
+            name_norm = str(opportunity.name or "").strip().lower()
+            if platform and name_norm and (platform, name_norm) in existing_platform_name_pairs:
+                continue
+            handle = (
+                opportunity.id.split(":", 1)[1].strip()
+                if ":" in opportunity.id
+                else None
+            )
+            program = Program(
+                program_key=opportunity.id,
+                name=opportunity.name,
+                platform=platform,
+                handle=handle,
+                policy_url=opportunity.program_url,
+                status="active",
+                created_by="system.catalog_seed",
+                config_json={
+                    "opportunity": {
+                        "source": "catalog_seed",
+                        "program_url": opportunity.program_url,
+                        "rules_text": opportunity.notes or "",
+                        "submission_guidelines": opportunity.scope_summary or "",
+                        "testing_restrictions": [],
+                        "disclosure_restrictions": [],
+                        "disclosure_policy": None,
+                        "allowed_asset_types": [],
+                        "disallowed_workflows": [],
+                        "require_safe_mode": True,
+                        "reward_metadata": {
+                            "max_payout_usd": int(opportunity.max_payout_usd),
+                            "min_payout_usd": int(opportunity.min_payout_usd),
+                            "vdp_only": bool(opportunity.vdp_only),
+                            "response_sla_days": int(opportunity.response_sla_days),
+                        },
+                        "notes": opportunity.notes or "",
+                        "platform_enrichment": {
+                            "status": "seeded",
+                            "source": "opportunity_catalog",
+                            "warnings": [],
+                            "artifact_urls": [opportunity.program_url],
+                            "last_fetch_at": None,
+                        },
+                        "imported_at": now,
+                        "last_synced_at": now,
+                    }
+                },
+            )
+            self.db.add(program)
+            await self.db.flush()
+
+            for scope_domain in opportunity.scope_domains:
+                target = str(scope_domain or "").strip()
+                if not target:
+                    continue
+                await self._upsert_scope_target(
+                    program=program,
+                    target=target,
+                    target_type=self._target_type_from_catalog_scope(target),
+                    is_in_scope=True,
+                    monitoring_enabled=True,
+                    safe_mode_required=True,
+                    priority_tier=3,
+                    monitoring_source="import:catalog_seed",
+                    monitoring_notes="Seeded from built-in opportunity catalog.",
+                )
+
+            await self._ensure_default_access_metadata(
+                program=program,
+                platform=str(platform or ""),
+                enrichment={
+                    "status": "seeded",
+                    "source": "opportunity_catalog",
+                    "artifact_urls": [opportunity.program_url],
+                },
+            )
+            existing_keys.add(opportunity.id)
+            if platform and name_norm:
+                existing_platform_name_pairs.add((platform, name_norm))
+            seeded_count += 1
+
+        if seeded_count > 0:
+            await record_transition_event(
+                self.db,
+                event_type="bugbounty.program.catalog_seeded",
+                actor="system.catalog_seed",
+                message="Seeded bug bounty programs from built-in opportunity catalog.",
+                payload={"seeded_program_count": seeded_count},
+            )
+        return seeded_count
 
     @staticmethod
     def _extract_urls(*chunks: str | None) -> list[str]:

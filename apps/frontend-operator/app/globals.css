@@ -1,3 +1,6 @@
+/* ── Google Fonts — MUST be first before @tailwind directives ────────── */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,43 +9,208 @@
   color-scheme: dark;
 }
 
+/* ── Base ─────────────────────────────────────────────────────────────── */
 html {
-  @apply bg-background;
+  background: #000;
 }
 
 body {
-  @apply bg-background text-foreground;
-  font-family: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: #000000;
+  color: #00FF41;
+  font-family: "IBM Plex Mono", "Courier New", monospace;
+  -webkit-font-smoothing: antialiased;
+  /* subtle CRT flicker */
+  animation: flicker 0.12s infinite;
 }
 
+/* ── Hacker text effects ──────────────────────────────────────────────── */
+h1, h2, h3 {
+  text-shadow: 0 0 8px #00FF41, 0 0 16px rgba(0,255,65,0.4);
+}
+
+a {
+  color: #00FF41;
+  text-decoration: none;
+}
+a:hover {
+  text-shadow: 0 0 8px #00FF41;
+  color: #00FF41;
+}
+
+/* ── Input / form hacker style ───────────────────────────────────────── */
+input, textarea, select {
+  background: #000 !important;
+  color: #00FF41 !important;
+  border: 1px solid #003300 !important;
+  font-family: "IBM Plex Mono", monospace !important;
+  caret-color: #00FF41;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: #00FF41 !important;
+  box-shadow: 0 0 8px rgba(0,255,65,0.4) !important;
+  outline: none !important;
+}
+input::placeholder, textarea::placeholder {
+  color: #007A1E !important;
+}
+option {
+  background: #000;
+  color: #00FF41;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: #003300; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #007A1E; }
+
+/* ── CRT scanline overlay ────────────────────────────────────────────── */
+.scanline-overlay {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.08) 2px,
+    rgba(0, 0, 0, 0.08) 4px
+  );
+}
+
+/* Moving bright scanline */
+.scanline-sweep::after {
+  content: "";
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(transparent, rgba(0,255,65,0.06), transparent);
+  animation: scanline-sweep 6s linear infinite;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+@keyframes scanline-sweep {
+  0%   { top: -4px; }
+  100% { top: 100vh; }
+}
+
+/* ── Vignette ────────────────────────────────────────────────────────── */
+.crt-vignette {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  background: radial-gradient(ellipse at center,
+    transparent 60%,
+    rgba(0,0,0,0.6) 100%
+  );
+}
+
+/* ── Layout helpers ──────────────────────────────────────────────────── */
 .operator-shell {
-  @apply min-h-screen;
+  min-height: 100vh;
+  position: relative;
 }
 
 .operator-grid {
-  @apply grid gap-4;
+  display: grid;
+  gap: 1rem;
 }
 
 .operator-panel {
-  @apply rounded-lg border border-border bg-panel;
+  border-radius: 0.5rem;
+  border: 1px solid #003300;
+  background: rgba(5,5,5,0.92);
+  box-shadow: inset 0 0 30px rgba(0,255,65,0.03), 0 0 1px #003300;
 }
 
 .operator-panel-elevated {
-  @apply rounded-lg border border-border bg-elevated;
+  border-radius: 0.5rem;
+  border: 1px solid #003300;
+  background: rgba(10,10,10,0.92);
 }
 
+/* ── Cards & panels ──────────────────────────────────────────────────── */
 .cockpit-flightdeck {
-  background-image: linear-gradient(140deg, rgba(59, 130, 246, 0.16) 0%, rgba(11, 15, 20, 0.92) 55%);
+  background-image: linear-gradient(140deg, rgba(0,255,65,0.06) 0%, rgba(0,0,0,0.96) 55%);
 }
 
 .cockpit-flightdeck-header {
-  background-image: linear-gradient(90deg, rgba(59, 130, 246, 0.15) 0%, rgba(11, 15, 20, 0.05) 100%);
+  background-image: linear-gradient(90deg, rgba(0,255,65,0.08) 0%, rgba(0,0,0,0.02) 100%);
 }
 
 .cockpit-kpi {
-  @apply rounded-md border border-border bg-elevated/80 p-3;
+  border-radius: 0.375rem;
+  border: 1px solid #003300;
+  background: rgba(10,10,10,0.8);
+  padding: 0.75rem;
 }
 
 .cockpit-lane {
-  @apply rounded-md border border-border bg-elevated/70 p-3;
+  border-radius: 0.375rem;
+  border: 1px solid #003300;
+  background: rgba(10,10,10,0.7);
+  padding: 0.75rem;
+}
+
+/* ── Blinking cursor ─────────────────────────────────────────────────── */
+.cursor-blink::after {
+  content: "_";
+  animation: blink 1s step-end infinite;
+  color: #00FF41;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+/* ── Glitch text on hover ────────────────────────────────────────────── */
+.glitch-hover:hover {
+  animation: glitch 0.3s steps(2) forwards;
+}
+
+@keyframes glitch {
+  0%   { transform: translate(0); clip-path: none; }
+  20%  { transform: translate(-2px, 1px); color: #FF3333; }
+  40%  { transform: translate(2px, -1px); color: #FFD700; }
+  60%  { transform: translate(-1px, 0); color: #00FF41; }
+  80%  { transform: translate(1px, 1px); }
+  100% { transform: translate(0); }
+}
+
+/* ── Table hacker style ──────────────────────────────────────────────── */
+table { border-collapse: collapse; width: 100%; }
+th {
+  color: #FFD700 !important;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  border-bottom: 1px solid #003300;
+}
+td { border-bottom: 1px solid #001a00; }
+tr:hover td { background: rgba(0,255,65,0.04); }
+
+/* ── Badges / status ─────────────────────────────────────────────────── */
+.badge-success { color: #00FF41; border: 1px solid #003300; }
+.badge-danger  { color: #FF3333; border: 1px solid #660000; }
+.badge-warning { color: #FFD700; border: 1px solid #665500; }
+.badge-muted   { color: #007A1E; border: 1px solid #003300; }
+
+/* ── Flicker keyframe ────────────────────────────────────────────────── */
+@keyframes flicker {
+  0%, 100% { opacity: 1; }
+  92%       { opacity: 0.98; }
+  94%       { opacity: 1; }
+  96%       { opacity: 0.97; }
+}
+
+/* ── Button overrides ────────────────────────────────────────────────── */
+button {
+  font-family: "IBM Plex Mono", monospace !important;
+  letter-spacing: 0.04em;
 }

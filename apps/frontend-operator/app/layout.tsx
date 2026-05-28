@@ -6,14 +6,18 @@ import { AppProviders } from "./providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Kai Operator Console",
+  title: "KAI / K1 — Operator Console",
   description:
-    "Operator control plane for bug bounty programs, monitored targets, inference-driven triage, approvals, and diagnostics."
+    "Autonomous bug bounty hunting platform — operator control plane for missions, targets, findings, triage, approvals, and threat intelligence.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body>
         <AppProviders>
           <AppShell>{children}</AppShell>

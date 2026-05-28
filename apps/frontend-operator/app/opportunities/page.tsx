@@ -3,9 +3,11 @@
 import { useMemo, useState } from "react";
 
 import { useOpportunityRankings } from "@/hooks/useOpportunityRankings";
+import { useScanQueue } from "@/hooks/useScanQueue";
 
 import { ProgramFilterCard } from "@/components/bugbounty/ProgramFilterCard";
 import { OpportunityRankingTable } from "@/components/bugbounty/OpportunityRankingTable";
+import { ScanQueuePanel } from "@/components/scan/ScanQueuePanel";
 import { EmptyState } from "@/components/data-display/EmptyState";
 import { ErrorState } from "@/components/data-display/ErrorState";
 import { LoadingState } from "@/components/data-display/LoadingState";
@@ -13,12 +15,15 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import type { OpportunityRankingRow } from "@/hooks/useOpportunityRankings";
 
 export default function OpportunitiesPage() {
   const [programIdFilter, setProgramIdFilter] = useState("");
   const [subjectTypeFilter, setSubjectTypeFilter] = useState("ALL");
   const [searchText, setSearchText] = useState("");
   const data = useOpportunityRankings(programIdFilter.trim() || undefined);
+  const { items, addItem, removeItem, reorder, updateItem, clearCompleted } = useScanQueue();
+
   const filteredRows = useMemo(() => {
     const term = searchText.trim().toLowerCase();
     return data.rows.filter((row) => {
@@ -42,6 +47,12 @@ export default function OpportunitiesPage() {
       return haystack.includes(term);
     });
   }, [data.rows, searchText, subjectTypeFilter]);
+
+  const handleAddToQueue = (rows: OpportunityRankingRow[]) => {
+    for (const row of rows) {
+      addItem(row);
+    }
+  };
 
   return (
     <div className="operator-grid">
@@ -81,14 +92,32 @@ export default function OpportunitiesPage() {
           {data.predictionsQuery.isError ? (
             <ErrorState error={data.predictionsQuery.error} title="Predictions source failed" />
           ) : null}
+          {data.programsQuery?.isError ? (
+            <ErrorState error={data.programsQuery.error} title="Program source failed" />
+          ) : null}
           {filteredRows.length > 0 ? (
-            <OpportunityRankingTable rows={filteredRows} />
+            <OpportunityRankingTable rows={filteredRows} onAddToQueue={handleAddToQueue} />
           ) : !data.rankingsQuery.isLoading ? (
             <EmptyState
               title="No opportunities match filters"
               description="No opportunity rankings match the selected subject type and search filters."
             />
           ) : null}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Scan Queue</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ScanQueuePanel
+            items={items}
+            onReorder={reorder}
+            onRemove={removeItem}
+            onUpdateItem={updateItem}
+            onClearCompleted={clearCompleted}
+          />
         </CardContent>
       </Card>
     </div>

@@ -158,6 +158,7 @@ services:
     working_dir: /app
     environment:
       NEXT_PUBLIC_API_BASE_URL: http://localhost:8080
+      NEXT_PUBLIC_K1_DEV_BOOTSTRAP_TOKEN: k1-dev-bootstrap-token-local
     ports:
       - "8081:8081"
     volumes:
