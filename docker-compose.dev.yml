@@ -72,6 +72,7 @@ services:
       - ./artifacts:/app/artifacts:rw
       - ./apps:/app/apps:ro
       - ./config:/app/config:ro
+      - ./tools:/app/tools:ro
       - /opt/k1-tools:/opt/k1-tools:ro
     depends_on:
       postgres:
@@ -109,6 +110,7 @@ services:
       - ./artifacts:/app/artifacts:rw
       - ./apps:/app/apps:ro
       - ./config:/app/config:ro
+      - ./tools:/app/tools:ro
       - /opt/k1-tools:/opt/k1-tools:ro
     networks:
       - k1_network

@@ -58,9 +58,12 @@ DEFAULT_ARGS: dict[str, list[str]] = {
     "puredns": ["resolve"],
     "waybackurls": [],
     "httprobe": [],
-    "tlsx": ["-silent", "-json"],
+    # tlsx uses -u/-host for target input; -u here triggers the else-branch target append.
+    "tlsx": ["-silent", "-json", "-u"],
     "katana": ["-silent", "-jsonl", "-u"],
-    "hakrawler": ["-plain", "-url"],
+    # hakrawler reads target URLs from stdin; -json produces structured output.
+    # Former flags (-plain, -url) do not exist in current hakrawler versions.
+    "hakrawler": ["-json"],
     "gospider": ["-q", "-s"],
     "waymore": ["-i"],
     "dirsearch": ["-u"],
@@ -75,9 +78,14 @@ DEFAULT_ARGS: dict[str, list[str]] = {
     "xsstrike": ["-u"],
     "commix": ["--url"],
     "tplmap": [],
+    # searchsploit: binary may be a broken symlink in some containers; will fail gracefully.
     "searchsploit": [],
     "git-secrets": ["--scan", "-r"],
-    "gitrob_alt": ["filesystem"],
+    # gitleaks v8+: requires 'git' or 'dir' subcommand before the repository/path target.
+    "gitleaks": ["git"],
+    # gitrob: scans GitHub orgs/users via API; needs -github-access-token set in env.
+    # The 'filesystem' subcommand does not exist in gitrob; use -silent mode.
+    "gitrob_alt": ["-silent"],
 }
 
 
@@ -97,9 +105,9 @@ TOOL_PARSE_MODE: dict[str, str] = {
     "puredns": "lines",
     "waybackurls": "lines",
     "httprobe": "lines",
-    "tlsx": "jsonl",
+    "tlsx": "jsonl",   # outputs one JSON object per line when -json is used
     "katana": "jsonl",
-    "hakrawler": "lines",
+    "hakrawler": "json_or_lines",  # outputs JSON objects when -json flag is used
     "gospider": "lines",
     "waymore": "lines",
     "dirsearch": "json_or_lines",
@@ -116,7 +124,8 @@ TOOL_PARSE_MODE: dict[str, str] = {
     "tplmap": "lines",
     "searchsploit": "lines",
     "git-secrets": "lines",
-    "gitrob_alt": "jsonl",
+    "gitleaks": "json_or_lines",   # gitleaks outputs JSON report
+    "gitrob_alt": "lines",         # gitrob outputs plain text (no --json flag)
 }
 
 _MSF_ALLOWED_MODULE_RE = re.compile(r"^(exploit|auxiliary)/[a-zA-Z0-9_./-]+$")
@@ -276,7 +285,9 @@ class CatalogBackedCLITool(BaseTool):
         stdin_text: str | None = None
         wordlist = self._find_wordlist()
 
-        if name in {"waybackurls", "httprobe"}:
+        # Stdin-based tools: feed target via stdin, not as a CLI arg.
+        # hakrawler reads one URL per line from stdin; waybackurls and httprobe do the same.
+        if name in {"waybackurls", "httprobe", "hakrawler"}:
             stdin_text = f"{target}\n"
         elif name == "gobuster":
             args.extend([target, "-w", wordlist, "-q"])
@@ -295,14 +306,16 @@ class CatalogBackedCLITool(BaseTool):
         elif name == "commix":
             args.extend([target, "--batch"])
         elif name == "gitrob_alt":
-            args.extend([target, "--json"])
+            # gitrob takes the org/user as a positional argument; no --json flag.
+            args.append(target)
+        elif name == "gitleaks":
+            # gitleaks git <repo_url_or_path>: 'git' subcommand already in DEFAULT_ARGS.
+            args.append(target)
         elif name in {"searchsploit", "tplmap"}:
             args.append(target)
         elif name == "nmap":
             args.append(target)
         elif name == "katana":
-            args.append(target)
-        elif name == "hakrawler":
             args.append(target)
         elif name == "gospider":
             args.append(target)

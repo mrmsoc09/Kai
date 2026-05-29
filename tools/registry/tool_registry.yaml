@@ -1575,3 +1575,92 @@ tools:
     tier: 3
     triggers_on: ["ai_pentest_authorized"]
     requires_authorization: true
+
+  # === WORKFLOW-REQUIRED TOOLS ===
+  # These tools are referenced in workflow templates and must be registered
+  # even if the binary is not present (graceful "binary not found" at runtime).
+
+  - name: tlsx
+    agent_class: TlsxAgent
+    category: tls_fingerprinting
+    execution_mode: native
+    binary_path: tlsx
+    install_verification_cmd: ["tlsx", "-version"]
+    input_schema: {"target": "host"}
+    output_schema: {"tls_data": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 1
+    enabled_by_default: true
+    triggers_on: ["live_host_detected"]
+
+  - name: gospider
+    agent_class: GospiderAgent
+    category: web_crawling
+    execution_mode: native
+    binary_path: gospider
+    install_verification_cmd: ["gospider", "--help"]
+    input_schema: {"target": "url"}
+    output_schema: {"urls": "list[str]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 1
+    enabled_by_default: true
+    triggers_on: ["live_http_service_detected"]
+
+  - name: waymore
+    agent_class: WaymoreAgent
+    category: endpoint_discovery
+    execution_mode: native
+    binary_path: waymore
+    install_verification_cmd: ["waymore", "--help"]
+    input_schema: {"target": "domain"}
+    output_schema: {"urls": "list[str]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    api_keys_required: ["WAYMORE_API_KEY"]
+    tier: 1
+    enabled_by_default: true
+    triggers_on: ["domain_confirmed"]
+
+  - name: nikto
+    agent_class: NiktoAgent
+    category: vulnerability_scanning
+    execution_mode: native
+    binary_path: nikto
+    install_verification_cmd: ["nikto", "-Version"]
+    input_schema: {"target": "url"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: active
+    tier: 2
+    enabled_by_default: true
+    triggers_on: ["live_http_service_detected"]
+
+  - name: git-secrets
+    agent_class: GitSecretsAgent
+    category: secret_scanning
+    execution_mode: native
+    binary_path: git-secrets
+    install_verification_cmd: ["git-secrets", "--help"]
+    input_schema: {"target": "path"}
+    output_schema: {"secrets": "list[dict]"}
+    timeout_seconds: 300
+    safety_classification: passive
+    tier: 1
+    enabled_by_default: true
+    triggers_on: ["repository_target"]
+
+  - name: gitrob_alt
+    agent_class: GitrobAltAgent
+    category: secret_scanning
+    execution_mode: native
+    binary_path: gitrob
+    install_verification_cmd: ["gitrob", "-h"]
+    input_schema: {"target": "github_org_or_user"}
+    output_schema: {"findings": "list[dict]"}
+    timeout_seconds: 600
+    safety_classification: passive
+    tier: 1
+    enabled_by_default: true
+    triggers_on: ["repository_target"]
