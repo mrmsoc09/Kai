@@ -4,11 +4,13 @@ export type ScanQueueItem = {
   id: string;
   opportunityId: string;
   programId: string;
+  scopeTargetId: string | null;
   subjectType: string;
   subjectKey: string;
   recommendedWorkflow: string | null;
   selectionScore: number;
   addedAt: string;
+  /** schedule_job_id returned by /api/v1/scan-pool/queue-batch; used for status tracking */
   campaignId: string | null;
   status: "queued" | "running" | "approved" | "killed" | "completed" | "failed";
   priority: number;
@@ -62,6 +64,7 @@ export function addToScanQueue(
     id: crypto.randomUUID(),
     opportunityId: opportunity.id,
     programId: opportunity.programId,
+    scopeTargetId: opportunity.scopeTargetId ?? null,
     subjectType: opportunity.subjectType,
     subjectKey: opportunity.subjectKey,
     recommendedWorkflow: opportunity.recommendedWorkflow,

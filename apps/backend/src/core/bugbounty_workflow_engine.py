@@ -111,6 +111,19 @@ WORKFLOW_TEMPLATES: dict[str, WorkflowTemplate] = {
             WorkflowStep("report_prep", "k1_priority_ranking", requires_mode=None),
         ),
     ),
+    "workflow_passive_triage": WorkflowTemplate(
+        name="workflow_passive_triage",
+        description=(
+            "Minimal 3-tool passive triage: subdomain discovery (subfinder) → "
+            "HTTP probing (httpx) → vulnerability sweep (nuclei). "
+            "Safe for first-run verification and rapid opportunity screening."
+        ),
+        steps=(
+            WorkflowStep("passive_recon", "subfinder", requires_mode=None),
+            WorkflowStep("live_host_validation", "httpx", requires_mode=None),
+            WorkflowStep("vuln_scan", "nuclei", requires_mode=None),
+        ),
+    ),
 }
 
 

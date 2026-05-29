@@ -32,7 +32,7 @@ from .artifact_service import ArtifactService
 from .audit_events import record_transition_event
 from .campaign_service import CampaignService
 from .finding_correlation_service import FindingCorrelationService
-from .hil_db import get_async_session_maker
+from .hil_db import dispose_async_engine, get_async_session_maker
 from .observation_service import ObservationService
 from .tool_execution_service import ToolExecutionService
 
@@ -737,15 +737,22 @@ def mark_worker_execution_running_sync(
     actor: str = "system.worker",
 ) -> dict[str, Any]:
     async def _runner() -> dict[str, Any]:
-        session_maker = get_async_session_maker()
-        async with session_maker() as db:
-            svc = ExecutionResultIngestionService(db)
-            updated = await svc.mark_execution_running(worker_task_id=worker_task_id, actor=actor)
-            if updated:
-                await db.commit()
-            else:
-                await db.rollback()
-            return {"updated": updated}
+        try:
+            session_maker = get_async_session_maker()
+            async with session_maker() as db:
+                svc = ExecutionResultIngestionService(db)
+                updated = await svc.mark_execution_running(worker_task_id=worker_task_id, actor=actor)
+                if updated:
+                    await db.commit()
+                else:
+                    await db.rollback()
+                return {"updated": updated}
+        finally:
+            # Dispose the engine so asyncpg connections bound to THIS event loop are
+            # released before asyncio.run() closes the loop. Without this, the next
+            # Celery task call (with a fresh loop) inherits a stale engine and raises
+            # "Task got Future attached to a different loop".
+            await dispose_async_engine()
 
     try:
         return asyncio.run(_runner())
@@ -765,34 +772,39 @@ def ingest_worker_result_sync(
     actor: str = "system.worker",
 ) -> dict[str, Any]:
     async def _runner() -> dict[str, Any]:
-        session_maker = get_async_session_maker()
-        async with session_maker() as db:
-            svc = ExecutionResultIngestionService(db)
-            try:
-                response = await svc.ingest_result(
-                    ExecutionResultIngestRequest(
-                        worker_task_id=worker_task_id,
-                        tool_status=tool_status,
-                        result_payload_json=result_payload_json or {},
-                        exit_code=exit_code,
-                        error_message=error_message,
-                        stdout_ref=stdout_ref,
-                        stderr_ref=stderr_ref,
+        try:
+            session_maker = get_async_session_maker()
+            async with session_maker() as db:
+                svc = ExecutionResultIngestionService(db)
+                try:
+                    response = await svc.ingest_result(
+                        ExecutionResultIngestRequest(
+                            worker_task_id=worker_task_id,
+                            tool_status=tool_status,
+                            result_payload_json=result_payload_json or {},
+                            exit_code=exit_code,
+                            error_message=error_message,
+                            stdout_ref=stdout_ref,
+                            stderr_ref=stderr_ref,
+                            actor=actor,
+                        ),
                         actor=actor,
-                    ),
-                    actor=actor,
-                )
-            except ValueError as exc:
-                await db.rollback()
-                return {"ingested": False, "reason": str(exc)}
-            await db.commit()
-            return {
-                "ingested": True,
-                "execution_id": str(response.execution_id),
-                "campaign_id": str(response.campaign_id),
-                "phase_job_id": str(response.phase_job_id) if response.phase_job_id else None,
-                "tool_status": response.tool_status.value,
-            }
+                    )
+                except ValueError as exc:
+                    await db.rollback()
+                    return {"ingested": False, "reason": str(exc)}
+                await db.commit()
+                return {
+                    "ingested": True,
+                    "execution_id": str(response.execution_id),
+                    "campaign_id": str(response.campaign_id),
+                    "phase_job_id": str(response.phase_job_id) if response.phase_job_id else None,
+                    "tool_status": response.tool_status.value,
+                }
+        finally:
+            # Same loop-cleanup as mark_worker_execution_running_sync — dispose engine
+            # so connections bound to this event loop are freed before the loop closes.
+            await dispose_async_engine()
 
     try:
         return asyncio.run(_runner())

@@ -5,7 +5,8 @@ import { useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { Button } from "@/components/ui/button";
-import { getCampaign, startCampaign } from "@/lib/api/campaigns";
+import { getCampaign } from "@/lib/api/campaigns";
+import { queueBatch } from "@/lib/api/scans";
 import type { ScanQueueItem } from "@/lib/scan-queue";
 
 type ScanActionButtonsProps = {
@@ -91,20 +92,36 @@ export function ScanActionButtons({
     setStarting(true);
     setStartError(null);
     try {
-      const response = await startCampaign({
-        initiated_by: "operator",
-        declared_goal: `Scan ${item.subjectKey}`,
-        program_id: item.programId
+      const response = await queueBatch({
+        items: [
+          {
+            program_id: item.programId,
+            scope_target_id: item.scopeTargetId ?? null,
+            subject_key: item.subjectKey,
+            subject_type: item.subjectType,
+            recommended_workflow: item.recommendedWorkflow ?? null,
+          },
+        ],
+        force: true,
+        safe_mode: true,
       });
-      onStart?.(response.campaign_id);
+
+      if (response.queued.length > 0) {
+        // Use schedule_job_id as the tracking handle (status polling will
+        // look up the schedule's last_run_status via the bug-bounty API).
+        onStart?.(response.queued[0].schedule_job_id);
+      } else {
+        const firstError = response.errors[0]?.error ?? "Queue returned no dispatched jobs";
+        setStartError(firstError);
+      }
     } catch (err) {
       const message =
-        err instanceof Error ? err.message : "Failed to start campaign";
+        err instanceof Error ? err.message : "Failed to queue scan";
       setStartError(message);
     } finally {
       setStarting(false);
     }
-  }, [item.subjectKey, item.programId, onStart]);
+  }, [item.subjectKey, item.programId, item.scopeTargetId, item.subjectType, item.recommendedWorkflow, onStart]);
 
   const handleKill = useCallback(() => {
     onKill?.();

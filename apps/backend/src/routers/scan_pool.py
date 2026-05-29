@@ -57,6 +57,39 @@ class AddOpportunityRequest(BaseModel):
     program_handle: str | None = None
 
 
+# ---- Bulk-trigger (queue-batch) schemas ----
+
+class QueueBatchItem(BaseModel):
+    """One item from the frontend localStorage scan queue."""
+    program_id: str = Field(..., description="UUID of the Program row")
+    scope_target_id: str | None = Field(
+        default=None,
+        description="UUID of an existing ScopeTarget; if omitted, one is created from subject_key",
+    )
+    subject_key: str = Field(..., min_length=1, max_length=2048, description="Domain / target value")
+    subject_type: str = Field(default="TARGET", max_length=64)
+    recommended_workflow: str | None = Field(
+        default=None,
+        description="workflow_passive_triage is used when this is absent or unknown",
+    )
+    program_name: str | None = Field(default=None, max_length=500)
+    platform: str | None = Field(default=None, max_length=255)
+
+
+class QueueBatchRequest(BaseModel):
+    items: list[QueueBatchItem] = Field(..., min_length=1, max_length=50)
+    force: bool = Field(
+        default=True,
+        description="Pass force=True to trigger_schedule so cooldown / readiness checks are skipped",
+    )
+    safe_mode: bool = True
+    dry_run: bool = False
+    workflow_override: str | None = Field(
+        default=None,
+        description="If set, every item uses this template regardless of recommended_workflow",
+    )
+
+
 class ReorderQueueRequest(BaseModel):
     entry_ids: list[UUID] = Field(..., min_length=1)
 
@@ -442,3 +475,170 @@ async def manually_advance(
     if "error" in result and result.get("error") == "pool not found":
         raise HTTPException(status_code=404, detail="Pool not found")
     return result
+
+
+# ============================================================================
+# Bulk-trigger endpoint
+# ============================================================================
+
+_DEFAULT_TRIAGE_WORKFLOW = "workflow_passive_triage"
+
+
+@router.post("/queue-batch", status_code=status.HTTP_202_ACCEPTED)
+async def queue_batch(
+    body: QueueBatchRequest,
+    db=Depends(get_db),
+) -> dict[str, Any]:
+    """Convert a list of frontend scan-queue items into running Celery scan tasks.
+
+    For each item the endpoint will:
+    1. Verify the Program exists in the database.
+    2. Find or create a ``ScopeTarget`` for the scan domain (``subject_key``).
+    3. Find or create a ``HuntScheduleJob`` for the program + target + workflow.
+    4. Commit all new rows, then dispatch ``run_bug_bounty_schedule_task`` via
+       Celery so the scan runs in the background through the existing
+       ``WorkflowExecutor`` (Model A) pipeline.
+
+    Returns a JSON body with ``queued`` and ``errors`` lists so the caller can
+    update each localStorage ``ScanQueueItem``'s status and ``scheduleJobId``.
+    """
+    from uuid import UUID as _UUID
+
+    from sqlalchemy import select as _select
+
+    from ..core.bug_bounty_hunting_service import SCHEDULE_ACTIVE
+    from ..core.bugbounty_workflow_engine import WORKFLOW_TEMPLATES
+    from ..models.bug_bounty import HuntScheduleJob
+    from ..models.campaign import Program, ScopeTarget
+    from ..worker.campaign_tasks import run_bug_bounty_schedule_task
+
+    queued: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+
+    # ── Pass 1: validate + create DB rows ────────────────────────────────────
+    scheduled_jobs: list[tuple[int, HuntScheduleJob]] = []  # (item_index, schedule)
+
+    for idx, item in enumerate(body.items):
+        try:
+            # 1. Resolve program
+            try:
+                program_uuid = _UUID(item.program_id)
+            except ValueError:
+                errors.append({"index": idx, "error": f"Invalid program_id UUID: {item.program_id}"})
+                continue
+
+            program: Program | None = await db.scalar(
+                _select(Program).where(Program.id == program_uuid)
+            )
+            if program is None:
+                errors.append({"index": idx, "error": f"Program not found: {item.program_id}"})
+                continue
+
+            # 2. Resolve scope target
+            scope_target: ScopeTarget | None = None
+            if item.scope_target_id:
+                try:
+                    st_uuid = _UUID(item.scope_target_id)
+                except ValueError:
+                    errors.append(
+                        {"index": idx, "error": f"Invalid scope_target_id UUID: {item.scope_target_id}"}
+                    )
+                    continue
+                scope_target = await db.scalar(
+                    _select(ScopeTarget).where(ScopeTarget.id == st_uuid)
+                )
+                if scope_target is None:
+                    errors.append(
+                        {"index": idx, "error": f"ScopeTarget not found: {item.scope_target_id}"}
+                    )
+                    continue
+            else:
+                # Try to find by target value within the program
+                scope_target = await db.scalar(
+                    _select(ScopeTarget).where(
+                        ScopeTarget.program_id == program_uuid,
+                        ScopeTarget.target == item.subject_key,
+                    )
+                )
+                if scope_target is None:
+                    # Create an in-scope target automatically so the program
+                    # scope policy will allow the scan.
+                    scope_target = ScopeTarget(
+                        program_id=program_uuid,
+                        target=item.subject_key,
+                        target_type="domain",
+                        is_in_scope=True,
+                        details_json={"seeded_via": "scan-pool.queue-batch"},
+                    )
+                    db.add(scope_target)
+                    await db.flush()
+
+            # 3. Determine workflow template
+            workflow_template = (
+                body.workflow_override
+                or item.recommended_workflow
+                or _DEFAULT_TRIAGE_WORKFLOW
+            )
+            if workflow_template not in WORKFLOW_TEMPLATES:
+                workflow_template = _DEFAULT_TRIAGE_WORKFLOW
+
+            # 4. Find or create HuntScheduleJob
+            schedule: HuntScheduleJob | None = await db.scalar(
+                _select(HuntScheduleJob).where(
+                    HuntScheduleJob.program_id == program_uuid,
+                    HuntScheduleJob.scope_target_id == scope_target.id,
+                    HuntScheduleJob.workflow_template == workflow_template,
+                )
+            )
+            if schedule is None:
+                schedule = HuntScheduleJob(
+                    program_id=program_uuid,
+                    scope_target_id=scope_target.id,
+                    workflow_template=workflow_template,
+                    schedule_type="interval",
+                    interval_minutes=1440,  # 24-hour default cadence
+                    status=SCHEDULE_ACTIVE,
+                    safe_mode=body.safe_mode,
+                    dry_run=body.dry_run,
+                    created_by="operator.queue-batch",
+                    updated_by="operator.queue-batch",
+                )
+                db.add(schedule)
+                await db.flush()
+
+            scheduled_jobs.append((idx, schedule))
+
+        except Exception as exc:
+            logger.exception("queue-batch item %d failed during DB setup: %s", idx, exc)
+            errors.append({"index": idx, "error": str(exc)})
+
+    # ── Commit all new rows before dispatching ────────────────────────────────
+    # The Celery worker reads the schedule by ID; it must exist before the
+    # message is consumed.
+    await db.commit()
+
+    # ── Pass 2: dispatch Celery tasks ────────────────────────────────────────
+    for idx, schedule in scheduled_jobs:
+        try:
+            async_result = run_bug_bounty_schedule_task.apply_async(
+                kwargs={
+                    "schedule_id": str(schedule.id),
+                    "actor": "operator.queue-batch",
+                    "worker_role": "scan_pool",
+                    "force": body.force,
+                },
+                queue="tools",  # worker listens on -Q tools,intrusive
+            )
+            queued.append(
+                {
+                    "item_index": idx,
+                    "schedule_job_id": str(schedule.id),
+                    "celery_task_id": async_result.id,
+                    "status": "dispatched",
+                }
+            )
+        except Exception as exc:
+            logger.exception("queue-batch Celery dispatch failed for schedule %s: %s", schedule.id, exc)
+            errors.append({"index": idx, "schedule_job_id": str(schedule.id), "error": str(exc)})
+
+    return {"queued": queued, "errors": errors, "total": len(body.items)}

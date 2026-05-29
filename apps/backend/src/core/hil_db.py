@@ -76,10 +76,13 @@ def get_async_engine() -> AsyncEngine:
         and _engine_loop_id is not None
         and current_loop_id is not None
         and _engine_loop_id != current_loop_id
-        and str(_async_engine.url).startswith("sqlite+aiosqlite://")
     ):
-        # aiosqlite connections are loop-bound; recycle cached engine/session maker
-        # when tests/runtime cross event-loop boundaries.
+        # All async DB backends (asyncpg AND aiosqlite) are loop-bound; recycle the
+        # cached engine/session maker whenever the event loop changes.  This is
+        # critical in Celery fork-pool workers where each asyncio.run() call creates
+        # a fresh event loop — without recycling here the engine holds asyncpg
+        # connections bound to the OLD loop, causing:
+        #   "Task got Future attached to a different loop"  /  "Event loop is closed"
         _async_engine.sync_engine.dispose()
         _async_engine = None
         _async_session_maker = None

@@ -6,7 +6,7 @@ from uuid import UUID
 
 from ..core.bug_bounty_hunting_service import BugBountyHuntingService
 from ..core.execution_result_service import ingest_worker_result_sync, mark_worker_execution_running_sync
-from ..core.hil_db import get_async_session_maker
+from ..core.hil_db import dispose_async_engine, get_async_session_maker
 from ..models.enums import ToolExecutionStatusEnum
 from .celery_app import celery_app
 
@@ -74,17 +74,20 @@ async def _trigger_bug_bounty_schedule_async(
     worker_role: str,
     force: bool,
 ) -> dict:
-    session_maker = get_async_session_maker()
-    async with session_maker() as db:
-        svc = BugBountyHuntingService(db)
-        response = await svc.trigger_schedule(
-            UUID(schedule_id),
-            actor=actor,
-            force=force,
-            trigger_source=f"worker.{worker_role}",
-        )
-        await db.commit()
-        return response.model_dump()
+    try:
+        session_maker = get_async_session_maker()
+        async with session_maker() as db:
+            svc = BugBountyHuntingService(db)
+            response = await svc.trigger_schedule(
+                UUID(schedule_id),
+                actor=actor,
+                force=force,
+                trigger_source=f"worker.{worker_role}",
+            )
+            await db.commit()
+            return response.model_dump()
+    finally:
+        await dispose_async_engine()
 
 
 @celery_app.task(name="bug_bounty_schedule_run", bind=True)

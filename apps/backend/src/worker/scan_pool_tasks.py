@@ -18,7 +18,7 @@ import logging
 from uuid import UUID
 
 from .celery_app import celery_app
-from ..core.hil_db import get_async_session_maker
+from ..core.hil_db import dispose_async_engine, get_async_session_maker
 
 logger = logging.getLogger(__name__)
 
@@ -45,12 +45,15 @@ async def _async_advance_all() -> dict:
     """Async body for ``advance_all_scan_queues_task``."""
     from ..core.scan_queue_rotator import ScanQueueRotator
 
-    session_maker = get_async_session_maker()
-    async with session_maker() as db:
-        rotator = ScanQueueRotator()
-        result = await rotator.tick_all(db)
-        await db.commit()
-    return result
+    try:
+        session_maker = get_async_session_maker()
+        async with session_maker() as db:
+            rotator = ScanQueueRotator()
+            result = await rotator.tick_all(db)
+            await db.commit()
+        return result
+    finally:
+        await dispose_async_engine()
 
 
 @celery_app.task(name="scan_pool_entry_complete", bind=True)
@@ -111,12 +114,15 @@ async def _async_on_complete(
     """Async body for ``on_pool_scan_complete_task``."""
     from ..core.scan_queue_rotator import ScanQueueRotator
 
-    session_maker = get_async_session_maker()
-    async with session_maker() as db:
-        rotator = ScanQueueRotator()
-        await rotator.complete_entry(db, pool_id, entry_id, success, workflow_run_id)
-        await db.commit()
-    return {"pool_id": str(pool_id), "entry_id": str(entry_id), "success": success}
+    try:
+        session_maker = get_async_session_maker()
+        async with session_maker() as db:
+            rotator = ScanQueueRotator()
+            await rotator.complete_entry(db, pool_id, entry_id, success, workflow_run_id)
+            await db.commit()
+        return {"pool_id": str(pool_id), "entry_id": str(entry_id), "success": success}
+    finally:
+        await dispose_async_engine()
 
 
 # ============================================================================
@@ -137,12 +143,15 @@ def run_api_keys_orchestrator_task(self) -> dict:
     try:
         from ..core.api_keys_orchestrator import APIKeysOrchestrator
 
-        session_maker = get_async_session_maker()
         async def _run_orchestrator():
-            async with session_maker() as db:
-                orchestrator = APIKeysOrchestrator()
-                await orchestrator.run(db)
-                await db.commit()
+            try:
+                session_maker = get_async_session_maker()
+                async with session_maker() as db:
+                    orchestrator = APIKeysOrchestrator()
+                    await orchestrator.run(db)
+                    await db.commit()
+            finally:
+                await dispose_async_engine()
 
         asyncio.run(_run_orchestrator())
         logger.info("API Keys Orchestrator task completed successfully")

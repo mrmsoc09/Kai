@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ScanActionButtons } from "@/components/scan/ScanActionButtons";
+import { queueBatch } from "@/lib/api/scans";
 import type { ScanQueueItem } from "@/lib/scan-queue";
 
 type ScanQueuePanelProps = {
@@ -32,6 +33,52 @@ export function ScanQueuePanel({
 }: ScanQueuePanelProps) {
   const dragIndexRef = useRef<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [launching, setLaunching] = useState(false);
+  const [launchError, setLaunchError] = useState<string | null>(null);
+
+  const handleLaunchAll = useCallback(async () => {
+    const queued = items.filter((item) => item.status === "queued");
+    if (queued.length === 0) {
+      return;
+    }
+    setLaunching(true);
+    setLaunchError(null);
+    try {
+      const response = await queueBatch({
+        items: queued.map((item) => ({
+          program_id: item.programId,
+          scope_target_id: item.scopeTargetId ?? null,
+          subject_key: item.subjectKey,
+          subject_type: item.subjectType,
+          recommended_workflow: item.recommendedWorkflow ?? null,
+        })),
+        force: true,
+        safe_mode: true,
+      });
+
+      // Update successfully dispatched items to "running"
+      for (const dispatched of response.queued) {
+        const localItem = queued[dispatched.item_index];
+        if (localItem) {
+          onUpdateItem(localItem.id, {
+            status: "running",
+            campaignId: dispatched.schedule_job_id,
+          });
+        }
+      }
+
+      if (response.errors.length > 0) {
+        setLaunchError(
+          `${response.queued.length} dispatched, ${response.errors.length} failed: ` +
+          response.errors.map((e) => e.error).join("; ")
+        );
+      }
+    } catch (err) {
+      setLaunchError(err instanceof Error ? err.message : "Launch failed");
+    } finally {
+      setLaunching(false);
+    }
+  }, [items, onUpdateItem]);
 
   const handleDragStart = (index: number) => (e: React.DragEvent) => {
     dragIndexRef.current = index;
@@ -67,19 +114,42 @@ export function ScanQueuePanel({
       item.status === "failed"
   );
 
+  const queuedCount = items.filter((item) => item.status === "queued").length;
+
   return (
     <div>
       {/* Header */}
-      <div className="mb-2 flex items-center justify-between">
+      <div className="mb-2 flex items-center justify-between gap-2 flex-wrap">
         <span className="text-sm font-medium text-foreground">
           {items.length} item{items.length !== 1 ? "s" : ""} in queue
         </span>
-        {hasTerminal && onClearCompleted && (
-          <Button variant="outline" size="sm" onClick={onClearCompleted}>
-            Clear Completed
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          {queuedCount > 0 && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => void handleLaunchAll()}
+              disabled={launching}
+              title={`Dispatch all ${queuedCount} queued items via subfinder → httpx → nuclei pipeline`}
+            >
+              {launching ? (
+                <span className="inline-block h-3 w-3 animate-spin rounded-full border border-foreground border-t-transparent mr-1" />
+              ) : (
+                "▶▶"
+              )}
+              {launching ? "Launching…" : `Launch All (${queuedCount})`}
+            </Button>
+          )}
+          {hasTerminal && onClearCompleted && (
+            <Button variant="outline" size="sm" onClick={onClearCompleted}>
+              Clear Completed
+            </Button>
+          )}
+        </div>
       </div>
+      {launchError && (
+        <p className="mb-2 text-xs text-danger">{launchError}</p>
+      )}
 
       {/* Empty state */}
       {items.length === 0 && (
