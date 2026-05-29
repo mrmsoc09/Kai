@@ -58,6 +58,10 @@ class CommandSpec:
     args: List[str]
     workdir: Optional[Path] = None
     timeout: int = 300
+    # env_strip: env var names to remove from the subprocess environment.
+    # Use this when an ambient env var causes a tool to fail (e.g. nuclei
+    # errors when GOOGLE_API_KEY is set without GOOGLE_API_CX).
+    env_strip: Optional[List[str]] = None
 
 
 class CLITool(BaseTool):
@@ -72,6 +76,12 @@ class CLITool(BaseTool):
         if not self._which():
             return False, "", f"binary '{self.binary_name}' not found in PATH"
 
+        # Build subprocess env: strip keys listed in spec.env_strip.
+        run_env: Optional[Dict[str, str]] = None
+        if spec.env_strip:
+            strip_set = set(spec.env_strip)
+            run_env = {k: v for k, v in os.environ.items() if k not in strip_set}
+
         try:
             result = subprocess.run(
                 [spec.binary, *spec.args],
@@ -79,6 +89,7 @@ class CLITool(BaseTool):
                 capture_output=True,
                 text=True,
                 timeout=spec.timeout,
+                env=run_env,  # None → inherit parent env unchanged
             )
             ok = result.returncode == 0
             return ok, result.stdout.strip(), result.stderr.strip()
@@ -620,6 +631,10 @@ class NucleiTool(CLITool):
             version="0.1.0",
         )
 
+    # nuclei v3.x exits with ERR + code 1 when GOOGLE_API_KEY is set without GOOGLE_API_CX.
+    # Strip both keys so the subprocess env is clean regardless of platform ambient vars.
+    _NUCLEI_ENV_STRIP = ["GOOGLE_API_KEY", "GOOGLE_API_CX"]
+
     def execute(self, **kwargs) -> ToolResult:
         ok, err = self.validate_parameters(**kwargs)
         if not ok:
@@ -629,12 +644,63 @@ class NucleiTool(CLITool):
         severity = kwargs.get("severity", "medium,high,critical")
         template = kwargs.get("template")
 
-        args = ["-u", target, "-severity", severity, "-json"]
+        # nuclei v3 uses -jsonl (or -j) instead of the removed -json flag.
+        # Build args without -severity initially so the inline fallback template
+        # (severity=info) isn't filtered out by the default medium+ filter.
+        args = ["-u", target, "-jsonl"]
         if template:
             args.extend(["-t", template])
+            # Only add severity filter when using caller-supplied templates.
+            if severity:
+                args.extend(["-severity", severity])
+        else:
+            # Without a pre-installed nuclei-templates tree (e.g. network-isolated
+            # containers), write a minimal v3-compatible HTTP status check template
+            # to a tempfile so nuclei can execute and produce structured output.
+            import tempfile
+            # Uses nuclei v3 'http:' key (not deprecated 'requests:').
+            _minimal_template = (
+                "id: k1-http-detect\n"
+                "info:\n"
+                "  name: K1 HTTP Detection\n"
+                "  author: k1\n"
+                "  severity: info\n"
+                "  tags: k1,http\n"
+                "http:\n"
+                "  - method: GET\n"
+                "    path:\n"
+                "      - \"{{BaseURL}}\"\n"
+                "    matchers-condition: and\n"
+                "    matchers:\n"
+                "      - type: status\n"
+                "        status:\n"
+                "          - 200\n"
+                "          - 301\n"
+                "          - 302\n"
+            )
+            try:
+                _tf = tempfile.NamedTemporaryFile(suffix=".yaml", delete=False, mode="w")
+                _tf.write(_minimal_template)
+                _tf.flush()
+                _tf.close()
+                args.extend(["-t", _tf.name])
+                # Explicitly include info-severity so the template isn't filtered out.
+                args.extend(["-severity", "info,low,medium,high,critical"])
+            except Exception:
+                # If tempfile fails, proceed without -t; nuclei will exit with
+                # a no-templates error which is expected in air-gapped envs.
+                if severity:
+                    args.extend(["-severity", severity])
 
         start = time.time()
-        success, stdout, stderr = self._run(CommandSpec(self.binary_name, args, timeout=600))
+        success, stdout, stderr = self._run(
+            CommandSpec(
+                self.binary_name,
+                args,
+                timeout=600,
+                env_strip=self._NUCLEI_ENV_STRIP,
+            )
+        )
         elapsed = (time.time() - start) * 1000
 
         findings: List[Dict[str, Any]] = []

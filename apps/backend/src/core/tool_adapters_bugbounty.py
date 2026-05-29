@@ -81,6 +81,15 @@ DEFAULT_ARGS: dict[str, list[str]] = {
 }
 
 
+# Per-tool env vars to strip before subprocess invocation.
+# nuclei v3.x exits with ERR if GOOGLE_API_KEY is present without GOOGLE_API_CX;
+# strip both to keep nuclei self-contained (no Google dork integration needed).
+TOOL_ENV_STRIP: dict[str, list[str]] = {
+    "nuclei": ["GOOGLE_API_KEY", "GOOGLE_API_CX"],
+    "nuclei_scan": ["GOOGLE_API_KEY", "GOOGLE_API_CX"],
+}
+
+
 TOOL_PARSE_MODE: dict[str, str] = {
     "nuclei": "jsonl",
     "assetfinder": "lines",
@@ -342,7 +351,21 @@ class CatalogBackedCLITool(BaseTool):
 
     _MAX_STDOUT_CHARS = 100 * 1024 * 1024 // 4  # ~25 MB char limit (≈100 MB UTF-8 worst case)
 
-    def _run_once(self, command: list[str], timeout_seconds: int, stdin_text: str | None) -> CommandResult:
+    def _run_once(
+        self,
+        command: list[str],
+        timeout_seconds: int,
+        stdin_text: str | None,
+        extra_env: dict[str, str] | None = None,
+    ) -> CommandResult:
+        """Run command once.
+
+        extra_env: when provided, used AS the complete subprocess environment
+        (not merged on top of os.environ). Callers that want to strip specific
+        vars should pre-compute ``{k:v for k,v in os.environ.items() if k not in strip_set}``
+        and pass that dict. Passing ``None`` lets the subprocess inherit the
+        parent env unchanged.
+        """
         start = time.time()
         try:
             result = subprocess.run(
@@ -351,6 +374,7 @@ class CatalogBackedCLITool(BaseTool):
                 text=True,
                 timeout=timeout_seconds,
                 input=stdin_text,
+                env=extra_env,  # None → inherit parent env; dict → exact env override
             )
             duration_ms = (time.time() - start) * 1000
             stdout = result.stdout.strip()
@@ -411,11 +435,12 @@ class CatalogBackedCLITool(BaseTool):
         retries: int,
         timeout_seconds: int,
         stdin_text: str | None,
+        extra_env: dict[str, str] | None = None,
     ) -> tuple[CommandResult, int]:
         attempts = max(1, retries)
         last: CommandResult | None = None
         for attempt in range(attempts):
-            last = self._run_once(command, timeout_seconds, stdin_text)
+            last = self._run_once(command, timeout_seconds, stdin_text, extra_env=extra_env)
             if last.success:
                 return last, attempt + 1
             if attempt < attempts - 1:
@@ -631,11 +656,17 @@ class CatalogBackedCLITool(BaseTool):
             )
         else:
             command = [binary, *args]
+            # Build a filtered env for tools that conflict with ambient env vars.
+            _strip_keys = TOOL_ENV_STRIP.get(self.catalog_name, [])
+            _tool_env: dict[str, str] | None = None
+            if _strip_keys:
+                _tool_env = {k: v for k, v in os.environ.items() if k not in _strip_keys}
             result, attempts = self._run_with_retry(
                 command,
                 retries=retries,
                 timeout_seconds=timeout_seconds,
                 stdin_text=stdin_text,
+                extra_env=_tool_env,
             )
 
         parsed = self._parse_output(result.stdout)
