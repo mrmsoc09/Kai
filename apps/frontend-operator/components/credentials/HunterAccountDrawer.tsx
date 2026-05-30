@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useReducer, useRef, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { ProgramOpportunity } from "@/lib/types/bug-bounty";
 import { useCredentialsForProgram } from "@/hooks/useHunterAccounts";
 
@@ -24,6 +24,269 @@ const C = {
   overlay: "rgba(0,0,0,0.72)",
   inputBg: "#060c06",
 } as const;
+
+// ============================================================================
+// Platform-specific signup guides
+// ============================================================================
+type PlatformGuide = {
+  name: string;
+  steps: string[];
+  tips: string[];
+  requirements: string[];
+};
+
+const PLATFORM_GUIDES: Record<string, PlatformGuide> = {
+  hackerone: {
+    name: "HackerOne",
+    steps: [
+      "Create account at hackerone.com/users/sign_up",
+      "Verify email address",
+      "Set up 2FA — TOTP is required for many programs",
+      "Complete your hacker profile (handle, bio, skills)",
+      "Navigate to the program and click 'Join Program'",
+      "Read and accept scope rules and responsible disclosure policy",
+      "Check reputation / signal requirements before joining private programs",
+    ],
+    tips: [
+      "Use a professional handle — program owners will see it on every report",
+      "Enable 2FA immediately and store the TOTP secret in the 2FA section below",
+      "Some programs are private / invite-only — check the policy URL",
+      "Build signal (≥ 1.0) before targeting high-value private programs",
+    ],
+    requirements: ["Valid email address", "TOTP 2FA (required by many programs)", "Clean hacker reputation"],
+  },
+  bugcrowd: {
+    name: "Bugcrowd",
+    steps: [
+      "Register at bugcrowd.com/user/sign_up",
+      "Complete email verification",
+      "Enable MFA on your account settings",
+      "Navigate to the specific program page and click 'Join Program'",
+      "Accept the Bugcrowd Researcher Terms of Service",
+      "Review the program brief, allowed actions, and out-of-scope assets",
+      "Link a payout method before submitting your first report",
+    ],
+    tips: [
+      "Link a payout account early (PayPal / Payoneer supported)",
+      "Some programs are private — you need a direct invite link from the program owner",
+      "Check whether the program requires NDA acceptance in the brief",
+      "Bugcrowd priority score affects your access to higher-tier programs",
+    ],
+    requirements: ["Valid email", "MFA recommended", "Payout account (PayPal / Payoneer)"],
+  },
+  intigriti: {
+    name: "Intigriti",
+    steps: [
+      "Register at app.intigriti.com/register",
+      "Complete email verification",
+      "Fill out your researcher profile fully",
+      "Browse programs and request access (private programs require approval)",
+      "Wait for program admin approval (can take 1–3 days for private programs)",
+      "Accept program-specific rules and scope",
+      "Read in-scope and out-of-scope assets very carefully — Intigriti is strict",
+    ],
+    tips: [
+      "EU-based platform — submissions are GDPR-compliant",
+      "Private programs require admin approval — apply early",
+      "Intigriti supports IBAN / SEPA for European payouts",
+      "Hall of Fame recognition is automatic for valid HIGH/CRITICAL findings",
+    ],
+    requirements: ["Valid email", "Complete researcher profile", "Program-specific approval"],
+  },
+  synack: {
+    name: "Synack Red Team",
+    steps: [
+      "Apply at synack.com/red-team (application-based, not open registration)",
+      "Complete the rigorous skills assessment",
+      "Pass background check — this can take 2–4 weeks",
+      "Sign NDA and contractor agreement",
+      "Complete mandatory platform onboarding and training modules",
+      "Access programs exclusively via the SRT secure portal",
+      "All findings must go through Synack triage before disclosure",
+    ],
+    tips: [
+      "Synack is invitation-only — requires demonstrated offensive security skills",
+      "Strong vetting process: background check, skills test, references",
+      "Highest-value targets with structured, guaranteed payouts",
+      "All work stays confidential — no public CVE disclosure without approval",
+    ],
+    requirements: ["Formal application + acceptance", "Background check passed", "NDA signed", "Contractor agreement"],
+  },
+  yeswehack: {
+    name: "YesWeHack",
+    steps: [
+      "Register at yeswehack.com",
+      "Verify email address and complete hacker profile",
+      "Browse public programs or request access to private ones",
+      "Accept program-specific rules and legal terms",
+      "Review scope and start testing",
+    ],
+    tips: [
+      "Strong European (French) platform with active private program network",
+      "Response SLAs are contractually enforced — expect fast triage",
+      "Payouts via Payoneer or SEPA bank transfer",
+      "Active community — Discord available for researchers",
+    ],
+    requirements: ["Valid email", "Complete hacker profile"],
+  },
+  immunefi: {
+    name: "Immunefi",
+    steps: [
+      "Register at immunefi.com",
+      "Connect a Web3 wallet (MetaMask or WalletConnect recommended)",
+      "Complete KYC if your payout tier requires it (usually >$5 000)",
+      "Browse and accept the specific program's terms of service",
+      "Submit findings via the structured vulnerability report form",
+    ],
+    tips: [
+      "Web3 / blockchain security focus: smart contracts, DeFi, bridges, wallets",
+      "Largest bug bounties in the industry — programs up to $10M+",
+      "Payouts in crypto: ETH, USDC, or the project's native token",
+      "Save your wallet seed phrase in the Mnemonic Passphrase field above",
+      "Critical smart contract bugs can pay 6–7 figure bounties",
+    ],
+    requirements: ["Web3 wallet (MetaMask / WC)", "KYC for large payouts", "Blockchain security skills"],
+  },
+};
+
+const DEFAULT_GUIDE: PlatformGuide = {
+  name: "Program",
+  steps: [
+    "Visit the program's policy URL (see link above)",
+    "Create a hunter account on the platform",
+    "Verify email address and enable 2FA where available",
+    "Apply to join the program if approval is required",
+    "Accept the scope rules and responsible disclosure policy",
+    "Save all credentials in the sections below before scanning",
+  ],
+  tips: [
+    "Always read scope rules before testing — out-of-scope submissions are rejected",
+    "Enable 2FA and store the TOTP secret in the 2FA & Recovery section",
+    "Keep a complete record of all account credentials in Vault",
+    "Validate credentials after saving using the VALIDATE button",
+  ],
+  requirements: ["Valid email address", "2FA recommended"],
+};
+
+// ============================================================================
+// Password strength scorer
+// ============================================================================
+function scorePassword(pwd: string): { score: 0 | 1 | 2 | 3 | 4; label: string; color: string } {
+  if (!pwd) return { score: 0, label: "", color: C.border };
+  let s = 0;
+  if (pwd.length >= 8) s++;
+  if (pwd.length >= 14) s++;
+  if (/[A-Z]/.test(pwd) && /[a-z]/.test(pwd)) s++;
+  if (/\d/.test(pwd)) s++;
+  if (/[^A-Za-z0-9]/.test(pwd)) s++;
+  const score = Math.min(4, s) as 0 | 1 | 2 | 3 | 4;
+  const labels: Record<number, string> = { 0: "", 1: "WEAK", 2: "FAIR", 3: "STRONG", 4: "VERY STRONG" };
+  const colors: Record<number, string> = {
+    0: C.border,
+    1: C.red,
+    2: C.orange,
+    3: "#aacc00",
+    4: C.green,
+  };
+  return { score, label: labels[score], color: colors[score] };
+}
+
+// ============================================================================
+// PasswordStrengthBar
+// ============================================================================
+function PasswordStrengthBar({ password }: { password: string }) {
+  const { score, label, color } = scorePassword(password);
+  if (!password) return null;
+  return (
+    <div style={{ marginTop: 4 }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 3,
+          marginBottom: 2,
+        }}
+      >
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            style={{
+              flex: 1,
+              height: 3,
+              borderRadius: 2,
+              background: i <= score ? color : C.border,
+              transition: "background 0.2s ease",
+            }}
+          />
+        ))}
+      </div>
+      <div
+        style={{
+          fontSize: "0.58rem",
+          color,
+          fontFamily: "IBM Plex Mono, monospace",
+          letterSpacing: "0.1em",
+        }}
+      >
+        {label}
+      </div>
+    </div>
+  );
+}
+
+// ============================================================================
+// Clipboard copy hook
+// ============================================================================
+function useCopyToClipboard() {
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const copy = (key: string, text: string) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedKey(key);
+      setTimeout(() => setCopiedKey(null), 2000);
+    });
+  };
+  return { copy, copiedKey };
+}
+
+// ============================================================================
+// CopyButton
+// ============================================================================
+function CopyButton({
+  keyId,
+  text,
+  copiedKey,
+  onCopy,
+}: {
+  keyId: string;
+  text: string;
+  copiedKey: string | null;
+  onCopy: (key: string, text: string) => void;
+}) {
+  const isCopied = copiedKey === keyId;
+  return (
+    <button
+      type="button"
+      onClick={() => onCopy(keyId, text)}
+      title="Copy to clipboard"
+      style={{
+        background: "none",
+        border: `1px solid ${isCopied ? C.greenDim : C.border}`,
+        borderRadius: 2,
+        color: isCopied ? C.green : C.muted,
+        cursor: text ? "pointer" : "default",
+        fontSize: "0.6rem",
+        padding: "2px 5px",
+        fontFamily: "IBM Plex Mono, monospace",
+        letterSpacing: "0.06em",
+        lineHeight: 1,
+        transition: "all 0.15s ease",
+        flexShrink: 0,
+      }}
+    >
+      {isCopied ? "✓ copied" : "⎘ copy"}
+    </button>
+  );
+}
 
 // ============================================================================
 // SecretInput — text input with show/hide toggle
@@ -352,6 +615,372 @@ function SecurityQuestionPair({
 }
 
 // ============================================================================
+// ReadinessChecklist — header row showing which sections have data
+// ============================================================================
+function ReadinessChecklist({
+  hasSignupUrl,
+  hasIdentity,
+  isConfigured,
+  hasNotes,
+  isValidated,
+}: {
+  hasSignupUrl: boolean;
+  hasIdentity: boolean;
+  isConfigured: boolean;
+  hasNotes: boolean;
+  isValidated: boolean;
+}) {
+  const items: Array<{ label: string; done: boolean }> = [
+    { label: "Setup", done: hasSignupUrl },
+    { label: "Identity", done: hasIdentity },
+    { label: "Credentials", done: isConfigured },
+    { label: "Notes", done: hasNotes },
+    { label: "Validated", done: isValidated },
+  ];
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 6,
+        flexWrap: "wrap",
+        padding: "6px 16px",
+        borderBottom: `1px solid ${C.border}`,
+        background: "rgba(0,0,0,0.2)",
+      }}
+    >
+      {items.map((item) => (
+        <span
+          key={item.label}
+          style={{
+            fontSize: "0.58rem",
+            fontFamily: "IBM Plex Mono, monospace",
+            letterSpacing: "0.06em",
+            color: item.done ? C.green : C.muted,
+            display: "flex",
+            alignItems: "center",
+            gap: 3,
+          }}
+        >
+          <span style={{ fontSize: "0.5rem" }}>{item.done ? "◉" : "○"}</span>
+          {item.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ============================================================================
+// StatusBadge
+// ============================================================================
+function StatusBadge({ configured, status }: { configured: boolean; status?: string }) {
+  const color = configured ? C.green : C.orange;
+  const text = configured ? `✓ CONFIGURED (${status ?? "active"})` : "○ NOT CONFIGURED";
+  return (
+    <span
+      style={{
+        fontSize: "0.62rem",
+        fontFamily: "IBM Plex Mono, monospace",
+        color,
+        border: `1px solid ${color}`,
+        borderRadius: 2,
+        padding: "2px 6px",
+        letterSpacing: "0.08em",
+        textShadow: configured ? `0 0 6px ${C.greenGlow}` : "none",
+        flexShrink: 0,
+      }}
+    >
+      {text}
+    </span>
+  );
+}
+
+// ============================================================================
+// ActionButton
+// ============================================================================
+function ActionButton({
+  onClick,
+  children,
+  variant = "primary",
+  disabled,
+  loading,
+}: {
+  onClick: () => void;
+  children: React.ReactNode;
+  variant?: "primary" | "danger" | "ghost" | "warn";
+  disabled?: boolean;
+  loading?: boolean;
+}) {
+  const colors = {
+    primary: { bg: "rgba(0,255,65,0.1)", border: C.borderActive, color: C.green },
+    danger: { bg: "rgba(255,68,68,0.1)", border: C.redDim, color: C.red },
+    ghost: { bg: "rgba(0,0,0,0.3)", border: C.border, color: C.greenDim },
+    warn: { bg: "rgba(255,153,0,0.1)", border: "#664400", color: C.orange },
+  };
+  const s = colors[variant];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled || loading}
+      style={{
+        background: s.bg,
+        border: `1px solid ${s.border}`,
+        borderRadius: 3,
+        color: s.color,
+        fontFamily: "IBM Plex Mono, monospace",
+        fontSize: "0.68rem",
+        letterSpacing: "0.06em",
+        padding: "5px 12px",
+        cursor: disabled || loading ? "not-allowed" : "pointer",
+        opacity: disabled || loading ? 0.5 : 1,
+        transition: "all 0.1s ease",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {loading ? "⟳ working..." : children}
+    </button>
+  );
+}
+
+// ============================================================================
+// CollapsibleSection — with optional completion badge
+// ============================================================================
+function CollapsibleSection({
+  id,
+  title,
+  subtitle,
+  children,
+  active,
+  toggle,
+  complete,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+  children: React.ReactNode;
+  active: string | null;
+  toggle: (id: string) => void;
+  complete?: boolean;
+}) {
+  const expanded = active === null || active === id;
+  return (
+    <div
+      style={{
+        marginTop: 12,
+        border: `1px solid ${expanded ? C.borderActive : C.border}`,
+        borderRadius: 4,
+        overflow: "hidden",
+        transition: "border-color 0.15s ease",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => toggle(id)}
+        style={{
+          width: "100%",
+          background: expanded ? C.greenFaint : "rgba(0,0,0,0.3)",
+          border: "none",
+          borderBottom: expanded ? `1px solid ${C.border}` : "none",
+          padding: "8px 12px",
+          display: "flex",
+          alignItems: "center",
+          gap: 8,
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span style={{ color: expanded ? C.green : C.greenDim, fontSize: "0.65rem" }}>
+          {expanded ? "▾" : "▸"}
+        </span>
+        <div style={{ flex: 1 }}>
+          <div
+            style={{
+              fontSize: "0.65rem",
+              letterSpacing: "0.15em",
+              color: expanded ? C.green : C.greenDim,
+              fontFamily: "IBM Plex Mono, monospace",
+            }}
+          >
+            {title}
+          </div>
+          <div
+            style={{
+              fontSize: "0.58rem",
+              color: C.muted,
+              fontFamily: "IBM Plex Mono, monospace",
+            }}
+          >
+            {subtitle}
+          </div>
+        </div>
+        {/* Completion badge */}
+        {complete !== undefined && (
+          <span
+            style={{
+              fontSize: "0.55rem",
+              fontFamily: "IBM Plex Mono, monospace",
+              color: complete ? C.green : C.muted,
+              border: `1px solid ${complete ? C.borderActive : C.border}`,
+              borderRadius: 2,
+              padding: "1px 4px",
+              letterSpacing: "0.06em",
+            }}
+          >
+            {complete ? "✓ done" : "○ empty"}
+          </span>
+        )}
+      </button>
+
+      {expanded && (
+        <div style={{ padding: "10px 12px" }}>
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// PlatformGuideCard — shown inside ACCESS SETUP for known platforms
+// ============================================================================
+function PlatformGuideCard({ platform }: { platform: string | null }) {
+  const [expanded, setExpanded] = useState(false);
+  const guide = platform ? (PLATFORM_GUIDES[platform.toLowerCase()] ?? DEFAULT_GUIDE) : DEFAULT_GUIDE;
+
+  return (
+    <div
+      style={{
+        marginBottom: 12,
+        border: `1px solid ${C.border}`,
+        borderRadius: 3,
+        overflow: "hidden",
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setExpanded((e) => !e)}
+        style={{
+          width: "100%",
+          background: expanded ? "rgba(0,255,65,0.04)" : "rgba(0,0,0,0.25)",
+          border: "none",
+          borderBottom: expanded ? `1px solid ${C.border}` : "none",
+          padding: "6px 10px",
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <span style={{ color: C.greenDim, fontSize: "0.62rem" }}>{expanded ? "▾" : "▸"}</span>
+        <span
+          style={{
+            color: C.greenDim,
+            fontFamily: "IBM Plex Mono, monospace",
+            fontSize: "0.62rem",
+            letterSpacing: "0.1em",
+          }}
+        >
+          {guide.name.toUpperCase()} SIGNUP GUIDE
+        </span>
+      </button>
+
+      {expanded && (
+        <div style={{ padding: "10px 12px" }}>
+          {/* Steps */}
+          <div
+            style={{
+              fontSize: "0.58rem",
+              color: C.muted,
+              letterSpacing: "0.08em",
+              marginBottom: 4,
+              fontFamily: "IBM Plex Mono, monospace",
+            }}
+          >
+            STEPS
+          </div>
+          <ol style={{ margin: "0 0 10px 0", paddingLeft: 18 }}>
+            {guide.steps.map((step, i) => (
+              <li
+                key={i}
+                style={{
+                  color: C.greenDim,
+                  fontFamily: "IBM Plex Mono, monospace",
+                  fontSize: "0.68rem",
+                  marginBottom: 3,
+                  lineHeight: 1.5,
+                }}
+              >
+                {step}
+              </li>
+            ))}
+          </ol>
+
+          {/* Requirements */}
+          <div
+            style={{
+              fontSize: "0.58rem",
+              color: C.muted,
+              letterSpacing: "0.08em",
+              marginBottom: 4,
+              fontFamily: "IBM Plex Mono, monospace",
+            }}
+          >
+            REQUIREMENTS
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+            {guide.requirements.map((req) => (
+              <span
+                key={req}
+                style={{
+                  fontSize: "0.6rem",
+                  fontFamily: "IBM Plex Mono, monospace",
+                  color: C.greenDim,
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 2,
+                  padding: "1px 5px",
+                }}
+              >
+                {req}
+              </span>
+            ))}
+          </div>
+
+          {/* Tips */}
+          <div
+            style={{
+              fontSize: "0.58rem",
+              color: C.muted,
+              letterSpacing: "0.08em",
+              marginBottom: 4,
+              fontFamily: "IBM Plex Mono, monospace",
+            }}
+          >
+            TIPS
+          </div>
+          <ul style={{ margin: 0, paddingLeft: 16 }}>
+            {guide.tips.map((tip, i) => (
+              <li
+                key={i}
+                style={{
+                  color: C.greenDim,
+                  fontFamily: "IBM Plex Mono, monospace",
+                  fontSize: "0.66rem",
+                  marginBottom: 3,
+                  lineHeight: 1.5,
+                }}
+              >
+                {tip}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
 // Form state
 // ============================================================================
 type FormState = {
@@ -427,78 +1056,6 @@ function formReducer(state: FormState, action: FormAction): FormState {
 }
 
 // ============================================================================
-// StatusBadge
-// ============================================================================
-function StatusBadge({ configured, status }: { configured: boolean; status?: string }) {
-  const color = configured ? C.green : C.orange;
-  const text = configured ? `✓ CONFIGURED (${status ?? "active"})` : "○ NOT CONFIGURED";
-  return (
-    <span
-      style={{
-        fontSize: "0.62rem",
-        fontFamily: "IBM Plex Mono, monospace",
-        color,
-        border: `1px solid ${color}`,
-        borderRadius: 2,
-        padding: "2px 6px",
-        letterSpacing: "0.08em",
-        textShadow: configured ? `0 0 6px ${C.greenGlow}` : "none",
-      }}
-    >
-      {text}
-    </span>
-  );
-}
-
-// ============================================================================
-// ActionButton
-// ============================================================================
-function ActionButton({
-  onClick,
-  children,
-  variant = "primary",
-  disabled,
-  loading,
-}: {
-  onClick: () => void;
-  children: React.ReactNode;
-  variant?: "primary" | "danger" | "ghost" | "warn";
-  disabled?: boolean;
-  loading?: boolean;
-}) {
-  const colors = {
-    primary: { bg: "rgba(0,255,65,0.1)", border: C.borderActive, color: C.green },
-    danger: { bg: "rgba(255,68,68,0.1)", border: C.redDim, color: C.red },
-    ghost: { bg: "rgba(0,0,0,0.3)", border: C.border, color: C.greenDim },
-    warn: { bg: "rgba(255,153,0,0.1)", border: "#664400", color: C.orange },
-  };
-  const s = colors[variant];
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled || loading}
-      style={{
-        background: s.bg,
-        border: `1px solid ${s.border}`,
-        borderRadius: 3,
-        color: s.color,
-        fontFamily: "IBM Plex Mono, monospace",
-        fontSize: "0.68rem",
-        letterSpacing: "0.06em",
-        padding: "5px 12px",
-        cursor: disabled || loading ? "not-allowed" : "pointer",
-        opacity: disabled || loading ? 0.5 : 1,
-        transition: "all 0.1s ease",
-        whiteSpace: "nowrap",
-      }}
-    >
-      {loading ? "⟳ working..." : children}
-    </button>
-  );
-}
-
-// ============================================================================
 // HunterAccountDrawer
 // ============================================================================
 
@@ -513,6 +1070,7 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
   const [toast, setToast] = useState<{ message: string; ok: boolean } | null>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const { copy, copiedKey } = useCopyToClipboard();
 
   const {
     credentialsQuery,
@@ -525,6 +1083,29 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
     validateMutation,
     upsertMetadataMutation,
   } = useCredentialsForProgram(program?.id ?? null);
+
+  // ── Derived staleness ─────────────────────────────────────────────────────
+  const daysSinceValidated = useMemo(() => {
+    if (!hunterCredential?.last_validated) return null;
+    return Math.floor(
+      (Date.now() - new Date(hunterCredential.last_validated).getTime()) / 86_400_000
+    );
+  }, [hunterCredential?.last_validated]);
+
+  const isStale =
+    isConfigured && (daysSinceValidated === null || daysSinceValidated > 30);
+
+  // ── Mnemonic word count ────────────────────────────────────────────────────
+  const mnemonicWordCount = useMemo(() => {
+    const trimmed = form.mnemonic_passphrase.trim();
+    return trimmed ? trimmed.split(/\s+/).length : 0;
+  }, [form.mnemonic_passphrase]);
+
+  // ── Readiness indicators ──────────────────────────────────────────────────
+  const hasSignupUrl = !!hunterMetadata?.signup_url;
+  const hasIdentity = !!hunterCredential?.credential_username;
+  const hasNotes = !!hunterCredential?.notes;
+  const isValidated = !!hunterCredential?.last_validated;
 
   // ── Sync metadata into form fields when it loads ──────────────────────────
   useEffect(() => {
@@ -603,7 +1184,6 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
   const handleSaveCredentials = () => {
     if (!program) return;
 
-    // Build the credential dict — only include non-empty secret fields
     const credentials: Record<string, string> = {};
     const secretFields = {
       email: form.email,
@@ -653,7 +1233,9 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
     validateMutation.mutate(undefined, {
       onSuccess: (result) => {
         showToast(
-          result.valid ? `Validation passed: ${result.reason}` : `Validation failed: ${result.reason}`,
+          result.valid
+            ? `Validation passed: ${result.reason}`
+            : `Validation failed: ${result.reason}`,
           result.valid
         );
       },
@@ -662,11 +1244,15 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
   };
 
   const handleDelete = () => {
-    if (!window.confirm(`Delete all hunter credentials for "${program?.name}"? This cannot be undone.`)) return;
+    if (
+      !window.confirm(
+        `Delete all hunter credentials for "${program?.name}"? This cannot be undone.`
+      )
+    )
+      return;
     deleteMutation.mutate(undefined, {
       onSuccess: () => {
         showToast("Credentials deleted.", true);
-        // Clear the form
         for (const f of Object.keys(EMPTY_FORM) as Array<keyof FormState>) {
           dispatch({ field: f, value: typeof EMPTY_FORM[f] === "boolean" ? false : "" });
         }
@@ -678,12 +1264,11 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
   // ── Section toggle helper ─────────────────────────────────────────────────
   const toggleSection = (s: string) =>
     setActiveSection((prev) => (prev === s ? null : s));
-  const isOpen = (s: string) => activeSection === null || activeSection === s;
 
-  // ── Render ────────────────────────────────────────────────────────────────
   if (!open) return null;
 
-  const busy = saveMutation.isPending || deleteMutation.isPending || validateMutation.isPending;
+  const busy =
+    saveMutation.isPending || deleteMutation.isPending || validateMutation.isPending;
 
   return (
     <>
@@ -706,7 +1291,7 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
           top: 0,
           right: 0,
           bottom: 0,
-          width: "min(640px, 92vw)",
+          width: "min(660px, 92vw)",
           background: C.panel,
           borderLeft: `1px solid ${C.border}`,
           zIndex: 1001,
@@ -730,7 +1315,14 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
         >
           <span style={{ color: C.greenDim, fontSize: "0.9rem" }}>⚿</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ color: C.green, fontSize: "0.8rem", fontWeight: 600, letterSpacing: "0.04em" }}>
+            <div
+              style={{
+                color: C.green,
+                fontSize: "0.8rem",
+                fontWeight: 600,
+                letterSpacing: "0.04em",
+              }}
+            >
               HUNTER ACCOUNT
             </div>
             <div
@@ -751,10 +1343,8 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
             </div>
           </div>
 
-          {/* Credential status */}
           <StatusBadge configured={isConfigured} status={hunterCredential?.status} />
 
-          {/* Close */}
           <button
             onClick={onClose}
             style={{
@@ -771,6 +1361,15 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
           </button>
         </div>
 
+        {/* ── Readiness checklist ──────────────────────────────────────────── */}
+        <ReadinessChecklist
+          hasSignupUrl={hasSignupUrl}
+          hasIdentity={hasIdentity}
+          isConfigured={isConfigured}
+          hasNotes={hasNotes}
+          isValidated={isValidated}
+        />
+
         {/* ── Scrollable body ──────────────────────────────────────────────── */}
         <div
           style={{
@@ -780,7 +1379,6 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
             paddingBottom: 100,
           }}
         >
-
           {/* Loading skeleton */}
           {(credentialsQuery.isLoading || metadataQuery.isLoading) && (
             <div style={{ color: C.muted, fontSize: "0.68rem", padding: "12px 0" }}>
@@ -788,47 +1386,117 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
             </div>
           )}
 
+          {/* ── Staleness warning ──────────────────────────────────────────── */}
+          {isStale && (
+            <div
+              style={{
+                marginTop: 12,
+                padding: "8px 10px",
+                background: "rgba(255,153,0,0.06)",
+                border: "1px solid rgba(255,153,0,0.25)",
+                borderRadius: 3,
+                fontSize: "0.65rem",
+                color: C.orange,
+                fontFamily: "IBM Plex Mono, monospace",
+                lineHeight: 1.6,
+              }}
+            >
+              ⚠{" "}
+              {daysSinceValidated === null
+                ? "Credentials have never been validated. Use the VALIDATE button to confirm they work before scanning."
+                : `Credentials last validated ${daysSinceValidated} days ago. Re-validate before scheduling a scan.`}
+            </div>
+          )}
+
           {/* ── ACCESS SETUP ──────────────────────────────────────────────── */}
           <CollapsibleSection
             id="access-setup"
             title="ACCESS SETUP"
-            subtitle="Signup URL and instructions for this program"
+            subtitle="Signup URL, instructions, and testing account info"
             active={activeSection}
             toggle={toggleSection}
+            complete={hasSignupUrl}
           >
+            {/* Platform guide card */}
+            <PlatformGuideCard platform={program?.platform ?? null} />
+
             <FieldRow label="Program Policy URL" hint="from program listing">
-              <a
-                href={program?.policy_url ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{
-                  color: C.green,
-                  fontSize: "0.72rem",
-                  textDecoration: "underline",
-                  display: "block",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {program?.policy_url ?? "No policy URL on record"}
-              </a>
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <a
+                  href={program?.policy_url ?? "#"}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    color: C.green,
+                    fontSize: "0.72rem",
+                    textDecoration: "underline",
+                    flex: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {program?.policy_url ?? "No policy URL on record"}
+                </a>
+                {program?.policy_url && (
+                  <CopyButton
+                    keyId="policy_url"
+                    text={program.policy_url}
+                    copiedKey={copiedKey}
+                    onCopy={copy}
+                  />
+                )}
+              </div>
             </FieldRow>
 
             <FieldRow label="Signup / Registration URL">
-              <PlainInput
-                value={form.signup_url}
-                onChange={set("signup_url")}
-                placeholder="https://hackerone.com/programs/..."
-                disabled={busy}
-              />
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <div style={{ flex: 1 }}>
+                  <PlainInput
+                    value={form.signup_url}
+                    onChange={set("signup_url")}
+                    placeholder="https://hackerone.com/programs/..."
+                    disabled={busy}
+                  />
+                </div>
+                {form.signup_url && (
+                  <>
+                    <CopyButton
+                      keyId="signup_url"
+                      text={form.signup_url}
+                      copiedKey={copiedKey}
+                      onCopy={copy}
+                    />
+                    <a
+                      href={form.signup_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        fontSize: "0.62rem",
+                        fontFamily: "IBM Plex Mono, monospace",
+                        color: C.green,
+                        border: `1px solid ${C.borderActive}`,
+                        borderRadius: 2,
+                        padding: "2px 6px",
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                        letterSpacing: "0.06em",
+                      }}
+                    >
+                      ↗ open
+                    </a>
+                  </>
+                )}
+              </div>
             </FieldRow>
 
             <FieldRow label="Account Creation Instructions" hint="shown before scanning">
               <PlainTextarea
                 value={form.signup_instructions}
                 onChange={set("signup_instructions")}
-                placeholder={"1. Visit signup_url above\n2. Create account with hunter email\n3. Complete email verification\n4. Apply to program's bug bounty scope\n5. Save credentials below"}
+                placeholder={
+                  "1. Visit signup URL above\n2. Create account with hunter email\n3. Complete email verification\n4. Apply to program's bug bounty scope\n5. Save credentials below"
+                }
                 rows={5}
                 disabled={busy}
               />
@@ -896,22 +1564,47 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
             subtitle="Username and display info (visible in status)"
             active={activeSection}
             toggle={toggleSection}
+            complete={hasIdentity}
           >
             <FieldRow label="Username / Handle" hint="shown in status badge">
-              <PlainInput
-                value={form.username}
-                onChange={set("username")}
-                placeholder="hunter_handle"
-                disabled={busy}
-              />
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <div style={{ flex: 1 }}>
+                  <PlainInput
+                    value={form.username}
+                    onChange={set("username")}
+                    placeholder="hunter_handle"
+                    disabled={busy}
+                  />
+                </div>
+                {form.username && (
+                  <CopyButton
+                    keyId="username"
+                    text={form.username}
+                    copiedKey={copiedKey}
+                    onCopy={copy}
+                  />
+                )}
+              </div>
             </FieldRow>
             <FieldRow label="Email Address" hint="stored in Vault">
-              <PlainInput
-                value={form.email}
-                onChange={set("email")}
-                placeholder="hunter@email.com"
-                disabled={busy}
-              />
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <div style={{ flex: 1 }}>
+                  <PlainInput
+                    value={form.email}
+                    onChange={set("email")}
+                    placeholder="hunter@email.com"
+                    disabled={busy}
+                  />
+                </div>
+                {form.email && (
+                  <CopyButton
+                    keyId="email"
+                    text={form.email}
+                    copiedKey={copiedKey}
+                    onCopy={copy}
+                  />
+                )}
+              </div>
             </FieldRow>
             <FieldRow label="Display Name / Alias" hint="stored in Vault">
               <PlainInput
@@ -930,6 +1623,7 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
             subtitle="Password, PIN, and passphrase — always write-only"
             active={activeSection}
             toggle={toggleSection}
+            complete={isConfigured}
           >
             <div
               style={{
@@ -943,7 +1637,8 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
                 letterSpacing: "0.04em",
               }}
             >
-              ⚠ Fields are WRITE-ONLY. Existing values are never retrieved. Saving empty fields will NOT clear Vault — only filled fields are written.
+              ⚠ WRITE-ONLY — existing values are never retrieved. Only filled fields are written.
+              Empty fields do not overwrite what is already in Vault.
             </div>
 
             <FieldRow label="Password" hint="main account password">
@@ -953,7 +1648,10 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
                 placeholder="Enter new password to overwrite"
                 disabled={busy}
               />
+              {/* Password strength bar */}
+              <PasswordStrengthBar password={form.password} />
             </FieldRow>
+
             <FieldRow label="PIN Code" hint="numeric PIN if required">
               <SecretInput
                 value={form.pin}
@@ -962,6 +1660,7 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
                 disabled={busy}
               />
             </FieldRow>
+
             <FieldRow label="Mnemonic Passphrase" hint="BIP-39 / wallet recovery phrase">
               <SecretTextarea
                 value={form.mnemonic_passphrase}
@@ -970,6 +1669,31 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
                 rows={3}
                 disabled={busy}
               />
+              {/* Word count indicator */}
+              {form.mnemonic_passphrase.trim() && (
+                <div
+                  style={{
+                    marginTop: 3,
+                    fontSize: "0.6rem",
+                    fontFamily: "IBM Plex Mono, monospace",
+                    color:
+                      mnemonicWordCount === 12 || mnemonicWordCount === 24
+                        ? C.green
+                        : mnemonicWordCount > 0
+                          ? C.orange
+                          : C.muted,
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {mnemonicWordCount} word{mnemonicWordCount !== 1 ? "s" : ""}
+                  {mnemonicWordCount === 12 && " ✓ (valid 12-word BIP-39)"}
+                  {mnemonicWordCount === 24 && " ✓ (valid 24-word BIP-39)"}
+                  {mnemonicWordCount > 0 &&
+                    mnemonicWordCount !== 12 &&
+                    mnemonicWordCount !== 24 &&
+                    " — standard lengths are 12 or 24 words"}
+                </div>
+              )}
             </FieldRow>
           </CollapsibleSection>
 
@@ -981,13 +1705,33 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
             active={activeSection}
             toggle={toggleSection}
           >
-            <FieldRow label="TOTP Secret (Base32)" hint="scan QR or paste secret">
+            <FieldRow label="TOTP Secret (Base32)" hint="scan QR or paste secret — used by authenticator apps">
               <SecretInput
                 value={form.totp_secret}
                 onChange={set("totp_secret")}
                 placeholder="JBSWY3DPEHPK3PXP..."
                 disabled={busy}
               />
+              {form.totp_secret && (
+                <div
+                  style={{
+                    marginTop: 3,
+                    fontSize: "0.6rem",
+                    fontFamily: "IBM Plex Mono, monospace",
+                    color:
+                      /^[A-Z2-7]+=*$/.test(form.totp_secret.toUpperCase()) &&
+                      form.totp_secret.length >= 16
+                        ? C.green
+                        : C.orange,
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {/^[A-Z2-7]+=*$/.test(form.totp_secret.toUpperCase()) &&
+                  form.totp_secret.length >= 16
+                    ? "✓ looks like valid Base32"
+                    : "⚠ verify this is valid Base32 (A-Z, 2-7)"}
+                </div>
+              )}
             </FieldRow>
 
             <FieldRow label="Backup / Recovery Codes" hint="one code per line">
@@ -998,6 +1742,20 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
                 rows={5}
                 disabled={busy}
               />
+              {form.backup_codes.trim() && (
+                <div
+                  style={{
+                    marginTop: 3,
+                    fontSize: "0.6rem",
+                    fontFamily: "IBM Plex Mono, monospace",
+                    color: C.greenDim,
+                    letterSpacing: "0.06em",
+                  }}
+                >
+                  {form.backup_codes.trim().split(/\n/).filter(Boolean).length} code
+                  {form.backup_codes.trim().split(/\n/).filter(Boolean).length !== 1 ? "s" : ""} stored
+                </div>
+              )}
             </FieldRow>
 
             <SectionLabel label="Security Questions" />
@@ -1051,13 +1809,25 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
                 disabled={busy}
               />
             </FieldRow>
-            <FieldRow label="OAuth Client ID" hint="public, not a secret">
-              <PlainInput
-                value={form.oauth_client_id}
-                onChange={set("oauth_client_id")}
-                placeholder="client_id_xxxx"
-                disabled={busy}
-              />
+            <FieldRow label="OAuth Client ID" hint="public — not a secret">
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <div style={{ flex: 1 }}>
+                  <PlainInput
+                    value={form.oauth_client_id}
+                    onChange={set("oauth_client_id")}
+                    placeholder="client_id_xxxx"
+                    disabled={busy}
+                  />
+                </div>
+                {form.oauth_client_id && (
+                  <CopyButton
+                    keyId="oauth_client_id"
+                    text={form.oauth_client_id}
+                    copiedKey={copiedKey}
+                    onCopy={copy}
+                  />
+                )}
+              </div>
             </FieldRow>
             <FieldRow label="OAuth Client Secret" hint="secret">
               <SecretInput
@@ -1093,15 +1863,31 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
             subtitle="Analyst notes stored in DB (not in Vault, not secret)"
             active={activeSection}
             toggle={toggleSection}
+            complete={hasNotes}
           >
-            <FieldRow label="Analyst Notes" hint="stored in database">
+            <FieldRow label="Analyst Notes" hint="stored in database — visible in status">
               <PlainTextarea
                 value={form.notes}
                 onChange={set("notes")}
-                placeholder={"Account created 2026-05-01\nVerified with program team\nScope: *.example.com"}
+                placeholder={
+                  "Account created 2026-05-01\nVerified with program team\nScope: *.example.com\nPayout: PayPal"
+                }
                 rows={4}
                 disabled={busy}
               />
+              {form.notes && (
+                <div
+                  style={{
+                    marginTop: 3,
+                    fontSize: "0.58rem",
+                    color: C.muted,
+                    fontFamily: "IBM Plex Mono, monospace",
+                    textAlign: "right",
+                  }}
+                >
+                  {form.notes.length} chars
+                </div>
+              )}
             </FieldRow>
             <FieldRow label="Additional Info" hint="stored in Vault">
               <PlainTextarea
@@ -1114,7 +1900,7 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
             </FieldRow>
           </CollapsibleSection>
 
-          {/* ── Credential detail ─────────────────────────────────────────── */}
+          {/* ── Credential metadata detail ────────────────────────────────── */}
           {hunterCredential && (
             <div
               style={{
@@ -1128,13 +1914,32 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
                 lineHeight: 1.7,
               }}
             >
+              <div
+                style={{
+                  fontSize: "0.58rem",
+                  color: C.muted,
+                  letterSpacing: "0.12em",
+                  marginBottom: 4,
+                }}
+              >
+                VAULT RECORD
+              </div>
               <div>ID: {hunterCredential.id}</div>
-              <div>Last validated: {hunterCredential.last_validated ?? "never"}</div>
-              <div>Last accessed: {hunterCredential.last_accessed_at ?? "never"}</div>
+              <div>
+                Last validated:{" "}
+                {hunterCredential.last_validated
+                  ? `${hunterCredential.last_validated} (${daysSinceValidated ?? 0}d ago)`
+                  : "never"}
+              </div>
+              <div>
+                Last accessed: {hunterCredential.last_accessed_at ?? "never"}
+                {hunterCredential.last_accessed_by
+                  ? ` by ${hunterCredential.last_accessed_by}`
+                  : ""}
+              </div>
               <div>Access count: {hunterCredential.access_count}</div>
             </div>
           )}
-
         </div>
 
         {/* ── Footer actions ───────────────────────────────────────────────── */}
@@ -1163,9 +1968,9 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
               onClick={handleValidate}
               loading={validateMutation.isPending}
               disabled={busy}
-              variant="ghost"
+              variant={isStale ? "warn" : "ghost"}
             >
-              ◎ VALIDATE
+              ◎ {isStale ? "VALIDATE NOW" : "VALIDATE"}
             </ActionButton>
           )}
 
@@ -1214,85 +2019,5 @@ export function HunterAccountDrawer({ program, open, onClose }: Props) {
         )}
       </div>
     </>
-  );
-}
-
-// ============================================================================
-// CollapsibleSection
-// ============================================================================
-function CollapsibleSection({
-  id,
-  title,
-  subtitle,
-  children,
-  active,
-  toggle,
-}: {
-  id: string;
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-  active: string | null;
-  toggle: (id: string) => void;
-}) {
-  const expanded = active === null || active === id;
-  return (
-    <div
-      style={{
-        marginTop: 12,
-        border: `1px solid ${expanded ? C.borderActive : C.border}`,
-        borderRadius: 4,
-        overflow: "hidden",
-        transition: "border-color 0.15s ease",
-      }}
-    >
-      <button
-        type="button"
-        onClick={() => toggle(id)}
-        style={{
-          width: "100%",
-          background: expanded ? C.greenFaint : "rgba(0,0,0,0.3)",
-          border: "none",
-          borderBottom: expanded ? `1px solid ${C.border}` : "none",
-          padding: "8px 12px",
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          cursor: "pointer",
-          textAlign: "left",
-        }}
-      >
-        <span style={{ color: expanded ? C.green : C.greenDim, fontSize: "0.65rem" }}>
-          {expanded ? "▾" : "▸"}
-        </span>
-        <div>
-          <div
-            style={{
-              fontSize: "0.65rem",
-              letterSpacing: "0.15em",
-              color: expanded ? C.green : C.greenDim,
-              fontFamily: "IBM Plex Mono, monospace",
-            }}
-          >
-            {title}
-          </div>
-          <div
-            style={{
-              fontSize: "0.58rem",
-              color: C.muted,
-              fontFamily: "IBM Plex Mono, monospace",
-            }}
-          >
-            {subtitle}
-          </div>
-        </div>
-      </button>
-
-      {expanded && (
-        <div style={{ padding: "10px 12px" }}>
-          {children}
-        </div>
-      )}
-    </div>
   );
 }

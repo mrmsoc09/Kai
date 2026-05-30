@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { bugBountyApi } from "@/lib/api/bug-bounty";
 import { listCredentials } from "@/lib/api/credentials";
@@ -19,13 +19,15 @@ const C = {
   green: "#00FF41",
   greenDim: "#007A1E",
   greenFaint: "rgba(0,255,65,0.07)",
-  greenGlow: "rgba(0,255,65,0.35)",
   orange: "#ff9900",
   muted: "#004d10",
   red: "#ff4444",
   text: "#00e536",
   inputBg: "#060c06",
 } as const;
+
+// ── SortOrder ─────────────────────────────────────────────────────────────────
+type SortOrder = "name" | "platform" | "newest" | "configured";
 
 // ── PlatformBadge ──────────────────────────────────────────────────────────────
 function PlatformBadge({ platform }: { platform: string | null }) {
@@ -58,55 +60,125 @@ function PlatformBadge({ platform }: { platform: string | null }) {
   );
 }
 
-// ── CredentialStatusDot ────────────────────────────────────────────────────────
-function CredentialStatusDot({ programId }: { programId: string }) {
-  const query = useQuery({
-    queryKey: queryKeys.credentials.forProgram(programId),
-    queryFn: ({ signal }) => listCredentials(programId, signal),
-    staleTime: 60_000,
-  });
+// ── CredentialInfo — per-program credential status for display ─────────────────
+type CredentialInfo = {
+  status: "active" | "expired" | "invalid" | "needs_renewal" | null;
+  username: string | null;
+  lastValidated: string | null;
+  isConfigured: boolean;
+  isStale: boolean;
+};
 
-  const hunter = query.data?.credentials.find((c) => c.access_type === "hunter_account");
-  if (query.isLoading) {
-    return <span style={{ color: C.muted, fontSize: "0.55rem" }}>●</span>;
-  }
-  if (!hunter) {
-    return (
-      <span title="No hunter account configured" style={{ color: C.muted, fontSize: "0.55rem" }}>
-        ○
-      </span>
-    );
-  }
-  const dotColor =
-    hunter.status === "active"
-      ? C.green
-      : hunter.status === "needs_renewal"
-        ? C.orange
-        : C.red;
+// ── StatsBar ──────────────────────────────────────────────────────────────────
+function StatsBar({
+  total,
+  filtered,
+  configured,
+  validated,
+  needsAttention,
+  loading,
+}: {
+  total: number;
+  filtered: number;
+  configured: number;
+  validated: number;
+  needsAttention: number;
+  loading: boolean;
+}) {
   return (
-    <span
-      title={`Hunter account: ${hunter.status}`}
+    <div
       style={{
-        color: dotColor,
-        fontSize: "0.55rem",
-        textShadow: hunter.status === "active" ? `0 0 4px ${dotColor}` : "none",
+        display: "flex",
+        gap: 0,
+        marginBottom: 14,
+        border: `1px solid ${C.border}`,
+        borderRadius: 4,
+        overflow: "hidden",
+        fontFamily: "IBM Plex Mono, monospace",
       }}
     >
-      ●
-    </span>
+      {[
+        { label: "TOTAL", value: total, color: C.greenDim },
+        { label: "FILTERED", value: filtered, color: C.greenDim },
+        { label: "CONFIGURED", value: configured, color: C.green },
+        { label: "VALIDATED", value: validated, color: C.green },
+        { label: "NEEDS ATTENTION", value: needsAttention, color: needsAttention > 0 ? C.orange : C.muted },
+      ].map((stat, idx, arr) => (
+        <div
+          key={stat.label}
+          style={{
+            flex: 1,
+            padding: "8px 10px",
+            background: C.panel,
+            borderRight: idx < arr.length - 1 ? `1px solid ${C.border}` : "none",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "0.6rem",
+              color: C.muted,
+              letterSpacing: "0.1em",
+              marginBottom: 2,
+            }}
+          >
+            {stat.label}
+          </div>
+          <div
+            style={{
+              fontSize: "1rem",
+              fontWeight: 700,
+              color: loading ? C.muted : stat.color,
+              letterSpacing: "0.04em",
+            }}
+          >
+            {loading ? "—" : stat.value}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }
 
 // ── ProgramCard ────────────────────────────────────────────────────────────────
 function ProgramCard({
   program,
+  credInfo,
   selected,
   onClick,
 }: {
   program: ProgramOpportunity;
+  credInfo: CredentialInfo | undefined;
   selected: boolean;
   onClick: () => void;
 }) {
+  const dotColor =
+    !credInfo || !credInfo.isConfigured
+      ? C.muted
+      : credInfo.status === "active"
+        ? C.green
+        : credInfo.status === "needs_renewal"
+          ? C.orange
+          : C.red;
+
+  const dotTitle =
+    !credInfo || !credInfo.isConfigured
+      ? "No hunter account configured"
+      : `Hunter account: ${credInfo.status}`;
+
+  // Relative time for last validated
+  const validatedLabel = useMemo(() => {
+    if (!credInfo?.lastValidated) return null;
+    const days = Math.floor(
+      (Date.now() - new Date(credInfo.lastValidated).getTime()) / 86_400_000
+    );
+    if (days === 0) return "validated today";
+    if (days === 1) return "validated yesterday";
+    if (days < 30) return `validated ${days}d ago`;
+    if (days < 365) return `validated ${Math.floor(days / 30)}mo ago`;
+    return `validated ${Math.floor(days / 365)}y ago`;
+  }, [credInfo?.lastValidated]);
+
   return (
     <button
       type="button"
@@ -128,9 +200,22 @@ function ProgramCard({
       }}
     >
       {/* Status dot */}
-      <CredentialStatusDot programId={program.id} />
+      <span
+        title={dotTitle}
+        style={{
+          color: dotColor,
+          fontSize: "0.55rem",
+          textShadow:
+            credInfo?.isConfigured && credInfo.status === "active"
+              ? `0 0 4px ${dotColor}`
+              : "none",
+          flexShrink: 0,
+        }}
+      >
+        {credInfo?.isConfigured ? "●" : "○"}
+      </span>
 
-      {/* Info */}
+      {/* Program info */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div
           style={{
@@ -145,36 +230,83 @@ function ProgramCard({
         >
           {program.name}
         </div>
-        {program.handle && (
-          <div
-            style={{
-              color: C.greenDim,
-              fontSize: "0.62rem",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            @{program.handle}
-          </div>
-        )}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            marginTop: 2,
+          }}
+        >
+          {program.handle && (
+            <span style={{ color: C.greenDim, fontSize: "0.62rem" }}>
+              @{program.handle}
+            </span>
+          )}
+          {credInfo?.username && (
+            <span
+              style={{
+                fontSize: "0.58rem",
+                color: C.green,
+                border: `1px solid ${C.border}`,
+                borderRadius: 2,
+                padding: "0px 4px",
+                letterSpacing: "0.06em",
+              }}
+            >
+              ⚿ {credInfo.username}
+            </span>
+          )}
+          {credInfo?.isStale && (
+            <span
+              style={{
+                fontSize: "0.55rem",
+                color: C.orange,
+                letterSpacing: "0.06em",
+              }}
+              title="Credentials stale — re-validate before scanning"
+            >
+              ⚠ stale
+            </span>
+          )}
+        </div>
       </div>
 
-      {/* Platform + status */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 3, flexShrink: 0 }}>
+      {/* Right column */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 3,
+          flexShrink: 0,
+        }}
+      >
         <PlatformBadge platform={program.platform} />
         <span
           style={{
             fontSize: "0.52rem",
-            color: program.status === "active" ? C.greenDim : C.muted,
+            color:
+              program.status === "active" ? C.greenDim : C.muted,
             letterSpacing: "0.06em",
           }}
         >
           {program.status?.toUpperCase()}
         </span>
+        {validatedLabel && (
+          <span
+            style={{
+              fontSize: "0.52rem",
+              color: C.muted,
+              letterSpacing: "0.04em",
+            }}
+          >
+            {validatedLabel}
+          </span>
+        )}
       </div>
 
-      {/* Arrow */}
+      {/* Chevron */}
       <span style={{ color: selected ? C.green : C.muted, fontSize: "0.65rem" }}>›</span>
     </button>
   );
@@ -187,15 +319,76 @@ export default function HunterAccountsPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [platformFilter, setPlatformFilter] = useState("ALL");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("name");
 
+  // ── Programs query ─────────────────────────────────────────────────────────
   const programsQuery = useQuery({
     queryKey: queryKeys.bugBounty.programs(),
     queryFn: ({ signal }) => bugBountyApi.listBountyPrograms(signal),
     staleTime: 120_000,
   });
-
   const programs = programsQuery.data ?? [];
 
+  // ── Batch credential status — one query per program (cached by dot components) ──
+  const credQueries = useQueries({
+    queries: programs.map((p) => ({
+      queryKey: queryKeys.credentials.forProgram(p.id),
+      queryFn: ({ signal }: { signal: AbortSignal }) => listCredentials(p.id, signal),
+      staleTime: 60_000,
+    })),
+  });
+
+  // ── Build a Map of programId → CredentialInfo ──────────────────────────────
+  const credMap = useMemo<Map<string, CredentialInfo>>(() => {
+    const map = new Map<string, CredentialInfo>();
+    programs.forEach((p, idx) => {
+      const q = credQueries[idx];
+      if (!q?.data) return;
+      const hunter = q.data.credentials.find((c) => c.access_type === "hunter_account");
+      if (!hunter) {
+        map.set(p.id, {
+          status: null,
+          username: null,
+          lastValidated: null,
+          isConfigured: false,
+          isStale: false,
+        });
+        return;
+      }
+      const daysSince = hunter.last_validated
+        ? Math.floor(
+            (Date.now() - new Date(hunter.last_validated).getTime()) / 86_400_000
+          )
+        : null;
+      map.set(p.id, {
+        status: hunter.status as CredentialInfo["status"],
+        username: hunter.credential_username,
+        lastValidated: hunter.last_validated,
+        isConfigured: true,
+        isStale: daysSince === null || daysSince > 30,
+      });
+    });
+    return map;
+  }, [programs, credQueries]);
+
+  // ── Aggregate stats ────────────────────────────────────────────────────────
+  const stats = useMemo(() => {
+    let configured = 0;
+    let validated = 0;
+    let needsAttention = 0;
+    for (const info of credMap.values()) {
+      if (info.isConfigured) {
+        configured++;
+        if (info.lastValidated) validated++;
+        if (info.status !== "active") needsAttention++;
+      }
+    }
+    return { configured, validated, needsAttention };
+  }, [credMap]);
+
+  const credQueriesLoading = credQueries.some((q) => q.isLoading);
+
+  // ── Platform list for filter ───────────────────────────────────────────────
   const platforms = useMemo(() => {
     const set = new Set<string>();
     for (const p of programs) {
@@ -204,6 +397,7 @@ export default function HunterAccountsPage() {
     return Array.from(set).sort();
   }, [programs]);
 
+  // ── Filter ─────────────────────────────────────────────────────────────────
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return programs.filter((p) => {
@@ -216,6 +410,30 @@ export default function HunterAccountsPage() {
       return hay.includes(term);
     });
   }, [programs, search, platformFilter]);
+
+  // ── Sort ───────────────────────────────────────────────────────────────────
+  const sorted = useMemo(() => {
+    return filtered.slice().sort((a, b) => {
+      switch (sortOrder) {
+        case "platform":
+          return (a.platform ?? "zzz").localeCompare(b.platform ?? "zzz");
+        case "newest":
+          return (
+            new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime()
+          );
+        case "configured": {
+          // Configured first, then not configured; within each group sort by name
+          const aConf = credMap.get(a.id)?.isConfigured ? 0 : 1;
+          const bConf = credMap.get(b.id)?.isConfigured ? 0 : 1;
+          if (aConf !== bConf) return aConf - bConf;
+          return a.name.localeCompare(b.name);
+        }
+        case "name":
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+  }, [filtered, sortOrder, credMap]);
 
   const handleSelect = (program: ProgramOpportunity) => {
     setSelectedProgram(program);
@@ -238,43 +456,26 @@ export default function HunterAccountsPage() {
         />
 
         {/* ── Stats bar ── */}
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-            marginBottom: 16,
-            padding: "8px 12px",
-            background: C.panel,
-            border: `1px solid ${C.border}`,
-            borderRadius: 4,
-            fontSize: "0.65rem",
-            color: C.greenDim,
-            letterSpacing: "0.08em",
-          }}
-        >
-          <span>
-            PROGRAMS:{" "}
-            <span style={{ color: C.green }}>{programs.length}</span>
-          </span>
-          <span>
-            FILTERED:{" "}
-            <span style={{ color: C.green }}>{filtered.length}</span>
-          </span>
-          <span style={{ flex: 1 }} />
-          <span style={{ color: C.muted }}>
-            ● CONFIGURED &nbsp; ○ NOT CONFIGURED
-          </span>
-        </div>
+        <StatsBar
+          total={programs.length}
+          filtered={sorted.length}
+          configured={stats.configured}
+          validated={stats.validated}
+          needsAttention={stats.needsAttention}
+          loading={credQueriesLoading}
+        />
 
-        {/* ── Filters ── */}
+        {/* ── Filters + Sort ── */}
         <div
           style={{
             display: "flex",
             gap: 8,
             marginBottom: 12,
             flexWrap: "wrap",
+            alignItems: "center",
           }}
         >
+          {/* Search */}
           <input
             type="text"
             value={search}
@@ -292,6 +493,8 @@ export default function HunterAccountsPage() {
               outline: "none",
             }}
           />
+
+          {/* Platform filter */}
           <select
             value={platformFilter}
             onChange={(e) => setPlatformFilter(e.target.value)}
@@ -312,6 +515,27 @@ export default function HunterAccountsPage() {
                 {p}
               </option>
             ))}
+          </select>
+
+          {/* Sort */}
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value as SortOrder)}
+            style={{
+              background: C.inputBg,
+              border: `1px solid ${C.border}`,
+              borderRadius: 3,
+              color: C.greenDim,
+              fontFamily: "IBM Plex Mono, monospace",
+              fontSize: "0.72rem",
+              padding: "6px 8px",
+              outline: "none",
+            }}
+          >
+            <option value="name">Sort: Name A→Z</option>
+            <option value="platform">Sort: Platform</option>
+            <option value="newest">Sort: Newest</option>
+            <option value="configured">Sort: Configured First</option>
           </select>
         </div>
 
@@ -346,7 +570,7 @@ export default function HunterAccountsPage() {
           </div>
         )}
 
-        {!programsQuery.isLoading && filtered.length === 0 && (
+        {!programsQuery.isLoading && sorted.length === 0 && (
           <div
             style={{
               padding: "32px",
@@ -364,17 +588,18 @@ export default function HunterAccountsPage() {
         )}
 
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {filtered.map((program) => (
+          {sorted.map((program) => (
             <ProgramCard
               key={program.id}
               program={program}
+              credInfo={credMap.get(program.id)}
               selected={selectedProgram?.id === program.id && drawerOpen}
               onClick={() => handleSelect(program)}
             />
           ))}
         </div>
 
-        {/* ── Guide panel (shown when no program selected) ── */}
+        {/* ── Setup guide (shown when no drawer open) ── */}
         {!drawerOpen && (
           <div
             style={{
@@ -403,12 +628,13 @@ export default function HunterAccountsPage() {
             </div>
             <ol style={{ paddingLeft: 16, margin: 0 }}>
               <li>
-                <span style={{ color: C.green }}>Select a program</span> from the list above to
-                open its account management panel.
+                <span style={{ color: C.green }}>Select a program</span> from the list above
+                to open its account management panel.
               </li>
               <li>
-                In the <span style={{ color: C.green }}>ACCESS SETUP</span> section, enter the
-                program&apos;s signup URL and step-by-step account creation instructions.
+                In <span style={{ color: C.green }}>ACCESS SETUP</span>, enter the program&apos;s
+                signup URL and step-by-step account creation instructions. Each platform has a
+                built-in signup guide to walk you through.
               </li>
               <li>
                 Create your hunter account on the platform{" "}
@@ -416,17 +642,17 @@ export default function HunterAccountsPage() {
                 prior registration and NDA acceptance.
               </li>
               <li>
-                Fill in your credentials: username, email, password, 2FA secrets, API keys, and
-                any PAT tokens.
+                Fill in your credentials in each section: username, email, password, 2FA TOTP
+                secret, backup codes, security questions, API keys, and PAT tokens.
               </li>
               <li>
                 Click <span style={{ color: C.green }}>SAVE TO VAULT</span> — all secrets are
-                encrypted and stored in HashiCorp Vault. Only metadata
-                (username, status) is kept in the database.
+                encrypted in HashiCorp Vault. Only the username and status are stored in the DB.
               </li>
               <li>
                 Use <span style={{ color: C.green }}>VALIDATE</span> to confirm the credentials
-                work before launching a scan.
+                work before launching a scan. Credentials older than 30 days show a staleness
+                warning.
               </li>
             </ol>
             <div
@@ -441,7 +667,8 @@ export default function HunterAccountsPage() {
               }}
             >
               ⚠ Without a valid hunter account, authenticated scans and bug bounty submissions
-              will fail. Configure accounts before scheduling scans.
+              will fail. Use <strong>Sort: Configured First</strong> to quickly see which programs
+              still need accounts set up.
             </div>
           </div>
         )}
