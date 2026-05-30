@@ -30,6 +30,9 @@ RUN git clone --depth 1 --branch v3.95.2 \
 # Amass v4 — v5 requires libpostal (C library, not in any standard package repo)
 RUN go install github.com/owasp-amass/amass/v4/...@v4.2.0
 
+# gospider — fast web spider for endpoint discovery
+RUN go install github.com/jaeles-project/gospider@v1.1.6
+
 # Stage 2: Final Worker Image
 FROM python:3.12-slim
 
@@ -38,10 +41,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
       ca-certificates curl wget git jq python3 python3-pip python3-venv \
-      libssl-dev libffi-dev build-essential \
+      libssl-dev libffi-dev build-essential make \
       libimage-exiftool-perl \
       libpcap0.8 \
-      whois nmap dnsutils bsdmainutils && \
+      whois nmap dnsutils bsdmainutils \
+      libnet-ssleay-perl libwww-perl libnet-dns-perl && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /usr/share/wordlists
 
@@ -53,6 +57,17 @@ COPY --from=go-builder /go/bin/* /usr/local/bin/
 RUN git clone https://github.com/laramies/theHarvester.git --branch 4.10.1 --depth 1 /opt/theHarvester && \
     cd /opt/theHarvester && \
     pip install . --break-system-packages
+
+# Nikto — Perl-based web vulnerability scanner
+# Installed from source to get the latest version vs stale distro package.
+RUN git clone --depth 1 https://github.com/sullo/nikto.git /opt/nikto && \
+    chmod +x /opt/nikto/program/nikto.pl && \
+    ln -sf /opt/nikto/program/nikto.pl /usr/local/bin/nikto
+
+# git-secrets — prevents committing secrets to git repositories
+RUN git clone --depth 1 https://github.com/awslabs/git-secrets.git /tmp/git-secrets && \
+    make install -C /tmp/git-secrets PREFIX=/usr/local && \
+    rm -rf /tmp/git-secrets
 
 # Install Celery + all deps required by the worker task (core backend imports)
 # httpx pinned to match backend; heavy ML stack (llama-index, chromadb) excluded
@@ -80,6 +95,7 @@ RUN pip install --no-cache-dir \
     hvac>=2.1.0 \
     networkx>=3.3 \
     PyNaCl>=1.5.0 \
+    waymore>=8.7 \
     --break-system-packages
 
 WORKDIR /app
