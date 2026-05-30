@@ -441,6 +441,169 @@ class CatalogBackedCLITool(BaseTool):
         docker_cmd = ["docker", "run", "--rm", image, *command_args]
         return self._run_once(docker_cmd, timeout_seconds=timeout_seconds, stdin_text=stdin_text)
 
+    def _run_via_api(self, target: str, **kwargs: Any) -> ToolResult:
+        """
+        Delegate execution to the registered Python client for tools with
+        ``execution_mode: api``.  Each branch instantiates the appropriate
+        client from :mod:`apps.backend.src.core`, calls a best-effort probe,
+        and wraps the result in a :class:`ToolResult`.
+
+        Tools that require credentials return FAILED with a human-readable
+        message when the required environment variables / Vault keys are absent.
+
+        API-key requirements reminder
+        ──────────────────────────────
+        - TheHive  : THEHIVE_URL, THEHIVE_API_KEY
+        - Cortex   : CORTEX_URL, CORTEX_API_KEY
+        - MISP     : MISP_URL, MISP_API_KEY
+        - Wazuh    : WAZUH_URL, WAZUH_USERNAME, WAZUH_PASSWORD
+        - Shuffle  : SHUFFLE_URL, SHUFFLE_WEBHOOK_TOKEN
+        - DefectDojo: DEFECTDOJO_URL, DEFECTDOJO_API_KEY
+        - OpenCTI  : OPENCTI_URL, OPENCTI_API_KEY
+        - swagger-inspector: SaaS product (SmartBear web UI, no local client)
+        """
+        _t0 = time.monotonic()
+        name = self.catalog_name
+
+        def _ok(data: Any) -> ToolResult:
+            elapsed_ms = int((time.monotonic() - _t0) * 1000)
+            return ToolResult(
+                self.id,
+                ToolStatus.COMPLETED,
+                {"target": target, "api_result": data, "tool": name},
+                execution_time_ms=elapsed_ms,
+                metadata={"execution_mode": "api", "tool_name": name},
+            )
+
+        def _fail(msg: str) -> ToolResult:
+            elapsed_ms = int((time.monotonic() - _t0) * 1000)
+            return ToolResult(
+                self.id,
+                ToolStatus.FAILED,
+                {},
+                error=msg,
+                execution_time_ms=elapsed_ms,
+                metadata={"execution_mode": "api", "tool_name": name},
+            )
+
+        try:
+            if name == "misp":
+                from .misp_client import MISPClient
+                client = MISPClient()
+                if not client.api_key:
+                    return _fail(
+                        "MISP credentials not configured. "
+                        "Set MISP_URL and MISP_API_KEY in Vault."
+                    )
+                alive = client.health_check()
+                data = client.enrich_ioc(target) if (target and alive) else {"health": alive}
+                return _ok(data)
+
+            elif name == "cortex":
+                from .cortex_client import CortexClient
+                client = CortexClient()
+                if not client.api_key:
+                    return _fail(
+                        "Cortex credentials not configured. "
+                        "Set CORTEX_URL and CORTEX_API_KEY in Vault."
+                    )
+                alive = client.health_check()
+                data = (
+                    client.analyze_observable(target)
+                    if (target and alive)
+                    else {"health": alive}
+                )
+                return _ok(data)
+
+            elif name == "thehive":
+                from .hil_thehive_client import TheHiveClient
+                client = TheHiveClient()
+                if not client.api_key:
+                    return _fail(
+                        "TheHive credentials not configured. "
+                        "Set THEHIVE_URL and THEHIVE_API_KEY in Vault."
+                    )
+                alive = client.health_check()
+                return _ok({"health": alive, "target": target})
+
+            elif name == "wazuh":
+                from .wazuh_client import WazuhClient
+                client = WazuhClient()
+                if not client.password:
+                    return _fail(
+                        "Wazuh credentials not configured. "
+                        "Set WAZUH_URL, WAZUH_USERNAME, and WAZUH_PASSWORD in Vault."
+                    )
+                alive = client.health_check()
+                data = client.check_host_anomalies() if alive else {"health": False}
+                return _ok(data)
+
+            elif name == "shuffle":
+                from .shuffle_client import ShuffleClient
+                client = ShuffleClient()
+                if not client.webhook_token:
+                    return _fail(
+                        "Shuffle credentials not configured. "
+                        "Set SHUFFLE_URL and SHUFFLE_WEBHOOK_TOKEN in Vault."
+                    )
+                alive = client.health_check()
+                return _ok({"health": alive, "target": target})
+
+            elif name == "defectdojo":
+                _url = os.environ.get("DEFECTDOJO_URL", "").rstrip("/")
+                _key = os.environ.get("DEFECTDOJO_API_KEY", "")
+                if not _url or not _key:
+                    return _fail(
+                        "DefectDojo credentials not configured. "
+                        "Set DEFECTDOJO_URL and DEFECTDOJO_API_KEY in Vault."
+                    )
+                import requests as _req
+                resp = _req.get(
+                    f"{_url}/api/v2/",
+                    headers={"Authorization": f"Token {_key}"},
+                    timeout=10,
+                )
+                return _ok({
+                    "status_code": resp.status_code,
+                    "available": resp.status_code < 400,
+                })
+
+            elif name == "opencti":
+                _url = os.environ.get("OPENCTI_URL", "").rstrip("/")
+                _key = os.environ.get("OPENCTI_API_KEY", "")
+                if not _url or not _key:
+                    return _fail(
+                        "OpenCTI credentials not configured. "
+                        "Set OPENCTI_URL and OPENCTI_API_KEY in Vault."
+                    )
+                import requests as _req
+                resp = _req.post(
+                    f"{_url}/graphql",
+                    json={"query": "{ about { version } }"},
+                    headers={"Authorization": f"Bearer {_key}"},
+                    timeout=10,
+                )
+                return _ok({
+                    "status_code": resp.status_code,
+                    "available": resp.status_code < 400,
+                })
+
+            elif name == "swagger-inspector":
+                return _fail(
+                    "swagger-inspector is a SaaS product (SmartBear). "
+                    "Access it via the web UI at https://swagger.io/tools/swagger-inspector/. "
+                    "No local API bridge is available."
+                )
+
+            else:
+                return _fail(
+                    f"No API bridge registered for tool '{name}' "
+                    "(execution_mode: api). Add a branch to _run_via_api()."
+                )
+
+        except Exception as exc:  # noqa: BLE001
+            return _fail(f"API client error for '{name}': {exc}")
+
     def _run_with_retry(
         self,
         command: list[str],
@@ -630,6 +793,10 @@ class CatalogBackedCLITool(BaseTool):
                     {},
                     error=f"Argument '{arg_str}' is not in the allowlist for tool '{self.catalog_name}'",
                 )
+
+        # --- API mode: delegate to Python client bridge (no subprocess) ---
+        if self.catalog_entry.execution_mode == "api":
+            return self._run_via_api(target)
 
         binary = self._which()
         try:

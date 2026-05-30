@@ -112,6 +112,8 @@ services:
       - ./config:/app/config:ro
       - ./tools:/app/tools:ro
       - /opt/k1-tools:/opt/k1-tools:ro
+      # Docker socket: allows worker to launch Docker containers (e.g., pentagi via _run_via_docker)
+      - /var/run/docker.sock:/var/run/docker.sock
     networks:
       - k1_network
     restart: unless-stopped

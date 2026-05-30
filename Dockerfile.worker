@@ -33,6 +33,15 @@ RUN go install github.com/owasp-amass/amass/v4/...@v4.2.0
 # gospider — fast web spider for endpoint discovery
 RUN go install github.com/jaeles-project/gospider@v1.1.6
 
+# gobuster — directory/file/DNS/vhost brute-forcing
+RUN go install github.com/OJ/gobuster/v3@v3.6.0
+
+# Jaeles — signature-based active scanner; build from source (replace directives in go.mod)
+RUN git clone --depth 1 https://github.com/jaeles-project/jaeles.git /tmp/jaeles \
+    && cd /tmp/jaeles \
+    && go build -o /go/bin/jaeles . \
+    && rm -rf /tmp/jaeles
+
 # Stage 2: Final Worker Image
 FROM python:3.12-slim
 
@@ -45,7 +54,8 @@ RUN apt-get update && \
       libimage-exiftool-perl \
       libpcap0.8 \
       whois nmap dnsutils bsdmainutils \
-      libnet-ssleay-perl libwww-perl libnet-dns-perl && \
+      libnet-ssleay-perl libwww-perl libnet-dns-perl \
+      ruby ruby-dev libcurl4-openssl-dev && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /usr/share/wordlists
 
@@ -68,6 +78,9 @@ RUN git clone --depth 1 https://github.com/sullo/nikto.git /opt/nikto && \
 RUN git clone --depth 1 https://github.com/awslabs/git-secrets.git /tmp/git-secrets && \
     make install -C /tmp/git-secrets PREFIX=/usr/local && \
     rm -rf /tmp/git-secrets
+
+# WPScan — WordPress vulnerability scanner (Ruby gem)
+RUN gem install wpscan --no-document
 
 # Install Celery + all deps required by the worker task (core backend imports)
 # httpx pinned to match backend; heavy ML stack (llama-index, chromadb) excluded
@@ -96,6 +109,8 @@ RUN pip install --no-cache-dir \
     networkx>=3.3 \
     PyNaCl>=1.5.0 \
     waymore>=8.7 \
+    wfuzz>=3.1.0 \
+    dirsearch>=0.4.3 \
     --break-system-packages
 
 WORKDIR /app

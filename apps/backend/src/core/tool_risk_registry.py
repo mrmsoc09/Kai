@@ -11,6 +11,15 @@ TOOL_RISK_BANDS: dict[str, int] = {
     "crt_sh": 0,
     "wayback": 0,
     "passive_recon": 0,
+    # Platform integration (API-mode) — passive by definition, auto-approved
+    "misp": 0,
+    "cortex": 0,
+    "thehive": 0,
+    "wazuh": 0,
+    "shuffle": 0,
+    "defectdojo": 0,
+    "opencti": 0,
+    "swagger-inspector": 0,
     # Band 1 — Active probing (auto-approved)
     "httpx": 1,
     "subfinder": 1,
