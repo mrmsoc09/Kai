@@ -23,8 +23,9 @@ const navGroups: Array<{ title: string; links: NavLink[] }> = [
       { href: "/reports",         label: "Reports",                 icon: "≡",  aliases: ["/exports"] },
       { href: "/approvals",       label: "Approvals",               icon: "⚑" },
       { href: "/terminal",        label: "Terminal",                icon: "▶" },
-      { href: "/programs",        label: "Programs / Targets",      icon: "◇", aliases: ["/targets"] },
-      { href: "/system",          label: "System / Logs",           icon: "⌘", aliases: ["/logs", "/diagnostics"] },
+      { href: "/programs",          label: "Programs / Targets",      icon: "◇", aliases: ["/targets"] },
+      { href: "/hunter-accounts",  label: "Hunter Accounts",         icon: "⚿" },
+      { href: "/system",           label: "System / Logs",           icon: "⌘", aliases: ["/logs", "/diagnostics"] },
     ],
   },
   {

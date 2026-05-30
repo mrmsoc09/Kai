@@ -1,4 +1,9 @@
 export const queryKeys = {
+  credentials: {
+    all: ["credentials"] as const,
+    forProgram: (programId: string) => ["credentials", programId] as const,
+    metadata: (programId: string) => ["credentials", programId, "metadata"] as const,
+  },
   campaigns: {
     all: ["campaigns"] as const,
     tracked: () => [...queryKeys.campaigns.all, "tracked"] as const,
