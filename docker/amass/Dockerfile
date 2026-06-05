@@ -1,5 +1,5 @@
 # /home/k1-admin/Kai/docker/amass/Dockerfile
-FROM golang:1.22-alpine as builder
+FROM golang:1.24-alpine as builder
 
 # Install git and other build dependencies
 RUN apk add --no-cache git

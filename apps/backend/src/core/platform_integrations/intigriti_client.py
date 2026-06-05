@@ -16,7 +16,7 @@ from .base_platform_client import (
 
 logger = logging.getLogger(__name__)
 
-INTIGRITI_API_URL = "https://api.intigriti.com/external/v1"
+INTIGRITI_API_URL = "https://api.intigriti.com/external/researcher/v1"
 
 
 class IntigrityClient(BasePlatformClient):
@@ -36,8 +36,8 @@ class IntigrityClient(BasePlatformClient):
                 timeout=self.timeout,
             )
 
-            # Test authentication
-            response = await self.session.get(f"{self.api_url}/profile")
+            # Test authentication using /programs instead of /profile
+            response = await self.session.get(f"{self.api_url}/programs")
             if response.status_code == 200:
                 self.authenticated = True
                 logger.info("✓ Authenticated with Intigriti API")
@@ -165,7 +165,7 @@ class IntigrityClient(BasePlatformClient):
 
             if response.status_code == 200:
                 data = response.json()
-                return data.get("programs", [])
+                return data.get("records") or data.get("programs") or []
             return []
         except Exception as e:
             logger.warning(f"Failed to list programs: {str(e)}")

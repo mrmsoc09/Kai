@@ -12,10 +12,30 @@ import logging
 import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-
 # Add project root to path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
+
+def load_env_file():
+    """Load environment variables from .env file if it exists."""
+    env_path = ROOT / ".env"
+    if env_path.exists():
+        with open(env_path) as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#"):
+                    parts = line.split("=", 1)
+                    if len(parts) == 2:
+                        key = parts[0].strip()
+                        val = parts[1].strip()
+                        # Strip optional surrounding quotes
+                        if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+                            val = val[1:-1]
+                        if key not in os.environ:
+                            os.environ[key] = val
+
+# Load environment variables
+load_env_file()
 
 from kai_master import KaiEngine
 from apps.backend.src.core.platform_integrations.hackerone_client import HackerOneClient
@@ -106,12 +126,28 @@ class MasterOrchestrator:
         # --- Platform 1: Intigriti ---
         if self.current_platform_index == 1:
             if self.intigriti_client and self.intigriti_client.authenticated:
-                # Placeholder for real Intigriti program listing
-                targets = [{"handle": "intigriti_example", "domain": "target.com", "name": "Intigriti Target"}]
-                for target in targets:
-                    if target["handle"] not in self.scanned_handles:
-                        self.scanned_handles.add(target["handle"])
-                        return {**target, "platform": "intigriti", "scopes": []}
+                programs = await self.intigriti_client.list_programs()
+                for prog in programs:
+                    handle = prog.get("handle") or prog.get("id")
+                    if handle and handle not in self.scanned_handles:
+                        logger.info(f"Master Loop -> Intigriti Program Found: {handle}")
+                        self.scanned_handles.add(handle)
+                        # Intigriti uses details or name
+                        name = prog.get("name") or handle
+                        # Extract domain/scope targets
+                        domains = []
+                        for domain_group in prog.get("domains", []):
+                            for endpoint in domain_group.get("endpoints", []):
+                                if endpoint.get("target"):
+                                    domains.append(endpoint.get("target"))
+                        target_domain = domains[0] if domains else f"{handle}.com"
+                        return {
+                            "handle": handle,
+                            "domain": target_domain,
+                            "name": name,
+                            "platform": "intigriti",
+                            "scopes": domains
+                        }
             
             logger.info("Master Loop -> All Intigriti programs scanned. Advancing to Public Opportunities.")
             self.current_platform_index = 2
@@ -163,7 +199,7 @@ class MasterOrchestrator:
         }
         
         context = {"engagement": "global_autonomous_run", "target": domain}
-        self.orchestrator.process_finding(sample_finding, context)
+        await self.orchestrator.intelligence.process_confirmed_finding(sample_finding, context)
         
         self.findings_count += 1
         self.scanned_count += 1

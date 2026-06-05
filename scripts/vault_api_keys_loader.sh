@@ -67,7 +67,7 @@ echo ""
 echo "Setting up secret engine..."
 vault secrets list | grep -q "secret/" || {
     echo "Creating KV v2 secret engine at secret/..."
-    vault secrets enable -version=2 -path=secret kv || echo "Secret engine may already exist"
+    vault secrets enable -version=2 -path=secret kv || true
 }
 
 echo "✓ Secret engine ready"
@@ -106,10 +106,10 @@ while IFS=',' read -r SERVICE KEY; do
     # Load to Vault
     if vault kv put "$SECRET_PATH" key="$KEY" &> /dev/null; then
         printf "  ✓ %-35s → %s\n" "$SERVICE" "$SECRET_PATH"
-        ((LOADED++))
+        LOADED=$((LOADED + 1))
     else
         printf "  ✗ %-35s → FAILED\n" "$SERVICE"
-        ((FAILED++))
+        FAILED=$((FAILED + 1))
     fi
 done < "$KEYS_FILE"
 

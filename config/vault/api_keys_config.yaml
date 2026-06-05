@@ -2,29 +2,9 @@ api_keys:
   categories:
     ai:
       services:
-      - openai
-      - anthropicai
-      - geminiai
-      - grokai
-      - vertexai
-      - mistralai
-      - perplexityai
-      - openrouter
-      - deepseek
-      - litellm
       - aimlapi
       vault_paths:
         aimlapi: secret/k1/ai/aimlapi
-        anthropicai: secret/k1/ai/anthropicai
-        deepseek: secret/k1/ai/deepseek
-        geminiai: secret/k1/ai/geminiai
-        grokai: secret/k1/ai/grokai
-        litellm: secret/k1/ai/litellm
-        mistralai: secret/k1/ai/mistralai
-        openai: secret/k1/ai/openai
-        openrouter: secret/k1/ai/openrouter
-        perplexityai: secret/k1/ai/perplexityai
-        vertexai: secret/k1/ai/vertexai
     bugbounty:
       services:
       - hackerone
@@ -59,7 +39,6 @@ api_keys:
       - google_workspace
       - gitkraken
       - agentops
-      - huggingface
       - coinbase_id
       - coinbase_id_secret
       vault_paths:
@@ -71,7 +50,6 @@ api_keys:
         gitkraken: secret/k1/developer/gitkraken
         google_developer: secret/k1/developer/google_developer
         google_workspace: secret/k1/developer/google_workspace
-        huggingface: secret/k1/developer/huggingface
     osint:
       services:
       - fullhunt
@@ -98,11 +76,9 @@ api_keys:
     other:
       services:
       - deepl
-      - serp
       - serper_dev
       vault_paths:
         deepl: secret/k1/other/deepl
-        serp: secret/k1/other/serp
         serper_dev: secret/k1/other/serper_dev
     search:
       services:

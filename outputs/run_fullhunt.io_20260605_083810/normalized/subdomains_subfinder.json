@@ -1,0 +1,15 @@
+{
+    "source": "subfinder",
+    "data": [
+        "stressful.fullhunt.io",
+        "0day-archive.fullhunt.io",
+        "enterprise.fullhunt.io",
+        "enterprise-api.fullhunt.io",
+        "internet-surveys.fullhunt.io",
+        "phish-catcher.fullhunt.io",
+        "api.fullhunt.io",
+        "api-docs.fullhunt.io",
+        "docs.fullhunt.io",
+        "portal.fullhunt.io"
+    ]
+}

@@ -17,25 +17,94 @@ NC='\033[0m' # No Color
 # Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_LOG="${SCRIPT_DIR}/output/logs/bootstrap.log"
+COMPOSE_CMD=()
+COMPOSE_DISPLAY_CMD=""
 
 ###############################################################################
 # Helper Functions
 ###############################################################################
 
+emit() {
+    local line="$1"
+    echo -e "$line"
+    { printf '%b\n' "$line" >> "$INSTALL_LOG"; } 2>/dev/null || true
+}
+
 log() {
-    echo -e "${BLUE}[$(date +%H:%M:%S)]${NC} $1" | tee -a "$INSTALL_LOG"
+    emit "${BLUE}[$(date +%H:%M:%S)]${NC} $1"
 }
 
 success() {
-    echo -e "${GREEN}[✓]${NC} $1" | tee -a "$INSTALL_LOG"
+    emit "${GREEN}[✓]${NC} $1"
 }
 
 warn() {
-    echo -e "${YELLOW}[!]${NC} $1" | tee -a "$INSTALL_LOG"
+    emit "${YELLOW}[!]${NC} $1"
 }
 
 error() {
-    echo -e "${RED}[✗]${NC} $1" | tee -a "$INSTALL_LOG"
+    emit "${RED}[✗]${NC} $1"
+}
+
+fatal() {
+    error "$1"
+    exit 1
+}
+
+prepare_log_path() {
+    local log_dir owner group
+    log_dir="$(dirname "$INSTALL_LOG")"
+    mkdir -p "$log_dir"
+    touch "$INSTALL_LOG" 2>/dev/null || true
+
+    if [[ -n "${SUDO_USER:-}" ]]; then
+        owner="$SUDO_USER"
+        group="$(id -gn "$SUDO_USER" 2>/dev/null || true)"
+        if [[ -n "$group" ]]; then
+            chown "$owner:$group" "$log_dir" "$INSTALL_LOG" 2>/dev/null || true
+        fi
+    fi
+}
+
+load_env_file() {
+    local env_file line key value
+    env_file="$1"
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line#"${line%%[![:space:]]*}"}"
+        [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+
+        if [[ "$line" == export\ * ]]; then
+            line="${line#export }"
+        fi
+
+        [[ "$line" == *=* ]] || continue
+        key="${line%%=*}"
+        value="${line#*=}"
+
+        if [[ "$value" =~ ^\".*\"$ || "$value" =~ ^\'.*\'$ ]]; then
+            value="${value:1:${#value}-2}"
+        fi
+
+        export "$key=$value"
+    done < "$env_file"
+}
+
+load_compose_env() {
+    local env_file
+    for env_file in "$SCRIPT_DIR/.env" "$SCRIPT_DIR/.env.vault"; do
+        if [[ -f "$env_file" ]]; then
+            load_env_file "$env_file"
+        fi
+    done
+}
+
+run_compose() {
+    (
+        cd "$SCRIPT_DIR"
+        load_compose_env
+        "${COMPOSE_CMD[@]}" "$@"
+    )
 }
 
 check_docker_installed() {
@@ -71,12 +140,24 @@ install_docker() {
 }
 
 check_docker_compose_installed() {
-    if ! command -v docker-compose &> /dev/null; then
-        log "docker-compose not found. Attempting to install..."
-        install_docker_compose
-    else
-        success "docker-compose is installed."
+    if docker compose version &> /dev/null; then
+        COMPOSE_CMD=(docker compose)
+        COMPOSE_DISPLAY_CMD="docker compose"
+        success "docker compose is installed."
+        return
     fi
+
+    if command -v docker-compose &> /dev/null; then
+        COMPOSE_CMD=(docker-compose)
+        COMPOSE_DISPLAY_CMD="docker-compose"
+        success "docker-compose is installed."
+        return
+    fi
+
+    log "Docker Compose not found. Attempting to install legacy docker-compose..."
+    install_docker_compose
+    COMPOSE_CMD=(docker-compose)
+    COMPOSE_DISPLAY_CMD="docker-compose"
 }
 
 install_docker_compose() {
@@ -103,8 +184,7 @@ main() {
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 
-    # Create log directory
-    mkdir -p "$(dirname "$INSTALL_LOG")"
+    prepare_log_path
 
     log "Starting Docker environment setup..."
 
@@ -115,12 +195,15 @@ main() {
     check_docker_compose_installed
 
     log "Building Docker images for Kai services and tools..."
-    # Navigate to the project root where docker-compose.yml is located
-    (cd "$SCRIPT_DIR" && docker-compose build) || error "Failed to build Docker images. Check logs."
+    if ! run_compose build; then
+        fatal "Failed to build Docker images. Check logs."
+    fi
     success "Docker images built."
 
     log "Bringing up Kai services..."
-    (cd "$SCRIPT_DIR" && docker-compose up -d) || error "Failed to bring up Docker services. Check logs."
+    if ! run_compose up -d; then
+        fatal "Failed to bring up Docker services. Check logs."
+    fi
     success "Kai services are up and running."
 
     echo ""
@@ -130,7 +213,7 @@ main() {
     echo ""
     success "Kai Docker environment setup complete!"
     echo ""
-    echo "Run 'docker-compose ps' in ${SCRIPT_DIR} to see running containers."
+    echo "Run '${COMPOSE_DISPLAY_CMD} ps' in ${SCRIPT_DIR} to see running containers."
     echo "You may need to log out and back in for Docker group changes to take effect."
     echo ""
     echo "Log saved to: $INSTALL_LOG"

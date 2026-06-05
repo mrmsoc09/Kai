@@ -85,3 +85,5 @@ ai_kernel/templates/memory/
 *.bak
 *.orig
 .aider*
+docs/training/output/
+docs/training/splits/

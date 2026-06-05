@@ -932,7 +932,10 @@ class KaiOrchestrator:
         self.execution_gateway = SubprocessExecutionGateway()
         self.transparency = TransparencyEnforcer(reports_base_dir)
 
-        logger.info("✓ KaiOrchestrator initialized with all compliance layers")
+        from apps.backend.src.core.intelligence_orchestrator import IntelligenceOrchestrator
+        self.intelligence = IntelligenceOrchestrator()
+
+        logger.info("✓ KaiOrchestrator initialized with all compliance layers and intelligence engine")
 
     async def execute_tool(
         self,

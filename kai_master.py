@@ -110,8 +110,7 @@ class KaiEngine:
         msg = f"[{ts}] [{level}] {message}"
         print(msg)
         with open(self.base_output / "logs" / "engine.log", "a") as f:
-            f.write(msg + "
-")
+            f.write(msg + "\n")
 
     def _run_docker_tool(self, image_name, command_args, network="kai_internal", tool_output_dir="/app/output", mount_local_dir=None, cap_add=None):
         """
@@ -161,6 +160,7 @@ class KaiEngine:
             self._run_docker_tool(
                 image_name="kai-subfinder", # Assuming kai-subfinder image will exist and is built
                 command_args=command_args,
+                tool_output_dir="/app/data",
                 mount_local_dir=raw_out_path_local.parent # Mount the local raw directory
             )
             
@@ -209,8 +209,7 @@ class KaiEngine:
             ]
             with open(raw_out_path_local, "w") as f:
                 for sub in simulated_subdomains:
-                    f.write(sub + "
-")
+                    f.write(sub + "\n")
             self.log(f"Simulated Amass output written to {raw_out_path_local}")
 
             # Immediate Normalization (read from local mounted file)
@@ -493,8 +492,7 @@ class KaiEngine:
         output_path_container = container_mount_dir / raw_out_file_name
 
         with open(input_path_local, "w") as f:
-            f.write("
-".join(input_list))
+            f.write("\n".join(input_list))
             
         command_args = ["-l", str(input_path_container), "-json", "-silent", "-o", str(output_path_container)]
         
@@ -502,6 +500,7 @@ class KaiEngine:
             self._run_docker_tool(
                 image_name="kai-httpx", # Assuming kai-httpx image will exist
                 command_args=command_args,
+                tool_output_dir="/app/data",
                 mount_local_dir=input_path_local.parent # Mount the local raw directory
             )
             

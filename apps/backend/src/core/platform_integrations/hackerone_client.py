@@ -16,11 +16,11 @@ from .base_platform_client import (
 
 logger = logging.getLogger(__name__)
 
-H1_API_URL = "https://api.hackerone.com/v1/graphql"
+H1_API_URL = "https://api.hackerone.com/v1/hackers"
 
 
 class HackerOneClient(BasePlatformClient):
-    """HackerOne GraphQL API client."""
+    """HackerOne REST API client for hackers/researchers."""
 
     def __init__(self, api_key: str, api_secret: str):
         """Initialize with H1 API credentials."""
@@ -29,21 +29,14 @@ class HackerOneClient(BasePlatformClient):
         self.authenticated = False
 
     async def authenticate(self) -> bool:
-        """Authenticate with H1 GraphQL API."""
+        """Authenticate with H1 Hacker REST API."""
         try:
             self.session = httpx.AsyncClient(
                 auth=(self.api_key, self.api_secret),
                 timeout=self.timeout,
             )
-            # Test authentication with simple query
-            query = """
-            query {
-              viewer {
-                username
-              }
-            }
-            """
-            response = await self.session.post(self.api_url, json={"query": query})
+            # Test authentication with simple GET query to hackers/me/reports
+            response = await self.session.get(f"{self.api_url}/me/reports")
             if response.status_code == 200:
                 self.authenticated = True
                 logger.info("✓ Authenticated with HackerOne API")
@@ -75,61 +68,46 @@ class HackerOneClient(BasePlatformClient):
                 )
 
         try:
-            # Build H1 report submission
-            mutation = """
-            mutation CreateReport($input: CreateReportInput!) {
-              createReport(input: $input) {
-                report {
-                  id
-                  number
-                  url
-                }
-                errors {
-                  message
-                }
-              }
-            }
-            """
-
-            variables = {
-                "input": {
-                    "programHandle": self._extract_h1_program(payload.target_url),
-                    "title": payload.title,
-                    "description": payload.description,
-                    "vulnerabilityTypes": [payload.vulnerability_type],
-                    "severity": self._map_severity_to_h1(payload.severity),
-                    "affectedUrl": payload.target_url,
-                    "proofOfConcept": payload.proof_of_concept,
+            # Build H1 report submission REST payload
+            team_handle = self._extract_h1_program(payload.target_url)
+            
+            # Use a default mapping or generic description for impact
+            impact_desc = "An attacker can exploit this vulnerability to compromise the target application."
+            
+            data = {
+                "data": {
+                    "type": "report",
+                    "attributes": {
+                        "team_handle": team_handle,
+                        "title": payload.title,
+                        "vulnerability_information": payload.description,
+                        "impact": impact_desc,
+                        "severity_rating": self._map_severity_to_h1(payload.severity)
+                    }
                 }
             }
 
             response = await self.session.post(
-                self.api_url, json={"query": mutation, "variables": variables}
+                f"{self.api_url}/reports", json=data
             )
 
-            if response.status_code == 200:
-                data = response.json()
-                if data.get("data", {}).get("createReport", {}).get("report"):
-                    report = data["data"]["createReport"]["report"]
-                    return SubmissionResult(
-                        success=True,
-                        platform_submission_id=report.get("id"),
-                        submission_url=report.get("url"),
-                        message="Report submitted successfully",
-                        submitted_at=self._get_current_timestamp(),
-                    )
-                else:
-                    errors = data.get("data", {}).get("createReport", {}).get("errors", [])
-                    return SubmissionResult(
-                        success=False,
-                        message=f"H1 submission failed: {errors}",
-                        error_code="SUBMISSION_ERROR",
-                    )
+            if response.status_code in (200, 201):
+                res_data = response.json()
+                report_id = res_data.get("data", {}).get("id")
+                report_url = f"https://hackerone.com/reports/{report_id}" if report_id else None
+                return SubmissionResult(
+                    success=True,
+                    platform_submission_id=report_id,
+                    submission_url=report_url,
+                    message="Report submitted successfully",
+                    submitted_at=self._get_current_timestamp(),
+                )
             else:
+                errors = response.json().get("errors", [])
                 return SubmissionResult(
                     success=False,
-                    message=f"H1 API error: {response.status_code}",
-                    error_code=f"HTTP_{response.status_code}",
+                    message=f"H1 submission failed: {errors}",
+                    error_code="SUBMISSION_ERROR",
                 )
 
         except Exception as e:
@@ -146,27 +124,12 @@ class HackerOneClient(BasePlatformClient):
             return False
 
         try:
-            query = """
-            query {
-              me {
-                reports(first: 100, filter: "scope") {
-                  edges {
-                    node {
-                      title
-                      url
-                    }
-                  }
-                }
-              }
-            }
-            """
-
-            response = await self.session.post(self.api_url, json={"query": query})
+            response = await self.session.get(f"{self.api_url}/me/reports")
             if response.status_code == 200:
                 data = response.json()
-                reports = data.get("data", {}).get("me", {}).get("reports", {}).get("edges", [])
-                for edge in reports:
-                    report_title = edge.get("node", {}).get("title", "")
+                reports = data.get("data", [])
+                for report in reports:
+                    report_title = report.get("attributes", {}).get("title", "")
                     if cve_id in report_title and target in report_title:
                         return True
             return False
@@ -180,19 +143,15 @@ class HackerOneClient(BasePlatformClient):
             return {"status": "unknown", "error": "Not authenticated"}
 
         try:
-            query = f"""
-            query {{
-              report(id: "{submission_id}") {{
-                state
-                severity
-                createdAt
-              }}
-            }}
-            """
-
-            response = await self.session.post(self.api_url, json={"query": query})
+            response = await self.session.get(f"{self.api_url}/reports/{submission_id}")
             if response.status_code == 200:
-                return response.json().get("data", {}).get("report", {})
+                report_data = response.json().get("data", {})
+                attributes = report_data.get("attributes", {})
+                return {
+                    "state": attributes.get("state"),
+                    "severity": attributes.get("severity_rating"),
+                    "createdAt": attributes.get("created_at"),
+                }
             return {"status": "error", "code": response.status_code}
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -203,32 +162,16 @@ class HackerOneClient(BasePlatformClient):
             return []
 
         try:
-            query = """
-            query {
-              me {
-                programs(first: 100) {
-                  edges {
-                    node {
-                      name
-                      handle
-                    }
-                  }
-                }
-              }
-            }
-            """
-
-            response = await self.session.post(self.api_url, json={"query": query})
+            response = await self.session.get(f"{self.api_url}/programs")
             if response.status_code == 200:
                 data = response.json()
                 programs = []
-                for edge in (
-                    data.get("data", {})
-                    .get("me", {})
-                    .get("programs", {})
-                    .get("edges", [])
-                ):
-                    programs.append(edge.get("node", {}))
+                for prog in data.get("data", []):
+                    attributes = prog.get("attributes", {})
+                    programs.append({
+                        "name": attributes.get("name"),
+                        "handle": attributes.get("handle"),
+                    })
                 return programs
             return []
         except Exception as e:
@@ -241,28 +184,36 @@ class HackerOneClient(BasePlatformClient):
             return None
 
         try:
-            query = f"""
-            query {{
-              program(handle: "{handle}") {{
-                name
-                handle
-                policy
-                structured_scopes(first: 100) {{
-                  edges {{
-                    node {{
-                      asset_identifier
-                      asset_type
-                      instruction
-                      availability_requirement
-                    }}
-                  }}
-                }}
-              }}
-            }}
-            """
-            response = await self.session.post(self.api_url, json={"query": query})
+            response = await self.session.get(f"{self.api_url}/programs/{handle}")
             if response.status_code == 200:
-                return response.json().get("data", {}).get("program")
+                res_json = response.json()
+                data = res_json.get("data") if "data" in res_json else res_json
+                attributes = data.get("attributes", {})
+                relationships = data.get("relationships", {})
+                
+                # Format structured scopes to match the GraphQL output
+                # for compatibility with the orchestrator.
+                edges = []
+                scopes = relationships.get("structured_scopes", {}).get("data", [])
+                for scope in scopes:
+                    scope_attrs = scope.get("attributes", {})
+                    edges.append({
+                        "node": {
+                            "asset_identifier": scope_attrs.get("asset_identifier"),
+                            "asset_type": scope_attrs.get("asset_type"),
+                            "instruction": scope_attrs.get("instruction"),
+                            "availability_requirement": scope_attrs.get("availability_requirement"),
+                        }
+                    })
+                
+                return {
+                    "name": attributes.get("name"),
+                    "handle": attributes.get("handle"),
+                    "policy": attributes.get("policy"),
+                    "structured_scopes": {
+                        "edges": edges
+                    }
+                }
             return None
         except Exception as e:
             logger.error(f"Failed to get program details for {handle}: {e}")

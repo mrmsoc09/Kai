@@ -88,12 +88,10 @@ class VaultSecretProvider(BaseSecretProvider):
         if response is None:
             return None
         data = (response or {}).get("data", {}).get("data", {})
-        value = data.get("value")
-        if isinstance(value, str) and value.strip():
-            return value.strip()
-        raw = data.get(name)
-        if isinstance(raw, str) and raw.strip():
-            return raw.strip()
+        for k in ["key", "value", name]:
+            val = data.get(k)
+            if isinstance(val, str) and val.strip():
+                return val.strip()
         return None
 
     def get_secret_with_lease(self, name: str) -> tuple[Optional[str], Optional[int]]:
@@ -104,12 +102,10 @@ class VaultSecretProvider(BaseSecretProvider):
             return None, None
         lease_duration: Optional[int] = response.get("lease_duration")
         data = (response or {}).get("data", {}).get("data", {})
-        value = data.get("value")
-        if isinstance(value, str) and value.strip():
-            return value.strip(), lease_duration
-        raw = data.get(name)
-        if isinstance(raw, str) and raw.strip():
-            return raw.strip(), lease_duration
+        for k in ["key", "value", name]:
+            val = data.get(k)
+            if isinstance(val, str) and val.strip():
+                return val.strip(), lease_duration
         return None, None
 
     def get_secret_hierarchical(
@@ -121,9 +117,10 @@ class VaultSecretProvider(BaseSecretProvider):
         if response is None:
             return None
         data = (response or {}).get("data", {}).get("data", {})
-        value = data.get("value")
-        if isinstance(value, str) and value.strip():
-            return value.strip()
+        for k in ["key", "value", service]:
+            val = data.get(k)
+            if isinstance(val, str) and val.strip():
+                return val.strip()
         return None
 
 
