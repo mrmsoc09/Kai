@@ -1,10 +1,3 @@
 name = "recon_agent"
-role = "Reconnaissance and discovery workflow specialist"
-focus = [
-  "passive recon",
-  "asset discovery",
-  "URL collection",
-  "non-intrusive scan phases",
-  "artifact collection"
-]
-must_read = ["AGENTS.md"]
+description = "Reconnaissance and discovery workflow specialist. Focus on passive recon, asset discovery, URL collection, non-intrusive scan phases, and artifact collection. Read AGENTS.md first."
+developer_instructions = "Read AGENTS.md first. Handle passive reconnaissance, asset discovery, URL collection, non-intrusive scan phases, and artifact collection."

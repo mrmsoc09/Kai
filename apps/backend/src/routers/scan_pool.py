@@ -443,6 +443,34 @@ async def remove_opportunity(
         )
 
 
+@router.post("/{pool_id}/entries/{entry_id}/pause")
+async def pause_entry(
+    pool_id: UUID,
+    entry_id: UUID,
+    db=Depends(get_db),
+) -> dict[str, Any]:
+    """Pause an individual queue entry."""
+    rotator = ScanQueueRotator()
+    entry = await rotator.pause_entry(db, pool_id, entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return {"pool_id": str(pool_id), "entry_id": str(entry.id), "status": entry.status}
+
+
+@router.post("/{pool_id}/entries/{entry_id}/resume")
+async def resume_entry(
+    pool_id: UUID,
+    entry_id: UUID,
+    db=Depends(get_db),
+) -> dict[str, Any]:
+    """Resume an individual paused queue entry."""
+    rotator = ScanQueueRotator()
+    entry = await rotator.resume_entry(db, pool_id, entry_id)
+    if entry is None:
+        raise HTTPException(status_code=404, detail="Entry not found")
+    return {"pool_id": str(pool_id), "entry_id": str(entry.id), "status": entry.status}
+
+
 @router.put("/{pool_id}/reorder")
 async def reorder_queue(
     pool_id: UUID,

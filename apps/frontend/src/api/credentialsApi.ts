@@ -134,7 +134,7 @@ export const credentialsApi = {
    */
   async listAccessMetadata(programId: string, token: string) {
     const response = await fetch(
-      `${API_BASE}/api/v1/access-metadata/${programId}`,
+      `${API_BASE}/api/v1/credentials/access-metadata/${programId}`,
       {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -155,7 +155,7 @@ export const credentialsApi = {
     token: string
   ) {
     const response = await fetch(
-      `${API_BASE}/api/v1/access-metadata/${programId}/${accessType}`,
+      `${API_BASE}/api/v1/credentials/access-metadata/${programId}/${accessType}`,
       {
         method: 'PUT',
         headers: {

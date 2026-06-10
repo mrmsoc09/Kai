@@ -6,7 +6,7 @@ RUN apk add --no-cache git
 
 WORKDIR /src
 # Clone Amass and build
-RUN git clone https://github.com/owasp-amass/amass.git .
+RUN git clone https://github.com/owasp-amass/amass.git --branch v5.0.1 --depth 1 .
 RUN go mod download
 RUN go build -o /usr/local/bin/amass ./cmd/amass
 

@@ -4,7 +4,7 @@ ENV CGO_ENABLED=0 GOOS=linux
 RUN go install -v github.com/dwisiswant0/crlfuzz/cmd/crlfuzz@latest
 FROM alpine:latest
 RUN apk add --no-cache ca-certificates
-COPY --from=builder /root/go/bin/crlfuzz /usr/local/bin/crlfuzz
+COPY --from=builder /go/bin/crlfuzz /usr/local/bin/crlfuzz
 RUN addgroup -S kaigroup && adduser -S -G kaigroup -H -D kaiuser
 USER kaiuser
 ENTRYPOINT ["crlfuzz"]

@@ -1,13 +1,3 @@
-/**
- * ScanPoolDashboard — real-time view of the rotating 75-125 opportunity scan pool.
- *
- * Displays:
- *   • Cycle progress bar (% of entries scanned in current cycle)
- *   • Active scans grid (up to 25, default 5-7)
- *   • Queued programs list with queue positions
- *   • Concurrency controls (min/max sliders)
- *   • Per-entry pause / manual-advance controls
- */
 import React, { useCallback, useEffect, useState } from 'react'
 import { api } from '../lib/api'
 
@@ -19,6 +9,7 @@ const C = {
   border: '#1e2a38',
   green: '#355E3B',
   greenBright: '#22c55e',
+  blue: '#60a5fa',
   orange: '#f97316',
   red: '#ef4444',
   text: '#c7d2e0',
@@ -27,10 +18,39 @@ const C = {
   mono: "'JetBrains Mono', 'Fira Code', monospace",
 }
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-interface Pool {
+type PoolSummary = {
   id: string
+  name: string
+  description: string | null
+  user_id: string | null
+  status: 'active' | 'paused' | 'stopped'
+  min_concurrent: number
+  max_concurrent: number
+  current_cycle: number
+  cycle_started_at: string | null
+  last_cycle_completed_at: string | null
+  target_cycle_days: number | null
+  created_at: string | null
+  updated_at: string | null
+}
+
+type PoolEntry = {
+  id: string
+  queue_position: number
+  program_name: string
+  platform: string | null
+  program_handle: string | null
+  status: 'waiting' | 'active' | 'paused' | 'error'
+  total_scans_completed: number
+  current_cycle_scanned: boolean
+  last_activated_at: string | null
+  last_completed_at: string | null
+  last_scan_status: string | null
+  last_celery_task_id: string | null
+}
+
+type PoolStatus = {
+  pool_id: string
   name: string
   status: 'active' | 'paused' | 'stopped'
   min_concurrent: number
@@ -39,68 +59,59 @@ interface Pool {
   cycle_started_at: string | null
   last_cycle_completed_at: string | null
   target_cycle_days: number | null
-}
-
-interface PoolEntry {
-  id: string
-  pool_id: string
-  program_name: string
-  platform: string | null
-  program_handle: string | null
-  queue_position: number
-  status: 'waiting' | 'active' | 'paused' | 'error'
-  total_scans_completed: number
-  current_cycle_scanned: boolean
-  last_activated_at: string | null
-  last_completed_at: string | null
-  last_scan_status: string | null
-}
-
-interface PoolStatus {
-  pool: Pool
   total_entries: number
-  active_count: number
-  waiting_count: number
-  paused_count: number
-  error_count: number
-  cycle_scanned_count: number
+  status_counts: Record<string, number>
+  entries: PoolEntry[]
 }
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
 
 function fmtDate(iso: string | null): string {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
-function cyclePercent(status: PoolStatus): number {
-  if (!status.total_entries) return 0
-  return Math.round((status.cycle_scanned_count / status.total_entries) * 100)
+function btnStyle(color: string): React.CSSProperties {
+  return {
+    background: 'none',
+    border: `1px solid ${color}`,
+    borderRadius: 4,
+    color,
+    fontSize: '0.65rem',
+    cursor: 'pointer',
+    padding: '3px 8px',
+    fontFamily: C.mono,
+  }
 }
-
-// ─── Status dot ─────────────────────────────────────────────────────────────
 
 function StatusDot({ status }: { status: 'active' | 'paused' | 'stopped' | 'waiting' | 'error' }) {
   const color =
-    status === 'active' ? C.greenBright :
-    status === 'waiting' ? C.textMute :
-    status === 'paused' ? C.orange :
-    status === 'error' ? C.red :
-    C.textDead
-  const pulse = status === 'active'
+    status === 'active'
+      ? C.greenBright
+      : status === 'waiting'
+        ? C.textMute
+        : status === 'paused'
+          ? C.orange
+          : status === 'error'
+            ? C.red
+            : C.textDead
   return (
-    <span style={{
-      display: 'inline-block',
-      width: 8, height: 8,
-      borderRadius: '50%',
-      backgroundColor: color,
-      boxShadow: pulse ? `0 0 6px ${color}` : 'none',
-      flexShrink: 0,
-    }} />
+    <span
+      style={{
+        display: 'inline-block',
+        width: 8,
+        height: 8,
+        borderRadius: '50%',
+        backgroundColor: color,
+        boxShadow: status === 'active' ? `0 0 6px ${color}` : 'none',
+        flexShrink: 0,
+      }}
+    />
   )
 }
-
-// ─── Cycle progress bar ──────────────────────────────────────────────────────
 
 function CycleBar({ pct, cycle }: { pct: number; cycle: number }) {
   return (
@@ -109,20 +120,19 @@ function CycleBar({ pct, cycle }: { pct: number; cycle: number }) {
         <span>CYCLE {cycle} PROGRESS</span>
         <span style={{ color: pct >= 80 ? C.greenBright : C.text }}>{pct}%</span>
       </div>
-      <div style={{ height: 6, background: '#1e2a38', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{
-          height: '100%',
-          width: `${pct}%`,
-          background: pct >= 80 ? C.greenBright : pct >= 40 ? '#60a5fa' : C.orange,
-          transition: 'width 0.6s ease',
-          borderRadius: 3,
-        }} />
+      <div style={{ height: 6, background: C.border, borderRadius: 3, overflow: 'hidden' }}>
+        <div
+          style={{
+            height: '100%',
+            width: `${pct}%`,
+            background: pct >= 80 ? C.greenBright : pct >= 40 ? C.blue : C.orange,
+            transition: 'width 0.6s ease',
+          }}
+        />
       </div>
     </div>
   )
 }
-
-// ─── Entry card ─────────────────────────────────────────────────────────────
 
 function EntryCard({
   entry,
@@ -134,31 +144,34 @@ function EntryCard({
   onResume: (id: string) => void
 }) {
   const borderColor =
-    entry.status === 'active' ? C.greenBright :
-    entry.status === 'error' ? C.red :
-    entry.status === 'paused' ? C.orange :
-    C.border
+    entry.status === 'active'
+      ? C.greenBright
+      : entry.status === 'paused'
+        ? C.orange
+        : entry.status === 'error'
+          ? C.red
+          : C.border
 
   return (
-    <div style={{
-      padding: '0.6rem 0.75rem',
-      background: C.card,
-      border: `1px solid ${borderColor}`,
-      borderRadius: 4,
-      fontFamily: C.mono,
-      fontSize: '0.72rem',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 4,
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+    <div
+      style={{
+        padding: '0.7rem 0.8rem',
+        background: C.card,
+        border: `1px solid ${borderColor}`,
+        borderRadius: 6,
+        fontFamily: C.mono,
+        fontSize: '0.72rem',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 5,
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
         <StatusDot status={entry.status} />
-        <span style={{ color: C.text, fontWeight: 600, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {entry.program_name}
-        </span>
-        <span style={{ color: C.textDead, fontSize: '0.6rem' }}>#{entry.queue_position}</span>
+        <span style={{ color: C.text, fontWeight: 700, flex: 1 }}>{entry.program_name}</span>
+        <span style={{ color: C.textDead, fontSize: '0.62rem' }}>#{entry.queue_position}</span>
       </div>
-      <div style={{ display: 'flex', gap: 8, color: C.textMute, fontSize: '0.65rem' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, color: C.textMute, fontSize: '0.64rem' }}>
         {entry.platform && <span>{entry.platform}</span>}
         <span>scans: {entry.total_scans_completed}</span>
         {entry.last_scan_status && (
@@ -167,111 +180,124 @@ function EntryCard({
           </span>
         )}
       </div>
-      {entry.last_activated_at && (
-        <div style={{ color: C.textDead, fontSize: '0.6rem' }}>activated {fmtDate(entry.last_activated_at)}</div>
-      )}
+      <div style={{ color: C.textDead, fontSize: '0.6rem' }}>
+        activated {fmtDate(entry.last_activated_at)} • completed {fmtDate(entry.last_completed_at)}
+      </div>
       <div style={{ display: 'flex', gap: 6, marginTop: 2 }}>
-        {entry.status === 'active' || entry.status === 'waiting' ? (
+        {(entry.status === 'active' || entry.status === 'waiting') && (
           <button onClick={() => onPause(entry.id)} style={btnStyle(C.orange)}>PAUSE</button>
-        ) : entry.status === 'paused' ? (
+        )}
+        {entry.status === 'paused' && (
           <button onClick={() => onResume(entry.id)} style={btnStyle(C.greenBright)}>RESUME</button>
-        ) : null}
+        )}
       </div>
     </div>
   )
 }
 
-function btnStyle(color: string): React.CSSProperties {
-  return {
-    background: 'none', border: `1px solid ${color}`, borderRadius: 3,
-    color, fontSize: '0.6rem', cursor: 'pointer', padding: '1px 8px',
-    fontFamily: C.mono,
-  }
-}
+function ConcurrencyPanel({
+  minConcurrent,
+  maxConcurrent,
+  onSave,
+}: {
+  minConcurrent: number
+  maxConcurrent: number
+  onSave: (min: number, max: number) => void
+}) {
+  const [minC, setMinC] = useState(minConcurrent)
+  const [maxC, setMaxC] = useState(maxConcurrent)
 
-// ─── Concurrency controls ───────────────────────────────────────────────────
+  useEffect(() => {
+    setMinC(minConcurrent)
+    setMaxC(maxConcurrent)
+  }, [maxConcurrent, minConcurrent])
 
-function ConcurrencyPanel({ pool, onSave }: { pool: Pool; onSave: (min: number, max: number) => void }) {
-  const [minC, setMinC] = useState(pool.min_concurrent)
-  const [maxC, setMaxC] = useState(pool.max_concurrent)
-  const dirty = minC !== pool.min_concurrent || maxC !== pool.max_concurrent
+  const dirty = minC !== minConcurrent || maxC !== maxConcurrent
 
   return (
-    <div style={{ padding: '0.75rem', background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, fontFamily: C.mono, fontSize: '0.72rem' }}>
+    <div style={{ padding: '0.85rem', background: C.card, border: `1px solid ${C.border}`, borderRadius: 6, fontFamily: C.mono, fontSize: '0.72rem' }}>
       <div style={{ color: C.textMute, marginBottom: 8, fontSize: '0.65rem', letterSpacing: '0.08em' }}>CONCURRENCY</div>
       <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
         <span style={{ color: C.textMute, minWidth: 28 }}>min</span>
-        <input type="range" min={1} max={maxC} value={minC} onChange={e => setMinC(Number(e.target.value))} style={{ flex: 1 }} />
+        <input type='range' min={1} max={maxC} value={minC} onChange={e => setMinC(Number(e.target.value))} style={{ flex: 1 }} />
         <span style={{ color: C.text, minWidth: 16 }}>{minC}</span>
       </label>
       <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <span style={{ color: C.textMute, minWidth: 28 }}>max</span>
-        <input type="range" min={minC} max={25} value={maxC} onChange={e => setMaxC(Number(e.target.value))} style={{ flex: 1 }} />
+        <input type='range' min={minC} max={25} value={maxC} onChange={e => setMaxC(Number(e.target.value))} style={{ flex: 1 }} />
         <span style={{ color: C.text, minWidth: 16 }}>{maxC}</span>
       </label>
-      <button
-        disabled={!dirty}
-        onClick={() => onSave(minC, maxC)}
-        style={{ ...btnStyle(dirty ? C.greenBright : C.textDead), opacity: dirty ? 1 : 0.4 }}
-      >
+      <button disabled={!dirty} onClick={() => onSave(minC, maxC)} style={{ ...btnStyle(dirty ? C.greenBright : C.textDead), opacity: dirty ? 1 : 0.45 }}>
         SAVE
       </button>
     </div>
   )
 }
 
-// ─── Main component ─────────────────────────────────────────────────────────
-
 export default function ScanPoolDashboard() {
-  const [pools, setPools] = useState<Pool[]>([])
+  const [pools, setPools] = useState<PoolSummary[]>([])
   const [selectedPoolId, setSelectedPoolId] = useState<string | null>(null)
   const [status, setStatus] = useState<PoolStatus | null>(null)
-  const [entries, setEntries] = useState<PoolEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionMsg, setActionMsg] = useState<string | null>(null)
 
-  // Load pool list on mount
-  useEffect(() => {
-    api.get(`${API_BASE}/pools`)
-      .then(r => {
-        const list: Pool[] = r.data.pools ?? []
-        setPools(list)
-        if (list.length > 0) setSelectedPoolId(list[0].id)
-      })
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false))
+  const flash = useCallback((message: string) => {
+    setActionMsg(message)
+    window.setTimeout(() => setActionMsg(null), 3000)
   }, [])
 
-  // Poll selected pool status + entries every 5s
-  const refreshPool = useCallback(() => {
+  const loadPools = useCallback(async () => {
+    try {
+      const response = await api.get(API_BASE)
+      const list: PoolSummary[] = Array.isArray(response.data) ? response.data : []
+      setPools(list)
+      setSelectedPoolId(current => current ?? list[0]?.id ?? null)
+      setError(null)
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      setError(typeof detail === 'string' ? detail : err?.message || 'Failed to load scan pools.')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const refreshPool = useCallback(async () => {
     if (!selectedPoolId) return
-    api.get(`${API_BASE}/${selectedPoolId}/status`)
-      .then(r => setStatus(r.data))
-      .catch(() => {})
-    api.get(`${API_BASE}/${selectedPoolId}/entries`)
-      .then(r => setEntries(r.data.entries ?? []))
-      .catch(() => {})
+    try {
+      const response = await api.get(`${API_BASE}/${selectedPoolId}`)
+      setStatus(response.data)
+      setError(null)
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      setError(typeof detail === 'string' ? detail : err?.message || 'Failed to load pool status.')
+    }
   }, [selectedPoolId])
 
   useEffect(() => {
-    refreshPool()
-    const iv = setInterval(refreshPool, 5_000)
-    return () => clearInterval(iv)
-  }, [refreshPool])
+    void loadPools()
+  }, [loadPools])
 
-  const flash = (msg: string) => {
-    setActionMsg(msg)
-    setTimeout(() => setActionMsg(null), 3000)
-  }
+  useEffect(() => {
+    if (!selectedPoolId) return
+    void refreshPool()
+    const timer = window.setInterval(() => {
+      void refreshPool()
+    }, 5000)
+    return () => window.clearInterval(timer)
+  }, [refreshPool, selectedPoolId])
 
   const setPoolLifecycle = async (action: 'pause' | 'resume' | 'stop') => {
     if (!selectedPoolId) return
     try {
       await api.post(`${API_BASE}/${selectedPoolId}/${action}`, {})
       flash(`Pool ${action}d.`)
-      refreshPool()
-    } catch (e: any) { flash(`Error: ${e.message}`) }
+      await loadPools()
+      await refreshPool()
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      flash(`Error: ${typeof detail === 'string' ? detail : err?.message || 'request failed'}`)
+    }
   }
 
   const pauseEntry = async (entryId: string) => {
@@ -279,8 +305,11 @@ export default function ScanPoolDashboard() {
     try {
       await api.post(`${API_BASE}/${selectedPoolId}/entries/${entryId}/pause`, {})
       flash('Entry paused.')
-      refreshPool()
-    } catch (e: any) { flash(`Error: ${e.message}`) }
+      await refreshPool()
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      flash(`Error: ${typeof detail === 'string' ? detail : err?.message || 'request failed'}`)
+    }
   }
 
   const resumeEntry = async (entryId: string) => {
@@ -288,17 +317,27 @@ export default function ScanPoolDashboard() {
     try {
       await api.post(`${API_BASE}/${selectedPoolId}/entries/${entryId}/resume`, {})
       flash('Entry resumed.')
-      refreshPool()
-    } catch (e: any) { flash(`Error: ${e.message}`) }
+      await refreshPool()
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      flash(`Error: ${typeof detail === 'string' ? detail : err?.message || 'request failed'}`)
+    }
   }
 
   const saveConcurrency = async (min: number, max: number) => {
     if (!selectedPoolId) return
     try {
-      await api.put(`${API_BASE}/${selectedPoolId}/concurrency`, { min_concurrent: min, max_concurrent: max })
+      await api.put(`${API_BASE}/${selectedPoolId}/settings`, {
+        min_concurrent: min,
+        max_concurrent: max,
+      })
       flash('Concurrency updated.')
-      refreshPool()
-    } catch (e: any) { flash(`Error: ${e.message}`) }
+      await loadPools()
+      await refreshPool()
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      flash(`Error: ${typeof detail === 'string' ? detail : err?.message || 'request failed'}`)
+    }
   }
 
   const manualAdvance = async () => {
@@ -306,159 +345,184 @@ export default function ScanPoolDashboard() {
     try {
       await api.post(`${API_BASE}/${selectedPoolId}/advance`, {})
       flash('Queue advanced.')
-      refreshPool()
-    } catch (e: any) { flash(`Error: ${e.message}`) }
+      await refreshPool()
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail
+      flash(`Error: ${typeof detail === 'string' ? detail : err?.message || 'request failed'}`)
+    }
   }
 
-  if (loading) return (
-    <div style={{ padding: '3rem', textAlign: 'center', color: C.textMute, fontFamily: C.mono, fontSize: '0.75rem' }}>
-      ▓▒░ LOADING SCAN POOL…
-    </div>
-  )
-
-  if (error) return (
-    <div style={{ padding: '2rem', color: C.red, fontFamily: C.mono, fontSize: '0.75rem' }}>
-      Error loading pools: {error}
-    </div>
-  )
-
-  if (pools.length === 0) return (
-    <div style={{ padding: '2rem', color: C.textMute, fontFamily: C.mono, fontSize: '0.75rem', textAlign: 'center' }}>
-      <div style={{ fontSize: '2rem', marginBottom: 8 }}>◯</div>
-      No scan pools configured yet.
-      <div style={{ marginTop: 8, fontSize: '0.65rem' }}>
-        Create a pool via the API: <code>POST /api/v1/scan-pool/pools</code>
+  if (loading) {
+    return (
+      <div style={{ padding: '3rem', textAlign: 'center', color: C.textMute, fontFamily: C.mono, fontSize: '0.75rem' }}>
+        ▓▒░ LOADING SCAN POOL…
       </div>
-    </div>
-  )
+    )
+  }
 
-  const pool = pools.find(p => p.id === selectedPoolId)
-  const pct = status ? cyclePercent(status) : 0
-  const activeEntries = entries.filter(e => e.status === 'active')
-  const waitingEntries = entries.filter(e => e.status === 'waiting')
-  const pausedEntries = entries.filter(e => e.status === 'paused')
-  const errorEntries = entries.filter(e => e.status === 'error')
+  if (error && pools.length === 0) {
+    return (
+      <div style={{ padding: '2rem', color: C.red, fontFamily: C.mono, fontSize: '0.75rem' }}>
+        Error loading pools: {error}
+      </div>
+    )
+  }
+
+  if (pools.length === 0) {
+    return (
+      <div style={{ padding: '2rem', color: C.textMute, fontFamily: C.mono, fontSize: '0.75rem', textAlign: 'center' }}>
+        <div style={{ fontSize: '2rem', marginBottom: 8 }}>◯</div>
+        No scan pools configured yet.
+        <div style={{ marginTop: 8, fontSize: '0.65rem' }}>
+          Create a pool via the API: <code>POST /api/v1/scan-pool</code>
+        </div>
+      </div>
+    )
+  }
+
+  const selectedPool = status ?? pools.find(pool => pool.id === selectedPoolId) ?? null
+  const entries = status?.entries ?? []
+  const totalEntries = status?.total_entries ?? entries.length
+  const activeEntries = entries.filter(entry => entry.status === 'active')
+  const waitingEntries = entries.filter(entry => entry.status === 'waiting')
+  const pausedEntries = entries.filter(entry => entry.status === 'paused')
+  const errorEntries = entries.filter(entry => entry.status === 'error')
+  const cycleScannedCount = entries.filter(entry => entry.current_cycle_scanned).length
+  const cyclePct = totalEntries > 0 ? Math.round((cycleScannedCount / totalEntries) * 100) : 0
+  const activeCount = status?.status_counts?.active ?? activeEntries.length
+  const waitingCount = status?.status_counts?.waiting ?? waitingEntries.length
+  const pausedCount = status?.status_counts?.paused ?? pausedEntries.length
+  const errorCount = status?.status_counts?.error ?? errorEntries.length
 
   return (
     <div style={{ background: C.bg, minHeight: '100vh', fontFamily: C.mono, color: C.text }}>
-      {/* Header */}
       <div style={{ padding: '1rem 1.5rem', background: C.card, borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
           <span style={{ color: C.green, fontSize: '1.2rem' }}>⟳</span>
           <h1 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, letterSpacing: '0.05em' }}>SCAN POOL OPERATIONS</h1>
-          {pool && (
+          {selectedPool && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.65rem' }}>
-              <StatusDot status={pool.status} />
-              <span style={{ color: C.textMute }}>{pool.status.toUpperCase()}</span>
+              <StatusDot status={selectedPool.status} />
+              <span style={{ color: C.textMute }}>{selectedPool.status.toUpperCase()}</span>
             </span>
           )}
         </div>
         {actionMsg && <span style={{ fontSize: '0.7rem', color: C.greenBright }}>{actionMsg}</span>}
         <div style={{ display: 'flex', gap: 8 }}>
-          {pool?.status === 'active' && (
-            <button onClick={() => setPoolLifecycle('pause')} style={btnStyle(C.orange)}>PAUSE POOL</button>
+          {selectedPool?.status === 'active' && (
+            <button onClick={() => void setPoolLifecycle('pause')} style={btnStyle(C.orange)}>PAUSE POOL</button>
           )}
-          {(pool?.status === 'paused' || pool?.status === 'stopped') && (
-            <button onClick={() => setPoolLifecycle('resume')} style={btnStyle(C.greenBright)}>RESUME POOL</button>
+          {(selectedPool?.status === 'paused' || selectedPool?.status === 'stopped') && (
+            <button onClick={() => void setPoolLifecycle('resume')} style={btnStyle(C.greenBright)}>RESUME POOL</button>
           )}
-          {pool?.status === 'active' && (
-            <button onClick={manualAdvance} style={btnStyle('#60a5fa')}>▶ ADVANCE</button>
+          {selectedPool?.status === 'active' && (
+            <button onClick={() => void manualAdvance()} style={btnStyle(C.blue)}>ADVANCE</button>
+          )}
+          {selectedPool?.status !== 'stopped' && (
+            <button onClick={() => void setPoolLifecycle('stop')} style={btnStyle(C.red)}>STOP</button>
           )}
         </div>
       </div>
 
-      {/* Pool selector (if multiple pools) */}
       {pools.length > 1 && (
-        <div style={{ padding: '0.5rem 1.5rem', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 8 }}>
-          {pools.map(p => (
-            <button key={p.id} onClick={() => setSelectedPoolId(p.id)} style={{
-              ...btnStyle(p.id === selectedPoolId ? C.greenBright : C.textMute),
-              fontWeight: p.id === selectedPoolId ? 700 : 400,
-            }}>{p.name}</button>
+        <div style={{ padding: '0.5rem 1.5rem', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {pools.map(pool => (
+            <button
+              key={pool.id}
+              onClick={() => setSelectedPoolId(pool.id)}
+              style={{
+                ...btnStyle(pool.id === selectedPoolId ? C.greenBright : C.textMute),
+                fontWeight: pool.id === selectedPoolId ? 700 : 400,
+              }}
+            >
+              {pool.name}
+            </button>
           ))}
         </div>
       )}
 
       <div style={{ padding: '1rem 1.5rem', display: 'grid', gridTemplateColumns: '1fr 280px', gap: '1rem' }}>
-        {/* Left: Cycle + Active + Queue */}
         <div>
-          {/* Cycle progress */}
-          {status && pool && (
+          {selectedPool && (
             <>
-              <CycleBar pct={pct} cycle={pool.current_cycle} />
-              <div style={{ display: 'flex', gap: 16, marginBottom: '1rem', fontSize: '0.65rem', color: C.textMute }}>
-                <span>Total: <strong style={{ color: C.text }}>{status.total_entries}</strong></span>
-                <span>Active: <strong style={{ color: C.greenBright }}>{status.active_count}</strong></span>
-                <span>Waiting: <strong style={{ color: C.text }}>{status.waiting_count}</strong></span>
-                {status.paused_count > 0 && <span>Paused: <strong style={{ color: C.orange }}>{status.paused_count}</strong></span>}
-                {status.error_count > 0 && <span>Errors: <strong style={{ color: C.red }}>{status.error_count}</strong></span>}
-                {pool.cycle_started_at && (
-                  <span>Cycle started: <strong style={{ color: C.text }}>{fmtDate(pool.cycle_started_at)}</strong></span>
+              <CycleBar pct={cyclePct} cycle={selectedPool.current_cycle} />
+              <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: '1rem', fontSize: '0.65rem', color: C.textMute }}>
+                <span>Total: <strong style={{ color: C.text }}>{totalEntries}</strong></span>
+                <span>Active: <strong style={{ color: C.greenBright }}>{activeCount}</strong></span>
+                <span>Waiting: <strong style={{ color: C.text }}>{waitingCount}</strong></span>
+                {pausedCount > 0 && <span>Paused: <strong style={{ color: C.orange }}>{pausedCount}</strong></span>}
+                {errorCount > 0 && <span>Errors: <strong style={{ color: C.red }}>{errorCount}</strong></span>}
+                {selectedPool.cycle_started_at && (
+                  <span>Cycle started: <strong style={{ color: C.text }}>{fmtDate(selectedPool.cycle_started_at)}</strong></span>
                 )}
               </div>
             </>
           )}
 
-          {/* Active scans */}
           {activeEntries.length > 0 && (
             <section style={{ marginBottom: '1.25rem' }}>
               <div style={{ color: C.textMute, fontSize: '0.65rem', letterSpacing: '0.08em', marginBottom: 6 }}>
-                ACTIVE SCANS ({activeEntries.length}/{pool?.max_concurrent ?? '?'} max)
+                ACTIVE SCANS ({activeEntries.length}/{selectedPool?.max_concurrent ?? '?'} max)
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
-                {activeEntries.map(e => (
-                  <EntryCard key={e.id} entry={e} onPause={pauseEntry} onResume={resumeEntry} />
+                {activeEntries.map(entry => (
+                  <EntryCard key={entry.id} entry={entry} onPause={pauseEntry} onResume={resumeEntry} />
                 ))}
               </div>
             </section>
           )}
 
-          {/* Error entries */}
-          {errorEntries.length > 0 && (
-            <section style={{ marginBottom: '1.25rem' }}>
-              <div style={{ color: C.red, fontSize: '0.65rem', letterSpacing: '0.08em', marginBottom: 6 }}>
-                ERRORS ({errorEntries.length})
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
-                {errorEntries.map(e => (
-                  <EntryCard key={e.id} entry={e} onPause={pauseEntry} onResume={resumeEntry} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Paused entries */}
           {pausedEntries.length > 0 && (
             <section style={{ marginBottom: '1.25rem' }}>
               <div style={{ color: C.orange, fontSize: '0.65rem', letterSpacing: '0.08em', marginBottom: 6 }}>
                 PAUSED ({pausedEntries.length})
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
-                {pausedEntries.map(e => (
-                  <EntryCard key={e.id} entry={e} onPause={pauseEntry} onResume={resumeEntry} />
+                {pausedEntries.map(entry => (
+                  <EntryCard key={entry.id} entry={entry} onPause={pauseEntry} onResume={resumeEntry} />
                 ))}
               </div>
             </section>
           )}
 
-          {/* Waiting queue */}
+          {errorEntries.length > 0 && (
+            <section style={{ marginBottom: '1.25rem' }}>
+              <div style={{ color: C.red, fontSize: '0.65rem', letterSpacing: '0.08em', marginBottom: 6 }}>
+                ERRORS ({errorEntries.length})
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
+                {errorEntries.map(entry => (
+                  <EntryCard key={entry.id} entry={entry} onPause={pauseEntry} onResume={resumeEntry} />
+                ))}
+              </div>
+            </section>
+          )}
+
           {waitingEntries.length > 0 && (
             <section>
               <div style={{ color: C.textMute, fontSize: '0.65rem', letterSpacing: '0.08em', marginBottom: 6 }}>
                 QUEUE ({waitingEntries.length} waiting)
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {waitingEntries.map(e => (
-                  <div key={e.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '0.4rem 0.6rem', background: C.card,
-                    border: `1px solid ${C.border}`, borderRadius: 3, fontSize: '0.68rem',
-                  }}>
-                    <span style={{ color: C.textDead, minWidth: 28 }}>#{e.queue_position}</span>
-                    <span style={{ color: C.text, flex: 1 }}>{e.program_name}</span>
-                    {e.platform && <span style={{ color: C.textMute, fontSize: '0.6rem' }}>{e.platform}</span>}
-                    <span style={{ color: C.textDead, fontSize: '0.6rem' }}>×{e.total_scans_completed}</span>
-                    <button onClick={() => pauseEntry(e.id)} style={btnStyle(C.textDead)}>pause</button>
+                {waitingEntries.map(entry => (
+                  <div
+                    key={entry.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '0.45rem 0.65rem',
+                      background: C.card,
+                      border: `1px solid ${C.border}`,
+                      borderRadius: 4,
+                      fontSize: '0.68rem',
+                    }}
+                  >
+                    <span style={{ color: C.textDead, minWidth: 28 }}>#{entry.queue_position}</span>
+                    <span style={{ color: C.text, flex: 1 }}>{entry.program_name}</span>
+                    {entry.platform && <span style={{ color: C.textMute, fontSize: '0.6rem' }}>{entry.platform}</span>}
+                    <span style={{ color: C.textDead, fontSize: '0.6rem' }}>×{entry.total_scans_completed}</span>
+                    <button onClick={() => void pauseEntry(entry.id)} style={btnStyle(C.textDead)}>pause</button>
                   </div>
                 ))}
               </div>
@@ -466,20 +530,19 @@ export default function ScanPoolDashboard() {
           )}
         </div>
 
-        {/* Right: Controls */}
-        {pool && (
+        {selectedPool && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <ConcurrencyPanel pool={pool} onSave={saveConcurrency} />
+            <ConcurrencyPanel minConcurrent={selectedPool.min_concurrent} maxConcurrent={selectedPool.max_concurrent} onSave={saveConcurrency} />
 
-            <div style={{ padding: '0.75rem', background: C.card, border: `1px solid ${C.border}`, borderRadius: 4, fontSize: '0.68rem' }}>
+            <div style={{ padding: '0.85rem', background: C.card, border: `1px solid ${C.border}`, borderRadius: 6, fontSize: '0.68rem' }}>
               <div style={{ color: C.textMute, marginBottom: 8, fontSize: '0.65rem', letterSpacing: '0.08em' }}>CYCLE INFO</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4, color: C.textMute }}>
-                <div>Cycle <strong style={{ color: C.text }}>#{pool.current_cycle}</strong></div>
-                {pool.target_cycle_days && (
-                  <div>Target <strong style={{ color: C.text }}>{pool.target_cycle_days}d</strong></div>
+                <div>Cycle <strong style={{ color: C.text }}>#{selectedPool.current_cycle}</strong></div>
+                {selectedPool.target_cycle_days && (
+                  <div>Target <strong style={{ color: C.text }}>{selectedPool.target_cycle_days}d</strong></div>
                 )}
-                {pool.last_cycle_completed_at && (
-                  <div>Last complete <strong style={{ color: C.text }}>{fmtDate(pool.last_cycle_completed_at)}</strong></div>
+                {selectedPool.last_cycle_completed_at && (
+                  <div>Last complete <strong style={{ color: C.text }}>{fmtDate(selectedPool.last_cycle_completed_at)}</strong></div>
                 )}
               </div>
             </div>

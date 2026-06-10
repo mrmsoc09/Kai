@@ -45,12 +45,16 @@ def resolve_litellm_string(llm_pin: str | None) -> str:
 
     _model_map: dict[str, str] = {
         "anthropic": f"anthropic/{os.getenv('K1_ANTHROPIC_MODEL', os.getenv('ANTHROPIC_MODEL', 'claude-sonnet-4-6'))}",
-        "openai":    f"openai/{os.getenv('K1_OPENAI_MODEL', os.getenv('OPENAI_MODEL', 'gpt-4o'))}",
+        "openai":    f"openai/{os.getenv('K1_OPENAI_MODEL', os.getenv('OPENAI_MODEL', 'gpt-4.1'))}",
         "gemini":    f"gemini/{os.getenv('K1_GEMINI_MODEL', os.getenv('GEMINI_MODEL', 'gemini-1.5-pro'))}",
+        "openrouter": f"openrouter/{os.getenv('KAI_MODEL_ROUTE_BULK', 'deepseek/deepseek-v4-flash')}",
+        "deepseek":  f"openrouter/{os.getenv('KAI_MODEL_ROUTE_BULK', 'deepseek/deepseek-v4-flash')}",
+        "kimi":      f"openrouter/{os.getenv('KAI_MODEL_ROUTE_PREMIUM', 'moonshotai/kimi-k2.5')}",
+        "local":     f"openai/{os.getenv('KAI_LOCAL_BULK_MODEL', os.getenv('K1_OLLAMA_MODEL', 'llama3'))}",
         "ollama":    f"ollama/{os.getenv('K1_OLLAMA_MODEL', os.getenv('OLLAMA_MODEL', 'llama3'))}",
         "gemma":     f"ollama/{os.getenv('K1_GEMMA_MODEL', os.getenv('GEMMA_MODEL', 'gemma:7b'))}",
     }
-    return _model_map.get(provider, "anthropic/claude-sonnet-4-6")
+    return _model_map.get(provider, f"openrouter/{os.getenv('KAI_MODEL_ROUTE_BULK', 'deepseek/deepseek-v4-flash')}")
 
 
 def resolve_provider_enum(llm_pin: str | None):
@@ -66,6 +70,8 @@ def resolve_provider_enum(llm_pin: str | None):
         "anthropic": LLMProvider.ANTHROPIC,
         "openai":    LLMProvider.OPENAI,
         "gemini":    LLMProvider.GEMINI,
+        "deepseek":  LLMProvider.DEEPSEEK,
+        "kimi":      LLMProvider.KIMI,
         "ollama":    LLMProvider.OLLAMA,
         "gemma":     LLMProvider.GEMMA,
     }

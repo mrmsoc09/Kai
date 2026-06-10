@@ -26,16 +26,22 @@ from apps.backend.src.core.duplicates import collect_existing_titles
 from apps.backend.src.core.auth import (
     ROLE_ADMIN,
     ROLE_ANALYST,
+    ROLE_OPERATOR,
     User,
     get_current_user,
     require_roles,
 )
 from apps.backend.src.core.hil_db import get_db
 from apps.backend.src.auth.models import UserScanQueueSettings
+from apps.backend.src.core.bug_bounty_hunting_service import (
+    BugBountyHuntingService,
+    SCHEDULE_ACTIVE,
+)
 from apps.backend.src.core.opportunity_actions import get_opportunity_action_service
 from apps.backend.src.core.opportunity_engine import get_opportunity_engine
 from apps.backend.src.core.opportunity_expansion import ExpansionCandidate, OpportunityExpansionResult, TargetBatch
 from apps.backend.src.core.intelligence_memory import get_memory_manager
+from apps.backend.src.schemas.bug_bounty_hunt import ProgramOpportunityImportRequest, ScopeAssetInput
 
 router = APIRouter(
     prefix="/opportunities",
@@ -47,6 +53,13 @@ SCAN_QUEUE_MIN_CONCURRENCY = 1
 SCAN_QUEUE_MAX_CONCURRENCY = 20
 SCAN_QUEUE_DEFAULT_MIN = 1
 SCAN_QUEUE_DEFAULT_MAX = 3
+DEFAULT_SCAN_QUEUE_WORKFLOW = "workflow_passive_triage"
+
+PLATFORM_HUNTER_SIGNUP: dict[str, tuple[str, str]] = {
+    "hackerone": ("HackerOne hunter account", "https://hackerone.com/users/sign_up"),
+    "bugcrowd": ("Bugcrowd researcher account", "https://bugcrowd.com/user/sign_up"),
+    "intigriti": ("Intigriti researcher account", "https://app.intigriti.com/account/register"),
+}
 
 
 # ---------------------------------------------------------------------------
@@ -59,6 +72,26 @@ class CredentialRequirementOut(BaseModel):
     signup_url: str
     notes: str
     required: bool
+
+
+class QueueTargetOut(BaseModel):
+    subject_key: str
+    subject_type: str
+    label: str
+    recommended_workflow: str
+
+
+class AccountPreparationOut(BaseModel):
+    required_account_types: list[str]
+    hunter_account_label: str | None = None
+    hunter_account_signup_url: str | None = None
+    program_account_label: str | None = None
+    program_account_signup_url: str | None = None
+    suggested_username: str
+    suggested_email_alias: str
+    suggested_password: str
+    suggested_pin: str | None = None
+    recommended_notes: list[str] = []
 
 
 class OpportunityOut(BaseModel):
@@ -82,6 +115,8 @@ class OpportunityOut(BaseModel):
     payout_label: str
     notes: str
     credential_requirements: List[CredentialRequirementOut]
+    queue_targets: list[QueueTargetOut]
+    account_prep: AccountPreparationOut
     needs_credentials: bool   # True when at least one required credential exists
     status: str
     approval_state: str
@@ -150,6 +185,21 @@ class ScanQueueSettingsUpdateRequest(BaseModel):
     max_concurrent: int = Field(..., ge=SCAN_QUEUE_MIN_CONCURRENCY, le=SCAN_QUEUE_MAX_CONCURRENCY)
 
 
+class OpportunityScanQueueDispatchItem(BaseModel):
+    opportunity_id: str = Field(..., min_length=1, max_length=255)
+    subject_key: str | None = Field(default=None, min_length=1, max_length=2048)
+    subject_type: str | None = Field(default=None, min_length=1, max_length=64)
+    recommended_workflow: str | None = Field(default=None, min_length=1, max_length=255)
+
+
+class OpportunityScanQueueDispatchRequest(BaseModel):
+    items: list[OpportunityScanQueueDispatchItem] = Field(..., min_length=1, max_length=50)
+    force: bool = True
+    safe_mode: bool = True
+    dry_run: bool = False
+    workflow_override: str | None = Field(default=None, min_length=1, max_length=255)
+
+
 def _tenant_context(user: User, *, require_tenant: bool = False) -> str:
     if user.tenant_id:
         return user.tenant_id
@@ -173,6 +223,153 @@ def _validated_scan_queue_bounds(payload: ScanQueueSettingsUpdateRequest) -> tup
     if min_concurrent > max_concurrent:
         raise HTTPException(status_code=400, detail="scan_queue_min_exceeds_max")
     return min_concurrent, max_concurrent
+
+
+def _slugify_account_fragment(value: str) -> str:
+    lowered = re.sub(r"[^a-z0-9]+", "-", str(value or "").strip().lower()).strip("-")
+    return lowered or "research"
+
+
+def _target_type_for_scan_subject(target: str) -> str:
+    value = str(target or "").strip()
+    if not value:
+        return "domain"
+    if value.startswith("*."):
+        return "wildcard"
+    if "://" in value:
+        return "url"
+    if "/" in value and "." not in value:
+        return "other"
+    return "domain"
+
+
+def _queue_targets_for_opportunity(opportunity: Opportunity) -> list[QueueTargetOut]:
+    targets: list[QueueTargetOut] = []
+    seen: set[str] = set()
+    for raw_target in opportunity.scope_domains:
+        subject_key = str(raw_target or "").strip()
+        if not subject_key or subject_key in seen:
+            continue
+        seen.add(subject_key)
+        targets.append(
+            QueueTargetOut(
+                subject_key=subject_key,
+                subject_type=_target_type_for_scan_subject(subject_key),
+                label=subject_key,
+                recommended_workflow=DEFAULT_SCAN_QUEUE_WORKFLOW,
+            )
+        )
+        if len(targets) >= 6:
+            break
+    if targets:
+        return targets
+    fallback = str(opportunity.scope_url or opportunity.program_url or opportunity.id).strip()
+    return [
+        QueueTargetOut(
+            subject_key=fallback,
+            subject_type=_target_type_for_scan_subject(fallback),
+            label=fallback,
+            recommended_workflow=DEFAULT_SCAN_QUEUE_WORKFLOW,
+        )
+    ]
+
+
+def _account_prep_for_opportunity(opportunity: Opportunity) -> AccountPreparationOut:
+    slug = _slugify_account_fragment(opportunity.organization or opportunity.name)
+    pin_value = 1000 + (sum(ord(ch) for ch in opportunity.id) % 9000)
+    required_account_types: list[str] = []
+    for requirement in opportunity.credential_requirements:
+        if requirement.kind == "signup":
+            required_account_types.append("user_account")
+        elif requirement.kind == "api_key":
+            required_account_types.append("api_key")
+        elif requirement.kind == "oauth":
+            required_account_types.append("oauth")
+        elif requirement.kind == "vpn":
+            required_account_types.append("vpn")
+        elif requirement.kind == "paid_plan":
+            required_account_types.append("paid_plan")
+        else:
+            required_account_types.append(requirement.kind)
+    if opportunity.platform in PLATFORM_HUNTER_SIGNUP:
+        required_account_types.append("hunter_account")
+    required_account_types = list(dict.fromkeys(required_account_types))
+
+    hunter_label, hunter_url = PLATFORM_HUNTER_SIGNUP.get(opportunity.platform, (None, None))
+    program_requirement = next(
+        (requirement for requirement in opportunity.credential_requirements if requirement.signup_url),
+        None,
+    )
+    recommended_notes: list[str] = []
+    if hunter_label and hunter_url:
+        recommended_notes.append("Create or reuse the platform hunter account before requesting deeper access.")
+    if program_requirement and program_requirement.required:
+        recommended_notes.append("Full authenticated scanning depends on the program account or token noted below.")
+    if opportunity.vdp_only:
+        recommended_notes.append("This program is recognition-only; payout setup is not required for participation.")
+    if not opportunity.is_public():
+        recommended_notes.append("Invitation or written authorization is required before any testing or account use.")
+    if not recommended_notes:
+        recommended_notes.append("Unauthenticated or surface-only scanning is available immediately for this opportunity.")
+
+    return AccountPreparationOut(
+        required_account_types=required_account_types,
+        hunter_account_label=hunter_label,
+        hunter_account_signup_url=hunter_url,
+        program_account_label=(program_requirement.label if program_requirement else None),
+        program_account_signup_url=(program_requirement.signup_url if program_requirement else None),
+        suggested_username=f"kai-{slug[:18]}-bbp",
+        suggested_email_alias=f"{slug[:18]}+bbp@example.test",
+        suggested_password=f"Kai!{slug[:8].title()}{pin_value}#2026",
+        suggested_pin=str(pin_value),
+        recommended_notes=recommended_notes,
+    )
+
+
+def _import_request_for_opportunity(opportunity: Opportunity) -> ProgramOpportunityImportRequest:
+    return ProgramOpportunityImportRequest(
+        source="opportunity.scan_queue",
+        platform=opportunity.platform,
+        name=opportunity.name,
+        handle=(opportunity.id.split(":", 1)[1] if ":" in opportunity.id else None),
+        program_key=opportunity.id,
+        program_url=opportunity.program_url,
+        status="ACTIVE",
+        submission_guidelines=opportunity.scope_summary,
+        require_safe_mode=True,
+        reward_metadata={
+            "max_payout_usd": int(opportunity.max_payout_usd),
+            "min_payout_usd": int(opportunity.min_payout_usd),
+            "vdp_only": bool(opportunity.vdp_only),
+            "response_sla_days": int(opportunity.response_sla_days),
+        },
+        notes=opportunity.notes,
+        in_scope_assets=[
+            ScopeAssetInput(
+                target=str(scope_target),
+                target_type=_target_type_for_scan_subject(str(scope_target)),
+                monitoring_enabled=True,
+                safe_mode_required=True,
+                priority_tier=3,
+                notes="Imported from opportunities scan queue.",
+            )
+            for scope_target in opportunity.scope_domains
+            if str(scope_target).strip()
+        ],
+        auto_fetch_platform_data=False,
+        allow_partial_platform_data=True,
+    )
+
+
+def _queue_dispatch_subject(item: OpportunityScanQueueDispatchItem, opportunity: Opportunity) -> tuple[str, str, str]:
+    queue_targets = _queue_targets_for_opportunity(opportunity)
+    default_target = queue_targets[0]
+    subject_key = str(item.subject_key or default_target.subject_key).strip()
+    if not subject_key:
+        raise HTTPException(status_code=400, detail="scan_queue_subject_required")
+    subject_type = str(item.subject_type or _target_type_for_scan_subject(subject_key)).strip() or default_target.subject_type
+    workflow_name = str(item.recommended_workflow or default_target.recommended_workflow).strip() or DEFAULT_SCAN_QUEUE_WORKFLOW
+    return subject_key, subject_type, workflow_name
 
 
 def _normalize_target(value: str) -> str:
@@ -284,6 +481,7 @@ def _parse_chain_summary_from_notes(notes: str) -> dict[str, Any] | None:
     }
 
 
+
 def _out(o: Opportunity, state: dict[str, Any]) -> OpportunityOut:
     execution_metadata = dict(state.get("execution_metadata", {}))
     mission_ids = [str(value) for value in execution_metadata.get("mission_ids", []) if str(value)]
@@ -299,6 +497,8 @@ def _out(o: Opportunity, state: dict[str, Any]) -> OpportunityOut:
         )
         for cr in o.credential_requirements
     ]
+    queue_targets = _queue_targets_for_opportunity(o)
+    account_prep = _account_prep_for_opportunity(o)
     return OpportunityOut(
         id=o.id,
         name=o.name,
@@ -320,6 +520,8 @@ def _out(o: Opportunity, state: dict[str, Any]) -> OpportunityOut:
         payout_label=o.payout_label(),
         notes=o.notes,
         credential_requirements=cred_outs,
+        queue_targets=queue_targets,
+        account_prep=account_prep,
         needs_credentials=any(cr.required for cr in o.credential_requirements),
         status=str(state.get("status", "proposed")),
         approval_state=str(state.get("approval_state", "pending")),
@@ -445,6 +647,141 @@ async def update_scan_queue_settings(
         min_concurrent=int(settings.min_concurrent),
         max_concurrent=int(settings.max_concurrent),
     )
+
+
+@router.post(
+    "/scan-queue/dispatch",
+    dependencies=[Depends(require_roles(ROLE_OPERATOR, ROLE_ANALYST, ROLE_ADMIN))],
+)
+async def dispatch_opportunity_scan_queue(
+    payload: OpportunityScanQueueDispatchRequest,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from sqlalchemy import select as _select
+
+    from apps.backend.src.core.bugbounty_workflow_engine import WORKFLOW_TEMPLATES
+    from apps.backend.src.models.bug_bounty import HuntScheduleJob
+    from apps.backend.src.models.campaign import ScopeTarget
+    from apps.backend.src.worker.campaign_tasks import run_bug_bounty_schedule_task
+
+    queued: list[dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
+    scheduled_jobs: list[tuple[int, str, str, str, str, str, HuntScheduleJob]] = []
+
+    svc = BugBountyHuntingService(db)
+    actor = f"opportunity.scan_queue:{current_user.id}"
+
+    for idx, item in enumerate(payload.items):
+        opportunity = get_opportunity(item.opportunity_id)
+        if opportunity is None:
+            errors.append({"index": idx, "opportunity_id": item.opportunity_id, "error": "Opportunity not found"})
+            continue
+        try:
+            subject_key, subject_type, workflow_name = _queue_dispatch_subject(item, opportunity)
+            workflow_template = str(payload.workflow_override or workflow_name or DEFAULT_SCAN_QUEUE_WORKFLOW).strip()
+            if workflow_template not in WORKFLOW_TEMPLATES:
+                workflow_template = DEFAULT_SCAN_QUEUE_WORKFLOW
+
+            program = await svc.import_program_opportunity(
+                _import_request_for_opportunity(opportunity),
+                actor=actor,
+            )
+
+            scope_target = await db.scalar(
+                _select(ScopeTarget).where(
+                    ScopeTarget.program_id == program.id,
+                    ScopeTarget.target == subject_key,
+                    ScopeTarget.target_type == subject_type,
+                )
+            )
+            if scope_target is None:
+                scope_target = ScopeTarget(
+                    program_id=program.id,
+                    target=subject_key,
+                    target_type=subject_type,
+                    is_in_scope=True,
+                    monitoring_enabled=True,
+                    safe_mode_required=payload.safe_mode,
+                    details_json={"seeded_via": "opportunities.scan_queue.dispatch"},
+                )
+                db.add(scope_target)
+                await db.flush()
+
+            schedule = await db.scalar(
+                _select(HuntScheduleJob).where(
+                    HuntScheduleJob.program_id == program.id,
+                    HuntScheduleJob.scope_target_id == scope_target.id,
+                    HuntScheduleJob.workflow_template == workflow_template,
+                )
+            )
+            if schedule is None:
+                schedule = HuntScheduleJob(
+                    program_id=program.id,
+                    scope_target_id=scope_target.id,
+                    workflow_template=workflow_template,
+                    schedule_type="interval",
+                    interval_minutes=1440,
+                    status=SCHEDULE_ACTIVE,
+                    safe_mode=payload.safe_mode,
+                    dry_run=payload.dry_run,
+                    created_by=actor,
+                    updated_by=actor,
+                )
+                db.add(schedule)
+                await db.flush()
+
+            scheduled_jobs.append(
+                (
+                    idx,
+                    opportunity.id,
+                    str(program.id),
+                    str(scope_target.id),
+                    subject_key,
+                    subject_type,
+                    schedule,
+                )
+            )
+        except Exception as exc:  # pragma: no cover - defensive API surface
+            errors.append({"index": idx, "opportunity_id": item.opportunity_id, "error": str(exc)})
+
+    await db.commit()
+
+    for idx, opportunity_id, program_id, scope_target_id, subject_key, subject_type, schedule in scheduled_jobs:
+        try:
+            async_result = run_bug_bounty_schedule_task.apply_async(
+                kwargs={
+                    "schedule_id": str(schedule.id),
+                    "actor": actor,
+                    "worker_role": "scan_queue",
+                    "force": payload.force,
+                },
+                queue="tools",
+            )
+            queued.append(
+                {
+                    "item_index": idx,
+                    "opportunity_id": opportunity_id,
+                    "program_id": program_id,
+                    "scope_target_id": scope_target_id,
+                    "schedule_job_id": str(schedule.id),
+                    "celery_task_id": async_result.id,
+                    "subject_key": subject_key,
+                    "subject_type": subject_type,
+                    "status": "dispatched",
+                }
+            )
+        except Exception as exc:  # pragma: no cover - defensive API surface
+            errors.append(
+                {
+                    "index": idx,
+                    "opportunity_id": opportunity_id,
+                    "schedule_job_id": str(schedule.id),
+                    "error": str(exc),
+                }
+            )
+
+    return {"queued": queued, "errors": errors, "total": len(payload.items)}
 
 @router.get("", response_model=dict)
 async def list_opportunities(

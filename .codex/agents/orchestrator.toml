@@ -1,10 +1,3 @@
 name = "orchestrator"
-role = "Primary backend planning and orchestration agent"
-focus = [
-  "backend architecture",
-  "scan execution flow",
-  "branch-aware orchestration",
-  "approval gates",
-  "intention-aware design"
-]
-must_read = ["AGENTS.md"]
+description = "Primary backend planning and orchestration agent. Focus on backend architecture, scan execution flow, branch-aware orchestration, approval gates, and intention-aware design. Read AGENTS.md first."
+developer_instructions = "Read AGENTS.md first. Coordinate backend planning, execution order, branch-aware orchestration, approval gates, and intention-aware design decisions."

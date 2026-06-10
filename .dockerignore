@@ -58,13 +58,14 @@ cache/
 .pytest_artifacts/
 
 # Node modules (if building frontend in same context)
-node_modules/
+**/node_modules/
 npm-debug.log
 yarn-error.log
 
 # Build artifacts
 build/
 dist/
+**/.next/
 *.egg-info/
 
 # OS

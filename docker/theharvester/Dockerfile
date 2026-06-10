@@ -6,7 +6,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends git build-essen
 
 # Clone the repository
 WORKDIR /app
-RUN git clone https://github.com/laramies/theHarvester.git --branch v4.10.1 --depth 1 .
+RUN git clone https://github.com/laramies/theHarvester.git --branch 4.10.1 --depth 1 .
 
 # Install theHarvester as a local package
 RUN pip install --no-cache-dir .

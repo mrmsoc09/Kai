@@ -383,6 +383,46 @@ class ScanQueueRotator:
         await db.flush()
         return True
 
+    async def pause_entry(
+        self, db: Any, pool_id: UUID, entry_id: UUID
+    ) -> OpportunityScanPoolEntry | None:
+        """Pause a waiting or active entry.
+
+        Active scans are not cancelled here; this only prevents the entry from
+        being selected again until it is resumed.
+        """
+        entry = await self._get_entry(db, entry_id)
+        if entry is None or entry.pool_id != pool_id:
+            return None
+        if entry.status not in {"waiting", "active"}:
+            return entry
+        entry.status = "paused"
+        db.add(entry)
+        await db.flush()
+        return entry
+
+    async def resume_entry(
+        self, db: Any, pool_id: UUID, entry_id: UUID
+    ) -> OpportunityScanPoolEntry | None:
+        """Resume a paused entry back into the waiting queue.
+
+        If the pool is active, queue advancement is attempted immediately.
+        """
+        entry = await self._get_entry(db, entry_id)
+        if entry is None or entry.pool_id != pool_id:
+            return None
+        if entry.status != "paused":
+            return entry
+
+        entry.status = "waiting"
+        db.add(entry)
+        await db.flush()
+
+        pool = await self._get_pool(db, pool_id)
+        if pool is not None and pool.status == "active":
+            await self.advance_queue(db, pool)
+        return entry
+
     # ------------------------------------------------------------------ #
     # Pool lifecycle                                                       #
     # ------------------------------------------------------------------ #

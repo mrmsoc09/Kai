@@ -142,6 +142,26 @@ export function getOpportunity(id: string) {
 export function getOpportunityStats() {
   return api.get('/opportunities/stats')
 }
+export function getScanQueueSettings() {
+  return api.get('/opportunities/scan-queue/settings')
+}
+export function updateScanQueueSettings(payload: { min_concurrent: number; max_concurrent: number }) {
+  return api.put('/opportunities/scan-queue/settings', payload)
+}
+export function dispatchOpportunityScans(payload: {
+  items: Array<{
+    opportunity_id: string
+    subject_key?: string | null
+    subject_type?: string | null
+    recommended_workflow?: string | null
+  }>
+  force?: boolean
+  safe_mode?: boolean
+  dry_run?: boolean
+  workflow_override?: string | null
+}) {
+  return api.post('/opportunities/scan-queue/dispatch', payload)
+}
 
 // Workflows
 export function listWorkflows(params?: {

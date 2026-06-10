@@ -1,0 +1,108 @@
+model_routing:
+  provider_mode: auto
+  discovery:
+    openrouter_enabled: true
+    ttl_seconds: 3600
+
+  roles:
+    bulk_reasoning:
+      preferred:
+        - provider: openrouter
+          model: deepseek/deepseek-v4-flash
+        - provider: openrouter
+          model: deepseek/deepseek-v4-pro
+        - provider: local
+          alias: local.bulk_reasoning
+      max_input_tokens: 32768
+      max_output_tokens: 4096
+      temperature: 0.2
+      top_p: 0.9
+      cost_ceiling_usd: 0.25
+
+    coding:
+      preferred:
+        - provider: openrouter
+          model: qwen/qwen3.5-27b
+        - provider: openrouter
+          model: deepseek/deepseek-v4-pro
+        - provider: local
+          alias: local.coding
+      max_input_tokens: 65536
+      max_output_tokens: 8192
+      temperature: 0.15
+      top_p: 0.9
+      cost_ceiling_usd: 0.50
+
+    free_premium:
+      preferred:
+        - provider: openrouter
+          model: moonshotai/kimi-k2.6:free
+          require_discovery_available: true
+        - provider: openrouter
+          model: moonshotai/kimi-k2.5
+        - provider: openrouter
+          model: deepseek/deepseek-v4-pro
+        - provider: local
+          alias: local.premium
+      max_input_tokens: 65536
+      max_output_tokens: 8192
+      temperature: 0.2
+      top_p: 0.9
+      cost_ceiling_usd: 0.75
+
+    premium_escalation:
+      preferred:
+        - provider: openrouter
+          model: moonshotai/kimi-k2.5
+        - provider: openrouter
+          model: deepseek/deepseek-v4-pro
+        - provider: local
+          alias: local.premium
+        - provider: openai
+          model: gpt-4.1
+      max_input_tokens: 65536
+      max_output_tokens: 12288
+      temperature: 0.2
+      top_p: 0.9
+      cost_ceiling_usd: 1.50
+
+  aliases:
+    report_drafting: bulk_reasoning
+    triage: bulk_reasoning
+    scheduler: bulk_reasoning
+    recon_synthesis: bulk_reasoning
+    case_analysis: bulk_reasoning
+    code_generation: coding
+    test_generation: coding
+    refactor: coding
+    docker_generation: coding
+    kubernetes_generation: coding
+    parser_generation: coding
+    hard_failure_escalation: premium_escalation
+    architecture_redesign: premium_escalation
+
+    osint_parse: bulk_reasoning
+    tool_selection: bulk_reasoning
+    log_summarization: bulk_reasoning
+    classification: bulk_reasoning
+    scope_validation: bulk_reasoning
+    mission_planning: bulk_reasoning
+    vuln_correlation: bulk_reasoning
+    report_writing: report_drafting
+    exploit_validation: premium_escalation
+    stakeholder_email: report_drafting
+    script_generation: coding
+    cve_lookup: bulk_reasoning
+    port_scan_analysis: bulk_reasoning
+    dns_analysis: bulk_reasoning
+    certificate_analysis: bulk_reasoning
+    credentials_analysis: bulk_reasoning
+    subdomain_analysis: bulk_reasoning
+    web_tech_fingerprinting: bulk_reasoning
+    embedding: bulk_reasoning
+    cve_classification: bulk_reasoning
+    code_patch_analysis: coding
+    screenshot_analysis: premium_escalation
+    large_doc_summary: premium_escalation
+    final_report_review: premium_escalation
+    novel_vuln_analysis: premium_escalation

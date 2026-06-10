@@ -1,105 +1,179 @@
-"""Tests for llm_budget_router — tier selection, budget gates, Ollama fallback."""
+"""Tests for Kai's role-based model router."""
 from __future__ import annotations
 
+import logging
+
 import pytest
-from unittest.mock import AsyncMock, patch
 
 from apps.backend.src.core.llm_budget_router import (
+    AuthenticationError,
+    CostCeilingExceededError,
     LLMBudgetRouter,
     ModelConfig,
-    _BUDGETS,
-    _MODEL_REGISTRY,
-    _DEFAULT_TASK_ROUTING,
+    ModelUnavailableError,
+    ProviderConfigurationError,
+    ProviderResponse,
 )
 
 
+class DummyProvider:
+    def __init__(self, responses):
+        self._responses = list(responses)
+
+    async def chat(self, model, request):
+        response = self._responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+
 @pytest.fixture
-def router():
-    r = LLMBudgetRouter()
-    r._ollama_available = True  # assume Ollama up for most tests
-    r._tracker._redis = None    # force in-process spend tracking
-    return r
+def router(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "or-secret")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("KAI_MODEL_PROVIDER", raising=False)
+    monkeypatch.delenv("KAI_LOCAL_LLM_BASE_URL", raising=False)
+    monkeypatch.delenv("KAI_LOCAL_BULK_MODEL", raising=False)
+    monkeypatch.delenv("KAI_LOCAL_CODING_MODEL", raising=False)
+    monkeypatch.delenv("KAI_LOCAL_PREMIUM_MODEL", raising=False)
+    router = LLMBudgetRouter()
+    router._tracker._redis = None
+    return router
 
 
-# 1. Tier 0 selected for osint_parse when Ollama available
 @pytest.mark.asyncio
-async def test_tier0_selected_for_osint_parse(router):
-    model = await router.select("osint_parse")
-    assert model.tier == 0
-    assert model.provider == "ollama"
+async def test_role_selection_by_alias(router):
+    model = await router.select("report_drafting")
+    assert model.route_role == "bulk_reasoning"
+    assert model.model == "deepseek/deepseek-v4-flash"
 
 
-# 2. Falls back to tier 1 when Ollama unavailable
 @pytest.mark.asyncio
-async def test_fallback_to_tier1_when_ollama_down(router):
-    router._ollama_available = False
-    model = await router.select("osint_parse")
-    assert model.tier >= 1
+async def test_openrouter_key_required_only_when_needed(monkeypatch):
+    monkeypatch.setenv("KAI_MODEL_PROVIDER", "openrouter")
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    router = LLMBudgetRouter()
+    router._tracker._redis = None
+    with pytest.raises(ProviderConfigurationError):
+        await router.select("bulk_reasoning")
 
 
-# 3. Tier 4 selected for final_report_review
 @pytest.mark.asyncio
-async def test_tier4_for_final_report(router):
-    model = await router.select("final_report_review")
-    assert model.tier == 4
-    assert model.provider in ("anthropic", "openai")
+async def test_local_provider_does_not_require_openrouter_key(monkeypatch):
+    monkeypatch.setenv("KAI_MODEL_PROVIDER", "local")
+    monkeypatch.delenv("OPENROUTER_API_KEY", raising=False)
+    monkeypatch.setenv("KAI_LOCAL_LLM_BASE_URL", "http://127.0.0.1:9000/v1")
+    monkeypatch.setenv("KAI_LOCAL_BULK_MODEL", "Qwen/Qwen3-32B")
+    router = LLMBudgetRouter()
+    router._tracker._redis = None
+    router._local_available = True
+    model = await router.select("bulk_reasoning")
+    assert model.provider == "local"
+    assert model.model == "Qwen/Qwen3-32B"
 
 
-# 4. Budget gate blocks expensive provider over limit
 @pytest.mark.asyncio
-async def test_budget_gate_blocks_overspent_provider(router):
-    # Simulate Anthropic over budget
-    router._tracker._local_spend["anthropic"] = 24.99  # > $25 * 0.95 = $23.75
-    model = await router.select("final_report_review")
-    # Should NOT be anthropic (over budget)
-    assert model.provider != "anthropic"
+async def test_auto_prefers_local_when_healthy(monkeypatch):
+    monkeypatch.setenv("KAI_MODEL_PROVIDER", "auto")
+    monkeypatch.setenv("KAI_LOCAL_LLM_BASE_URL", "http://127.0.0.1:9000/v1")
+    monkeypatch.setenv("KAI_LOCAL_BULK_MODEL", "local-bulk-model")
+    router = LLMBudgetRouter()
+    router._tracker._redis = None
+    router._local_available = True
+    model = await router.select("bulk_reasoning")
+    assert model.provider == "local"
+    assert model.model == "local-bulk-model"
 
 
-# 5. record_usage decrements budget
-def test_record_usage_decrements_budget(router):
-    model = ModelConfig("openrouter", "qwen/qwen3-235b-a22b", "OPENROUTER_API_KEY",
-                        tier=1, cost_per_1k=0.0002)
-    before = router._tracker.get_spend("openrouter")
+@pytest.mark.asyncio
+async def test_kimi_free_selected_when_available(router, monkeypatch):
+    async def _available(model_id, api_key):
+        return model_id == "moonshotai/kimi-k2.6:free"
+
+    monkeypatch.setattr(router._discovery, "is_model_available", _available)
+    model = await router.select("free_premium")
+    assert model.model == "moonshotai/kimi-k2.6:free"
+
+
+@pytest.mark.asyncio
+async def test_kimi_free_skipped_when_unavailable(router, monkeypatch):
+    async def _unavailable(model_id, api_key):
+        return False
+
+    monkeypatch.setattr(router._discovery, "is_model_available", _unavailable)
+    model = await router.select("free_premium")
+    assert model.model == "moonshotai/kimi-k2.5"
+
+
+@pytest.mark.asyncio
+async def test_fallback_from_kimi_free_to_kimi_paid(router, monkeypatch):
+    async def _available(model_id, api_key):
+        return model_id == "moonshotai/kimi-k2.6:free"
+
+    monkeypatch.setattr(router._discovery, "is_model_available", _available)
+    provider = DummyProvider([
+        ModelUnavailableError("free unavailable", retryable=True),
+        ProviderResponse(provider="openrouter", model="moonshotai/kimi-k2.5", text="ok", usage={"total_tokens": 1000}),
+    ])
+    router._provider_for = lambda model: provider
+    response = await router.complete("free_premium", [{"role": "user", "content": "hello"}])
+    assert response.model == "moonshotai/kimi-k2.5"
+
+
+@pytest.mark.asyncio
+async def test_fallback_from_flash_to_pro(router):
+    providers = {
+        "deepseek/deepseek-v4-flash": DummyProvider([ModelUnavailableError("flash unavailable", retryable=True)]),
+        "deepseek/deepseek-v4-pro": DummyProvider([ProviderResponse(provider="openrouter", model="deepseek/deepseek-v4-pro", text="ok", usage={"total_tokens": 1000})]),
+    }
+    router._provider_for = lambda model: providers[model.model]
+    response = await router.complete("bulk_reasoning", [{"role": "user", "content": "reason"}])
+    assert response.model == "deepseek/deepseek-v4-pro"
+
+
+@pytest.mark.asyncio
+async def test_qwen_selected_for_coding(router):
+    model = await router.select("coding")
+    assert model.model == "qwen/qwen3.5-27b"
+
+
+@pytest.mark.asyncio
+async def test_cost_guardrail_blocks_excessive_request(router):
+    with pytest.raises(CostCeilingExceededError):
+        await router.select("premium_escalation", estimated_tokens_k=5000)
+
+
+@pytest.mark.asyncio
+async def test_failed_discovery_does_not_break_startup(router, monkeypatch):
+    async def _empty(model_id, api_key):
+        return False
+
+    monkeypatch.setattr(router._discovery, "is_model_available", _empty)
+    model = await router.select("free_premium")
+    assert model.model == "moonshotai/kimi-k2.5"
+
+
+@pytest.mark.asyncio
+async def test_no_secret_leakage_in_logs(router, monkeypatch, caplog):
+    secret = "or-secret"
+    monkeypatch.setenv("OPENROUTER_API_KEY", secret)
+    router._provider_for = lambda model: DummyProvider([AuthenticationError("bad auth", retryable=False)])
+    caplog.set_level(logging.WARNING)
+    with pytest.raises(AuthenticationError):
+        await router.complete("bulk_reasoning", [{"role": "user", "content": "hi"}])
+    assert secret not in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_record_usage_decrements_budget(router):
+    model = ModelConfig(
+        "openrouter",
+        "qwen/qwen3.5-27b",
+        "OPENROUTER_API_KEY",
+        tier=1,
+        cost_per_1k=0.0003,
+    )
+    before = router.budget_report()["openrouter"]["spent"]
     router.record_usage(model, tokens_used_k=10.0)
-    after = router._tracker.get_spend("openrouter")
-    assert abs((after - before) - 0.002) < 1e-6
-
-
-# 6. require_tool_calling excludes ollama (tool_calling=False)
-@pytest.mark.asyncio
-async def test_tool_calling_excludes_ollama(router):
-    model = await router.select("mission_planning", require_tool_calling=True)
-    assert model.supports_tool_calling is True
-    assert model.provider != "ollama"
-
-
-# 7. high complexity bumps tier
-@pytest.mark.asyncio
-async def test_high_complexity_bumps_tier(router):
-    model_low  = await router.select("osint_parse", complexity="low")
-    model_high = await router.select("osint_parse", complexity="high")
-    assert model_high.tier >= model_low.tier
-
-
-# 8. budget_report returns all providers
-def test_budget_report_completeness(router):
-    report = router.budget_report()
-    for provider in _BUDGETS:
-        assert provider in report
-        assert "budget" in report[provider]
-        assert "spent" in report[provider]
-        assert "remaining" in report[provider]
-
-
-# 9. All task types in _DEFAULT_TASK_ROUTING have valid tiers
-def test_all_default_tasks_have_valid_tiers():
-    for task, config in _DEFAULT_TASK_ROUTING.items():
-        tier = config["tier"]
-        assert 0 <= tier <= 4, f"Task {task} has invalid tier {tier}"
-
-
-# 10. Model registry has at least one model per tier 0-3
-def test_model_registry_coverage():
-    tiers_covered = {m.tier for m in _MODEL_REGISTRY}
-    for required_tier in [0, 1, 2, 3]:
-        assert required_tier in tiers_covered, f"Tier {required_tier} missing from model registry"
+    after = router.budget_report()["openrouter"]["spent"]
+    assert round(after - before, 6) == 0.003
