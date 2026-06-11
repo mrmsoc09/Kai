@@ -16,6 +16,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 COMPOSE_FILE="${REPO_ROOT}/docker-compose.yml"
 ENV_FILE="${REPO_ROOT}/.env"
+STORAGE_ROOT="${KAI_STORAGE_ROOT:-/srv/kai}"
+ARTIFACTS_ROOT="${K1_ARTIFACTS_HOST_ROOT:-${STORAGE_ROOT}/artifacts}"
+OUTPUT_ROOT="${K1_WORKFLOW_OUTPUT_ROOT:-${STORAGE_ROOT}/output}"
 
 cd "${REPO_ROOT}"
 
@@ -115,10 +118,14 @@ if [[ ${#MISSING_VARS[@]} -gt 0 ]]; then
   warn "These will use insecure defaults in development. Set them in .env for production."
 fi
 
-# -- Ensure artifact dirs exist -----------------------------------------------
-mkdir -p artifacts/audit artifacts/usage artifacts/telemetry \
-         artifacts/workflows artifacts/dork_runs output/logs
-info "Artifact directories ready."
+# -- Ensure persistent storage exists -----------------------------------------
+if [[ -x "${REPO_ROOT}/scripts/init_kai_artifacts.sh" ]]; then
+  sudo KAI_STORAGE_ROOT="${STORAGE_ROOT}" \
+       K1_ARTIFACTS_HOST_ROOT="${ARTIFACTS_ROOT}" \
+       K1_WORKFLOW_OUTPUT_ROOT="${OUTPUT_ROOT}" \
+       "${REPO_ROOT}/scripts/init_kai_artifacts.sh"
+fi
+info "Persistent storage ready at ${STORAGE_ROOT}."
 
 # -- Build and start ----------------------------------------------------------
 BUILD_FLAGS=""

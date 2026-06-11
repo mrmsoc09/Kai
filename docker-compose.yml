@@ -11,27 +11,27 @@ x-kai-artifacts-env: &kai_artifacts_env
 
 x-kai-artifacts-volumes: &kai_artifacts_volumes
   - type: bind
-    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}
+    source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts
     target: ${K1_ARTIFACTS_CONTAINER_ROOT:-/tmp/kai-artifacts}
     read_only: false
   - type: bind
-    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/nmap-output
+    source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts/nmap-output
     target: /tmp/nmap-output
     read_only: false
   - type: bind
-    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/nuclei-output
+    source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts/nuclei-output
     target: /tmp/nuclei-output
     read_only: false
   - type: bind
-    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/gitleaks-output
+    source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts/gitleaks-output
     target: /tmp/gitleaks-output
     read_only: false
   - type: bind
-    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/burp-cache
+    source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts/burp-cache
     target: /tmp/burp-cache
     read_only: false
   - type: bind
-    source: ${K1_ARTIFACTS_HOST_ROOT:-/var/kai-artifacts}/cache
+    source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts/cache
     target: /home/kai/.cache
     read_only: false
 
@@ -78,7 +78,9 @@ services:
       - POSTGRES_USER=${POSTGRES_USER:-k1}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/docker/postgres
+        target: /var/lib/postgresql/data
     networks:
       - kai_internal
     read_only: true
@@ -86,6 +88,10 @@ services:
   redis:
     image: redis:6-alpine
     container_name: kai_redis
+    volumes:
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/docker/redis
+        target: /data
     networks:
       - kai_internal
     read_only: true
@@ -97,7 +103,9 @@ services:
       - "6333:6333"
       - "6334:6334"
     volumes:
-      - qdrant_data:/qdrant/storage
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/docker/qdrant
+        target: /qdrant/storage
     networks:
       - kai_internal
 
@@ -919,7 +927,3 @@ services:
     networks:
       - kai_internal
     command: ["-h"]
-
-volumes:
-  postgres_data:
-  qdrant_data:

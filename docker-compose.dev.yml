@@ -14,7 +14,9 @@ services:
       # volume root is owned by root. Point PGDATA at the actual cluster location.
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/docker/postgres
+        target: /var/lib/postgresql/data
     ports:
       - "127.0.0.1:5432:5432"
     healthcheck:
@@ -32,7 +34,9 @@ services:
     container_name: k1_redis
     command: redis-server --appendonly yes --requirepass K1_SecR3tP4ssw0rd!_2026
     volumes:
-      - redis_data:/data
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/docker/redis
+        target: /data
     ports:
       - "127.0.0.1:6379:6379"
     healthcheck:
@@ -56,6 +60,9 @@ services:
       ENVIRONMENT: development
       PYTHONUNBUFFERED: 1
       PYTHONPATH: /app
+      K1_ARTIFACTS_ROOT: /app/artifacts
+      K1_WORKFLOW_OUTPUT_ROOT: /app/output
+      ARTIFACTS_DIR: /app/artifacts
       # Vault and Ollama run as native systemd services on the host
       VAULT_URL: http://host.docker.internal:8200
       OLLAMA_HOST: http://host.docker.internal:11434
@@ -67,7 +74,14 @@ services:
     ports:
       - "127.0.0.1:8080:8080"
     volumes:
-      - ./artifacts:/app/artifacts:rw
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts
+        target: /app/artifacts
+        read_only: false
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/output
+        target: /app/output
+        read_only: false
       - ./apps:/app/apps:ro
       - ./config:/app/config:ro
       - ./tools:/app/tools:ro
@@ -94,6 +108,9 @@ services:
     env_file: .env
     environment:
       PYTHONPATH: /app
+      K1_ARTIFACTS_ROOT: /app/artifacts
+      K1_WORKFLOW_OUTPUT_ROOT: /app/output
+      ARTIFACTS_DIR: /app/artifacts
       VAULT_URL: http://host.docker.internal:8200
       OLLAMA_HOST: http://host.docker.internal:11434
       REDIS_URL: "redis://:K1_SecR3tP4ssw0rd!_2026@redis:6379/0"
@@ -105,7 +122,14 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - ./artifacts:/app/artifacts:rw
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts
+        target: /app/artifacts
+        read_only: false
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/output
+        target: /app/output
+        read_only: false
       - ./apps:/app/apps:ro
       - ./config:/app/config:ro
       - ./tools:/app/tools:ro
@@ -129,6 +153,9 @@ services:
     env_file: .env
     environment:
       PYTHONPATH: /app
+      K1_ARTIFACTS_ROOT: /app/artifacts
+      K1_WORKFLOW_OUTPUT_ROOT: /app/output
+      ARTIFACTS_DIR: /app/artifacts
       VAULT_URL: http://host.docker.internal:8200
       OLLAMA_HOST: http://host.docker.internal:11434
       REDIS_URL: "redis://:K1_SecR3tP4ssw0rd!_2026@redis:6379/0"
@@ -141,7 +168,14 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./artifacts:/app/artifacts:rw
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts
+        target: /app/artifacts
+        read_only: false
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/output
+        target: /app/output
+        read_only: false
       - ./apps:/app/apps:ro
       - ./config:/app/config:ro
     networks:
@@ -151,7 +185,7 @@ services:
       celery -A apps.backend.src.worker.celery_app.celery_app beat
       --loglevel=info
       --scheduler celery.beat.PersistentScheduler
-      --schedule /tmp/celerybeat-schedule
+      --schedule /app/output/celerybeat-schedule
 
   # React Frontend (Kaison Composer UI)
   frontend:
@@ -165,7 +199,9 @@ services:
       - "8081:8081"
     volumes:
       - ./apps/frontend-operator:/app
-      - /app/node_modules
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/docker/frontend-node_modules
+        target: /app/node_modules
     command: >
       sh -c "
         npm install &&
@@ -187,10 +223,6 @@ services:
     networks:
       - k1_network
     restart: unless-stopped
-
-volumes:
-  postgres_data:
-  redis_data:
 
 networks:
   k1_network:

@@ -59,8 +59,10 @@ function start() {
     print_banner
     echo -e "${BLUE}Starting Kaison K1 Platform...${NC}"
     
-    # Ensure correct permissions for data dirs
-    mkdir -p artifacts
+    # Ensure the external SSD storage root is initialized before Docker starts.
+    if [ -x ./scripts/init_kai_artifacts.sh ]; then
+        sudo KAI_STORAGE_ROOT="${KAI_STORAGE_ROOT:-/srv/kai}" ./scripts/init_kai_artifacts.sh
+    fi
     
     docker compose -f docker-compose.dev.yml up --build -d
     

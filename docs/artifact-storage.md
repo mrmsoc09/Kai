@@ -4,7 +4,9 @@ This deployment keeps tool containers with `read_only: true` and exposes only sp
 
 ## Mount strategy
 
-- Host root: `/var/kai-artifacts`
+- Host root: `/srv/kai`
+- Artifacts root: `/srv/kai/artifacts`
+- Workflow/output root: `/srv/kai/output`
 - Container root: `/tmp/kai-artifacts`
 - Dedicated writable paths:
   - nmap: `/tmp/nmap-output`
@@ -14,7 +16,9 @@ This deployment keeps tool containers with `read_only: true` and exposes only sp
   - shared cache: `/home/kai/.cache`
 
 The compose file uses:
-- `K1_ARTIFACTS_HOST_ROOT` (default `/var/kai-artifacts`)
+- `KAI_STORAGE_ROOT` (default `/srv/kai`)
+- `K1_ARTIFACTS_HOST_ROOT` (default `/srv/kai/artifacts`)
+- `K1_WORKFLOW_OUTPUT_ROOT` (default `/srv/kai/output`)
 - `K1_ARTIFACTS_CONTAINER_ROOT` (default `/tmp/kai-artifacts`)
 - `K1_ARTIFACTS_ROOT` and per-tool paths built from the container root.
 
@@ -23,7 +27,7 @@ The compose file uses:
 Run once on each Docker host:
 
 ```bash
-K1_ARTIFACTS_HOST_ROOT=/var/kai-artifacts ./scripts/init_kai_artifacts.sh
+KAI_STORAGE_ROOT=/srv/kai ./scripts/init_kai_artifacts.sh
 ```
 
 ## Daily cleanup and quota enforcement

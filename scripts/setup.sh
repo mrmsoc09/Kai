@@ -98,7 +98,7 @@ ensure_postgres_running_cli() {
         -e POSTGRES_PASSWORD=k1_pass_secure \
         -e POSTGRES_DB=k1 \
         -p "${host_bind}:${host_port}:5432" \
-        -v postgres_data:/var/lib/postgresql/data \
+        -v "${KAI_STORAGE_ROOT:-/srv/kai}/docker/postgres:/var/lib/postgresql/data" \
         "${postgres_image}" >/dev/null
 }
 
@@ -125,6 +125,7 @@ ensure_redis_running_cli() {
         --name "${name}" \
         --restart unless-stopped \
         -p "${host_bind}:${host_port}:6379" \
+        -v "${KAI_STORAGE_ROOT:-/srv/kai}/docker/redis:/data" \
         redis:7-alpine >/dev/null
 }
 

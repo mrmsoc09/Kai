@@ -42,6 +42,8 @@ Alternative (containerized full stack):
 ./scripts/deploy-local.sh --down
 ```
 
+Persistent runtime data, logs, and Docker-backed service state are stored on the external SSD under `/srv/kai`. Initialize it once with `./scripts/init_kai_artifacts.sh` if the startup scripts have not already done so.
+
 Services after startup:
 - Backend API: `http://localhost:8080`
 - Frontend UI: `http://localhost:8081`

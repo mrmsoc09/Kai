@@ -28,6 +28,9 @@ CORE_SERVICES=(
     orchestrator
     admin_gui
 )
+STORAGE_ROOT="${KAI_STORAGE_ROOT:-/srv/kai}"
+ARTIFACTS_ROOT="${K1_ARTIFACTS_HOST_ROOT:-${STORAGE_ROOT}/artifacts}"
+OUTPUT_ROOT="${K1_WORKFLOW_OUTPUT_ROOT:-${STORAGE_ROOT}/output}"
 
 ###############################################################################
 # Helper Functions
@@ -209,6 +212,15 @@ main() {
 
     # Check and install docker-compose
     check_docker_compose_installed
+
+    # Initialize persistent storage on the external SSD.
+    if [[ -x "${SCRIPT_DIR}/scripts/init_kai_artifacts.sh" ]]; then
+        run_root env \
+            KAI_STORAGE_ROOT="${STORAGE_ROOT}" \
+            K1_ARTIFACTS_HOST_ROOT="${ARTIFACTS_ROOT}" \
+            K1_WORKFLOW_OUTPUT_ROOT="${OUTPUT_ROOT}" \
+            "${SCRIPT_DIR}/scripts/init_kai_artifacts.sh"
+    fi
 
     mapfile -t targets < <(compose_targets)
     if [[ "$BOOTSTRAP_MODE" == "core" ]]; then

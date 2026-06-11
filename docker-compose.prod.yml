@@ -29,7 +29,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: k1
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/docker/postgres
+        target: /var/lib/postgresql/data
     expose:
       - "5432"
     healthcheck:
@@ -59,7 +61,9 @@ services:
       --requirepass ${REDIS_PASSWORD:-}
       --save 60 1000
     volumes:
-      - redis_data:/data
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/docker/redis
+        target: /data
     expose:
       - "6379"
     healthcheck:
@@ -140,7 +144,9 @@ services:
       redis:
         condition: service_healthy
     volumes:
-      - artifacts:/app/artifacts
+      - type: bind
+        source: ${KAI_STORAGE_ROOT:-/srv/kai}/artifacts
+        target: /app/artifacts
     networks:
       - k1_internal
     restart: unless-stopped
@@ -171,11 +177,6 @@ services:
           cpus: "0.5"
           memory: 256m
     logging: *default-logging
-
-volumes:
-  postgres_data:
-  redis_data:
-  artifacts:
 
 networks:
   k1_internal:
