@@ -11,6 +11,13 @@ RUN go install github.com/projectdiscovery/naabu/v2/cmd/naabu@v2.6.0
 RUN go install github.com/projectdiscovery/httpx/cmd/httpx@v1.9.0
 RUN go install github.com/projectdiscovery/nuclei/v3/cmd/nuclei@v3.8.0
 RUN go install github.com/projectdiscovery/katana/cmd/katana@v1.6.0
+
+# Fall back to direct VCS fetches once we enter the less-stable dependency tree
+# used by chaos/uncover and the remaining ProjectDiscovery tools. A pipe
+# separator retries on any proxy failure, not only 404/410.
+ENV GOPROXY=https://proxy.golang.org|direct \
+    GOSUMDB=sum.golang.org
+
 RUN go install github.com/projectdiscovery/chaos-client/cmd/chaos@v0.5.2
 RUN go install github.com/projectdiscovery/uncover/cmd/uncover@v1.2.0
 RUN go install github.com/projectdiscovery/dnsx/cmd/dnsx@v1.1.4
@@ -109,9 +116,13 @@ RUN pip install --no-cache-dir \
     networkx>=3.3 \
     PyNaCl>=1.5.0 \
     waymore>=8.7 \
-    wfuzz>=3.1.0 \
     dirsearch>=0.4.3 \
     --break-system-packages
+
+# Debian-packaged wfuzz avoids the broken PyPI/pycurl build path on Python 3.12.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends wfuzz && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY . /app
