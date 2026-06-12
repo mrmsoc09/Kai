@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 
 import { bugBountyApi } from "@/lib/api/bug-bounty";
-import { listCredentials } from "@/lib/api/credentials";
+import { getHunterAccountInventory, getScanSuggestions, listCredentials } from "@/lib/api/credentials";
 import { queryKeys } from "@/lib/query-keys";
 import type { ProgramOpportunity } from "@/lib/types/bug-bounty";
 import { HunterAccountDrawer } from "@/components/credentials/HunterAccountDrawer";
@@ -12,18 +12,22 @@ import { PageHeader } from "@/components/layout/PageHeader";
 
 // ── Colour palette ────────────────────────────────────────────────────────────
 const C = {
-  bg: "#0a0f0a",
-  panel: "#0d140d",
-  border: "#003300",
-  borderActive: "#006600",
-  green: "#00FF41",
-  greenDim: "#007A1E",
-  greenFaint: "rgba(0,255,65,0.07)",
-  orange: "#ff9900",
-  muted: "#004d10",
-  red: "#ff4444",
-  text: "#00e536",
-  inputBg: "#060c06",
+  bg: "var(--page-bg)",
+  panel: "var(--panel-bg)",
+  panelSoft: "var(--panel-elevated)",
+  border: "var(--border-color)",
+  borderActive: "var(--border-strong)",
+  green: "var(--accent-color)",
+  greenDim: "var(--text-muted)",
+  greenFaint: "var(--accent-soft)",
+  orange: "var(--highlight-color)",
+  highlight: "var(--highlight-color)",
+  highlightSoft: "var(--highlight-soft)",
+  muted: "var(--text-muted)",
+  red: "var(--highlight-color)",
+  text: "var(--text-color)",
+  textStrong: "var(--text-color)",
+  inputBg: "var(--input-bg)",
 } as const;
 
 // ── SortOrder ─────────────────────────────────────────────────────────────────
@@ -320,6 +324,7 @@ export default function HunterAccountsPage() {
   const [search, setSearch] = useState("");
   const [platformFilter, setPlatformFilter] = useState("ALL");
   const [sortOrder, setSortOrder] = useState<SortOrder>("name");
+  const [inventoryFilter, setInventoryFilter] = useState<"all" | "complete" | "partial">("all");
 
   // ── Programs query ─────────────────────────────────────────────────────────
   const programsQuery = useQuery({
@@ -328,6 +333,28 @@ export default function HunterAccountsPage() {
     staleTime: 120_000,
   });
   const programs = programsQuery.data ?? [];
+  const hunterInventoryQuery = useQuery({
+    queryKey: queryKeys.credentials.hunterInventory(),
+    queryFn: ({ signal }) => getHunterAccountInventory(signal),
+    staleTime: 120_000,
+  });
+  const scanSuggestionsQuery = useQuery({
+    queryKey: queryKeys.credentials.scanSuggestions(50),
+    queryFn: ({ signal }) => getScanSuggestions(50, signal),
+    staleTime: 120_000,
+  });
+  const hunterInventory = hunterInventoryQuery.data;
+  const scanSuggestions = scanSuggestionsQuery.data?.items ?? [];
+  const inventoryRecords = useMemo(() => {
+    const records = hunterInventory?.records ?? [];
+    if (inventoryFilter === "complete") {
+      return records.filter((record) => record.username && record.email && record.has_password);
+    }
+    if (inventoryFilter === "partial") {
+      return records.filter((record) => !(record.username && record.email && record.has_password));
+    }
+    return records;
+  }, [hunterInventory?.records, inventoryFilter]);
 
   // ── Batch credential status — one query per program (cached by dot components) ──
   const credQueries = useQueries({
@@ -464,6 +491,220 @@ export default function HunterAccountsPage() {
           needsAttention={stats.needsAttention}
           loading={credQueriesLoading}
         />
+
+        <div
+          style={{
+            marginBottom: 14,
+            padding: 14,
+            background: C.panel,
+            border: `1px solid ${C.border}`,
+            borderRadius: 8,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
+            <div>
+              <div style={{ fontSize: "0.62rem", color: C.orange, letterSpacing: "0.18em", textTransform: "uppercase" }}>
+                Imported Hunter Inventory
+              </div>
+              <div style={{ fontSize: "0.74rem", color: C.muted }}>
+                Proton CSV import data with visible presence markers for each account field.
+              </div>
+            </div>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+              <span style={{ border: `1px solid ${C.border}`, borderRadius: 999, padding: "3px 8px", color: C.text, background: C.panel, fontSize: "0.62rem" }}>
+                {inventoryRecords.length}/{hunterInventory?.record_count ?? 0} records
+              </span>
+              {Object.entries(hunterInventory?.counts ?? {}).map(([kind, count]) => (
+                <span key={kind} style={{ border: `1px solid ${C.border}`, borderRadius: 999, padding: "3px 8px", color: C.green, background: C.panel, fontSize: "0.62rem" }}>
+                  {kind}: {count}
+                </span>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  void hunterInventoryQuery.refetch();
+                  void scanSuggestionsQuery.refetch();
+                }}
+                style={{
+                  borderRadius: 999,
+                  border: `1px solid ${C.border}`,
+                  background: C.panelSoft,
+                  color: C.text,
+                  padding: "3px 10px",
+                  fontSize: "0.6rem",
+                  cursor: "pointer",
+                }}
+              >
+                ↻ refresh
+              </button>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
+            {[
+              { key: "all", label: "all inventory" },
+              { key: "complete", label: "complete" },
+              { key: "partial", label: "needs attention" },
+            ].map((item) => {
+              const active = inventoryFilter === item.key;
+              return (
+                <button
+                  key={item.key}
+                  type="button"
+                  onClick={() => setInventoryFilter(item.key as typeof inventoryFilter)}
+                  style={{
+                    borderRadius: 999,
+                    border: `1px solid ${active ? C.borderActive : C.border}`,
+                    background: active ? C.greenFaint : C.panelSoft,
+                    color: active ? C.green : C.muted,
+                    padding: "3px 10px",
+                    fontSize: "0.6rem",
+                    cursor: "pointer",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.08em",
+                  }}
+                >
+                  {item.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {hunterInventoryQuery.isLoading ? (
+            <div style={{ color: C.muted, fontSize: "0.72rem" }}>⟳ Loading imported inventory…</div>
+          ) : inventoryRecords.length ? (
+            <div style={{ display: "grid", gap: 8 }}>
+              {inventoryRecords.slice(0, 12).map((record) => (
+                <div
+                  key={`${record.slug}-${record.source_index}`}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1.5fr repeat(5, minmax(72px, 1fr))",
+                    gap: 8,
+                    alignItems: "center",
+                    padding: "10px 12px",
+                    background: C.panelSoft,
+                    border: `1px solid ${C.border}`,
+                    borderRadius: 8,
+                  }}
+                >
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ color: C.text, fontSize: "0.74rem", fontWeight: 700, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {record.display_name}
+                    </div>
+                    <div style={{ color: C.muted, fontSize: "0.58rem", letterSpacing: "0.08em" }}>
+                      {record.credential_kind} · {record.platform_hint ?? "unknown platform"}
+                    </div>
+                    <div style={{ color: C.orange, fontSize: "0.55rem", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      {record.source_url ?? record.vault_path}
+                    </div>
+                  </div>
+                  <PresenceFlag label="username" present={!!record.username} />
+                  <PresenceFlag label="email" present={!!record.email} />
+                  <PresenceFlag label="password" present={record.has_password} />
+                  <PresenceFlag label="totp" present={record.has_totp} />
+                  <PresenceFlag label="backup" present={record.has_backup_codes} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color: C.muted, fontSize: "0.72rem" }}>
+              No imported hunter inventory found for the selected filter. The UI is still reading live credential metadata only.
+            </div>
+          )}
+        </div>
+
+        <div
+          style={{
+            marginBottom: 14,
+            padding: 14,
+            background: C.panel,
+            border: `1px solid ${C.border}`,
+            borderRadius: 8,
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
+            <div>
+              <div style={{ fontSize: "0.62rem", color: C.orange, letterSpacing: "0.18em", textTransform: "uppercase" }}>
+                Suggested Scan Queue
+              </div>
+              <div style={{ fontSize: "0.74rem", color: C.muted }}>
+                Opportunities ranked from imported account coverage and platform match.
+              </div>
+            </div>
+            <div style={{ color: C.orange, fontSize: "0.62rem", letterSpacing: "0.08em" }}>
+              {scanSuggestions.length} suggested
+            </div>
+          </div>
+          {scanSuggestionsQuery.isLoading ? (
+            <div style={{ color: C.muted, fontSize: "0.72rem" }}>⟳ Computing scan suggestions…</div>
+          ) : scanSuggestions.length > 0 ? (
+            <div style={{ display: "grid", gap: 8 }}>
+              {scanSuggestions.slice(0, 50).map((item) => {
+                const program = programs.find((p) => p.id === item.opportunity_id);
+                return (
+                  <div
+                    key={item.opportunity_id}
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: 8,
+                      border: `1px solid ${C.border}`,
+                      background: C.panelSoft,
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 10,
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <div style={{ minWidth: 0, flex: "1 1 360px" }}>
+                      <div style={{ color: C.text, fontWeight: 700, fontSize: "0.74rem" }}>
+                        {item.name}
+                      </div>
+                      <div style={{ color: C.muted, fontSize: "0.6rem" }}>
+                        {item.organization} · {item.platform} · score {item.score}
+                      </div>
+                      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 6 }}>
+                        {item.matching_accounts.map((account) => (
+                          <span key={account} style={{ border: `1px solid ${C.border}`, borderRadius: 999, padding: "2px 7px", color: C.green, fontSize: "0.58rem" }}>
+                            {account}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                      {item.reasons.slice(0, 3).map((reason) => (
+                        <span key={reason} style={{ border: `1px solid ${C.border}`, background: C.highlightSoft, color: C.orange, borderRadius: 999, padding: "2px 8px", fontSize: "0.58rem" }}>
+                          {reason}
+                        </span>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => program && handleSelect(program)}
+                        disabled={!program}
+                        style={{
+                          borderRadius: 999,
+                          border: `1px solid ${C.borderActive}`,
+                          background: C.greenFaint,
+                          color: C.green,
+                          padding: "4px 10px",
+                          fontSize: "0.6rem",
+                          cursor: program ? "pointer" : "not-allowed",
+                        }}
+                      >
+                        Open program
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div style={{ color: C.muted, fontSize: "0.72rem" }}>
+              No suggestions available yet. Sync the Proton import or add more accounts to improve queue ranking.
+            </div>
+          )}
+        </div>
 
         {/* ── Filters + Sort ── */}
         <div
@@ -680,6 +921,29 @@ export default function HunterAccountsPage() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
       />
+    </div>
+  );
+}
+
+function PresenceFlag({ label, present }: { label: string; present: boolean }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 2,
+        padding: "6px 8px",
+        borderRadius: 6,
+        border: `1px solid ${present ? C.borderActive : C.border}`,
+        background: present ? C.greenFaint : C.panelSoft,
+        color: present ? C.green : C.muted,
+        minHeight: 44,
+      }}
+    >
+      <span style={{ fontSize: "0.72rem", fontWeight: 700 }}>{present ? "✓" : "×"}</span>
+      <span style={{ fontSize: "0.52rem", textTransform: "uppercase", letterSpacing: "0.1em" }}>{label}</span>
     </div>
   );
 }

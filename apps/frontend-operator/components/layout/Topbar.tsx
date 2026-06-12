@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
+import { useOperatorTheme } from "@/lib/theme";
+
 function LiveClock() {
   const [time, setTime] = useState("");
   useEffect(() => {
@@ -12,8 +14,9 @@ function LiveClock() {
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
+  const { colors } = useOperatorTheme();
   return (
-    <span style={{ color: "#007A1E", fontFamily: "IBM Plex Mono, monospace", fontSize: "0.7rem" }}>
+    <span style={{ color: colors.highlight, fontFamily: "IBM Plex Mono, monospace", fontSize: "0.7rem" }}>
       {time}
     </span>
   );
@@ -33,6 +36,7 @@ function glitchText(text: string) {
 
 export function Topbar() {
   const [label, setLabel] = useState("OPERATOR CONSOLE");
+  const { mode, toggleMode, colors } = useOperatorTheme();
 
   useEffect(() => {
     const glitch = () => {
@@ -46,15 +50,15 @@ export function Topbar() {
 
   return (
     <header
-      className="border-b border-border px-4 py-2"
-      style={{ background: "rgba(0,0,0,0.95)" }}
+      className="border-b px-4 py-2"
+      style={{
+        background: colors.panelSoft,
+        borderBottomColor: colors.border,
+        backdropFilter: "blur(10px)",
+      }}
     >
       <div className="flex items-center justify-between gap-4">
-
-        {/* ── Brand section ─────────────────────────────────────── */}
         <div className="flex items-center gap-3">
-
-          {/* Logo — circular badge with gold glow */}
           <div
             style={{
               position: "relative",
@@ -62,11 +66,13 @@ export function Topbar() {
               height: 52,
               flexShrink: 0,
               borderRadius: "50%",
-              border: "1px solid rgba(180,140,30,0.5)",
+              border: `1px solid ${colors.highlight}66`,
               boxShadow:
-                "0 0 10px rgba(180,140,30,0.35), 0 0 24px rgba(180,140,30,0.15), inset 0 0 8px rgba(0,0,0,0.8)",
+                mode === "dark"
+                  ? `0 0 10px ${colors.highlight}40, 0 0 24px ${colors.highlight}22, inset 0 0 8px rgba(0,0,0,0.8)`
+                  : `0 0 10px ${colors.highlight}22, inset 0 0 8px rgba(0,0,0,0.15)`,
               overflow: "hidden",
-              background: "#0a0a0a",
+              background: colors.shellBg,
             }}
           >
             <Image
@@ -79,15 +85,13 @@ export function Topbar() {
             />
           </div>
 
-          {/* Text block */}
           <div>
-            {/* Super-label */}
             <p
               style={{
                 fontSize: "0.55rem",
                 textTransform: "uppercase",
                 letterSpacing: "0.25em",
-                color: "#7A6000",   /* muted gold */
+                color: colors.highlight,
                 fontFamily: "IBM Plex Mono, monospace",
                 lineHeight: 1,
                 marginBottom: 2,
@@ -96,13 +100,12 @@ export function Topbar() {
               KAI / K1 ▸ AUTONOMOUS HUNT PLATFORM
             </p>
 
-            {/* Platform name with glitch */}
             <h1
               style={{
                 fontSize: "1rem",
                 fontWeight: 700,
-                color: "#00FF41",
-                textShadow: "0 0 8px #00FF41, 0 0 18px rgba(0,255,65,0.5)",
+                color: colors.accent,
+                textShadow: mode === "dark" ? `0 0 8px ${colors.accent}, 0 0 18px rgba(0,255,65,0.5)` : "none",
                 fontFamily: "IBM Plex Mono, monospace",
                 letterSpacing: "0.14em",
                 lineHeight: 1.1,
@@ -112,7 +115,6 @@ export function Topbar() {
               <span style={{ animation: "blink 1s step-end infinite", marginLeft: 2 }}>_</span>
             </h1>
 
-            {/* Tagline — gold, tight spacing */}
             <p
               style={{
                 fontSize: "0.55rem",
@@ -120,8 +122,7 @@ export function Topbar() {
                 textTransform: "uppercase",
                 fontFamily: "IBM Plex Mono, monospace",
                 marginTop: 2,
-                /* Gold gradient to echo the logo palette */
-                background: "linear-gradient(90deg, #B8860B 0%, #FFD700 50%, #B8860B 100%)",
+                background: `linear-gradient(90deg, ${colors.highlight} 0%, #ffd87a 50%, ${colors.highlight} 100%)`,
                 WebkitBackgroundClip: "text",
                 WebkitTextFillColor: "transparent",
                 backgroundClip: "text",
@@ -132,74 +133,84 @@ export function Topbar() {
           </div>
         </div>
 
-        {/* ── Right status chips ─────────────────────────────────── */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexShrink: 0 }}>
           <LiveClock />
 
-          {/* KAISON_01 unit badge — echoes logo */}
           <div
             style={{
               borderRadius: 3,
-              border: "1px solid rgba(180,140,30,0.3)",
-              background: "rgba(30,20,0,0.5)",
+              border: `1px solid ${colors.highlight}4d`,
+              background: mode === "dark" ? "rgba(30,20,0,0.5)" : colors.panelElevated,
               padding: "2px 8px",
               fontSize: "0.6rem",
               fontFamily: "IBM Plex Mono, monospace",
-              color: "#7A6000",
+              color: colors.highlight,
               letterSpacing: "0.1em",
             }}
           >
-            UNIT:{" "}
-            <span style={{ color: "#FFD700" }}>KAISON_01</span>
+            UNIT: <span style={{ color: colors.highlight }}>KAISON_01</span>
           </div>
 
           <div
             style={{
               borderRadius: 3,
-              border: "1px solid #003300",
-              background: "rgba(0,51,0,0.25)",
+              border: `1px solid ${colors.border}`,
+              background: mode === "dark" ? "rgba(0,51,0,0.25)" : colors.panelElevated,
               padding: "2px 8px",
               fontSize: "0.65rem",
               fontFamily: "IBM Plex Mono, monospace",
-              color: "#007A1E",
+              color: colors.textMuted,
             }}
           >
-            API:{" "}
-            <span style={{ color: "#00FF41" }}>
-              {process.env.NEXT_PUBLIC_API_BASE_URL ?? "localhost:8080"}
-            </span>
+            API: <span style={{ color: colors.accent }}>{process.env.NEXT_PUBLIC_API_BASE_URL ?? "localhost:8080"}</span>
           </div>
 
           <div
             style={{
               borderRadius: 3,
-              border: "1px solid #003300",
-              background: "rgba(0,51,0,0.25)",
+              border: `1px solid ${colors.border}`,
+              background: mode === "dark" ? "rgba(0,51,0,0.25)" : colors.panelElevated,
               padding: "2px 8px",
               fontSize: "0.65rem",
               fontFamily: "IBM Plex Mono, monospace",
-              color: "#007A1E",
+              color: colors.textMuted,
             }}
           >
-            {/* Status dot */}
             <span
               style={{
                 display: "inline-block",
                 width: 5,
                 height: 5,
                 borderRadius: "50%",
-                background: "#00FF41",
-                boxShadow: "0 0 4px #00FF41",
+                background: colors.success,
+                boxShadow: `0 0 4px ${colors.success}`,
                 animation: "blink 1.4s step-end infinite",
                 marginRight: 4,
                 verticalAlign: "middle",
               }}
             />
-            SYS:{" "}
-            <span style={{ color: "#00FF41", textShadow: "0 0 4px #00FF41" }}>ONLINE</span>
+            SYS: <span style={{ color: colors.success, textShadow: mode === "dark" ? `0 0 4px ${colors.success}` : "none" }}>ONLINE</span>
           </div>
-        </div>
 
+          <button
+            type="button"
+            onClick={toggleMode}
+            title={`Switch to ${mode === "dark" ? "light" : "dark"} theme`}
+            style={{
+              borderRadius: 999,
+              border: `1px solid ${colors.border}`,
+              background: colors.panelElevated,
+              padding: "3px 10px",
+              fontSize: "0.62rem",
+              fontFamily: "IBM Plex Mono, monospace",
+              color: colors.text,
+              letterSpacing: "0.1em",
+              cursor: "pointer",
+            }}
+          >
+            {mode === "dark" ? "☼ LIGHT" : "☾ DARK"}
+          </button>
+        </div>
       </div>
     </header>
   );

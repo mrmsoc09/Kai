@@ -21,7 +21,13 @@ try:
     import hvac
     from hvac.exceptions import VaultError, InvalidPath
 except ImportError:
-    raise ImportError("hvac package required. Install: pip install hvac")
+    hvac = None  # type: ignore[assignment]
+
+    class VaultError(Exception):
+        """Fallback Vault error used when hvac is unavailable."""
+
+    class InvalidPath(Exception):
+        """Fallback invalid-path error used when hvac is unavailable."""
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +105,10 @@ class VaultClient:
 
     def _connect(self) -> None:
         """Create or refresh Vault client connection."""
+        if hvac is None:
+            logger.error("Failed to connect to Vault: hvac package is unavailable")
+            self.client = None
+            return
         try:
             self.client = hvac.Client(
                 url=self.vault_addr,
@@ -207,6 +217,8 @@ class VaultClient:
         """
         if not self.client:
             self._connect()
+        if not self.client:
+            raise VaultConnectionError("Vault client is unavailable")
 
         # Check if secret exists
         if not overwrite:
@@ -247,6 +259,8 @@ class VaultClient:
         """
         if not self.client:
             self._connect()
+        if not self.client:
+            raise VaultConnectionError("Vault client is unavailable")
 
         def _read():
             response = self.client.secrets.kv.v2.read_secret_version(path=secret_path)
@@ -273,6 +287,8 @@ class VaultClient:
         """
         if not self.client:
             self._connect()
+        if not self.client:
+            raise VaultConnectionError("Vault client is unavailable")
 
         try:
             response = self.client.secrets.kv.v2.list_secrets(path=secret_prefix)
@@ -299,6 +315,8 @@ class VaultClient:
         """
         if not self.client:
             self._connect()
+        if not self.client:
+            raise VaultConnectionError("Vault client is unavailable")
 
         # Check if exists first
         try:
@@ -362,6 +380,8 @@ class VaultClient:
         """
         if not self.client:
             self._connect()
+        if not self.client:
+            raise VaultConnectionError("Vault client is unavailable")
 
         try:
             response = self.client.secrets.kv.v2.read_secret_metadata(path=secret_path)

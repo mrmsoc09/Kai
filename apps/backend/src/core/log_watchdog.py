@@ -124,7 +124,7 @@ class LogWatchdog:
                         self.signature_records[log_entry.log_id] = SignatureRecord(
                             log_id=log_entry.log_id,
                             signature_file=str(sig_file),
-                            signer="machine-kaisonai@pm.me",
+                            signer="kaisonai@pm.me",
                             signature_valid=True,
                             verified_at=datetime.now(timezone.utc).isoformat()
                         )

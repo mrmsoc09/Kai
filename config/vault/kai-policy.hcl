@@ -39,6 +39,11 @@ path "secret/k1/auth/jwt" {
   capabilities = ["read"]
 }
 
+# PGP signing keys used for artifact and approval signing
+path "secret/k1/auth/pgp/*" {
+  capabilities = ["read"]
+}
+
 # Allow token renewal but not root-token operations
 path "auth/token/renew-self" {
   capabilities = ["update"]

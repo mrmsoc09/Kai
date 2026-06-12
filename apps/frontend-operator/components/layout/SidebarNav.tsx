@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useOperatorTheme } from "@/lib/theme";
 
 type NavLink = {
   href: string;
@@ -49,6 +50,7 @@ const navGroups: Array<{ title: string; links: NavLink[] }> = [
 
 export function SidebarNav() {
   const pathname = usePathname();
+  const { colors, mode } = useOperatorTheme();
 
   return (
     <nav style={{ fontFamily: "IBM Plex Mono, monospace" }}>
@@ -60,10 +62,10 @@ export function SidebarNav() {
               fontSize: "0.6rem",
               textTransform: "uppercase",
               letterSpacing: "0.2em",
-              color: "#007A1E",
+              color: colors.highlight,
               padding: "0 4px",
               marginBottom: "0.35rem",
-              borderLeft: "2px solid #003300",
+              borderLeft: `2px solid ${colors.border}`,
               paddingLeft: "6px",
             }}
           >
@@ -95,31 +97,31 @@ export function SidebarNav() {
                     transition: "all 0.1s ease",
                     ...(active
                       ? {
-                          background: "rgba(0,255,65,0.12)",
-                          border: "1px solid rgba(0,255,65,0.35)",
-                          color: "#00FF41",
-                          textShadow: "0 0 6px rgba(0,255,65,0.6)",
-                          boxShadow: "inset 0 0 8px rgba(0,255,65,0.06)",
+                          background: colors.accentSoft,
+                          border: `1px solid ${colors.borderStrong}`,
+                          color: colors.accent,
+                          textShadow: mode === "dark" ? `0 0 6px ${colors.accentGlow}` : "none",
+                          boxShadow: `inset 0 0 8px ${colors.accentSoft}`,
                         }
                       : {
-                          background: "rgba(0,0,0,0.4)",
-                          border: "1px solid #001a00",
-                          color: "#007A1E",
+                          background: colors.panelSoft,
+                          border: `1px solid ${colors.border}`,
+                          color: colors.textMuted,
                         }),
                   }}
                   onMouseEnter={(e) => {
                     if (!active) {
-                      (e.currentTarget as HTMLAnchorElement).style.color = "#00FF41";
-                      (e.currentTarget as HTMLAnchorElement).style.borderColor = "#003300";
-                      (e.currentTarget as HTMLAnchorElement).style.background = "rgba(0,255,65,0.05)";
-                      (e.currentTarget as HTMLAnchorElement).style.textShadow = "0 0 4px rgba(0,255,65,0.4)";
+                      (e.currentTarget as HTMLAnchorElement).style.color = colors.accent;
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor = colors.borderStrong;
+                      (e.currentTarget as HTMLAnchorElement).style.background = colors.highlightSoft;
+                      (e.currentTarget as HTMLAnchorElement).style.textShadow = mode === "dark" ? `0 0 4px ${colors.accentGlow}` : "none";
                     }
                   }}
                   onMouseLeave={(e) => {
                     if (!active) {
-                      (e.currentTarget as HTMLAnchorElement).style.color = "#007A1E";
-                      (e.currentTarget as HTMLAnchorElement).style.borderColor = "#001a00";
-                      (e.currentTarget as HTMLAnchorElement).style.background = "rgba(0,0,0,0.4)";
+                      (e.currentTarget as HTMLAnchorElement).style.color = colors.textMuted;
+                      (e.currentTarget as HTMLAnchorElement).style.borderColor = colors.border;
+                      (e.currentTarget as HTMLAnchorElement).style.background = colors.panelSoft;
                       (e.currentTarget as HTMLAnchorElement).style.textShadow = "";
                     }
                   }}
@@ -128,7 +130,7 @@ export function SidebarNav() {
                   <span
                     style={{
                       fontSize: "0.65rem",
-                      color: active ? "#00FF41" : "#003300",
+                      color: active ? colors.accent : colors.border,
                       minWidth: "12px",
                       textAlign: "center",
                     }}
@@ -147,8 +149,8 @@ export function SidebarNav() {
                         width: 5,
                         height: 5,
                         borderRadius: "50%",
-                        background: "#00FF41",
-                        boxShadow: "0 0 4px #00FF41",
+                        background: colors.accent,
+                        boxShadow: `0 0 4px ${colors.accent}`,
                         animation: "blink 1.2s step-end infinite",
                         flexShrink: 0,
                       }}
@@ -166,20 +168,20 @@ export function SidebarNav() {
         style={{
           marginTop: "1rem",
           padding: "6px 8px",
-          borderTop: "1px solid #001a00",
+          borderTop: `1px solid ${colors.border}`,
           fontSize: "0.6rem",
-          color: "#003300",
+          color: colors.textMuted,
           fontFamily: "IBM Plex Mono, monospace",
           letterSpacing: "0.08em",
         }}
       >
         <div style={{ display: "flex", justifyContent: "space-between" }}>
           <span>AGENTS</span>
-          <span style={{ color: "#007A1E" }}>STANDBY</span>
+          <span style={{ color: colors.highlight }}>STANDBY</span>
         </div>
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: 2 }}>
           <span>MISSION</span>
-          <span style={{ color: "#007A1E" }}>IDLE</span>
+          <span style={{ color: colors.highlight }}>IDLE</span>
         </div>
       </div>
     </nav>

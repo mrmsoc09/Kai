@@ -19,6 +19,7 @@ from apps.backend.src.middleware.security_headers import SecurityHeadersMiddlewa
 from apps.backend.src.core.exception_handlers import register_exception_handlers
 from apps.backend.src.core.services import Services
 from apps.backend.src.core.tools import get_registry, initialize_default_tools
+from apps.backend.src.core.startup_migrations import ensure_startup_migrations
 from apps.backend.src.core.toolpacks import validate_toolpacks_or_raise
 from apps.backend.src.core.secret_manager import get_secret_manager
 from apps.backend.src.core.auth import assert_bootstrap_auth_safe, AuthConfigError
@@ -201,6 +202,7 @@ async def lifespan(app: FastAPI):
         raise RuntimeError(str(exc)) from exc
     if not test_mode:
         await services.startup()
+        ensure_startup_migrations()
         await ensure_bootstrap_admin_user()
         if _env_bool("K1_STARTUP_VALIDATE_DEPENDENCIES", True):
             await _validate_startup_dependencies()

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useOperatorTheme } from "@/lib/theme";
 
 /* Characters used in the rain — binary + hex + hacker symbols */
 const CHARS =
@@ -34,8 +35,11 @@ function randomSpeed() {
 
 export function MatrixRain() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { mode, colors } = useOperatorTheme();
 
   useEffect(() => {
+    if (mode === "light") return;
+
     const canvas = canvasRef.current;
     if (!canvas) return;
 
@@ -127,7 +131,9 @@ export function MatrixRain() {
       cancelAnimationFrame(animId);
       window.removeEventListener("resize", onResize);
     };
-  }, []);
+  }, [mode]);
+
+  if (mode === "light") return null;
 
   return (
     <canvas
@@ -138,7 +144,7 @@ export function MatrixRain() {
         inset: 0,
         zIndex: 0,
         pointerEvents: "none",
-        opacity: 0.45,   /* subtle — readable content above */
+        opacity: colors.matrixOpacity,   /* subtle — readable content above */
       }}
     />
   );

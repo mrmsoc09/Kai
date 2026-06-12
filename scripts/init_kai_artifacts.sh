@@ -45,6 +45,10 @@ DOCKER_DIRS=(
   "docker/frontend-node_modules"
 )
 
+KEY_DIRS=(
+  "keys/pgp"
+)
+
 echo "[init-kai-artifacts] Preparing storage root ${STORAGE_ROOT}"
 mkdir -p "${ARTIFACTS_ROOT}"
 mkdir -p "${OUTPUT_ROOT}"
@@ -61,10 +65,14 @@ for dir_name in "${DOCKER_DIRS[@]}"; do
   mkdir -p "${STORAGE_ROOT}/${dir_name}"
 done
 
+for dir_name in "${KEY_DIRS[@]}"; do
+  mkdir -p "${STORAGE_ROOT}/${dir_name}"
+done
+
 # Use broad write permissions because tool containers run as different UIDs.
 chmod 0755 "${ARTIFACTS_ROOT}"
 chmod 0755 "${OUTPUT_ROOT}"
-chmod 0777 "${ARTIFACTS_ROOT}"/* "${OUTPUT_ROOT}"/* "${STORAGE_ROOT}"/docker/* 2>/dev/null || true
+chmod 0777 "${ARTIFACTS_ROOT}"/* "${OUTPUT_ROOT}"/* "${STORAGE_ROOT}"/docker/* "${STORAGE_ROOT}"/keys/* 2>/dev/null || true
 
 if [[ -n "${ARTIFACT_UID}" && -n "${ARTIFACT_GID}" ]]; then
   chown -R "${ARTIFACT_UID}:${ARTIFACT_GID}" "${ARTIFACTS_ROOT}"

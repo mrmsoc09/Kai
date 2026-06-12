@@ -3,6 +3,8 @@ export const queryKeys = {
     all: ["credentials"] as const,
     forProgram: (programId: string) => ["credentials", programId] as const,
     metadata: (programId: string) => ["credentials", programId, "metadata"] as const,
+    hunterInventory: () => ["credentials", "hunter-inventory"] as const,
+    scanSuggestions: (limit: number) => ["credentials", "scan-suggestions", limit] as const,
   },
   campaigns: {
     all: ["campaigns"] as const,

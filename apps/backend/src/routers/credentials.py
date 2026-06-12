@@ -3,13 +3,16 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.auth import User, get_current_user
 from ..core.credentials_manager import CredentialsManager
+from ..core.hunter_account_inventory import load_hunter_account_index
 from ..core.hil_db import get_db
+from ..core.opportunity_catalog import list_filtered
 from ..core.vault_client import SecretNotFoundError, VaultConnectionError
 from ..models.campaign import Program
 from ..models.credential_schemas import (
@@ -37,6 +40,28 @@ router = APIRouter(
     tags=["credentials"],
     dependencies=[Depends(get_current_user)],
 )
+
+
+class HunterAccountInventoryResponse(BaseModel):
+    source_path: str
+    record_count: int
+    counts: dict[str, int]
+    records: list[dict]
+
+
+class ScanSuggestionResponse(BaseModel):
+    opportunity_id: str
+    name: str
+    organization: str
+    platform: str
+    score: int
+    reasons: list[str]
+    matching_accounts: list[str]
+    account_ready: bool = True
+
+
+class ScanSuggestionListResponse(BaseModel):
+    items: list[ScanSuggestionResponse]
 
 
 # ============================================================================
@@ -200,7 +225,7 @@ async def delete_credential(
     except SecretNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Credential not found",
+            detail="Credential not found",
         )
     except VaultConnectionError as e:
         raise HTTPException(
@@ -324,3 +349,83 @@ async def upsert_access_metadata(
         testing_instructions=body.testing_instructions,
     )
     return _metadata_to_response(meta)
+
+
+def _build_scan_suggestions(limit: int = 10) -> list[dict]:
+    inventory = load_hunter_account_index()
+    records = inventory.get("records", [])
+    opportunities = list_filtered(limit=500)
+    suggestions: list[dict] = []
+
+    for opportunity in opportunities:
+        reasons: list[str] = []
+        matching_accounts: list[str] = []
+        score = 0
+        platform = str(opportunity.platform or "").strip().lower()
+        required_types = {
+            str(req.kind or "").strip().lower()
+            for req in getattr(opportunity, "credential_requirements", [])
+            if getattr(req, "kind", None)
+        }
+
+        for record in records:
+            display_name = str(record.get("display_name") or record.get("slug") or "").strip()
+            if not display_name:
+                continue
+
+            record_platform = str(record.get("platform_hint") or "").strip().lower()
+            record_kind = str(record.get("credential_kind") or "").strip().lower()
+            source_url = str(record.get("source_url") or "").strip().lower()
+
+            if record_platform and platform and record_platform == platform:
+                score += 40
+                reasons.append(f"platform match via {display_name}")
+                matching_accounts.append(display_name)
+                continue
+
+            if record_kind in required_types:
+                score += 20
+                reasons.append(f"required credential type covered by {display_name}")
+                matching_accounts.append(display_name)
+                continue
+
+            if source_url and any(domain and domain.lower() in source_url for domain in opportunity.scope_domains):
+                score += 15
+                reasons.append(f"scope host aligns with {display_name}")
+                matching_accounts.append(display_name)
+
+        if score <= 0 or not matching_accounts:
+            continue
+
+        suggestions.append(
+            {
+                "opportunity_id": opportunity.id,
+                "name": opportunity.name,
+                "organization": opportunity.organization,
+                "platform": opportunity.platform,
+                "score": score,
+                "reasons": reasons[:4],
+                "matching_accounts": sorted(set(matching_accounts))[:5],
+                "account_ready": True,
+            }
+        )
+
+    suggestions.sort(
+        key=lambda item: (len(item["matching_accounts"]), item["score"]),
+        reverse=True,
+    )
+    return suggestions[:limit]
+
+
+@router.get("/hunter-accounts", response_model=HunterAccountInventoryResponse)
+async def list_hunter_accounts() -> HunterAccountInventoryResponse:
+    return HunterAccountInventoryResponse(**load_hunter_account_index())
+
+
+@router.get("/scan-suggestions", response_model=ScanSuggestionListResponse)
+async def list_scan_suggestions(
+    limit: int = Query(default=50, ge=1, le=50),
+) -> ScanSuggestionListResponse:
+    return ScanSuggestionListResponse(
+        items=[ScanSuggestionResponse(**item) for item in _build_scan_suggestions(limit)]
+    )

@@ -41,6 +41,17 @@ function readStoredAccessToken(): string | null {
   }
 }
 
+function clearStoredAccessToken(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  try {
+    window.localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+  } catch {
+    // Ignore browser storage failures in hardened/private modes.
+  }
+}
+
 export function setApiAccessToken(token: string): void {
   if (typeof window === "undefined") {
     return;
@@ -104,7 +115,7 @@ async function resolveAuthHeaderValue(): Promise<string | null> {
   return null;
 }
 
-export async function requestJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
+async function requestJsonOnce(path: string, options: RequestOptions = {}): Promise<Response> {
   const authHeader = await resolveAuthHeaderValue();
   const headers: Record<string, string> = {
     "Content-Type": "application/json"
@@ -113,45 +124,64 @@ export async function requestJson<T>(path: string, options: RequestOptions = {})
     headers.Authorization = authHeader;
   }
 
-  const response = await fetch(`${API_BASE}${path}`, {
+  return fetch(`${API_BASE}${path}`, {
     method: options.method ?? "GET",
     headers,
     body: options.body === undefined ? undefined : JSON.stringify(options.body),
     signal: options.signal,
     cache: "no-store"
   });
+}
 
+async function parseResponse<T>(response: Response, fallbackMessage?: string): Promise<T> {
   const isJson = response.headers.get("content-type")?.includes("application/json");
   const payload = isJson ? ((await response.json()) as ApiErrorPayload) : {};
 
   if (!response.ok) {
-    throw new ApiError(response.status, payload);
+    throw new ApiError(response.status, payload, fallbackMessage);
   }
   return payload as T;
+}
+
+export async function requestJson<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await requestJsonOnce(path, options);
+  if (response.status !== 401) {
+    return parseResponse<T>(response);
+  }
+
+  clearStoredAccessToken();
+  const bootstrapped = await bootstrapDevAccessToken();
+  if (bootstrapped) {
+    const retry = await requestJsonOnce(path, options);
+    return parseResponse<T>(retry);
+  }
+
+  return parseResponse<T>(response);
 }
 
 export async function postJsonAllow422<T>(
   path: string,
   body?: unknown
 ): Promise<{ data: T; status: number }> {
-  const authHeader = await resolveAuthHeaderValue();
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json"
-  };
-  if (authHeader) {
-    headers.Authorization = authHeader;
-  }
-
-  const response = await fetch(`${API_BASE}${path}`, {
-    method: "POST",
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-    cache: "no-store"
-  });
-
+  const response = await requestJsonOnce(path, { method: "POST", body });
   const payload = (await response.json()) as T & ApiErrorPayload;
   if (response.status === 422) {
     return { data: payload as T, status: 422 };
+  }
+  if (response.status === 401) {
+    clearStoredAccessToken();
+    const bootstrapped = await bootstrapDevAccessToken();
+    if (bootstrapped) {
+      const retry = await requestJsonOnce(path, { method: "POST", body });
+      const retryPayload = (await retry.json()) as T & ApiErrorPayload;
+      if (retry.status === 422) {
+        return { data: retryPayload as T, status: 422 };
+      }
+      if (!retry.ok) {
+        throw new ApiError(retry.status, retryPayload);
+      }
+      return { data: retryPayload as T, status: retry.status };
+    }
   }
   if (!response.ok) {
     throw new ApiError(response.status, payload);

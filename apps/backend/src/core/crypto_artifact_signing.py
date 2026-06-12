@@ -60,7 +60,7 @@ class KaiCryptoSystem:
         self,
         gpg_home: str = None,
         key_source_dir: str = None,
-        machine_identity: str = "machine-kaisonai@pm.me"
+        machine_identity: str = "kaisonai@pm.me"
     ):
         """
         Initialize the crypto system
@@ -68,7 +68,7 @@ class KaiCryptoSystem:
         Args:
             gpg_home: Path to GnuPG home directory (default: ~/.kai/gpg_home)
             key_source_dir: Path to Kai PGP-Keys directory (default: /home/user/kai/Kai PGP-Keys)
-            machine_identity: The machine signing identity (default: machine-kaisonai@pm.me)
+            machine_identity: The machine signing identity (default: kaisonai@pm.me)
         """
         self.key_source_dir = Path(key_source_dir or os.getenv("K1_PGP_KEY_SOURCE_DIR", "/home/user/kai/Kai PGP-Keys"))
         self.machine_identity = machine_identity
@@ -82,10 +82,7 @@ class KaiCryptoSystem:
 
         # Key identity mappings
         self.trusted_identities = {
-            "admin-kaisonai@pm.me": "Kai Admin",
-            "user-kaisonai@pm.me": "Kai User",
-            "infra-kaisonai@pm.me": "Kai Infrastructure",
-            "machine-kaisonai@pm.me": "Kai Machine"
+            "kaisonai@pm.me": "Kai Signing",
         }
 
         # Signature and verification logs
