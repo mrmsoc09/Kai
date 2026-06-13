@@ -1,3 +1,7 @@
+"use client";
+
+import { useOperatorTheme } from "@/lib/theme";
+
 type PageHeaderProps = {
   title: string;
   description?: string;
@@ -5,12 +9,13 @@ type PageHeaderProps = {
 };
 
 export function PageHeader({ title, description, actions }: PageHeaderProps) {
+  const { colors, mode } = useOperatorTheme();
   return (
     <div
       style={{
         marginBottom: "1rem",
         paddingBottom: "0.75rem",
-        borderBottom: "1px solid #001a00",
+        borderBottom: `1px solid ${colors.border}`,
         display: "flex",
         flexWrap: "wrap",
         alignItems: "flex-start",
@@ -25,7 +30,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
             fontSize: "0.6rem",
             letterSpacing: "0.2em",
             textTransform: "uppercase",
-            color: "#003300",
+            color: colors.textMuted,
             fontFamily: "IBM Plex Mono, monospace",
             marginBottom: "2px",
           }}
@@ -36,14 +41,14 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
           style={{
             fontSize: "1.1rem",
             fontWeight: 700,
-            color: "#00FF41",
+            color: colors.accent,
             fontFamily: "IBM Plex Mono, monospace",
             letterSpacing: "0.1em",
             textTransform: "uppercase",
-            textShadow: "0 0 8px rgba(0,255,65,0.4)",
+            textShadow: mode === "dark" ? `0 0 8px ${colors.accentGlow}` : "none",
           }}
         >
-          <span style={{ color: "#007A1E", marginRight: "0.4em" }}>›</span>
+          <span style={{ color: colors.highlight, marginRight: "0.4em" }}>›</span>
           {title}
           <span
             style={{
@@ -51,7 +56,7 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
               width: 8,
               marginLeft: 4,
               animation: "blink 1s step-end infinite",
-              color: "#00FF41",
+              color: colors.accent,
             }}
           >
             _
@@ -59,13 +64,13 @@ export function PageHeader({ title, description, actions }: PageHeaderProps) {
         </h2>
         {description ? (
           <p
-            style={{
-              marginTop: "3px",
-              fontSize: "0.7rem",
-              color: "#007A1E",
-              fontFamily: "IBM Plex Mono, monospace",
-              letterSpacing: "0.04em",
-            }}
+          style={{
+            marginTop: "3px",
+            fontSize: "0.7rem",
+            color: colors.textMuted,
+            fontFamily: "IBM Plex Mono, monospace",
+            letterSpacing: "0.04em",
+          }}
           >
             {description}
           </p>

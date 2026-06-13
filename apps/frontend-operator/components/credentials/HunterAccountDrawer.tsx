@@ -8,21 +8,21 @@ import { useCredentialsForProgram } from "@/hooks/useHunterAccounts";
 // Colour palette (matrix green)
 // ============================================================================
 const C = {
-  bg: "#0a0f0a",
-  panel: "#0d140d",
-  border: "#003300",
-  borderActive: "#006600",
-  green: "#00FF41",
-  greenDim: "#007A1E",
-  greenFaint: "rgba(0,255,65,0.07)",
-  greenGlow: "rgba(0,255,65,0.35)",
-  red: "#ff4444",
-  redDim: "#883333",
-  orange: "#ff9900",
-  text: "#00e536",
-  muted: "#004d10",
-  overlay: "rgba(0,0,0,0.72)",
-  inputBg: "#060c06",
+  bg: "var(--page-bg)",
+  panel: "var(--panel-bg)",
+  border: "var(--border-color)",
+  borderActive: "var(--border-strong)",
+  green: "var(--accent-color)",
+  greenDim: "var(--text-muted)",
+  greenFaint: "var(--accent-soft)",
+  greenGlow: "var(--accent-soft)",
+  red: "var(--highlight-color)",
+  redDim: "var(--highlight-color)",
+  orange: "var(--highlight-color)",
+  text: "var(--text-color)",
+  muted: "var(--text-muted)",
+  overlay: "var(--overlay-color)",
+  inputBg: "var(--input-bg)",
 } as const;
 
 // ============================================================================
@@ -661,7 +661,7 @@ function ReadinessChecklist({
             gap: 3,
           }}
         >
-          <span style={{ fontSize: "0.5rem" }}>{item.done ? "◉" : "○"}</span>
+          <span style={{ fontSize: "0.5rem" }}>{item.done ? "✓" : "×"}</span>
           {item.label}
         </span>
       ))}
@@ -826,7 +826,7 @@ function CollapsibleSection({
               letterSpacing: "0.06em",
             }}
           >
-            {complete ? "✓ done" : "○ empty"}
+            {complete ? "✓ done" : "× empty"}
           </span>
         )}
       </button>

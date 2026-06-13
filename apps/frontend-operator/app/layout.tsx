@@ -13,10 +13,26 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" data-theme="dark">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                try {
+                  var mode = localStorage.getItem('k1-operator-theme');
+                  if (mode !== 'light' && mode !== 'dark') {
+                    mode = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+                  }
+                  document.documentElement.dataset.theme = mode;
+                  document.documentElement.style.colorScheme = mode;
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <AppProviders>

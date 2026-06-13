@@ -4,6 +4,8 @@ import {
   createWorkflow,
   dispatchOpportunityScans,
   getScanQueueSettings,
+  getOpportunity,
+  getScanSuggestions,
   listOpportunities,
   updateScanQueueSettings,
 } from '../lib/api'
@@ -87,6 +89,16 @@ type GuardAction = {
   kind: 'scan' | 'workflow'
   opportunity: Opportunity
   target: QueueTarget
+}
+
+type ScanSuggestion = {
+  opportunity_id: string
+  name: string
+  organization: string
+  platform: string
+  score: number
+  reasons: string[]
+  matching_accounts: string[]
 }
 
 const PAGE_SIZE = 24
@@ -499,6 +511,8 @@ export default function Opportunities() {
   const [page, setPage] = useState(0)
 
   const [queueItems, setQueueItems] = useState<QueueItem[]>([])
+  const [scanSuggestions, setScanSuggestions] = useState<ScanSuggestion[]>([])
+  const [suggestionsLoading, setSuggestionsLoading] = useState(true)
   const [selectedTargets, setSelectedTargets] = useState<Record<string, number>>({})
   const [scanLoadingIds, setScanLoadingIds] = useState<Record<string, boolean>>({})
   const [workflowLoadingIds, setWorkflowLoadingIds] = useState<Record<string, boolean>>({})
@@ -561,8 +575,21 @@ export default function Opportunities() {
     }
   }, [])
 
+  const loadSuggestions = useCallback(async () => {
+    setSuggestionsLoading(true)
+    try {
+      const response = await getScanSuggestions(8)
+      setScanSuggestions(Array.isArray(response.data?.items) ? response.data.items : [])
+    } catch {
+      setScanSuggestions([])
+    } finally {
+      setSuggestionsLoading(false)
+    }
+  }, [])
+
   useEffect(() => { void loadOpportunities() }, [loadOpportunities])
   useEffect(() => { void loadSettings() }, [loadSettings])
+  useEffect(() => { void loadSuggestions() }, [loadSuggestions])
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       setSearch(searchInput)
@@ -744,6 +771,18 @@ export default function Opportunities() {
     }
   }, [maxConcurrent, minConcurrent])
 
+  const queueSuggestedOpportunity = useCallback(async (suggestion: ScanSuggestion) => {
+    try {
+      const inView = opportunities.find((item) => item.id === suggestion.opportunity_id)
+      const opportunity = inView ?? (await getOpportunity(suggestion.opportunity_id)).data
+      const target = targetForOpportunity(opportunity, selectedTargets)
+      upsertQueueItem(opportunity, target)
+      setNotice(`Queued suggested opportunity: ${opportunity.name}`)
+    } catch {
+      setError('Unable to queue the suggested opportunity.')
+    }
+  }, [opportunities, selectedTargets, upsertQueueItem])
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
   const queuedCount = queueItems.filter(item => item.status === 'queued' || item.status === 'error').length
   const dispatchedCount = queueItems.filter(item => item.status === 'dispatched').length
@@ -848,6 +887,56 @@ export default function Opportunities() {
         </div>
 
         <aside style={{ position: 'sticky', top: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ background: '#0f1413', border: '1px solid #29412f', borderRadius: 14, padding: '1rem' }}>
+            <div style={{ color: '#dcead8', fontSize: '0.95rem', fontWeight: 700, marginBottom: 4 }}>Suggested Queue</div>
+            <div style={{ color: '#6F8E7A', fontSize: '0.76rem', lineHeight: 1.5, marginBottom: 12 }}>
+              Rank opportunities that already have imported hunter accounts or credential coverage.
+            </div>
+            {suggestionsLoading ? (
+              <div style={{ color: '#6F8E7A', fontSize: '0.78rem' }}>Loading suggestions…</div>
+            ) : scanSuggestions.length === 0 ? (
+              <div style={{ border: '1px dashed #29412f', borderRadius: 10, padding: '1rem', color: '#8FAF9B', fontSize: '0.78rem' }}>
+                No account-backed queue suggestions are available yet.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {scanSuggestions.map((suggestion) => {
+                  const color = PLATFORM_COLORS[suggestion.platform] || '#6F8E7A'
+                  const liveOpportunity = opportunities.find((item) => item.id === suggestion.opportunity_id)
+                  return (
+                    <div key={suggestion.opportunity_id} style={{ border: '1px solid #203028', borderRadius: 10, padding: '0.85rem', background: '#111917' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start', marginBottom: 8 }}>
+                        <div>
+                          <div style={{ color: '#dcead8', fontSize: '0.8rem', fontWeight: 700 }}>{suggestion.name}</div>
+                          <div style={{ color: '#6F8E7A', fontSize: '0.7rem', marginTop: 3 }}>{suggestion.organization}</div>
+                        </div>
+                        <span style={badgeStyle(color)}>Score {suggestion.score}</span>
+                      </div>
+                      <div style={{ color: '#8FAF9B', fontSize: '0.74rem', marginBottom: 8 }}>
+                        {suggestion.matching_accounts.join(', ') || 'Imported account coverage'}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 10 }}>
+                        {suggestion.reasons.slice(0, 3).map((reason) => (
+                          <div key={reason} style={{ color: '#8FAF9B', fontSize: '0.72rem', lineHeight: 1.4 }}>• {reason}</div>
+                        ))}
+                      </div>
+                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                        <button onClick={() => void queueSuggestedOpportunity(suggestion)} style={gBtn('primary')}>
+                          Queue Suggestion
+                        </button>
+                        {liveOpportunity && (
+                          <button onClick={() => setPrepOpportunity(liveOpportunity)} style={gBtn('ghost')}>
+                            Review Accounts
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
           <div style={{ background: '#0f1413', border: '1px solid #29412f', borderRadius: 14, padding: '1rem' }}>
             <div style={{ color: '#dcead8', fontSize: '0.95rem', fontWeight: 700, marginBottom: 4 }}>Scan Queue Controls</div>
             <div style={{ color: '#6F8E7A', fontSize: '0.76rem', lineHeight: 1.5, marginBottom: 12 }}>

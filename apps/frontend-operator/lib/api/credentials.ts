@@ -56,6 +56,42 @@ export type AccessMetadataListResponse = {
   metadata: AccessMetadataResponse[];
 };
 
+export type HunterAccountRecord = {
+  source_index: number;
+  slug: string;
+  display_name: string;
+  platform_hint: string | null;
+  credential_kind: string;
+  username: string | null;
+  email: string | null;
+  source_url: string | null;
+  vault_path: string;
+  has_password: boolean;
+  has_totp: boolean;
+  has_backup_codes: boolean;
+};
+
+export type HunterAccountInventoryResponse = {
+  source_path: string;
+  record_count: number;
+  counts: Record<string, number>;
+  records: HunterAccountRecord[];
+};
+
+export type ScanSuggestionRecord = {
+  opportunity_id: string;
+  name: string;
+  organization: string;
+  platform: string;
+  score: number;
+  reasons: string[];
+  matching_accounts: string[];
+};
+
+export type ScanSuggestionListResponse = {
+  items: ScanSuggestionRecord[];
+};
+
 export type ValidateCredentialResponse = {
   valid: boolean;
   reason: string;
@@ -154,5 +190,21 @@ export function upsertAccessMetadata(
   return requestJson<AccessMetadataResponse>(
     `/api/v1/credentials/access-metadata/${programId}/${accessType}`,
     { method: "PUT", body }
+  );
+}
+
+/** Load the imported hunter-account inventory derived from the Proton CSV. */
+export function getHunterAccountInventory(signal?: AbortSignal) {
+  return requestJson<HunterAccountInventoryResponse>(
+    "/api/v1/credentials/hunter-accounts",
+    { signal }
+  );
+}
+
+/** Load scan suggestions that are informed by the imported hunter accounts. */
+export function getScanSuggestions(limit = 50, signal?: AbortSignal) {
+  return requestJson<ScanSuggestionListResponse>(
+    `/api/v1/credentials/scan-suggestions?limit=${encodeURIComponent(String(limit))}`,
+    { signal }
   );
 }

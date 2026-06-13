@@ -148,6 +148,12 @@ export function getScanQueueSettings() {
 export function updateScanQueueSettings(payload: { min_concurrent: number; max_concurrent: number }) {
   return api.put('/opportunities/scan-queue/settings', payload)
 }
+export function getHunterAccountInventory() {
+  return api.get('/credentials/hunter-accounts')
+}
+export function getScanSuggestions(limit = 10) {
+  return api.get('/credentials/scan-suggestions', { params: { limit } })
+}
 export function dispatchOpportunityScans(payload: {
   items: Array<{
     opportunity_id: string
